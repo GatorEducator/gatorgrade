@@ -41,8 +41,6 @@ jobs:
         with:
           paths: "*.md"
           config: .github/cspell.json
-      - name: Update MkDocs
-        run: mkdocs gh-deploy --force
 
   test:
     name: Test
@@ -52,6 +50,11 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10"]
+        include:
+          - os: macos-latest
+            python-version: "3.9"
+          - os: windows-latest
+            python-version: "3.8"
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
