@@ -1,0 +1,75 @@
+# This GitHub Actions workflow contains two jobs:
+# -- First, Lint uses the latest Ubuntu image and Python 3.9 to check
+# the code and writing for defects, using the Poetry lint task
+#
+# -- Second, Test uses a strategy matrix to test the code with different
+# Python versions and determine code coverage, using the Poetry test task
+
+name: Lint and Test
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        id: setup-python
+        with:
+          python-version: 3.9
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: 1.1.12
+      - name: Setup Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          poetry env info
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+      - name: Lint code
+        run: poetry run task lint
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@v4
+      - name: Check spelling
+        uses: zwaldowski/cspell-action@v1
+        with:
+          paths: "*.md"
+          config: .github/cspell.json
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: 1.1.12
+      - name: Setup Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          poetry env info
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+      - name: Execute tests
+        run: poetry run task test
