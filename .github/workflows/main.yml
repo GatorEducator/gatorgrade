@@ -24,7 +24,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.1.12
+          poetry-version: 1.1.13
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true
@@ -41,6 +41,8 @@ jobs:
         with:
           paths: "*.md"
           config: .github/cspell.json
+      - name: Update MkDocs
+        run: mkdocs gh-deploy --force
 
   test:
     name: Test
@@ -73,3 +75,4 @@ jobs:
         run: poetry install --no-interaction --no-ansi
       - name: Execute tests
         run: poetry run task test
+
