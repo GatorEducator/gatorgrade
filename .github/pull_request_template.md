@@ -12,11 +12,6 @@
 - [ ] Bug fix
 - [ ] Documentation
 
-### Test Coverage
-
-<!-- TODO: Fill in the test coverage -->
-`0%`
-
 ## Contributors
 
 <!-- TODO: Add your GitHub username below and the GitHub usernames of all other contributors to the proposed changes -->
