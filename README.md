@@ -1,2 +1,19 @@
 # GatorGrade
-![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=ullrichd21&show_icons=true&theme=synthwave)
+
+## Project Description
+
+## Table of Contents:
+
+## How to Install GatorGrade
+
+### Installing Dependencies
+
+### Configuring Checks
+
+## How to Best Use GatorGrade
+
+### Running Checks
+
+### Including GatorGrade in your Project
+
+## Output Summary
