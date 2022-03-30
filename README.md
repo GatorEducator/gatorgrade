@@ -27,4 +27,4 @@ GatorGrade is an automatic grading tool that can be used to check assignments th
 ### Including GatorGrade in your Project
 
 ## Output Summary
-The purpose of GatorGrader is to proved an output of work that is required to meet all requirements by the provider. It will display a red ✘ when that requirement is not complete and a green  ✔ when that requirement is complete. It will also display your grade percentage accord to the number of ✘’s and ✔'s
+The purpose of GatorGrader is to provid an output of work that is required for you to meet all assignments requirements by the provider. It will display a red ✘ when a requirement is not complete and a green  ✔ when a requirement is complete. It will also display your grade percentage according to the number of ✘’s and ✔'s.
