@@ -15,8 +15,6 @@
         "gitignore",
         "github",
         "pwsh",
-        "fastfail",
-        "gatorconfig",
         "gatorgrader",
         "gatorgrade",
         "gatorgradle"
