@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "gatorgrade"
 version = "0.1.0"
-description = ""
+description = "Python tool to execute GatorGrader"
 authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Peyton Kelly", "Lacaria Luke", "Lauren Nevill", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
 
 [tool.poetry.dependencies]
@@ -13,10 +13,19 @@ taskipy = "^1.10.1"
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
 pylint = "^2.13.4"
+black = "^22.3.0"
+flake8 = "^4.0.1"
+mypy = "^0.942"
+pydocstyle = "^6.1.1"
 
 [tool.taskipy.tasks]
-test = "pytest --cov-report term-missing --cov-fail-under=70  --cov-branch --cov=package tests/"
-lint = "pylint package/ tests/"
+test = { cmd = "pytest --cov-report term-missing --cov-fail-under=70  --cov-branch --cov=package tests/", help = "Run the pytest test suite" }
+lint = { cmd = "pylint package/ tests/" }
+flake8 = { cmd = "flake8 gatorgrade tests", help = "Run the flake8 checks for source code documentation" }
+mypy = { cmd = "poetry run mypy gatorgrade --show-error-codes", "run the mypy type checker for potential type errors" }
+black = { cmd= "black gatorgrade tests --check", help = "Run the black checks for source code format" }
+pydocstyle = { cmd = "pydocstyle gatorgrade tests", help = "Run the pydocstyle checks for source code documentation" }
+pylint = { cmd = "pylint gatorgrade tests", help = "Run the pylint checks for source code documentation" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
