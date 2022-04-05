@@ -2,7 +2,7 @@
 name = "gatorgrade"
 version = "0.1.0"
 description = "Python tool to execute GatorGrader"
-authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Peyton Kelly", "Lacaria Luke", "Lauren Nevill", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
+authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Peyton Kelly", "Luke Lacaria", "Lauren Nevill", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
 
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
