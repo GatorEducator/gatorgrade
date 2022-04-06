@@ -1,2 +1,2 @@
-# This class will be used for storing the functions requested from the issues tab on main branch.
-# For instance, percentage output, description output, colorization of text.
+# This class is used for storing the main functions requested from the Github Issue Tracker for the output team.
+# For instance, functions dealing with percentage output, description output, and colorization of text.
