@@ -1,0 +1,2 @@
+# This file will be used for storing tools (functions) that aren't related to the listed issues on main branch.
+# For example, a function for space parsing of the string commands retrieved from the input team.
