@@ -1,2 +1,3 @@
-# This file will be used for storing tools (functions) that aren't related to the listed issues on main branch.
-# For example, a function for space parsing of the string commands retrieved from the input team.
+# This file is used for storing supporting functions and tools that are used by the methods in output_functions.
+# The main use of this class is to de-clutter output_functions.py for better readability.
+# One example of a function to be written here is the splitting of strings retrieved from the input team, at spaces, into lists.
