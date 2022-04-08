@@ -1,14 +1,13 @@
-# This GitHub Actions workflow contains two jobs:
-# -- First, Lint uses the latest Ubuntu image and Python 3.9 to check
-# the code and writing for defects, using the Poetry lint task
-#
-# -- Second, Test uses a strategy matrix to test the code with different
-# Python versions and determine code coverage, using the Poetry test task
+# This GitHub Actions workflow contains one job:
+# -- Build MKDocs uses the latest Ubuntu image and Python 3.9 to build
+# the MKDocs website using the latest Poetry version.
 
-name: Lint and Test
+name: Build MKDocs
 
-on: [push, pull_request]
-
+on:
+  push:
+    branches:
+      -main
 jobs:
   mkdocs:
     name: MkDocs
@@ -22,9 +21,12 @@ jobs:
         with:
           python-version: 3.9
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: Gr1N/setup-poetry@v7
+      - name: Use Poetry Dependency Cache
+        uses: actions/cache@v2
         with:
-          poetry-version: 1.1.13
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true
