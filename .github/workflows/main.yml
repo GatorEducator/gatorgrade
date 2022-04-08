@@ -1,17 +1,20 @@
-# This GitHub Actions workflow contains two jobs:
-# -- First, Lint uses the latest Ubuntu image and Python 3.9 to check
-# the code and writing for defects, using the Poetry lint task
-#
-# -- Second, Test uses a strategy matrix to test the code with different
-# Python versions and determine code coverage, using the Poetry test task
+# This GitHub Actions workflow contains four jobs:
+# -- First, Lint Code uses the latest Ubuntu image and Python 3.9 to check
+# the code for defects, using the Poetry lint task.
+# -- Second, Lint Markdown uses the latest Ubuntu image and makrdownlint to
+# check markdown files for defects.
+# -- Third uses the latest Ubuntu image and cspell to check for spelling
+# defects in the markdown.
+# -- Fourth, Test uses a strategy matrix to test the code with different
+# Python versions and determine code coverage, using the Poetry test task.
 
 name: Lint and Test
 
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: Lint
+  code:
+    name: Lint Code
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -22,11 +25,15 @@ jobs:
         with:
           python-version: 3.9
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: Gr1N/setup-poetry@v7
+      - name: Use Poetry Dependency Cache
+        uses: actions/cache@v2
         with:
-          poetry-version: 1.1.13
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
+          poetry --version
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           poetry env info
@@ -34,14 +41,29 @@ jobs:
         run: poetry install --no-interaction --no-ansi
       - name: Lint code
         run: poetry run task lint
-      - name: Lint markdown
-        uses: DavidAnson/markdownlint-cli2-action@v4
-      - name: Check spelling
-        uses: zwaldowski/cspell-action@v1
+  markdown:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
-          paths: "*.md"
-          config: .github/cspell.json
-
+          fetch-depth: 0
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v4
+  spelling:
+      name: Check Spelling
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+          with:
+            fetch-depth: 0
+        - name: Run cspell
+          uses: zwaldowski/cspell-action@v1
+          with:
+            paths: ["*.md", "*/*.md"] #Not sure if multiple paths are supported?
+            config: .github/cspell.json
   test:
     name: Test
     runs-on: ${{ matrix.os }}
@@ -66,11 +88,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: Gr1N/setup-poetry@v7
+      - name: Use Poetry Dependency Cache
+        uses: actions/cache@v2
         with:
-          poetry-version: 1.1.12
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
+          poetry --version
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           poetry env info
