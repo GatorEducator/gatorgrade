@@ -4,8 +4,9 @@
 ## Description
 
 <!-- TODO: Write a description of the proposed changes -->
+<!-- Remember to check the reminders! -->
 
-### Type of Change
+## Type of Change
 
 <!-- TODO: Fill in the brackets with an `x` next to all types that apply to the proposed changes -->
 - [ ] Feature
@@ -19,4 +20,6 @@
 
 ## Reminder
 
-All GitHub Actions should be in a passing state before any pull request is merged.
+ - All GitHub Actions should be in a passing state before any pull request is merged.
+ - All PRs must be reviewed by at least one team member and one member of the Integration team!
+ - Any issues this PR closes are tagged in the description!
