@@ -1,1 +1,1 @@
-
+"""Standard init file."""
