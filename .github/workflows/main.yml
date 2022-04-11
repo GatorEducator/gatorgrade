@@ -3,10 +3,10 @@
 # the code for defects, using the Poetry lint task.
 # -- Second, Lint Markdown uses the latest Ubuntu image and markdownlint to
 # check markdown files for defects.
-# -- Third uses the latest Ubuntu image and cspell to check for spelling
+# -- Third, Check Spelling uses the latest Ubuntu image and cspell to check for spelling
 # defects in the markdown.
-# -- Fourth, Test uses a strategy matrix to test the code with different
-# Python versions and determine code coverage, using the Poetry test task.
+# -- Fourth, Test uses a strategy matrix to test the code with different operating
+# systems and Python versions and determine code coverage, using the Poetry test task.
 
 name: Lint and Test
 
@@ -26,11 +26,6 @@ jobs:
           python-version: 3.9
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
-      - name: Use Poetry Dependency Cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
           poetry --version
@@ -62,7 +57,7 @@ jobs:
         - name: Run cspell
           uses: zwaldowski/cspell-action@v1
           with:
-            paths: ["*.md", "*/*.md"] #Not sure if multiple paths are supported?
+            paths: "**/*.md"
             config: .github/cspell.json
   test:
     name: Test
@@ -71,7 +66,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.10"]
         include:
           - os: macos-latest
             python-version: "3.9"
@@ -89,11 +84,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
-      - name: Use Poetry Dependency Cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
           poetry --version
