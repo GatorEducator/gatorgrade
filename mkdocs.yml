@@ -1,2 +1,7 @@
+site_name: GatorGrade Documentation
+site_url: https://gatoreducator.github.io/gatorgrade/docs/
+site_description: The documentation for the GatorGrade project, part of the GatorEducator suite.
+site_author: GatorGrade Team
+repo_url: https://github.com/GatorEducator/gatorgrade
 theme:
   name: material
