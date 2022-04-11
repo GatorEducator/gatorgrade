@@ -6,6 +6,11 @@
 <!-- TODO: Write a description of the proposed changes -->
 <!-- Remember to check the reminders! -->
 
+## Linked Issues
+
+<!-- Fill in which issue number this PR closes, if there is none, just remove this section! -->
+closes: #00
+
 ## Type of Change
 
 <!-- TODO: Fill in the brackets with an `x` next to all types that apply to the proposed changes -->
