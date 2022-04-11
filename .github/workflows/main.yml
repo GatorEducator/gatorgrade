@@ -1,7 +1,7 @@
 # This GitHub Actions workflow contains four jobs:
 # -- First, Lint Code uses the latest Ubuntu image and Python 3.9 to check
 # the code for defects, using the Poetry lint task.
-# -- Second, Lint Markdown uses the latest Ubuntu image and makrdownlint to
+# -- Second, Lint Markdown uses the latest Ubuntu image and markdownlint to
 # check markdown files for defects.
 # -- Third uses the latest Ubuntu image and cspell to check for spelling
 # defects in the markdown.
