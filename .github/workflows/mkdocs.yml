@@ -23,10 +23,6 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
       - name: Use Poetry Dependency Cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true
