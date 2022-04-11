@@ -19,7 +19,7 @@ mypy = "^0.942"
 pydocstyle = "^6.1.1"
 
 [tool.taskipy.tasks]
-test = { cmd = "pytest --cov-report term-missing --cov-fail-under=70  --cov-branch --cov=package tests/", help = "Run the pytest test suite" }
+test = { cmd = "pytest --cov-report term-missing --cov-fail-under=70  --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
 lint = { cmd = "pylint gatorgrade tests/" }
 flake8 = { cmd = "flake8 gatorgrade tests", help = "Run the flake8 checks for source code documentation" }
 mypy = { cmd = "poetry run mypy gatorgrade --show-error-codes", "run the mypy type checker for potential type errors" }
