@@ -7,16 +7,29 @@ Show an example of what the the green check mark in output would look like
 Won't work until Poetry is in the project
 '''
 def sample_output_passing_check():
+    req = "REQUIREMENT" # Description of test requirement
+    loc = "LOCATION" # File location
+    num = "NUMBER" # Number of elements required
     print(Style.RESET_ALL)
-    print("\n Green Check Mark: " + Fore.GREEN + "\u2714")
+    if len(loc) > 0:
+        print(Fore.GREEN + "\u2714 " + req + " in " + loc)
+    else:
+        print(Fore.GREEN + "\u2714 " + req)
 
 '''
 Show an example of what the the red "X" mark in output would look like
 Won't work until Poetry is in the project
 '''
 def sample_output_failing_check():
+    req = "REQUIREMENT" # Description of test requirement
+    loc = "LOCATION" # File location
+    num = "NUMBER" # Number of elements required
     print(Style.RESET_ALL)
-    print("\n Red \"X\" Mark: " + Fore.RED + "\u2718")
+    if len(loc) > 0:
+        print(Fore.RED + "\u2718 " + req + " in " + loc)
+    else:
+        print(Fore.RED + "\u2718 " + req)
+    
 
 
 # Print outputs
