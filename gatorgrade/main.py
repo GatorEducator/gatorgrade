@@ -10,7 +10,7 @@ def gatorgrade(file: str):
 
 
 @app.command()
-def generate(force: bool = typer.Option("-F")):
+def generate(force: bool = typer.Option(False, "--force", "-F")):
     """Generates a gatorgrade.yml file based on the folers/files in the current directory."""
 
 
