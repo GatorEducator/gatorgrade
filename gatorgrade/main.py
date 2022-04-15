@@ -1,7 +1,7 @@
 import typer
 
 app = typer.Typer(add_completion=False)
-file = "gatorgrade.yml"
+FILE = "gatorgrade.yml"
 
 
 @app.callback(invoke_without_command=True)
