@@ -1,1 +1,1 @@
-# __init__.py file
+"""Standard docstring for __init__ file."""
