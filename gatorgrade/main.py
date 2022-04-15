@@ -5,7 +5,7 @@ file = "gatorgrade.yml"
 
 
 @app.callback(invoke_without_command=True)
-def foo(file):
+def gatorgrade(file: str):
     """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
 
 
