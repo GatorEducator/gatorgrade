@@ -1,7 +1,12 @@
 import typer
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 file = "gatorgrade.yml"
+
+
+@app.callback(invoke_without_command=True)
+def foo(file):
+    """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
 
 
 @app.command()
