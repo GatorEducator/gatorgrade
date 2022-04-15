@@ -16,6 +16,8 @@ GatorGrade is an automatic grading tool that can be used to check assignments th
 
 ## How to Install GatorGrade
 
+(add to this as project goes on)
+
 ### Installing Dependencies
 
 ### Configuring Checks
