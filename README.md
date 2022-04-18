@@ -6,31 +6,39 @@ GatorGrade is an automatic grading tool that can be used to check assignments th
 
 ## Table of Contents:
 
-- How to Install GatorGrade
-     - Installing Dependencies
-     - Configuring Checks
-- How to Best Use GatorGrade
+- Installing GatorGrade
+    - Including GatorGrade in Your Project
+- Using GatorGrade
     - Running Checks
-    - Including GatorGrade in your Project
-- Output Summary
-- How to Contribute
+        - Interpreting Output (Output Team)
+    - Generating a gatorgrade.yml file (Generate team)
+        - Configuring GatorGrade Checks (input team)
+- Contributing to GatorGrade
     - Installing dev environment
-- Special Thanks to Our Contributors
+- Contributors
 
-## How to Install GatorGrade
-
+## Installing GatorGrade
 (add to this as project goes on)
 
-### Installing Dependencies
+### Including GatorGrade in Your Project
 
-### Configuring Checks
-
-## How to Best Use GatorGrade
+## Using GatorGrade
 
 ### Running Checks
 
-### Including GatorGrade in your Project
+#### Interpreting Output 
+Output team
 
-## Output Summary
+### Generating a gatorgrade.yml file
+Generate team
 
-The purpose of GatorGrader is to provide an output of work that is required to meet all requirements by the provider. It will display a red ✘ when that requirement is not complete and a green  ✔ when that requirement is complete. It will also display your grade percentage according to the number of ✘’s and ✔'s
+#### Configuring GatorGrade Checks
+Input team
+
+## Contributing to GatorGrade
+
+### Installing Dev Environment
+
+## Contributors
+
+
