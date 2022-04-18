@@ -2,6 +2,8 @@
 # For instance, functions dealing with percentage output, description output, and colorization of text.
 
 import gator
+import os
+import output_tools
 
 # Commands are received as list of tuples.
 # Each tuple in the list is a string and list of strings <string, [strings]>
@@ -16,17 +18,14 @@ def receive_command(command_info):
         for pre_command in commands:
 
             formatted_command = split_command_string(pre_command)
+
             # 3 types -- /blah1/blah2/blah3.py
             # /blah1/blah2 and blah3.py
             # /blah1/blah2 
             # blah3.py
-            if "--file" not in formatted_command:
-                formatted_command.append('--file')
-                formatted_command.append(file_name)
-            if "--directory" not in formated_command:
-                formatted_command.append('--file')
-                formatted_command.append(file_name)
-            split_commands.append(fomatted_command)
+
+            if "--file" not in formatted_command or "--directory" not in formatted_command:
+                output_tools.get_directory_and_file(formatted_command)
 
         for command in split_commands:
 
