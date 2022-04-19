@@ -2,11 +2,9 @@
 import pytest
 from output import output_functions
 
-def test_list_to_string_function():
-    """Test list to string function in output tools"""
+def test_receive_command_function_returns_no_error():
+    """Make sure the receive function in output_functions.py runs"""
 
-    list = ['test', 'test2', 'test9', 'puddle']
-    expected_string = "test test2 test3 test9 puddle"
-    actual_list = output_tools.get_simple_command_string(list)
+    with pytest.raises(Exception):
 
     assert expected_list == actual_list
