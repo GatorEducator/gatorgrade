@@ -1,7 +1,7 @@
 # Import the necessary libraries
 
 def create_targeted_paths_list():
-    """Generate a list of targeted paths by walking the tree top-down"""
+    """Generate a list of targeted paths by walking the paths"""
     # Go through the root repo, the sub dictionaries and files.
     # Select only files in the dictionaries with specific names.
     # Add those targeted file paths into a list and returns it
