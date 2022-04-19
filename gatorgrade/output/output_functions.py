@@ -10,14 +10,12 @@ Each tuple in the list is a string and list of strings <string, [strings]>
 The string is the path to the file or filename and the list is the commands for the file. '''
 def receive_command(command_info : List[Tuple(str, List[str])]):
     results = []
-
     # Loop through commands received, then format into string list, finally send commands to proper checking software
     for file_name, commands in command_info:
         split_commands = []
         results.append((file_name, []))
 
         for pre_command in commands:
-
             formatted_command = split_command_string(pre_command)
             
         for command in split_commands:
@@ -27,6 +25,6 @@ def receive_command(command_info : List[Tuple(str, List[str])]):
                 results.get(file_name).append(result)
             except:
                 print("\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m", output_tools.get_simple_command_string(command) , "\033[0m")
-
+    # Send results to output methods
     print_percentage(results)
     print_description(results)
