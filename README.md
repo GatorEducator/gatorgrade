@@ -16,9 +16,8 @@ GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool
 - Contributors
 
 ## Installing GatorGrade
-(add to this as project goes on)
-python 3.7 or above
-pip or pipx
+
+Installing GatorGrade requires a version of Python greater than 3.7. You can install GatorGrade from PyPi using `pip` or `pipx` package installers. This method of installation allows for GatorGrade to be accessible to all Python projects on your computer. The GatorGrade package can also be installed using `Poetry`. 
 
 ### Including GatorGrade in Your Project
 
