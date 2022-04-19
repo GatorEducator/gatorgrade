@@ -1,5 +1,5 @@
 import typer
-"""Use Typer to run gatorgrade by running the checks and generating the yml file."""
+"""Use Typer to run gatorgrade to run the checks and generating the yml file."""
 
 app = typer.Typer(add_completion=False)
 FILE = "gatorgrade.yml"
