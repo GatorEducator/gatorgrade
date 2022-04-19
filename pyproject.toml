@@ -24,6 +24,7 @@ black = { cmd= "black gatorgrade/ tests/ --check", help = "Run the black checks 
 flake8 = { cmd = "flake8 gatorgrade/ tests/", help = "Run the flake8 checks for source code documentation" }
 pylint = { cmd = "pylint gatorgrade/ tests/", help = "Run the pylint checks for source code documentation" }
 pydocstyle = { cmd = "pydocstyle gatorgrade/ tests/", help = "Run the pydocstyle checks for source code documentation" }
+mkdocs = { cmd = ""}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
