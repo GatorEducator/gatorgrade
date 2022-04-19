@@ -1,4 +1,4 @@
-"""Generate a YAML file with default messages and specific paths."""
+"""Generate a GatorGrade configuration file with paths to whitelisted files and default GatorGrader checks"""
 # Import the necessary libraries
 
 def create_targeted_paths_list():
@@ -11,6 +11,6 @@ def create_targeted_paths_list():
 def write_yaml_of_paths_list(path_names):
     """Write YAML file to create gatorgrade file and set default messages."""
     # Create a new YAML file with PyYaml in the specific path.
-    # write the default set up messages in YAML file.
+    # Write the default set up messages in YAML file.
     # List the file paths in specific format.
     pass
