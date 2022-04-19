@@ -27,7 +27,5 @@ def receive_command(command_info):
             except:
                 print("\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m", output_tools.get_simple_command_string(command) , "\033[0m")
 
-
-    # Here will be the code to send results to output functions ex:)
-    # print_percentage(results)
-    # print_description(results)
+    print_percentage(results)
+    print_description(results)
