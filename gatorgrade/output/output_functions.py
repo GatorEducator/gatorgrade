@@ -25,7 +25,7 @@ def receive_command(command_info):
                 result = gator.grader(command)
                 results.get(file_name).append(result)
             except:
-                print("\033[93m \033[4m An exception was detected when running the command : \033[0m", output_tools.get_simple_command_string(command))
+                print("\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m", output_tools.get_simple_command_string(command) , "\033[0m")
 
 
     # Here will be the code to send results to output functions ex:)
