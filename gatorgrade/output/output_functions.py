@@ -18,19 +18,15 @@ def receive_command(command_info):
         for pre_command in commands:
 
             formatted_command = split_command_string(pre_command)
-
-            # 3 types -- /blah1/blah2/blah3.py
-            # /blah1/blah2 and blah3.py
-            # /blah1/blah2 
-            # blah3.py
-
-            if "--file" not in formatted_command or "--directory" not in formatted_command:
-                output_tools.get_directory_and_file(formatted_command)
-
+            
         for command in split_commands:
 
-            result = gator.grader(command)
-            results.get(file_name).append(result)
+            try:
+                result = gator.grader(command)
+                results.get(file_name).append(result)
+            except:
+                print("\033[93m \033[4m An exception was detected when running the command : \033[0m", output_tools.get_simple_command_string(command))
+
 
     # Here will be the code to send results to output functions ex:)
     # print_percentage(results)
