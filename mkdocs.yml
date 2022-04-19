@@ -6,13 +6,20 @@ repo_url: https://github.com/GatorEducator/gatorgrade
 theme:
   name: material
 plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_pages.py
+  - literate-nav:
+      nav-file: source/SUMMARY.md
   - mkdocstrings:
       default_handler: python
       handlers:
         python:
           rendering:
-            show_source: false
+            show_source: true
       watch:
         - gatorgrade
 nav:
-  - Home: index.md
+  - Home: source/index.md
+  - Code Reference: reference/
