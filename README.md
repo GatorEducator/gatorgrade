@@ -19,6 +19,8 @@ GatorGrade is an automatic grading tool that can be used to check assignments th
 
 ## Installing GatorGrade
 (add to this as project goes on)
+python 3.7 or above
+pip or pipx
 
 ### Including GatorGrade in Your Project
 
