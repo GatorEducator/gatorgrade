@@ -8,12 +8,23 @@ FILE = "gatorgrade.yml"
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(file_dir: Path = typer.Option(f"{FILE_DIR}/{FILE}")):
+def gatorgrade(
+    filepath: Path = typer.Option(
+        f"{FILE_DIR}/{FILE}", "--dir", "-d", help="Filepath to the yml file."
+    )
+):
     """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
 
 
 @app.command()
-def generate(force: bool = typer.Option(False, "--force", "-f")):
+def generate(
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force gatorgrade to overwrite an existing yml file.",
+    )
+):
     """Generates a gatorgrade.yml file based on the folers/files in the current directory."""
 
 
