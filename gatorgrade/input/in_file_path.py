@@ -3,19 +3,27 @@
 # import yaml and other necessary libraries/packages
 
 
-def generate_checks(tuple):
+def generate_checks(tuple_of_file):
 # iterate through the checks
-    list_  = tuple[1]
+    list_of_dict_checks  = tuple[1]
     file_path = tuple[0]
 
-    if tuple[0] is not None:
+    if file_path is not None:
         for dicts in list_data:
             for keys in dicts:
                 description = dicts['description']
                 options = dicts['options']
                 #creating a list that has description, check, and options in it.
                 gator_grader_commands = ['--description', f'{description}']
-                gator_grader_commands.append(data['check'])
+                gator_grader_commands.append(dicts['check'])
+                #if options exist, then add all the keys and the values inside the command list
+                if options:
+                    for keys in options:
+                        gator_grader_commands.append(f'--{keys}')
+                        gator_grader_commands.append(f'{options[keys]}')
+
+
+
 
 
 
