@@ -5,3 +5,14 @@ site_author: GatorGrade Team
 repo_url: https://github.com/GatorEducator/gatorgrade
 theme:
   name: material
+plugins:
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_source: false
+      watch:
+        - gatorgrade
+nav:
+  - Home: index.md
