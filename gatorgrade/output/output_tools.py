@@ -3,6 +3,6 @@
  One example of a function to be written here is the splitting of strings retrieved from the input team, at spaces, into lists.'''
 
 '''This function takes a list of strings and combines them to one single string.'''
-def get_simple_command_string(command):
+def get_simple_command_string(command : List[str]) -> str:
     command_string = ' '.join(command)
     return command_string
