@@ -8,7 +8,7 @@ import output_tools
 ''' Commands are received as list of tuples.
 Each tuple in the list is a string and list of strings <string, [strings]>
 The string is the path to the file or filename and the list is the commands for the file. '''
-def receive_command(command_info):
+def receive_command(command_info : List[Tuple(str, List[str])]):
     results = []
 
     for file_name, commands in command_info:
