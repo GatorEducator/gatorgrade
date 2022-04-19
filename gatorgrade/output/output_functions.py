@@ -11,6 +11,7 @@ The string is the path to the file or filename and the list is the commands for 
 def receive_command(command_info : List[Tuple(str, List[str])]):
     results = []
 
+    # Loop through commands received, then format into string list, finally send commands to proper checking software
     for file_name, commands in command_info:
         split_commands = []
         results.append((file_name, []))
