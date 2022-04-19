@@ -1,13 +1,13 @@
-# This class is used for storing the main functions requested from the Github Issue Tracker for the output team.
-# For instance, functions dealing with percentage output, description output, and colorization of text.
+''' This module is used for storing the main functions requested from the Github Issue Tracker for the output team.
+For instance, functions dealing with percentage output, description output, and colorization of text. '''
 
 import gator
 import os
 import output_tools
 
-# Commands are received as list of tuples.
-# Each tuple in the list is a string and list of strings <string, [strings]>
-# The string is the path to the file or filename and the list is the commands for the file.
+''' Commands are received as list of tuples.
+Each tuple in the list is a string and list of strings <string, [strings]>
+The string is the path to the file or filename and the list is the commands for the file. '''
 def receive_command(command_info):
     results = []
 
