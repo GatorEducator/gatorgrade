@@ -21,7 +21,7 @@ def receive_command(command_info : List[Tuple(str, List[str])]):
             formatted_command = split_command_string(pre_command)
             
         for command in split_commands:
-
+            # If command is formatted incorrectly in yaml files, catch the exception that would be returned and print
             try:
                 result = gator.grader(command)
                 results.get(file_name).append(result)
