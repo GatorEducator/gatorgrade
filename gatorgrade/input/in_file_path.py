@@ -8,6 +8,3 @@ def parse_yaml_file(file_path):
         for item in data: #Transfers the data from the file's generator to a list for later access
             data_holder.append(item)
         return data_holder
-
-text = parse_yaml_file('demo_yaml_file.yml')
-print(text)
