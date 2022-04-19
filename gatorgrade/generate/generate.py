@@ -16,10 +16,9 @@ def create_targeted_paths_list():
 
             # Add those qualified file paths into a list and returns it.
                 targeted_paths.append(os.path.join(dirpath, filename))
+    return targeted_paths
 
 
-
-    pass
 
 def write_yaml_of_paths_list(path_names):
     """Write YAML file to create gatorgrade file and set default messages."""
