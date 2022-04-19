@@ -4,19 +4,15 @@
 
 # Splits a command into individual strings to be run through gatorgrader
 def split_command_string(command: str) :
-    # loop through the full string and find individual parts to separate
-    # separation is based on a space followed by two dashes
-    dashes = "--"
-    command_lines = command.split(" --")
+    # separation is based on a space using .split
 
-    for segment in command_lines :
-        segment = dashes + segment
+    try :
+        command_lines = command.split(" ")
+    except : 
+        return("an error has occurred.  Please make sure your command is in the proper format")    
+
     return  command_lines
 
-command = "--description 'Complete all TODOs in writing/reflection.md' MatchFileFragment --fragment TODO --count 0 --exact"
 
-split_lines = split_command_string(command)
 
-for line in split_lines :
-    print(line)
 
