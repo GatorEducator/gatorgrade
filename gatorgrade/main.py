@@ -10,7 +10,7 @@ FILE = "gatorgrade.yml"
 @app.callback(invoke_without_command=True)
 def gatorgrade(
     filepath: Path = typer.Option(
-        f"{FILE_DIR}/{FILE}", "--path", "-p", help="Filepath to the yml file."
+        f"{FILE_DIR}/{FILE}", "--config", "-c", help="Filepath to the yml file."
     )
 ):
     """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
