@@ -1,1 +1,1 @@
-"""Standard init file."""
+"""GatorGrade is a program to do X."""

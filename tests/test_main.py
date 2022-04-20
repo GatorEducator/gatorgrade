@@ -3,7 +3,7 @@ from typer.testing import CliRunner
 runner = CliRunner()
 
 
-def test_gatorgrade_runs_correct():
+def test_gatorgrade_runs_correctly():
     """Test that ensures that the default command runs correctly."""
     assert True
 
@@ -13,7 +13,7 @@ def test_generate_creates_correctly():
     assert True
 
 
-def test_generate_fail_with_existing_yml():
+def test_generate_fails_with_existing_yml():
     """Test that ensures that a second yml file isn't generated without the force command."""
     # result = runner.invoke(app, "generate")
     assert True
