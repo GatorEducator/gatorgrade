@@ -25,7 +25,7 @@ def generate(
         help="Force gatorgrade to overwrite an existing yml file.",
     )
 ):
-    """Generates a gatorgrade.yml file based on the folers/files in the current directory."""
+    """Generates a gatorgrade.yml file based on the folders and files in the current directory."""
 
 
 if __name__ == "__main__":
