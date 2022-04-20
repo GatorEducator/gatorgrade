@@ -10,6 +10,7 @@ def test_gatorgrade_runs():
 
 def test_generate_creates_valid_yml():
     """Test that ensures that the generate command creates the .yml file correctly."""
+    # use pytest-mock to test if function with force is called correctly
     assert True
 
 
