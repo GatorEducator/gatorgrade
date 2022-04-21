@@ -12,14 +12,14 @@ def test_split_command_string_splits_at_correct_delimiter():
 
     assert expected_list == actual_list
 
-def test_split_command_string_multiple_spaces_in_a_row():
+def test_remove_excess_spaces():
     command = "This is   a    bad command   "
 
-    expected_list = ["This", "is", "a", "bad", "command"]
+    expected_string = "This is a bad command"
 
-    actual_list = output_tools.split_command_string(command)
+    actual_string = output_tools.remove_excess_spaces(command)
 
-    assert expected_list == actual_list
+    assert expected_string == actual_string
 
 def test_split_command_string_bad_argument() :
     
@@ -30,6 +30,8 @@ def test_split_command_string_bad_argument() :
     actual_message = output_tools.split_command_string(command)
 
     assert expected_message == actual_message
+
+
 
 
 
