@@ -10,6 +10,7 @@ def split_command_string(command: str) :
     try :
         formatted_command = remove_excess_spaces(command)
         command_lines = formatted_command.split(" ")
+
     except : 
         return("an error has occurred.  Please make sure your command is in the proper format")    
 
