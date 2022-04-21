@@ -48,13 +48,15 @@ as a tuple in the (REQUIREMENT, PASS/FAIL, RESULT-optional) format.
 '''
 def output_check_result(file, check):
     # Store the check elements as variables for the output statement.
-    requirement = check[1]
-    result = check[2]
+    requirement = check[0]
+    result = check[1]
     # Print message with green check for passing checks
     if result == True:
+        # Use colorama to style "X"
         print(f"{Fore.GREEN}\u2714  {Style.RESET_ALL}{file} {requirement}")
     # Print message with X for failing checks
     elif result == False:
+        # Use colorama to style "X"
         print(f"{Fore.RED}\u2718  {Style.RESET_ALL}{file} {requirement}")
 
             
@@ -62,6 +64,6 @@ def output_check_result(file, check):
     
 
 
-# Print outputs
+# Display a sample output of how the function could display a result object from GatorGrader
 sample_result = ["file.txt", [('No TODOS in text', True), ('Has an if statement', False, "No if statements found")]]
 determine_result_by_file(sample_result)
