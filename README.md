@@ -25,7 +25,7 @@ To include GatorGrade in you project you can use `Poetry`. Once Poetry has been 
 
 ## Using GatorGrade
 
-You can use GatorGrade as a student or instructor to run a series of pre-prescribed checks against a project. Additionally, instructors can use GatorGrade to to generate a `gatorgrade.yml` file.
+You can use GatorGrade as a student or instructor to run a series of pre-prescribed checks against a project. Additionally, instructors can use GatorGrade to to generate a `gatorgrade.yml` file that configures the checks.
 
 ### Running Checks
 
