@@ -29,6 +29,8 @@ You can use GatorGrade as a student or instructor to run a series of pre-prescri
 
 ### Running Checks
 
+To run checks against an assignment, use the `gator grade` command.
+
 #### Interpreting Output 
 Output team
 
