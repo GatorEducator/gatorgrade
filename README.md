@@ -42,6 +42,8 @@ Input team
 
 ## Contributing to GatorGrade
 
+If you'd like to contribute to GatorGrade, refer to the GatorGrade wiki with details on contributing guidelines here: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines. 
+
 ### Installing Dev Environment
 
 ## Contributors
