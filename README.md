@@ -32,12 +32,15 @@ You can use GatorGrade as a student or instructor to run a series of pre-prescri
 To run checks against an assignment, use the `gator grade` command.
 
 #### Interpreting Output 
+
 Output team
 
 ### Generating a gatorgrade.yml file
+
 Generate team
 
 #### Configuring GatorGrade Checks
+
 Input team
 
 ## Contributing to GatorGrade
