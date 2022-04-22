@@ -1,6 +1,6 @@
 # This class is used for storing the main functions requested from the Github Issue Tracker for the output team.
 # For instance, functions dealing with percentage output, description output, and colorization of text.
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 init()
 '''
 Show an example of what the the green check mark in output would look like
