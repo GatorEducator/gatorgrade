@@ -5,19 +5,19 @@ GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool
 ## Table of Contents:
 
 - Installing GatorGrade
-    - Including GatorGrade in Your Project
+  - Including GatorGrade in Your Project
 - Using GatorGrade
-    - Running Checks
-        - Interpreting Output (Output Team)
-    - Generating a gatorgrade.yml File (Generate Team)
-        - Configuring GatorGrade Checks (Input Team)
+  - Running Checks
+    - Interpreting Output (Output Team)
+  - Generating a gatorgrade.yml File (Generate Team)
+    - Configuring GatorGrade Checks (Input Team)
 - Contributing to GatorGrade
-    - Installing Dev Environment
+  - Installing Dev Environment
 - Contributors
 
 ## Installing GatorGrade
 
-Installing GatorGrade requires a version of Python greater than 3.7. You can install GatorGrade from PyPi using `pip` or `pipx` package installers. This method of installation allows for GatorGrade to be accessible to all Python projects on your computer. 
+Installing GatorGrade requires a version of Python greater than 3.7. You can install GatorGrade from PyPi using `pip` or `pipx` package installers. This method of installation allows for GatorGrade to be accessible to all Python projects on your computer.
 
 ### Including GatorGrade in Your Project
 
@@ -45,12 +45,10 @@ Input team
 
 ## Contributing to GatorGrade
 
-If you'd like to contribute to GatorGrade, refer to the GatorGrade wiki with details on contributing guidelines here: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines. 
+If you'd like to contribute to GatorGrade, refer to the GatorGrade wiki with details on contributing guidelines here: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines.
 
 ### Installing Dev Environment
 
-To install the dev environment, you must first have a version of python greater than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your computer, run a `poetry install` to install all of the necessary dependencies onto your computer. Now you can begin to contribute to the project following the contributing guidelines. 
+To install the dev environment, you must first have a version of python greater than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your computer, run a `poetry install` to install all of the necessary dependencies onto your computer. Now you can begin to contribute to the project following the contributing guidelines.
 
 ## Contributors
-
-
