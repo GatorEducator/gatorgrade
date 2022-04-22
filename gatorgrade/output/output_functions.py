@@ -58,10 +58,20 @@ def output_check_result(file, check):
     elif result == False:
         # Use colorama to style "X"
         print(f"{Fore.RED}\u2718  {Style.RESET_ALL}{file} {requirement}")
+        # Use output_fail_description to give a description for why it failed
+        output_fail_description(check[2])
 
             
 
-    
+'''
+Produce output explaining why a check failed when it failed
+
+Arguments: desc - the string describing why a check failed
+'''
+def output_fail_description(desc):
+    # Use colorama to print a colored fail description
+    print(f"    {Fore.YELLOW}\u2192  {desc}")
+
 
 
 # Display a sample output of how the function could display a result object from GatorGrader
