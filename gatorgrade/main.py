@@ -3,14 +3,13 @@ import typer
 from pathlib import Path
 
 app = typer.Typer(add_completion=False)
-FILE_DIR = "config"
 FILE = "gatorgrade.yml"
 
 
 @app.callback(invoke_without_command=True)
 def gatorgrade(
     filepath: Path = typer.Option(
-        f"{FILE_DIR}/{FILE}", "--config", "-c", help="Filepath to the yml file."
+        f"{FILE}", "--config", "-c", help="Filepath to the yml file."
     )
 ):
     """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
