@@ -22,7 +22,10 @@ Installing GatorGrade requires a version of Python greater than 3.7. You can ins
 ### Including GatorGrade in Your Project
 
 To include GatorGrade in you project you can use `Poetry`. Once Poetry has been installed you can use `poetry add` to add the GatorGrade package.
+
 ## Using GatorGrade
+
+You can use GatorGrade as a student or instructor to run a series of pre-prescribed checks against a project. Additionally, instructors can use GatorGrade to to generate a `gatorgrade.yml` file.
 
 ### Running Checks
 
