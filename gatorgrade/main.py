@@ -1,6 +1,6 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
-import typer
 from pathlib import Path
+import typer
 
 app = typer.Typer(add_completion=False)
 FILE = "gatorgrade.yml"
@@ -9,10 +9,11 @@ FILE = "gatorgrade.yml"
 @app.callback(invoke_without_command=True)
 def gatorgrade(
     filepath: Path = typer.Option(
-        f"{FILE}", "--config", "-c", help="Filepath to the yml file."
+        f"{FILE}", "--config", "-c", help="Name of the yml file."
     )
 ):
-    """Runs the GatorGrader checks that are defined in the gatorgrade.yml file."""
+    """Runs the GatorGrader checks that are defined
+    in the gatorgrade.yml file."""
 
 
 @app.command()
@@ -24,7 +25,8 @@ def generate(
         help="Force gatorgrade to overwrite an existing yml file.",
     )
 ):
-    """Generates a gatorgrade.yml file based on the folders and files in the current directory."""
+    """Generates a gatorgrade.yml file based on the folders and files
+    in the current directory."""
 
 
 if __name__ == "__main__":
