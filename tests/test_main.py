@@ -1,3 +1,4 @@
+"""Tests for the main file of the project."""
 from typer.testing import CliRunner
 
 from gatorgrade import main
