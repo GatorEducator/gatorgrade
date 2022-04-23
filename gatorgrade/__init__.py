@@ -1,1 +1,1 @@
-"""GatorGrade is a program to do X."""
+"""GatorGrade is a program that checks your work fulfillments according to grade check accommodations."""
