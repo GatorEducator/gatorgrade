@@ -13,13 +13,15 @@ def test_gatorgrade_runs():
 
 
 def test_generate_creates_valid_yml():
-    """Test that ensures that the generate command creates the .yml file correctly."""
+    """Test that ensures that the generate command creates
+    the .yml file correctly."""
     result = runner.invoke(main.app, "--force")
     assert True
 
 
 def test_generate_fails_with_existing_yml():
-    """Test that ensures that a second yml file isn't generated without the force command."""
+    """Test that ensures that a second yml file isn't generated
+    without the force command."""
     result = runner.invoke(main.app)
 
     assert True
