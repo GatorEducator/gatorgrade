@@ -33,4 +33,4 @@ def test_generate_force_option_creates_yml():
     """Test that ensures the force command works correctly."""
     result = runner.invoke(main.app, "--force")
 
-    assert result.exit_code == 2
+    assert result.exit_code == 0
