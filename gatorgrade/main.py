@@ -8,13 +8,16 @@ FILE = "gatorgrade.yml"
 
 @app.callback(invoke_without_command=True)
 def gatorgrade(
+    ctx: typer.Context,
     filename: Path = typer.Option(
         "FILE", "--config", "-c", help="Name of the yml file."
-    )
+    ),
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
-    if filename.endswith(".yml"):
-        pass
+    # check if ctx.subcommand is none
+    if ctx.invoked_subcommand == None:
+        if filename.suffix == "yml":
+            pass
 
 
 @app.command()
