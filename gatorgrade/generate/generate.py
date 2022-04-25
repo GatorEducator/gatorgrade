@@ -16,19 +16,24 @@ def create_targeted_paths_list():
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through.
     for dirpath, _, filenames in os.walk("."):
-        # Select only files in the dictionaries with specific names.
         for filename in filenames:
+            # Split path string to split it into multiple directories.
             path_list = dirpath.split("/")
-            if len(path_list) < 2:
+            # The first directory is always dot, so skip it.
+            if len(path_list) == 1:
                 continue
+            # Ignore hidden folders.
             if path_list[1].startswith("."):
                 continue
-            # Add paths only when they have the key words in the first and the second levels
-            # The first path will always be dot, so skip it.
+
+            # Add paths only when they have the key words in the second and the third directories.
             elif len(path_list) == 2:
                 for key in key_word_list:
+                    # For the path with only two directories, check key words in the second directory folder name.
                     if key in path_list[1]:
                         targeted_paths.append(os.path.join(dirpath, filename))
+
+            # For the other paths with more than 2 directories, check key words in the second and third directories.
             else:
                 for key in key_word_list:
                     if key in path_list[1] or key in path_list[2]:
