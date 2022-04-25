@@ -13,7 +13,7 @@ def gatorgrade(
     )
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
-    if FILE.endswith(".yml"):
+    if filename.endswith(".yml"):
         pass
 
 
@@ -28,7 +28,7 @@ def generate(
 ):
     """Generate a gatorgrade.yml file."""
     if force is False:
-        None
+        pass
 
 
 if __name__ == "__main__":
