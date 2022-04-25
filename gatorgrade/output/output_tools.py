@@ -3,7 +3,7 @@
 # One example of a function to be written here is the splitting of strings retrieved from the input team, at spaces, into lists.
 
 import re
-# Splits a command into individual strings to be run through gatorgrader
+"""Splits a command into individual strings to be run through gatorgrader"""
 def split_command_string(command: str) :
     # separation is based on a space using .split
 
@@ -17,18 +17,10 @@ def split_command_string(command: str) :
     return  command_lines
 
 def remove_excess_spaces(str: str) :
-    # removes excess spaces from a string
+    """removes excess spaces from a string"""
 
+    # use re import to remove spaces
     formatted_string = re.sub(' +', ' ', str)
     formatted_string = formatted_string.strip()
-    return formatted_string
-
-
-def remove_empty_strings(list: list) :
-    # removes empty strings from a list
-    formatted_list = []
-
     
-
-    return formatted_list
-
+    return formatted_string
