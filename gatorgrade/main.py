@@ -28,7 +28,7 @@ def generate(
 ):
     """Generate a gatorgrade.yml file."""
     if force is False:
-        pass
+        None
 
 
 if __name__ == "__main__":
