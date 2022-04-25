@@ -7,16 +7,16 @@ the newer Python-based version of
 
 ## Table of Contents
 
-- Installing GatorGrade
-  - Including GatorGrade in Your Project
-- Using GatorGrade
-  - Running Checks
-    - Interpreting Output (Output Team)
-  - Generating a gatorgrade.yml File (Generate Team)
-    - Configuring GatorGrade Checks (Input Team)
-- Contributing to GatorGrade
-  - Installing Dev Environment
-- Contributors
+- [Installing GatorGrade](#installing-gatorgrade)
+  - [Including GatorGrade in Your Project](#including-gatorgrade-in-your-project)
+- [Using GatorGrade](#using-gatorgrade)
+  - [Running Checks](#running-checks)
+    - [Interpreting Output](#interpreting-output)
+  - [Generating a gatorgrade.yml File](#generating-a-gatorgrade.yml-file)
+    - [Configuring GatorGrade Checks](#confiiguring-gatorgrade-checks)
+- [Contributing to GatorGrade](#contributing-to-gatorgrade)
+  - [Installing Dev Environment](#installing-dev-environment)
+- [Contributors](#contributors)
 
 ## Installing GatorGrade
 
