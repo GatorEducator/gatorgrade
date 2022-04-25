@@ -1,4 +1,4 @@
-- description: Have a total of 8 commits, 5 of which were created by you
+- description: Have 8 commits
   check: CountCommits
   options:
     count: 8
