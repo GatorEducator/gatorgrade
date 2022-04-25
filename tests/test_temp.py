@@ -1,4 +1,4 @@
-""" temporary test file for CI testing"""
+"""Temporary test file for CI testing"""
 
 
 def test_blank_temp():
