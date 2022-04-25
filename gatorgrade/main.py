@@ -15,7 +15,7 @@ def gatorgrade(
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
     # check if ctx.subcommand is none
-    if ctx.invoked_subcommand == None:
+    if ctx.invoked_subcommand is None:
         if filename.suffix == "yml":
             pass
 
