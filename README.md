@@ -13,7 +13,7 @@ the newer Python-based version of
   - [Running Checks](#running-checks)
     - [Interpreting Output](#interpreting-output)
   - [Generating a gatorgrade.yml File](#generating-a-gatorgrade.yml-file)
-    - [Configuring GatorGrade Checks](#confiiguring-gatorgrade-checks)
+    - [Configuring GatorGrade Checks](#configuring-gatorgrade-checks)
 - [Contributing to GatorGrade](#contributing-to-gatorgrade)
   - [Installing Dev Environment](#installing-dev-environment)
 - [Contributors](#contributors)
