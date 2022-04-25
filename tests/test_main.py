@@ -16,8 +16,8 @@ def test_gatorgrade_runs():
 def test_generate_creates_valid_yml():
     """Test that ensures that the generate command creates
     the .yml file correctly."""
-    result = runner.invoke(main.app, "--force")
-
+    result = runner.invoke(main.app, ["generate", "--force"])
+    
     assert result.exit_code == 2
 
 
