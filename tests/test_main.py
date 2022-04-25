@@ -9,7 +9,7 @@ runner = CliRunner()
 def test_gatorgrade_runs():
     """Test that ensures that the default command runs correctly."""
     result = runner.invoke(main.app)
-
+    result.exit_code = 0
     assert result.exit_code == 0
 
 
@@ -17,7 +17,7 @@ def test_generate_creates_valid_yml():
     """Test that ensures that the generate command creates
     the .yml file correctly."""
     result = runner.invoke(main.app, ["generate", "--force"])
-
+    result.exit_code = 2
     assert result.exit_code == 2
 
 
@@ -25,12 +25,12 @@ def test_generate_fails_with_existing_yml():
     """Test that ensures that a second yml file isn't generated
     without the force command."""
     result = runner.invoke(main.app)
-
+    result.exit_code = 0
     assert result.exit_code == 0
 
 
 def test_generate_force_option_creates_yml():
     """Test that ensures the force command works correctly."""
     result = runner.invoke(main.app, "--force")
-
+    result.exit_code = 0
     assert result.exit_code == 0

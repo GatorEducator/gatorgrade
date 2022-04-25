@@ -13,7 +13,7 @@ def gatorgrade(
     )
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
-    if PurePosixPath(".yml").suffix:
+    if FILE.endswith(".yml"):
         pass
 
 
