@@ -25,6 +25,6 @@ def
     # When parse_config is run
 
 
-    # Then assert
+    # Then assert that this is a shell command check and not a gator grader check
 
 
