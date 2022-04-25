@@ -9,7 +9,7 @@ def test_output_shows_green(capsys):
     sample_output_passing_check()
     out, err = capsys.readouterr()
 
-    assert "{Fore.GREEN}\u2714" in out
+    assert f"{Fore.GREEN}\u2714" in out
     assert err == ""
 
 
@@ -17,7 +17,7 @@ def test_output_shows_red(capsys):
     sample_output_passing_check()
     out, err = capsys.readouterr()
 
-    assert "{Fore.RED}\u2718" in out
+    assert f"{Fore.RED}\u2718" in out
 
 
 
@@ -26,7 +26,7 @@ def test_output_shows_yellow(capsys):
     sample_output_passing_check()
     out, err = capsys.readouterr()
 
-    assert "{Fore.YELLOW}\u2192" in out
+    assert f"{Fore.YELLOW}\u2192" in out
 
 
 
