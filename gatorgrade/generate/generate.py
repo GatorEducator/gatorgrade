@@ -18,25 +18,25 @@ def create_targeted_paths_list():
     for dirpath, _, filenames in os.walk("."):
         for filename in filenames:
             # Split path string to split it into multiple directories.
-            path_list = dirpath.split("/")
+            path_dir_list = dirpath.split("/")
             # The first directory is always dot, so skip it.
-            if len(path_list) == 1:
+            if len(path_dir_list) == 1:
                 continue
             # Ignore hidden folders.
-            if path_list[1].startswith("."):
+            if path_dir_list[1].startswith("."):
                 continue
 
             # Add paths only when they have the key words in the second and the third directories.
-            elif len(path_list) == 2:
+            elif len(path_dir_list) == 2:
                 for key in key_word_list:
                     # For the path with only two directories, check key words in the second directory folder name.
-                    if key in path_list[1]:
+                    if key in path_dir_list[1]:
                         targeted_paths.append(os.path.join(dirpath, filename))
 
             # For the other paths with more than 2 directories, check key words in the second and third directories.
             else:
                 for key in key_word_list:
-                    if key in path_list[1] or key in path_list[2]:
+                    if key in path_dir_list[1] or key in path_dir_list[2]:
                         targeted_paths.append(os.path.join(dirpath, filename))
     return targeted_paths
 
