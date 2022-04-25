@@ -30,3 +30,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 gatorgrade = 'gatorgrade.main:app'
+
+[tool.isort]
+profile = "black"
