@@ -10,7 +10,7 @@ FILE = "gatorgrade.yml"
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(
-        "FILE", "--config", "-c", help="Name of the yml file."
+        FILE, "--config", "-c", help="Name of the yml file."
     ),
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
