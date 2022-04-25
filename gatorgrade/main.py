@@ -12,9 +12,7 @@ def gatorgrade(
         f"{FILE}", "--config", "-c", help="Name of the yml file."
     )
 ):
-    """Runs the GatorGrader checks that are defined
-    in the gatorgrade.yml file."""
-
+    """Run the GatorGrader checks in the gatorgrade.yml file."""
     if filename.contains(".yml"):
         pass
 
@@ -28,8 +26,7 @@ def generate(
         help="Force gatorgrade to overwrite an existing yml file.",
     )
 ):
-    """Generates a gatorgrade.yml file based on the folders and files
-    in the current directory."""
+    """Generate a gatorgrade.yml file."""
     if force is False:
         pass
 
