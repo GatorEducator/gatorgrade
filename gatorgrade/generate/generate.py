@@ -29,7 +29,6 @@ def create_targeted_paths_list():
                 for key in key_word_list:
                     if key in path_list[1]:
                         targeted_paths.append(os.path.join(dirpath, filename))
-
             else:
                 for key in key_word_list:
                     if key in path_list[1] or key in path_list[2]:
