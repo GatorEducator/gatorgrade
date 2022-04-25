@@ -1,8 +1,8 @@
 # GatorGrade: A Python Tool to Implement GatorGrader
 
-GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool that can be used to check assignments through user-created checks. GatorGrade is the newer Python-based version of GatorGradle which can be found on GitHub at this link: https://github.com/GatorEducator/gatorgradle/blob/master/README.md. GatorGrade takes in a gatorgrader.yml file and tests each check for correctness against the code that it is connected to.
+GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool that can be used to check assignments through user-created checks. GatorGrade is the newer Python-based version of [GatorGradle](https://github.com/GatorEducator/gatorgradle/blob/master/README.md).
 
-## Table of Contents:
+## Table of Contents
 
 - Installing GatorGrade
   - Including GatorGrade in Your Project
@@ -31,7 +31,7 @@ You can use GatorGrade as a student or instructor to run a series of pre-prescri
 
 To run checks against an assignment, use the `gator grade` command.
 
-#### Interpreting Output 
+#### Interpreting Output
 
 Output team
 
@@ -45,7 +45,7 @@ Input team
 
 ## Contributing to GatorGrade
 
-If you'd like to contribute to GatorGrade, refer to the GatorGrade wiki with details on contributing guidelines here: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines.
+If you'd like to contribute to GatorGrade, refer to the [GatorGrade wiki](https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines) with details on contributing guidelines.
 
 ### Installing Dev Environment
 
