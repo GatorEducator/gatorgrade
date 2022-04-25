@@ -7,21 +7,26 @@ def generate_checks(tuple_of_file):
 # iterate through the checks
     list_of_dict_checks  = tuple_of_file
     #file_path = tuple_of_file[0]
+    gator_grader_checks = []
 
     #if file_path is not None:
     for dicts in list_of_dict_checks:
+        temp_gator_grader_commands = []
         for keys in dicts:
             description = dicts['description']
             options = dicts['options']
-            #creating a list that has description, check, and options in it.
-            gator_grader_commands = ['--description', f'{description}']
-            gator_grader_commands.append(dicts['check'])
+            #creating a temp list that has description, check, and options in it for every check.
+            temp_gator_grader_commands = ['--description', f'{description}']
+            temp_gator_grader_commands.append(dicts['check'])
             #if options exist, then add all the keys and the values inside the command list
             if options:
                 for keys in options:
-                    gator_grader_commands.append(f'--{keys}')
-                    gator_grader_commands.append(f'{options[keys]}')
-    return gator_grader_commands
+                    temp_gator_grader_commands.append(f'--{keys}')
+                    temp_gator_grader_commands.append(f'{options[keys]}')
+        #
+        gator_grader_checks.append(temp_gator_grader_commands)
+    
+    return gator_grader_checks
 
 
 
