@@ -3,14 +3,13 @@ For instance, functions dealing with percentage output, description output, and 
 
 import gator
 import os
-import output_tools
-import List
-import Tuple
+from output import output_tools
+from typing import List, Tuple
 
 # Commands are received as list of tuples.
 # Each tuple in the list is a string and list of strings <string, [strings]>
 # The string is the path to the file or filename and the list is the commands for the file.
-def receive_command(command_info : List[Tuple(str, List[str])]):
+def receive_command(command_info : List[tuple[str, List[str]]]):
     """Main command function to pass commands and send results to other methods."""
     
     results = []
