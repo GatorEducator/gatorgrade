@@ -6,15 +6,14 @@ from output import output_functions
 def test_receive_command_function_returns_no_error():
     """Make sure the receive function in output_functions.py runs"""
 
-    results = []
-    results.append(("file.txt", [('No TODOs in text', True, ''),
-        ('Has 5 comments', False, 'Found 3 Fragments in file.'),
-        ('Removed dependencies', True, '')]))
-    results.append(("file2.txt", [('No TODOs in text', False,
-        'Found 5 fragments in file2.'), ('Has API call', True, ''),
-        ('Contains 20 comments', True, '')]))
-
+    command_type_lists = ([])
+    commands = []
+    command1 = ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', '/output/', '--file', 'output_tools.py']
+    command2 = ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'Frog', '--count', '1', '--exact', '--directory', '/output/', '--file', 'output_tools.py']
+    commands.append(command1)
+    commands.append(command2)
+    command_type_lists[0].append(commands)
     try:
-        receive_command(results)
+        output_functions.receive_command(command_type_lists)
     except Exception as exc:
         assert False, f"'Command receive function' raised an exception {exc}"
