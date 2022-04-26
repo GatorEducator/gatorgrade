@@ -25,8 +25,9 @@ def receive_command(command_info : List[Tuple(str, List[str])]):
             try:
                 result = gator.grader(command)
                 results.get(file_name).append(result)
-            except:
+            except Exception as e:
                 print("\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m", output_tools.get_simple_command_string(command) , "\033[0m")
+                print("Exception is as follows: \n ", e)
     #Send results to output methods
     #print_percentage(results)
     #print_description(results)
