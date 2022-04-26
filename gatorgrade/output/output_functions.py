@@ -4,6 +4,8 @@ For instance, functions dealing with percentage output, description output, and 
 import gator
 import os
 import output_tools
+import List
+import Tuple
 
 #Commands are received as list of tuples.
 #Each tuple in the list is a string and list of strings <string, [strings]>
