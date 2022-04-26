@@ -1,9 +1,8 @@
 from sys import stdout
 import output_functions
-
 import pytest
 from colorama import init, Fore, Style
-
+init()
 
 @pytest.fixture()
 def test_output_shows_green(capsys):
@@ -31,21 +30,35 @@ def test_output_shows_yellow(capsys):
     assert err ==  ""
 
 
-def test_descrition_in_fail_message(capsys):
-    output_functions.output_fail_description()
+def test_descrition_in_fail_message(capsys,expected_output):
+    output_functions.output_check_result(file="text.txt",check=("have a if statement",False,"no ifs "))
     out, err = capsys.readouterr()
+    expected_output = "no ifs "
+    actual_output = out
+    assert  expected_output == actual_output
+    assert "" in err 
 
-    assert "No if statements found" in out 
+def test_false_result_returns_X(capsys):
+    
+    output_functions.output_check_result()
+    
+    out,err = capsys.readouterr()
+    
+    assert '\u2718' in out
     assert err == ""
 
 
-def test_false_result_returns_X():
-    output_functions.output_check_result()
+
+def test_style_reset():
 
 
 
-'''
+
+    '''
 def test_result():
+
+
+
 
 
 
