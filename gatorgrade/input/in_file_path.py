@@ -1,12 +1,13 @@
 """Allow customer to specify gator grader checks that do and do not correspond to a file path."""
 
 # import yaml and other necessary libraries/packages
-txt = [{'description': 'Complete all TODOs', 'check': 'MatchFileFragment', 'options': {'fragment': 'TODO', 'count': 0, 'exact': True}}, {'description': 'Use an if statement', 'check': 'MatchFileRegex', 'options': {'regex': 'if .*?:', 'count': 1, 'exact': False}}]
+txt = ("the_file_path", [{'description': 'Complete all TODOs', 'check': 'MatchFileFragment', 'options': {'fragment': 'TODO', 'count': 0, 'exact': True}}, {'description': 'Use an if statement', 'check': 'MatchFileRegex', 'options': {'regex': 'if .*?:', 'count': 1, 'exact': False}}])
 
-def generate_checks(tuple_of_file):
+def parse_config(tuple_of_file):
 # iterate through the checks
-    list_of_dict_checks  = tuple_of_file
-    #file_path = tuple_of_file[0]
+    list_of_dict_checks  = tuple_of_file[1]
+    file_path = tuple_of_file[0]
+    # The final output for the checks
     gator_grader_checks = []
 
     #if file_path is not None:
@@ -26,11 +27,13 @@ def generate_checks(tuple_of_file):
         #
         gator_grader_checks.append(temp_gator_grader_commands)
     
+
+    #returning list of lists// the final output
     return gator_grader_checks
 
 
 
-checks = generate_checks(txt)
+checks = parse_config(txt)
 
 print(checks)
 
