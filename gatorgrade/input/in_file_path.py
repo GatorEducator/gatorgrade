@@ -10,22 +10,22 @@ def parse_config(tuple_of_file):
     # The final output for the checks
     gator_grader_checks = []
 
-    #if file_path is not None:
-    for dicts in list_of_dict_checks:
-        temp_gator_grader_commands = []
-        for keys in dicts:
-            description = dicts['description']
-            options = dicts['options']
-            #creating a temp list that has description, check, and options in it for every check.
-            temp_gator_grader_commands = ['--description', f'{description}']
-            temp_gator_grader_commands.append(dicts['check'])
-            #if options exist, then add all the keys and the values inside the command list
-            if options:
-                for keys in options:
-                    temp_gator_grader_commands.append(f'--{keys}')
-                    temp_gator_grader_commands.append(f'{options[keys]}')
+    if file_path is not None:
+        for dicts in list_of_dict_checks:
+            temp_gator_grader_commands = []
+            for keys in dicts:
+                description = dicts['description']
+                options = dicts['options']
+                #creating a temp list that has description, check, and options in it for every check.
+                temp_gator_grader_commands = ['--description', f'{description}']
+                temp_gator_grader_commands.append(dicts['check'])
+                #if options exist, then add all the keys and the values inside the command list
+                if options:
+                    for keys in options:
+                        temp_gator_grader_commands.append(f'--{keys}')
+                        temp_gator_grader_commands.append(f'{options[keys]}')
         #
-        gator_grader_checks.append(temp_gator_grader_commands)
+            gator_grader_checks.append(temp_gator_grader_commands)
     
 
     #returning list of lists// the final output
