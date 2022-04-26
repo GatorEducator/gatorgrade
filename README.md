@@ -27,8 +27,10 @@ projects on your computer.
 
 ### Including GatorGrade in Your Project
 
-To include GatorGrade in you project you can use `Poetry`. Once Poetry has been
-installed you can use `poetry add` to add the GatorGrade package.
+To include GatorGrade in your project we recommend using the `Poetry` package manager.
+When using `Poetry` to install, use the `poetry add` command to add the GatorGrade
+package. If you use another package manager, you can add GatorGrade as a dependency the
+same way you would with other `pip` or `pipx` packages.
 
 ## Using GatorGrade
 
@@ -61,9 +63,9 @@ with details on contributing guidelines.
 ### Installing Dev Environment
 
 To install the dev environment, you must first have a version of python greater
- than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your
- computer, run a `poetry install` to install all of the necessary dependencies
- onto your computer. Now you can begin to contribute to the project following
- the contributing guidelines.
+than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your
+computer, run a `poetry install` to install all of the necessary dependencies
+onto your computer. Now you can begin to contribute to the project following
+the contributing guidelines.
 
 ## Contributors
