@@ -1,5 +1,5 @@
 from sys import stdout
-import output_functions
+from output import output_functions
 import pytest
 from colorama import init, Fore, Style
 init()
@@ -31,7 +31,7 @@ def test_output_shows_yellow(capsys):
 
 
 def test_descrition_in_fail_message(capsys,expected_output):
-    output_functions.output_check_result(file="text.txt",check=("have a if statement",False,"no ifs "))
+    output_functions.output_check_result()
     out, err = capsys.readouterr()
     expected_output = "no ifs "
     actual_output = out
@@ -50,7 +50,6 @@ def test_false_result_returns_X(capsys):
 
 
 def test_style_reset():
-
 
 
 
