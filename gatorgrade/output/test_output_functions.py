@@ -5,6 +5,7 @@ from output import output_functions
 
 def test_receive_command_function_returns_no_error():
     """Make sure the receive function in output_functions.py runs"""
+
     results = []
     results.append(("file.txt", [('No TODOs in text', True, ''),
         ('Has 5 comments', False, 'Found 3 Fragments in file.'),
@@ -17,4 +18,3 @@ def test_receive_command_function_returns_no_error():
         receive_command(results)
     except Exception as exc:
         assert False, f"'Command receive function' raised an exception {exc}"
-

@@ -10,6 +10,7 @@ import output_tools
 #The string is the path to the file or filename and the list is the commands for the file.
 def receive_command(command_info : List[Tuple(str, List[str])]):
     """Main command function to pass commands and send results to other methods."""
+    
     results = []
     #Loop through commands received, then format into string list, finally send commands to proper checking software
     for file_name, commands in command_info:
