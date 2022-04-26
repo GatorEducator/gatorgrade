@@ -19,9 +19,10 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     # Then assert that there is no file path indicated in the first index of list
     assert output[0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
-def 
-    # Given the path to the test yml file
+def test_parse_config_shell_command():
 
+    # Given the path to the test yml file
+    config = 
     # When parse_config is run
 
 

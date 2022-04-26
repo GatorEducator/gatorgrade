@@ -25,7 +25,7 @@ setup: |
         count: 0
         exact: true
 - description: Pass MDL
-  command: mdl .
+  command: mdl 
 - description: Pass HTMLHint
   command: htmlhint
 - description: Have a total of 8 commits, 5 of which were created by you
