@@ -1,2 +1,2 @@
 - description: Pass MDL
-  command: mdl 
+  command: mdl .
