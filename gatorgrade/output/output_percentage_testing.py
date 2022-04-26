@@ -40,13 +40,15 @@ index list to take the str bool str 1,2,3 bc 0 is the file path/name
 list is made up of total command tuple with desc bool diagnostic if bool = false 
 '''
 
-list = []
-def return_green_or_red(list -> str, bool, str):   
+
+def return_green_or_red():   
+    list = []
     str1 = "no todos"
-    bool = false
+    bool = False
     str2 = "still have 3 todos"
-    tuple1 = (str1,bool, str2)
-    if bool == True: 
-        return green check 
-        else:
-            return red and str2
+    tuple1 = (str1,bool,str2)
+    if bool == False: 
+        list.append(tuple1)
+        
+    print(list)
+return_green_or_red()
