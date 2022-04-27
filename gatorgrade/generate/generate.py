@@ -11,32 +11,28 @@ def create_targeted_paths_list(key_word_list):
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
         # Ignore folder starting with double underscore
-        for path in path_dir_list:
-            if path.startswith("__"):
-                continue
-
+        if any(path.startswith("__") for path in path_dir_list):
+            continue
+        # Ignore hidden folders
+        if any(path.startswith(".") for path in path_dir_list):
+            continue
         for filename in filenames:
-            # The first directory is always dot. Skip it
-            if len(path_dir_list) == 1:
+            # Ignore the file starting with double underscore and hidden file
+            if filename.startswith("__") or filename.startswith("."):
                 continue
-            # Ignore the file starting with double underscore
-            if filename.startswith("__"):
-                continue
-            # Ignore hidden folders
-            if path_dir_list[1].startswith("."):
-                continue
-            # Add paths only when they have the key words in the second and the third directories
-            elif len(path_dir_list) == 2:
-                for key in key_word_list:
-                    # For the path with only two directories, check key words in the second directory folder name
-                    if key in path_dir_list[1]:
-                        targeted_paths.append(os.path.join(dirpath, filename))
+            # Add paths when they have the key words in the second and the third directories
+            # For the path with only two directories, check key words in the second directory folder name
+            if len(path_dir_list) == 2:
+                if path_dir_list[1] in key_word_list:
+                    targeted_paths.append(os.path.join(dirpath, filename))
 
             # For the other paths with more than 2 directories, check key words in the second and third directories
-            else:
-                for key in key_word_list:
-                    if key in path_dir_list[1] or key in path_dir_list[2]:
-                        targeted_paths.append(os.path.join(dirpath, filename))
+            elif len(path_dir_list) > 2:
+                if path_dir_list[1] in key_word_list or path_dir_list[2] in key_word_list:
+                    targeted_paths.append(os.path.join(dirpath, filename))
+
+            if filename in key_word_list:
+                    targeted_paths.append(os.path.join(dirpath, filename))               
     return targeted_paths
 
 def write_yaml_of_paths_list(path_names):
