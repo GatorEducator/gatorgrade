@@ -11,10 +11,10 @@ def create_targeted_paths_list(key_word_list):
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
         # Ignore folder starting with double underscore
-        if any(path.startswith("__") for path in path_dir_list):
+        if any(path.startswith("__") for path in path_dir_list[1:]):
             continue
-        # Ignore hidden folders
-        if any(path.startswith(".") for path in path_dir_list):
+        # Ignore hidden folders, the first layer is always dot
+        if any(path.startswith(".") for path in path_dir_list[1:]):
             continue
         for filename in filenames:
             # Ignore the file starting with double underscore and hidden file
@@ -32,7 +32,7 @@ def create_targeted_paths_list(key_word_list):
                     targeted_paths.append(os.path.join(dirpath, filename))
 
             if filename in key_word_list:
-                    targeted_paths.append(os.path.join(dirpath, filename))               
+                targeted_paths.append(os.path.join(dirpath, filename))               
     return targeted_paths
 
 def write_yaml_of_paths_list(path_names):
@@ -42,4 +42,4 @@ def write_yaml_of_paths_list(path_names):
     # List the file paths in specific format.
     pass
 
-print(create_targeted_paths_list())
+print(create_targeted_paths_list(["gatorgrade"]))
