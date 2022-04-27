@@ -3,6 +3,12 @@ import os
 
 def create_targeted_paths_list(key_word_list):
     """Generate a list of targeted paths by walking the paths."""
+    # Warning: User should provide precise names of folders or files and provide correct character case as input
+    # Warning: The empty folder or the folders only containing files starting with __ or . will be ignore
+    # Warning: Don't name folder or file starting with dot or double underscore. They will be ignore   
+    # If you input a folder name, all the sub-dirs and files will be reserved except the ones starting with . or __
+    # Warning: Only folder names in root dir or the one after root will be checked. Don't put the target folders too deep
+    # The file names have no above problem. You can put it in any dir.
     targeted_paths = []
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through
@@ -11,7 +17,7 @@ def create_targeted_paths_list(key_word_list):
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
         # Ignore folder starting with double underscore
-        if any(path.startswith("__") for path in path_dir_list[1:]):
+        if any(path.startswith("__") for path in path_dir_list):
             continue
         # Ignore hidden folders, the first layer is always dot
         if any(path.startswith(".") for path in path_dir_list[1:]):
@@ -42,4 +48,4 @@ def write_yaml_of_paths_list(path_names):
     # List the file paths in specific format.
     pass
 
-print(create_targeted_paths_list(["gatorgrade"]))
+print(create_targeted_paths_list(["test_temp.py"]))
