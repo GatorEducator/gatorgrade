@@ -1,17 +1,16 @@
 """Generate a YAML file with default messages and specific paths."""
 import os
 
-def create_targeted_paths_list():
+def create_targeted_paths_list(key_word_list):
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
-    key_word_list = ["writing", "src", "test", "deliverables"]
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through
     for dirpath, _, filenames in os.walk("."):
 
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
-        # Ignore folder starting with __
+        # Ignore folder starting with double underscore
         for path in path_dir_list:
             if path.startswith("__"):
                 continue
@@ -20,7 +19,7 @@ def create_targeted_paths_list():
             # The first directory is always dot. Skip it
             if len(path_dir_list) == 1:
                 continue
-            # Ignore the file starting with __
+            # Ignore the file starting with double underscore
             if filename.startswith("__"):
                 continue
             # Ignore hidden folders
