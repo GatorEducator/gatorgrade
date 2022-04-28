@@ -3,13 +3,40 @@
 import pytest
 from output import output_functions
 
+
 def test_receive_command_function_returns_no_error():
     """Make sure the receive function in output_functions.py runs"""
 
-    command_type_lists = ([])
+    command_type_lists = []
     commands = []
-    command1 = ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', '/output/', '--file', 'output_tools.py']
-    command2 = ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'Frog', '--count', '1', '--exact', '--directory', '/output/', '--file', 'output_tools.py']
+    command1 = [
+        "--description",
+        "Complete all TODOs",
+        "MatchFileFragment",
+        "--fragment",
+        "TODO",
+        "--count",
+        "0",
+        "--exact",
+        "--directory",
+        "/output/",
+        "--file",
+        "output_tools.py",
+    ]
+    command2 = [
+        "--description",
+        "Complete all TODOs",
+        "MatchFileFragment",
+        "--fragment",
+        "Frog",
+        "--count",
+        "1",
+        "--exact",
+        "--directory",
+        "/output/",
+        "--file",
+        "output_tools.py",
+    ]
     commands.append(command1)
     commands.append(command2)
     command_type_lists[0].append(commands)

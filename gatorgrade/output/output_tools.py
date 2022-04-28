@@ -4,8 +4,9 @@ One example of a function to be written here is the splitting of strings retriev
 
 from typing import List
 
-def get_simple_command_string(command : List[str]) -> str:
+
+def get_simple_command_string(command: List[str]) -> str:
     """This function takes a list of strings and combines them to one single string."""
-    
-    command_string = ' '.join(command)
+
+    command_string = " ".join(command)
     return command_string
