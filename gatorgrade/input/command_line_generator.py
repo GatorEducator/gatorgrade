@@ -3,14 +3,6 @@
 # import necessary libraries/packages
 import os
 
-#test list of tuples that has checks
-
-'''
-a_list_of_tuples = [("./home/dir/subdir/yayaya.py",[{'description': 'Complete all TODOs', 'check': 'MatchFileFragment', 'options': {'fragment': 'TODO', 'count': 0, 'exact': True}}, {'description': 'Use an if statement', 'check': 'MatchFileRegex', 'options': {'regex': 'if .*?:', 'count': 1, 'exact': False}}]),
-                ("./home/dir/subdir/module.py", [{'description': 'Complete all TODOs', 'check': 'MatchFileFragment', 'options': {'fragment': 'TODO', 'count': 0, 'exact': True}}, {'description': 'Use an if statement', 'check': 'MatchFileRegex', 'options': {'regex': 'if .*?:', 'count': 1, 'exact': False}}]),
-                  (None, [{'description': 'Pass HTMLHint', 'command': 'htmlhint'},{'description': 'Have a total of 8 commits, 5 of which were created by you', 'check': 'CountCommitts', 'options': {'fragment': 'TODO', 'count': 0, 'exact': True}}])]
-'''
-
 # Function to generate command lines from a list of tuples
 
 def command_line_generator_list(a_list_of_tuples):
@@ -58,8 +50,3 @@ def command_line_generator_list(a_list_of_tuples):
                 gator_grader_checks.append(temp_gator_grader_commands)
 
     return {"shell": shell_checks,"gatorgrader": gator_grader_checks}
-
-'''
-dict_of_shell_and_gator_commands = command_line_generator_list(a_list_of_tuples)
-print(dict_of_shell_and_gator_commands)
-'''
