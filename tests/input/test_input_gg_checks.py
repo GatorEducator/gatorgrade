@@ -20,16 +20,11 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     assert output == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
 
-
-
-def test_parse_config_gg_check_in_file_context_contains_file():
-    # Given the path to the test yml file
-    
-
-    # When parse_config is run
-    config = parse_config(config)
-
-    # Then assert
+def test_parse_config_puts_checks_in_correct_keys():
+    config = "tests/input/gatorgrader_both_checks.yml"
+    output = parse_config(config)
+    assert {"description": "Pass MDL", "command": "mdl ."} in output["shell"]
+    assert ["-description", "Complete All TODOs", "check", "MatchFileFragment"] in output["gatorgrader"]
 
 
 
@@ -55,6 +50,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
      # have an input file that has one gator grade check and one shell check
      # run the parse config function
      # do a dictionary call to check whether the output[shell] has the value of the lists of shell checks 
+    
 
      
     # the parse config function will call jacobs functionality and then use the output of that to call tugi's function and will return the output of tugi's function 
