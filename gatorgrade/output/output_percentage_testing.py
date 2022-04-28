@@ -1,7 +1,20 @@
+from itertools import count
 import string
 import gator
 from sympy import false
 from output_functions import receive_command
+
+
+results = [(2,2),(2,3),(4,5)]
+total = 0 
+check = 0 
+for num in results:
+    total +=1
+print(total)
+if "True" == results:
+    check +1
+
+
 
 '''
 def percentage_from_check():
@@ -41,7 +54,7 @@ list is made up of total command tuple with desc bool diagnostic if bool = false
 '''
 
 
-def return_green_or_red():   
+def return_command_full_tuple():   
     list = []
     str1 = "no todos"
     bool = False
@@ -51,4 +64,4 @@ def return_green_or_red():
         list.append(tuple1)
         
     print(list)
-return_green_or_red()
+return_command_full_tuple()
