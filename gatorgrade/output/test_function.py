@@ -14,33 +14,33 @@ def test_output_shows_green(capsys):
 
 
 def test_output_shows_red(capsys):
-    output_functions.sample_output_passing_check()
+    output_functions.sample_output_failing_check()
     out, err = capsys.readouterr()
 
-    assert f"{Fore.RED}\u2718" in out
+    assert f"{Fore.RED}" in out
     assert err == ""
 
 
 def test_output_shows_yellow(capsys):
 
-    output_functions.sample_output_passing_check()
+    output_functions.output_fail_description(desc="missing if statement")
     out, err = capsys.readouterr()
 
     assert f"{Fore.YELLOW}\u2192" in out
     assert err ==  ""
 
 
-def test_descrition_in_fail_message(capsys,expected_output):
-    output_functions.output_check_result()
+def test_descrition_in_fail_message(capsys):
+    output_functions.output_check_result(file="txt",check=("todos",False,"no ifs "))
     out, err = capsys.readouterr()
     expected_output = "no ifs "
     actual_output = out
-    assert  expected_output == actual_output
+    assert  expected_output in actual_output
     assert "" in err 
 
 def test_false_result_returns_X(capsys):
     
-    output_functions.output_check_result()
+    output_functions.output_check_result(file="txt",check=("todos",False,"no ifs "))
     
     out,err = capsys.readouterr()
     
