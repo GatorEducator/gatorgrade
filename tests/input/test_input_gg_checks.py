@@ -17,7 +17,7 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     output = parse_config(config)
 
     # Then assert that there is no file path indicated in the first index of list
-    assert output[0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
+    assert output[0][0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
 
 
