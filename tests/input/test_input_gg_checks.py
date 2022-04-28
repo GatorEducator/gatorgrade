@@ -21,10 +21,13 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
 
 
 def test_parse_config_puts_checks_in_correct_keys():
+    # Given the path to the test yml file
     config = "tests/input/gatorgrader_both_checks.yml"
+    # When parse_config is run
     output = parse_config(config)
+    # Then assert that 
     assert {"description": "Pass MDL", "command": "mdl ."} in output["shell"]
-    assert ["-description", "Complete All TODOs", "check", "MatchFileFragment"] in output["gatorgrader"]
+    assert ["description", "Complete All TODOs", "check", "MatchFileFragment"] in output["gatorgrader"]
 
 
 
