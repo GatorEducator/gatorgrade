@@ -25,7 +25,7 @@ def test_parse_config_puts_checks_in_correct_keys():
     config = "tests/input/gatorgrader_both_checks.yml"
     # When parse_config is run
     output = parse_config(config)
-    # Then assert that 
+    # Then assert that there will be outputs in the shell and in gatorgrader
     assert {"description": "Pass MDL", "command": "mdl ."} in output["shell"]
     assert ["description", "Complete All TODOs", "check", "MatchFileFragment"] in output["gatorgrader"]
 
