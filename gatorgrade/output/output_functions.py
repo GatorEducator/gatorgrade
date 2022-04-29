@@ -6,14 +6,13 @@ import os
 from output import output_tools
 from typing import List, Tuple
 
-# Commands are received as tuple of lists with lists
-# The tuple is used for future upgradeability for when shell commands are introduced
-# The string is the path to the file or filename and the list is the commands for the file.
+# Commands are received as dictionary of two keys, shell commands / gator commands
+# In the dictionary
 def receive_command(commands_input):
     """Main command function to pass commands and send results to other methods."""
 
     # Get first element in list, which is gatorgrader commands
-    gatorcommands = commands_input[0]
+    gatorcommands = commands_input.get('gatorgrade')
     results = []
 
     for command in gatorcommands:
@@ -31,3 +30,4 @@ def receive_command(commands_input):
     # Send results to output methods
     # print_percentage(results)
     # print_description(results)
+    return results
