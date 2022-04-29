@@ -49,6 +49,7 @@ def generate_checks(file_context_checks):
                     else:
                         gatorgrader_command_options.append(f'--{key}')
                         gatorgrader_command_options.append(f'{options[key]}')
+            # assigning the file context from the dict object
             file_context = file_context_check['file_context']
             # If it is a gator grade check with a file context, then add the directory and the file name into the command options
             if file_context is not None:
