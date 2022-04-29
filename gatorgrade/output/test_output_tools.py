@@ -1,7 +1,7 @@
 """Test suite for output_tools.py."""
 
 import pytest
-from output import output_tools
+import output_tools
 
 
 def test_list_to_string_function():

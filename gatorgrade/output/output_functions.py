@@ -3,7 +3,7 @@ For instance, functions dealing with percentage output, description output, and 
 
 import gator
 import os
-from output import output_tools
+import output_tools
 from typing import List, Tuple
 
 # Commands are received as dictionary of two keys, shell commands / gator commands
@@ -23,7 +23,7 @@ def receive_command(commands_input):
         except Exception as e:
             print(
                 "\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m",
-                output_tools.get_simple_command_string(command),
+                " ".join(command),
                 "\033[0m",
             )
             print("Exception is as follows: \n ", e)
