@@ -29,7 +29,7 @@ projects on your computer.
 
 To include GatorGrade in your project we recommend using the `Poetry` package
 manager. When using `Poetry` to install, use the `poetry add` command to add
-the GatorGrade package. If you use another package manager, you can adds
+the GatorGrade package. If you use another package manager, you can add
 GatorGrade as a dependency the same way you would with other `pip` or `pipx` packages.
 
 ## Using GatorGrade
