@@ -1,0 +1,8 @@
+- description: Pass MDL
+  command: mdl .
+- description: Pass HTMLHint
+  command: htmlhint
+- description: Have a total of 8 commits, 5 of which were created by you
+  check: CountCommits
+  options:
+    count: 8
