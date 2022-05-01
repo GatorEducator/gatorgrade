@@ -2,7 +2,7 @@
 
 def test_parse_config_check_gg_matchfilefragment():
     # Given the path to the test yml file
-    config = "test/input/gatorgrade.yml"
+    config = "test/input/yml_test_files/gatorgrade.yml"
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that match file fragment and match file regex exists
@@ -11,7 +11,7 @@ def test_parse_config_check_gg_matchfilefragment():
 
 def test_parse_config_check_shell_contains_command():
     # Given the path to the test yml file
-    config = "test/input/gatorgrade.yml"
+    config = "test/input/yml_test_files/gatorgrade.yml"
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that command is present in the shell

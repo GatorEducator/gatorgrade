@@ -5,7 +5,7 @@ from gatorgrade.input.in_file_path import parse_config
 
 def test_parse_config_setup_shell_checks():
     # given the path to the test yml file
-    config = "tests/input/gatorgrade_no_shell_setup_check.yml"
+    config = "tests/input/yml_test_files/gatorgrade_no_shell_setup_check.yml"
     # when the parse_config function is run
     output = parse_config(config)
     # then run a yml file without shell commands and see if the program can handle that
@@ -15,8 +15,8 @@ def test_parse_config_setup_shell_checks():
 
 def test_parse_config_has_same_format():
     # given the path to two test yml files, one being correctly formated, the other being incorrect
-    config_one = "tests/input/gatorgrade_two_in_file_context_checks.yml"
-    config_two = "tests/input/gatorgrade_two_in_file_context_checks_incorrect_format.yml"
+    config_one = "tests/input/yml_test_files/gatorgrade_two_in_file_context_checks.yml"
+    config_two = "tests/input/yml_test_files/gatorgrade_two_in_file_context_checks_incorrect_format.yml"
     # when parse_config is run twice
     output_one = parse_config(config_one)
     output_two = parse_config(config_two)
