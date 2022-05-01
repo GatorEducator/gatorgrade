@@ -1,0 +1,15 @@
+-  path/to:
+  - file.py:
+    - description: Complete all TODOs 
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
+  - file2.py:
+    - description: Complete all TODOs
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
