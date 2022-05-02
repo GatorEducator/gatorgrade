@@ -1,46 +1,18 @@
 """Test suite for output_functions.py."""
 
-# import pytest
-import output_functions
+import pytest
+from output import output_functions
 
+def test_receive_command_function_returns_correct_results():
+    """Make sure the receive function in output_functions.py runs
+    and returns the correct results in the form of a tuple list"""
 
-def test_receive_command_function_returns_no_error():
-    """Make sure the receive function in output_functions.py runs"""
-
-    command_type_lists = []
-    commands = []
-    command1 = [
-        "--description",
-        "Complete all TODOs",
-        "MatchFileFragment",
-        "--fragment",
-        "TODO",
-        "--count",
-        "0",
-        "--exact",
-        "--directory",
-        "/output/",
-        "--file",
-        "output_tools.py",
-    ]
-    command2 = [
-        "--description",
-        "Complete all TODOs",
-        "MatchFileFragment",
-        "--fragment",
-        "Frog",
-        "--count",
-        "1",
-        "--exact",
-        "--directory",
-        "/output/",
-        "--file",
-        "output_tools.py",
-    ]
-    commands.append(command1)
-    commands.append(command2)
-    command_type_lists[0].append(commands)
-    try:
-        output_functions.receive_command(command_type_lists)
-    except Exception as exc:
-        assert False, f"'Command receive function' raised an exception {exc}"
+    commands = {'shell': [{'description': 'Run program', 'command': 'mdl'}],
+    'gatorgrader': [['--description', 'Check TODOs', 'MatchFileFragment',
+    '--fragment', 'TODO', "--count", "0", "--exact", '--directory',
+    '../output', '--file', 'output_functions.py']]}
+    
+    expected_result = [('Check TODOs', True, '')]
+    actual_result = output_functions.run_gatorgrade_commands_and_return_results(commands)
+    
+    assert expected_result == actual_result
