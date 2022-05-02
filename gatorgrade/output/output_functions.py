@@ -1,14 +1,19 @@
-"""This module is used for storing the main functions requested from the
-Github Issue Tracker for the output team. For instance, functions dealing
-with percentage output, description output, and colorization of text."""
+"""
+This module is used for storing the main functions requested.
+
+The requested functions are located at the Github Issue Tracker
+for the output team. For instance, functions dealing with percentage
+output, description output, and colorization of text.
+"""
 
 import gator
 from gator import exceptions
 
 
 def run_commands_and_return_results(commands_input):
-    """Main command function to pass commands and send results to other
-    methods.
+    """
+    Receive commands and send results to other output methods.
+
     Commands are received as dictionary of two keys, shell commands / gator
     commands.
 
@@ -16,8 +21,8 @@ def run_commands_and_return_results(commands_input):
 
     {'shell': [{'description': 'Run program', 'command': 'mdl'}],
     'gatorgrader': [['--description', 'do command', 'commandType',
-    '--arg', '1', '--directory', './home', '--file', 'file.py']]}"""
-
+    '--arg', '1', '--directory', './home', '--file', 'file.py']]}
+    """
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get("gatorgrader")
     results = []
