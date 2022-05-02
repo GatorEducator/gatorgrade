@@ -13,3 +13,5 @@
         fragment: TODO
         count: 0
         exact: true
+- description: Pass MDL
+  command: mdl .

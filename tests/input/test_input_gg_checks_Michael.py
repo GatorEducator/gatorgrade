@@ -8,7 +8,7 @@ def test_parse_config_check_gg_matchfilefragment():
     output = parse_config(config)
     # Then assert that match file fragment and match file regex exists
     assert "MatchFileFragment" in output["gatorgrader"][0]
-    assert set([["--desription", "Complete all TODOs", ], [], []]) == set(output["gatorgrader"])  # Assert that output["gatorgrader"] is equal to expected output
+    assert set([["--description", "Complete all TODOs", ], [], []]) == set(output["gatorgrader"])  # Assert that output["gatorgrader"] is equal to expected output
 
     # def test_parse_config_check_gg_matchfilefragment():
 #     # Given the path to the test yml file
@@ -26,7 +26,7 @@ def test_parse_config_check_shell_contains_command():
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that command is present in the shell
-    assert "command" in output["shell"]
+    assert output["shell"][0] == {"description": "Pass MDL", "command": "mdl ."}
 
      # do a test that makes sure shell checks are in the list with the shell key and vice versa
      # have an input file that has one gator grade check and one shell check

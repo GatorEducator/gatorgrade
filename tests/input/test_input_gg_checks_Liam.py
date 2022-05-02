@@ -10,21 +10,13 @@ def test_parse_config_setup_shell_checks():
     # when the parse_config function is run
     output = parse_config(config)
     # then run a yml file without shell commands and see if the program can handle that
-    assert ["setup", "./script.sh", "poetry install", "echo 'Setup Complete!'"] not in output["shell"]
+    assert output["gatorgrader"][0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
 
 
-def test_parse_config_has_same_format():
-    """Test the outputted format of parse_config to make sure it is returning a list inside a dictionary."""
-    # given the path to two test yml files, one being correctly formated, the other being incorrect
-    config_one = "tests/input/yml_test_files/gatorgrade_two_in_file_context_checks.yml"
-    config_two = "tests/input/yml_test_files/gatorgrade_two_in_file_context_checks_incorrect_format.yml"
-    # when parse_config is run twice
-    output_one = parse_config(config_one)
-    output_two = parse_config(config_two)
-    # then assert that the format is incorrect or something like that
 
 
+      # we want the test to be testing the user experience which is why we are using test files here.
 
 
 
@@ -36,12 +28,7 @@ def test_parse_config_has_same_format():
 
      
 
-     # test for shell checks 
-
-     # do a test that makes sure shell checks are in the list with the shell key and vice versa
-     # have an input file that has one gator grade check and one shell check
-     # run the parse config function
-     # do a dictionary call to check whether the output[shell] has the value of the lists of shell checks 
+     
     
 
      
