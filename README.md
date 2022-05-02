@@ -46,6 +46,8 @@ To run checks against an assignment, use the `gator grade` command.
 
 Tuples : desc of check, true or false, if false a diagnostic
 
+A dictionary will come from the input team that mostly will contain list, unpack the dictionary, run through gatorgrade, and return as a list of tuples. Each tuple will contain a descriptive boolean that will either Pass or Fail. If Passed, it will come through as an empty string. If Failed it will come through as what excatly failed within the assignment.
+
 ### Generating a gatorgrade.yml file
 
 Generate team
