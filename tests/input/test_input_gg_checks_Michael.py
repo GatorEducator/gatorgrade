@@ -1,10 +1,6 @@
-    
-"""Test suite for parse_config function."""
-
-from gatorgrade.input.in_file_path import parse_config
+    # look for matchfilefragment and match file regex
 
 def test_parse_config_check_gg_matchfilefragment():
-    """Test to make sure keywords like MatchFileFragment anf MatchFileRegex appear inside the gator grader check list."""
     # Given the path to the test yml file
     config = "test/input/yml_test_files/gatorgrade.yml"
     # When the parse_config is run
@@ -14,7 +10,6 @@ def test_parse_config_check_gg_matchfilefragment():
     assert ["check","MatchFileRegex"] in output["gatorgrader"]
 
 def test_parse_config_check_shell_contains_command():
-    """Test to make sure that the shell comands are found inside the 'shell' list."""
     # Given the path to the test yml file
     config = "test/input/yml_test_files/gatorgrade.yml"
     # When the parse_config is run
