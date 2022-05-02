@@ -44,7 +44,7 @@ To run checks against an assignment, use the `gator grade` command.
 
 #### Interpreting Output
 
-Output team
+Tuples : desc of check, true or false, if false a diagnostic
 
 ### Generating a gatorgrade.yml file
 
@@ -52,7 +52,7 @@ Generate team
 
 #### Configuring GatorGrade Checks
 
-Input team
+In order to configure GatorGrade checks, you need to go into the 'gatorgrade.yml' file and manually edit the file. You can input different keywords into the yml format, which is labeled for ease of use. For example, you can input check 'match file fragment' in order to make sure that a specific line of code is included in a program. You can also use the 'match file fragment' check with the 'exact' option with value 0 in order to create a check that can make sure that there are no TODO markers left in a completed repository.
 
 ## Contributing to GatorGrade
 
