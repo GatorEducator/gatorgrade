@@ -71,10 +71,10 @@ The created .yml file will be a template with example checks inside of it.
 
 #### Configuring GatorGrade Checks
 
-In order to configure GatorGrade checks, you need to go into the 
+In order to configure GatorGrade checks, you need to go into the
 'gatorgrade.yml' file and manually edit the file. You can input different
 keywords into the yml format, which is labeled for ease of use. For example,
-you can input check 'match file fragment' in order to make sure that a 
+you can input check 'match file fragment' in order to make sure that a
 specific line of code is included in a program. You can also use the
 'match file fragment' check with the 'exact' option with value 0 in order to
 create a check that can make sure that there are no TODO markers left in a
