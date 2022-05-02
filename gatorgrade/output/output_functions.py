@@ -7,10 +7,9 @@ import output_tools
 from typing import List, Tuple
 from gator import exceptions
 
-# Commands are received as dictionary of two keys, shell commands / gator commands
-# In the dictionary
 def receive_command(commands_input):
-    """Main command function to pass commands and send results to other methods."""
+    """Main command function to pass commands and send results to other methods.
+    Commands are received as dictionary of two keys, shell commands / gator commands."""
 
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get('gatorgrader')
