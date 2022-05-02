@@ -21,6 +21,6 @@ plugins:
       watch:
         - gatorgrade
 nav:
-  - Home: ./
+  - Home: ./index.md
   - source/*.md
   - Code Reference: reference/
