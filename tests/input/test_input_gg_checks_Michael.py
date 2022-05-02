@@ -1,6 +1,7 @@
     # look for matchfilefragment and match file regex
 
 def test_parse_config_check_gg_matchfilefragment():
+    """Test to make sure keywords like MatchFileFragment and MatchFileRegex appear inside the gator grader check list."""
     # Given the path to the test yml file
     config = "test/input/yml_test_files/gatorgrade.yml" # Make fixture that will create yml file to be parsed instead of expected file
     # When the parse_config is run
@@ -10,6 +11,7 @@ def test_parse_config_check_gg_matchfilefragment():
     assert set([["--desription", "Complete all TODOs", ], [], []]) == set(output["gatorgrader"])  # Assert that output["gatorgrader"] is equal to expected output
 
 def test_parse_config_check_shell_contains_command():
+    """Test to make sure that the shell commands are found inside the 'shell' list."""
     # Given the path to the test yml file
     config = "test/input/yml_test_files/gatorgrade.yml"
     # When the parse_config is run
