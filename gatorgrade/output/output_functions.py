@@ -40,26 +40,26 @@ def determine_result_by_file(result):
     for i in result[1]:
         output_check_result(file_name, i)
 
-'''
-Produce the output for the console for each check.
 
-Argument: take check from determine_result_by_file()
-as a tuple in the (REQUIREMENT, PASS/FAIL, RESULT-optional) format.
-'''
-def output_check_result(file, check):
-    # Store the check elements as variables for the output statement.
-    requirement = check[0]
-    result = check[1]
-    # Print message with green check for passing checks
-    if result == True:
-        # Use colorama to style "X"
-        print(f"{Fore.GREEN}\u2714  {Style.RESET_ALL}{file} {requirement}")
-    # Print message with X for failing checks
-    elif result == False:
-        # Use colorama to style "X"
-        print(f"{Fore.RED}\u2718  {Style.RESET_ALL}{file} {requirement}")
-        # Use output_fail_description to give a description for why it failed
-        output_fail_description(check[2])
+def sort_checks_by_result(results):
+    '''
+    Process results and determine if the check passed or failed.
+
+    Argument `results` is: list[(check_result_element1, check_result_element2),(...)]]
+    '''
+    passed_checks = []
+    failed_checks = []
+    #iterate through results tuples
+    for i in results:
+        for j in i:
+            if isinstance(j, bool):
+                if j == True:
+                    passed_checks.append(i)
+                else:
+                    failed_checks.append(i)
+
+
+
 
             
 
@@ -77,3 +77,20 @@ def output_fail_description(desc):
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = ["file.txt", [('No TODOS in text', True), ('Has an if statement', False, "No if statements found")]]
 determine_result_by_file(sample_result)
+
+
+'''
+# Store the check elements as variables for the output statement.
+    requirement = check[0]
+    result = check[1]
+    # Print message with green check for passing checks
+    if result == True:
+        # Use colorama to style "X"
+        print(f"{Fore.GREEN}\u2714  {Style.RESET_ALL}{file} {requirement}")
+    # Print message with X for failing checks
+    elif result == False:
+        # Use colorama to style "X"
+        print(f"{Fore.RED}\u2718  {Style.RESET_ALL}{file} {requirement}")
+        # Use output_fail_description to give a description for why it failed
+        output_fail_description(check[2])
+'''
