@@ -6,7 +6,7 @@ import gator
 from gator import exceptions
 
 
-def run_gatorgrade_commands_and_return_results(commands_input):
+def run_commands_and_return_results(commands_input):
     """Main command function to pass commands and send results to other
     methods.
     Commands are received as dictionary of two keys, shell commands / gator
