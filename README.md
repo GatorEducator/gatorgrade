@@ -45,7 +45,7 @@ To run checks against an assignment, use the `gator grade` command.
 #### Interpreting Output
 
 A dictionary will come from the input team that mostly will contain list,
-and a dictionary. The dictionary will contain two keys 
+and a dictionary. The dictionary will contain two keys
 (shell and gatorgrader) that will contain the commands for the output team to
 run, run through gatorgrade, and return as a list of tuples.
 Each tuple will contain a descriptive boolean that will either Pass or Fail.
