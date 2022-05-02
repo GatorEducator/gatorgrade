@@ -1,22 +1,40 @@
-from itertools import count
-import string
-import gator
-from sympy import false
+
+from turtle import right
 from output_functions import receive_command
 
-
-results = [(2,2),(2,3),(4,5)]
-total = 0 
-check = 0 
-for num in results:
-    total +=1
-print(total)
-if "True" == results:
-    check +1
-
+global right
+results = [(2,True),(2,False),(4,True)] 
+def find_total():
+    total = 0
+    for () in results:
+        total = +1
+    
+    yield total
 
 
-'''
+def find_amount_right():
+    right = 0
+    for i in results(i[1]) == True:
+        right = +1
+    yield right    
+    
+
+print(f"{find_amount_right}{find_total}")
+
+
+def print_percentage():
+    find_total()
+    find_amount_right()
+
+
+def print_all():
+    print(f"\n\t\tPassing {find_amount_right(right)}/")
+
+            
+
+    
+
+    '''
 def percentage_from_check():
     for each command 
         look through the list of tuples 
