@@ -44,11 +44,30 @@ To run checks against an assignment, use the `gator grade` command.
 
 #### Interpreting Output
 
-A dictionary will come from the input team that mostly will contain list, unpack the dictionary, run through gatorgrade, and return as a list of tuples. Each tuple will contain a descriptive boolean that will either Pass or Fail. If Passed, it will come through as an empty string. If Failed it will come through as what excatly failed within the assignment.
+A dictionary will come from the input team that mostly will contain list,
+unpack the dictionary, run through gatorgrade, and return as a list of tuples.
+Each tuple will contain a descriptive boolean that will either Pass or Fail.
+If Passed, it will come through as an empty string. If Failed it will come
+through as what exactly failed within the assignment.
 
 ### Generating a gatorgrade.yml file
 
-Generate team
+In order to generate a ‘gatorgrade.yml’ file, you should run the following
+command in your terminal:
+
+‘’’
+Gator grade generate
+‘’’
+
+Make sure that your repository doesn’t already contain a gator grade.yml file,
+or the command will not run. If you want to override this, run the previous
+command with —force/-f:
+
+‘’’
+Gator grade generate —force
+‘’’
+
+The created .yml file will be a template with example checks inside of it.
 
 #### Configuring GatorGrade Checks
 
