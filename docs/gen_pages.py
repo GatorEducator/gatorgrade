@@ -26,5 +26,13 @@ for path in sorted(Path("gatorgrade").rglob("*.py")):  #
 
     mkdocs_gen_files.set_edit_path(full_doc_path, path)  #
 
-with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:
+#Generate navigation
+with mkdocs_gen_files.open("reference/Summary.md", "w") as nav_file:
+    # Generate source pages nav
+    # for file in sorted(Path("docs/source").rglob("*.md")):
+    #     title = file.relative_to("docs/source").with_suffix("")
+    #     path = file.relative_to("docs/")
+    #     print(f" * [{title}]({path})", file=nav_file)
+
+    #Generate code reference navigation
     nav_file.writelines(nav.build_literate_nav())
