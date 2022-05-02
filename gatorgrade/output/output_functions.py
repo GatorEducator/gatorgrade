@@ -32,15 +32,15 @@ def run_gatorgrade_commands_and_return_results(commands_input):
             exceptions.InvalidCheckArgumentsError,
             exceptions.InvalidSystemArgumentsError,
             exceptions.InvalidCheckError,
-        ) as e:
+        ) as exc:
             print(
                 "\033[91m \033[1m \033[4m An exception was detected when",
                 " running the command : \033[0m \n\n \033[91m",
                 " ".join(command),
                 "\033[0m\n",
             )
-            print("The exception type is : ", type(e), "\n")
-            print("Exception is as follows: \n ", e)
+            print("The exception type is : ", type(exc), "\n")
+            print("Exception is as follows: \n ", exc)
     # Send results to output methods, to be uncommented when
     # functions are merged
     # print_percentage(results)
