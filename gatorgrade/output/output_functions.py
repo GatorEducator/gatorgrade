@@ -9,7 +9,13 @@ from gator import exceptions
 
 def receive_command(commands_input):
     """Main command function to pass commands and send results to other methods.
-    Commands are received as dictionary of two keys, shell commands / gator commands."""
+    Commands are received as dictionary of two keys, shell commands / gator commands.
+    
+    An Example of input for this function is as follows : 
+    
+    {'shell': [{'description': 'Run program', 'command': 'mdl'}], 
+    'gatorgrader': [['--description', 'do command', 'commandType', 
+    '--arg', '1', '--directory', './home', '--file', 'file.py']]}"""
 
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get('gatorgrader')
@@ -28,11 +34,11 @@ def receive_command(commands_input):
             )
             print("The exception type is : ", type(e), "\n")
             print("Exception is as follows: \n ", e)
-    # Send results to output methods
+    # Send results to output methods, to be uncommented when functions are merged
     # print_percentage(results)
     # print_description(results)
     return results
 
-commands_input = {'shell': [{'description': 'Pass HTMLHint', 'command': 'htmlhint'}], 'gatorgrader': [['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Have a total of 8 commits, 5 of which were created by you', 'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+commands_input = {'shell': [{'description': 'Run program', 'command': 'mdl'}], 'gatorgrader': [['--description', 'do command', 'commandType', '--arg', '1', '--directory', './home', '--file', 'file.py']]}
 
 receive_command(commands_input)
