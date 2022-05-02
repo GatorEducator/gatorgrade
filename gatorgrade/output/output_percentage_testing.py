@@ -1,4 +1,4 @@
-
+import math
 from turtle import right
 
 from sympy import total_degree
@@ -9,24 +9,26 @@ results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Fou
     ('Complete all TODOs', True, ''), ('Use an if statement', False, 'Found 0 match(es) of the regular expression in output or module.py'), 
     ('Have a total of 8 commits, 5 of which were created by you', True, '')]
 
-T_list = []
-Total = []
-for result in results:
-   checks = result[1]
-   for checks in checks:
-        T_list.append(checks)
+True_list = []
 
-    
-    
-        if checks == True:
-            Total.append(checks)
-    
+def math_function():
+#iterate through results tuples
+    for i in results:
+        for j in i:
+            if isinstance(j, bool):
+                if j == True:
+                    True_list.append(i)
+    math = print(len(True_list)/len(results))       
+    print(math)
+
+print(math_function())
 
 
 
 
-print(len(T_list))
-print(len(Total))
+
+
+
 
 '''
 def find_total():
