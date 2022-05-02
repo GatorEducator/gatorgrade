@@ -1,6 +1,6 @@
 # This class is used for storing the main functions requested from the Github Issue Tracker for the output team.
 # For instance, functions dealing with percentage output, description output, and colorization of text.
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 init()
 '''
 Show an example of what the the green check mark in output would look like
@@ -77,6 +77,7 @@ def output_fail_description(desc):
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = ["file.txt", [('No TODOS in text', True), ('Has an if statement', False, "No if statements found")]]
 determine_result_by_file(sample_result)
+<<<<<<< HEAD
 
 
 '''
@@ -94,3 +95,12 @@ determine_result_by_file(sample_result)
         # Use output_fail_description to give a description for why it failed
         output_fail_description(check[2])
 '''
+=======
+"""Add docstring."""
+
+
+# This class is used for storing the main functions requested
+# from the Github Issue Tracker for the output team.
+# For instance, functions dealing with percentage output,
+# description output, and colorization of text.
+>>>>>>> c937149568d83029dc1bd60088554378be5a9c6d
