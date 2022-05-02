@@ -16,6 +16,33 @@ def create_targeted_paths_list():
 
 def write_yaml_of_paths_list():  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
+    files_list = [
+        {
+            "path/to": [
+                {
+                    "file.py": [
+                        {
+                            "description": "Complete all TODOs",
+                            "check": "MatchFileFragment",
+                            "options": {"fragment": "TODO", "count": 0, "exact": True},
+                        }
+                    ]
+                },
+                {
+                    "file2.py": [
+                        {
+                            "description": "Complete all TODOs",
+                            "check": "MatchFileFragment",
+                            "options": {"fragment": "TODO", "count": 0, "exact": True},
+                        }
+                    ]
+                },
+            ]
+        }
+    ]
+
+    with open('gatorgrade.yml', 'w') as f:
+        data = yaml.dump(files_list, f)
     # Create a new YAML file with PyYaml in the specific path.
     # Write the default set up messages in YAML file.
     # List the file paths in specific format.
