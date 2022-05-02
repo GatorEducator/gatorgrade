@@ -1,0 +1,24 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": [
+        "pipx",
+        "pytest",
+        "pylint",
+        "taskipy",
+        "markdownlint",
+        "pyproject",
+        "virtualenvs",
+        "git",
+        "gitignore",
+        "github",
+        "pwsh",
+        "gatorgrader",
+        "gatorgrade",
+        "gatorgradle"
+    ],
+    "ignorePaths": [
+        ".github/**",
+        ".venv/**"
+    ]
+}
