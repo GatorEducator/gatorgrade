@@ -1,6 +1,6 @@
 """Test suite for output_functions.py."""
 
-import pytest
+# import pytest
 import output_functions
 
 
