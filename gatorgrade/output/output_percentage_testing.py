@@ -5,10 +5,11 @@ results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Fou
     ('Complete all TODOs', True, ''), ('Use an if statement', False, 'Found 0 match(es) of the regular expression in output or module.py'), 
     ('Have a total of 8 commits, 5 of which were created by you', True, '')]
 
-True_list = []
 
-def print_percetage():
+
+def print_percentage():
 #iterate through results tuples
+    True_list = []
     for i in results:
         for j in i:
             if isinstance(j, bool):
@@ -21,7 +22,7 @@ def print_percetage():
     else:
         print(f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%\n")
 
-print_percetage()
+print_percentage()
 
 
 
