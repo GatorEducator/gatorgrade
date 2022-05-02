@@ -1,7 +1,8 @@
 """Generate a YAML file with default messages and specific paths."""
 import os
+from typing import List
 
-def create_targeted_paths_list(key_word_list):
+def create_targeted_paths_list(key_word_list: List[str]) -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     # Warning: User should provide precise names of folders or files and provide correct character case as input
     # Warning: The empty folder or the folders only containing files starting with __ or . will be ignore
@@ -47,4 +48,4 @@ def write_yaml_of_paths_list(path_names):
     # List the file paths in specific format.
     pass
 
-print(create_targeted_paths_list(["test_temp.py"]))
+print(create_targeted_paths_list(["tests"]))
