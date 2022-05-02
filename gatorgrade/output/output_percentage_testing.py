@@ -1,8 +1,4 @@
-import math
-from turtle import right
-
-from sympy import total_degree
-from output_functions import receive_command
+from colorama import Fore
 
 
 results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Found 0 match(es) of the regular expression in output or yayaya.py'), 
@@ -11,17 +7,21 @@ results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Fou
 
 True_list = []
 
-def math_function():
+def print_percetage():
 #iterate through results tuples
     for i in results:
         for j in i:
             if isinstance(j, bool):
                 if j == True:
                     True_list.append(i)
-    math = print(len(True_list)/len(results))       
-    print(math)
+    math = (len(True_list)/len(results))       
+    Percent = math * 100
+    if Percent == 100.0:
+        print(f"\n{Fore.GREEN}Passing all GatorGrader Checks {Percent}%\n")
+    else:
+        print(f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%\n")
 
-print(math_function())
+print_percetage()
 
 
 
