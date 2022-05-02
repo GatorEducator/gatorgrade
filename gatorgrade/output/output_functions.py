@@ -10,6 +10,7 @@ import gator
 from gator import exceptions
 
 
+
 def run_commands_and_return_results(commands_input):
     """
     Receive commands and send results to other output methods.
@@ -32,22 +33,13 @@ def run_commands_and_return_results(commands_input):
         # catch the exception that would be returned and print
         try:
             result = gator.grader(command)
-            results.append(result)
-        except (
-            exceptions.InvalidCheckArgumentsError,
-            exceptions.InvalidSystemArgumentsError,
-            exceptions.InvalidCheckError,
-        ) as exc:
-            print(
-                "\033[91m \033[1m \033[4m An exception was detected when",
-                " running the command : \033[0m \n\n \033[91m",
-                " ".join(command),
-                "\033[0m\n",
-            )
-            print("The exception type is : ", type(exc), "\n")
-            print("Exception is as follows: \n ", exc)
+        except Exception as e:
+            bad_command = "Whoops!", e.__class__
+            result = (command, False, bad_command)
+        results.append(result)
     # Send results to output methods, to be uncommented when
     # functions are merged
     # print_percentage(results)
     # print_description(results)
     return results
+
