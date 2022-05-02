@@ -34,12 +34,21 @@ def run_commands_and_return_results(commands_input):
         try:
             result = gator.grader(command)
         except Exception as e:
-            bad_command = "Whoops!", e.__class__
+            bad_command = e.__class__
             result = (command, False, bad_command)
+            print("Whoops!  ", command, "didn't work for some reason.  Check out the diagnostic to find the type of error.\n")
         results.append(result)
     # Send results to output methods, to be uncommented when
     # functions are merged
     # print_percentage(results)
     # print_description(results)
     return results
+
+commands_input = {'gatorgrader': [['--description',
+        'Have a total of 8 commits, 5 of which were created by you',
+        'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+
+results = run_commands_and_return_results(commands_input)
+
+print(results)
 
