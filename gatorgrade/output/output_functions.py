@@ -38,7 +38,3 @@ def run_gatorgrade_commands_and_return_results(commands_input):
     # print_percentage(results)
     # print_description(results)
     return results
-
-commands_input = {'shell': [{'description': 'Run program', 'command': 'mdl'}], 'gatorgrader': [['--description', 'do command', 'commandType', '--arg', '1', '--directory', './home', '--file', 'file.py']]}
-
-receive_command(commands_input)
