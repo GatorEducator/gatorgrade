@@ -13,21 +13,21 @@ def reformat_yaml_data(data):
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
     data.pop(0)  # Removes the setup commands
-    loop_through_data(None, data[0], reformatted_data)
+    add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
 
 
-def loop_through_data(path, data_list, reformatted_data):
+def add_checks_to_list(path, data_list, reformatted_data):
     """Recursively loop through the data and add any checks that are found to the reformatted list."""
     current_path = path
     for dict in data_list:
         for item in dict:
-            if str(type(dict[item])) == "<class 'list'>":
-                if path == None:
+            if isinstance(dict[item], list):
+                if not path:
                     path = item
                 else:
                     path = f"{path}/{item}"
-                loop_through_data(path, dict[item], reformatted_data)
+                add_checks_to_list(path, dict[item], reformatted_data)
                 path = current_path
             else:
                 reformatted_data.append({"file_context": path, "check": dict})
