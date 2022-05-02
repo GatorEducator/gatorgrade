@@ -4,11 +4,6 @@ from typing import List
 
 def create_targeted_paths_list(key_word_list: List[str]) -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
-    # Warning: User should provide precise names of folders or files and provide correct character case as input
-    # Warning: The empty folder or the folders only containing files starting with __ or . will be ignore
-    # Warning: Don't name folder or file starting with . files will be reserved except the ones starting with . or __
-    # Warning: Only folder names in root dir or the one after root will be checked. Don't put the target folders too deep
-    # The file names have no above problem. You can put it in any dir.
     targeted_paths = []
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through
