@@ -1,37 +1,55 @@
-# This class is used for storing the main functions requested from the Github Issue Tracker for the output team.
-# For instance, functions dealing with percentage output, description output, and colorization of text.
+"""
+This module is used for storing the main functions requested.
+
+The requested functions are located at the Github Issue Tracker
+for the output team. For instance, functions dealing with percentage
+output, description output, and colorization of text.
+"""
 
 import gator
-import os
+from gator import exceptions
+
 from gatorgrade.output.output_percentage_testing import print_percetage
-import output_tools
-
-# Commands are received as list of tuples.
-# Each tuple in the list is a string and list of strings <string, [strings]>
-# The string is the path to the file or filename and the list is the commands for the file.
-def receive_command(command_info):
-    results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Found 0 match(es) of the regular expression in output or yayaya.py'), 
-    ('Complete all TODOs', True, ''), ('Use an if statement', False, 'Found 0 match(es) of the regular expression in output or module.py'), 
-    ('Have a total of 8 commits, 5 of which were created by you', True, '')]
 
 
-    for file_name, commands in command_info:
-        split_commands = []
-        results.append((file_name, []))
+def run_commands_and_return_results(commands_input):
+    """
+    Receive commands and send results to other output methods.
 
-        for pre_command in commands:
+    Commands are received as dictionary of two keys, shell commands / gator
+    commands.
 
-            formatted_command = split_command_string(pre_command)
-            
-        for command in split_commands:
+    An Example of input for this function is as follows :
 
-            try:
-                result = gator.grader(command)
-                results.get(file_name).append(result)
-            except:
-                print("\033[91m \033[1m \033[4m An exception was detected when running the command : \033[0m \n\n \033[91m", output_tools.get_simple_command_string(command) , "\033[0m")
+    {'shell': [{'description': 'Run program', 'command': 'mdl'}],
+    'gatorgrader': [['--description', 'do command', 'commandType',
+    '--arg', '1', '--directory', './home', '--file', 'file.py']]}
+    """
+    # Get first element in list, which is gatorgrader commands
+    gatorcommands = commands_input.get("gatorgrader")
+    results = []
 
-
-    # Here will be the code to send results to output functions ex:)
+    for command in gatorcommands:
+        # If command is formatted incorrectly in yaml files,
+        # catch the exception that would be returned and print
+        try:
+            result = gator.grader(command)
+            results.append(result)
+        except (
+            exceptions.InvalidCheckArgumentsError,
+            exceptions.InvalidSystemArgumentsError,
+            exceptions.InvalidCheckError,
+        ) as exc:
+            print(
+                "\033[91m \033[1m \033[4m An exception was detected when",
+                " running the command : \033[0m \n\n \033[91m",
+                " ".join(command),
+                "\033[0m\n",
+            )
+            print("The exception type is : ", type(exc), "\n")
+            print("Exception is as follows: \n ", exc)
+    # Send results to output methods, to be uncommented when
+    # functions are merged
     print_percetage(results)
     # print_description(results)
+    return results
