@@ -7,6 +7,7 @@ authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess
 [tool.poetry.dependencies]
 python = ">=3.7,<4.0"
 typer = "^0.4.1"
+PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 taskipy = "^1.10.1"
@@ -21,10 +22,11 @@ mkdocstrings = {extras = ["python"], version = "^0.18.1"}
 mkdocs-gen-files = {version = "^0.3.4"}
 mkdocs-typer = {version = "^0.0.2"}
 mkdocs-literate-nav = "^0.4.1"
+toml = "^0.10.2"
 
 [tool.taskipy.tasks]
-test = { cmd = "pytest --cov-report term-missing --cov-fail-under=70  --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
-lint = "task black && task flake8 && task pylint && task pydocstyle"
+test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
+lint = "task black && task pylint && task pydocstyle"
 black = { cmd= "black gatorgrade/ tests/ --check", help = "Run the black checks for source code format" }
 pylint = { cmd = "pylint gatorgrade/ tests/", help = "Run the pylint checks for source code documentation" }
 pydocstyle = { cmd = "pydocstyle gatorgrade/ tests/", help = "Run the pydocstyle checks for source code documentation" }
@@ -33,3 +35,6 @@ mkdocs = { cmd = "mkdocs build", help = "Build MKDocs documentation" }
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+gatorgrade = 'gatorgrade.main:app'
