@@ -3,6 +3,7 @@
 from gatorgrade.input.in_file_path import parse_config
 
 def test_parse_config_gg_check_in_file_context_contains_file():
+    """Test to make sure gatorgrader checks that have a file context include the file name in the list of lists."""
     # Given the path to the test yml file
     config = "tests/input/yml_test_files/gatorgrade_one_gg_check_in_file_context.yml"
     # when the parse_config function is run
@@ -11,6 +12,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
     assert "file.py" in output["gatorgrader"]
 
 def test_parse_config_gg_check_no_file_context_contains_no_file():
+    """Test to make sure gator grader checks that have no file context do not show the file name in the outputted list."""
     # Given the path to the test yml file
     config = "tests/input/yml_test_files/gatorgrade_one_gg_check_no_file_context.yml"
     # When parse_config is run
@@ -21,6 +23,7 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
 
 
 def test_parse_config_puts_checks_in_correct_keys():
+    """Test to make sure that gatorgrader checks are put inside the gatorgrader list and that shell commands are put inside the shell list."""
     # Given the path to the test yml file
     config = "tests/input/yml_test_files/gatorgrader_both_checks.yml"
     # When parse_config is run
