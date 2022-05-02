@@ -17,13 +17,13 @@ def test_parse_config_check_shell_contains_command():
     # Then assert that command is present in the shell
     assert "command" in output["shell"]
 
-    # do a test that makes sure shell checks are in the list with the shell key and vice versa
-    # have an input file that has one gator grade check and one shell check
-    # run the parse config function
-    # do a dictionary call to check whether the output[shell] has the value of the lists of shell checks 
+     # do a test that makes sure shell checks are in the list with the shell key and vice versa
+     # have an input file that has one gator grade check and one shell check
+     # run the parse config function
+     # do a dictionary call to check whether the output[shell] has the value of the lists of shell checks 
     
 
-    
+     
     # the parse config function will call jacobs functionality and then use the output of that to call tugi's function and will return the output of tugi's function 
     
     # jacobs function as output is tugi's functions input
