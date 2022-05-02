@@ -2,12 +2,12 @@
 
 def test_parse_config_check_gg_matchfilefragment():
     # Given the path to the test yml file
-    config = "test/input/yml_test_files/gatorgrade.yml"
+    config = "test/input/yml_test_files/gatorgrade.yml" # Make fixture that will create yml file to be parsed instead of expected file
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that match file fragment and match file regex exists
-    assert ["check","MatchFileFragment"] in output["gatorgrader"]
-    assert ["check","MatchFileRegex"] in output["gatorgrader"]
+    assert "MatchFileFragment" in output["gatorgrader"][0]
+    assert set([["--desription", "Complete all TODOs", ], [], []]) == set(output["gatorgrader"])  # Assert that output["gatorgrader"] is equal to expected output
 
 def test_parse_config_check_shell_contains_command():
     # Given the path to the test yml file
