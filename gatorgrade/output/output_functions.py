@@ -1,5 +1,4 @@
-"""
-This module is used for storing the main functions requested.
+"""This module is used for storing the main functions requested.
 
 The requested functions are located at the Github Issue Tracker
 for the output team. For instance, functions dealing with percentage
@@ -10,8 +9,7 @@ import gator
 
 
 def run_commands_and_return_results(commands_input):
-    """
-    Receive commands and send results to other output methods.
+    """Receive commands and send results to other output methods.
 
     Commands are received as dictionary of two keys, shell commands / gator
     commands.
@@ -22,7 +20,7 @@ def run_commands_and_return_results(commands_input):
     'gatorgrader': [['--description', 'do command', 'commandType',
     '--arg', '1', '--directory', './home', '--file', 'file.py']]}
     """
-    
+
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get("gatorgrader")
     results = []
@@ -32,7 +30,7 @@ def run_commands_and_return_results(commands_input):
         # catch the exception that would be returned and print
         try:
             result = gator.grader(command)
-        except Exception as command_exception: # pylint: disable=W0703
+        except Exception as command_exception:  # pylint: disable=W0703
             bad_command = command_exception.__class__
             result = (command, False, bad_command)
             print(
