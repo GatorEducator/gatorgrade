@@ -34,35 +34,37 @@ def test_parse_config_puts_checks_in_correct_keys():
 
 
 
-
-
-
-
-
-
-
-
+def test_parse_config_setup_shell_checks():
+    """Run a yml file without shell setup commands to see if the program allows a yml file without those commands."""
+    # given the path to the test yml file
+    config = "tests/input/yml_test_files/gatorgrade_no_shell_setup_check.yml"
+    # when the parse_config function is run
+    output = parse_config(config)
+    # then run a yml file without shell commands and see if the program can handle that
+    assert output["gatorgrader"][0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
 
     # look for matchfilefragment and match file regex
 
-    # test for format 
+def test_parse_config_check_gg_matchfilefragment():
+    """Test to make sure keywords like MatchFileFragment and MatchFileRegex appear inside the gator grader check list."""
+    # Given the path to the test yml file
+    config = "test/input/yml_test_files/gatorgrade_matchfilefragment.yml" # Make fixture that will create yml file to be parsed instead of expected file
+    # When the parse_config is run
+    output = parse_config(config)
+    # Then assert that match file fragment and match file regex exists
+    assert "MatchFileFragment" in output["gatorgrader"][0]
+    assert set([["--description", "Complete all TODOs", ], [], []]) == set(output["gatorgrader"])  # Assert that output["gatorgrader"] is equal to expected output
 
-     # a test to see if setup shell commands are needed, run a yml file without shell commands and see if the program can handle that
-
-     # test for shell checks 
-
-     # do a test that makes sure shell checks are in the list with the shell key and vice versa
-     # have an input file that has one gator grade check and one shell check
-     # run the parse config function
-     # do a dictionary call to check whether the output[shell] has the value of the lists of shell checks 
     
+
+def test_parse_config_check_shell_contains_command():
+    """Test to make sure that the shell commands are found inside the 'shell' list."""
+    # Given the path to the test yml file
+    config = "test/input/yml_test_files/gatorgrade_one_shell_command_check.yml"
+    # When the parse_config is run
+    output = parse_config(config)
+    # Then assert that command is present in the shell
+    assert output["shell"][0] == {"description": "Pass MDL", "command": "mdl ."}
 
      
-    # the parse config function will call jacobs functionality and then use the output of that to call tugi's function and will return the output of tugi's function 
-    
-    # jacobs function as output is tugi's functions input
-
-    # parse config should take as an argument the name of the gator grade file
-
-    # WHEN THIS IS IN A PR include a note that it wont be merged until parse_config is written
