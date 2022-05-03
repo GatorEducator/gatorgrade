@@ -1,7 +1,7 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 from pathlib import Path
 import typer
-from gatorgrade.input.in_file_path import parse_config
+
 
 app = typer.Typer(add_completion=False)
 FILE = "gatorgrade.yml"
@@ -17,7 +17,6 @@ def gatorgrade(
     """Run the GatorGrader checks in the gatorgrade.yml file."""
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
-        checks = parse_config(FILE)
         if filename.suffix == "yml":
             pass
 
