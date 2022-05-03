@@ -1,7 +1,6 @@
 """Test suite for output_functions.py."""
 
 from output import output_functions
-from gator import exceptions
 import pytest
 
 

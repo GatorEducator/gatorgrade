@@ -36,9 +36,10 @@ def run_commands_and_return_results(commands_input):
             bad_command = e.__class__
             result = (command, False, bad_command)
             print(
-                "Whoops!  ",
+                "Whoops! ",
                 command,
-                "didn't work for some reason.  Check out the diagnostic to find the type of error.\n",
+                "didn't work for some reason.",  
+                "Check out the diagnostic to find the type of error.",
             )
         results.append(result)
     # Send results to output methods, to be uncommented when
