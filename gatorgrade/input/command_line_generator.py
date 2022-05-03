@@ -16,7 +16,7 @@ def generate_checks(file_context_checks):
         },
     Args:
         file_context_checks: List containing dictionaries that contain file contexts
-            (either a file path or None if no file context) and checks in another dictionary 
+            (either a file path or None if no file context) and checks in another dictionary
             (can be either GatorGrader or shell checks).
             The input list is generated based on the configuration file.
     """
