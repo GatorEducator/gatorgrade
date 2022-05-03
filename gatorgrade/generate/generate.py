@@ -14,7 +14,7 @@ def create_targeted_paths_list():
     # Add those targeted file paths into a list and returns it.
 
 
-def write_yaml_of_paths_list():  # expected input: A path list
+def write_yaml_of_paths_list(path_names):  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
     files_list = [
         {
@@ -40,9 +40,9 @@ def write_yaml_of_paths_list():  # expected input: A path list
             ]
         }
     ]
-
-    with open('gatorgrade.yml', 'w') as f:
-        data = yaml.dump(files_list, f)
-    # Create a new YAML file with PyYaml in the specific path.
     # Write the default set up messages in YAML file.
-    # List the file paths in specific format.
+
+    with open('gatorgrade.yml', 'w') as file:
+        # Open the YAML file gatorgrade 
+        data = yaml.dump(files_list, file)
+        # Yaml dump accepts a python object and produces a YAML document.
