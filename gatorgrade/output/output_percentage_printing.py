@@ -1,4 +1,4 @@
-"""This function is to show the percentage of checks that the student has met requirments"""
+"""Output of percent printing is to show the percentage of checks that the student has met requirments."""
 from colorama import Fore
 
 
@@ -20,7 +20,7 @@ results = [
 
 
 def print_percentage(results):
-    """This is the fuction that will produce the output, so the customer can see the percentage."""
+    """Print percentage acts as fuction that will produce the output, so the customer can see the percentage."""
     # iterate through results tuples
     True_list = []
     for i in results:
