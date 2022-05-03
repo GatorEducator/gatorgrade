@@ -38,7 +38,7 @@ def run_commands_and_return_results(commands_input):
             print(
                 "Whoops! ",
                 command,
-                "didn't work for some reason.",  
+                "didn't work for some reason.",
                 "Check out the diagnostic to find the type of error.",
             )
         results.append(result)
