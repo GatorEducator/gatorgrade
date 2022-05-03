@@ -1,8 +1,8 @@
 '''
-"""Test suite for in_file_path.pu"""
+"""Test suite for command_line_generator.py"""
 
 import pytest
-from input import in_file_path
+from input import command_line_generator.py
 '''
 
 
