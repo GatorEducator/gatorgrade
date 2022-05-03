@@ -36,6 +36,7 @@ def test_run_commands_and_return_results_returns_correct_results():
 def test_bad_command_creates_diagnostic(capsys):
     """an improperly formatted command should produce a failed test and a diagnostic"""
 
+    # Spelling errors and an extra argument are in this dictionary
     bad_command = {
         "gatorgrader": [
             [
@@ -52,7 +53,8 @@ def test_bad_command_creates_diagnostic(capsys):
     }
 
     output_functions.run_commands_and_return_results(bad_command)
-    out, err = capsys.readouterr()
-    err = err + "Linting is not great sometimes"
+
+    # Capture the stdout
+    out, _ = capsys.readouterr()
 
     assert "Whoops" in out

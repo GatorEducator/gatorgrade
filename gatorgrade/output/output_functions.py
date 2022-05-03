@@ -22,6 +22,7 @@ def run_commands_and_return_results(commands_input):
     'gatorgrader': [['--description', 'do command', 'commandType',
     '--arg', '1', '--directory', './home', '--file', 'file.py']]}
     """
+    
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get("gatorgrader")
     results = []
@@ -31,7 +32,7 @@ def run_commands_and_return_results(commands_input):
         # catch the exception that would be returned and print
         try:
             result = gator.grader(command)
-        except Exception as command_exception:
+        except Exception as command_exception: # pylint: disable=W0703
             bad_command = command_exception.__class__
             result = (command, False, bad_command)
             print(
@@ -41,8 +42,5 @@ def run_commands_and_return_results(commands_input):
                 "Check out the diagnostic to find the type of error.",
             )
         results.append(result)
-    # Send results to output methods, to be uncommented when
-    # functions are merged
-    # print_percentage(results)
-    # print_description(results)
+
     return results
