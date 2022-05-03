@@ -39,13 +39,23 @@ def test_generate_force_option_creates_yml():
     assert result.exit_code == 0
 
 
-@pytest.mark.parametrize("assignment_path,expected_checks", [
-    ("./tests/test_assignment", ["✔  Complete All TODOs",
-                                 "✔  Use an if statement",
-                                 "|=====================================|\n|Passing all GatorGrader Checks "
-                                 "100.0%|\n|=====================================|"])
-])
-def test_full_integration_creates_valid_output(assignment_path, expected_checks, chdir, capsys):
+@pytest.mark.parametrize(
+    "assignment_path,expected_checks",
+    [
+        (
+            "./tests/test_assignment",
+            [
+                "✔  Complete All TODOs",
+                "✔  Use an if statement",
+                "|=====================================|\n|Passing all GatorGrader Checks "
+                "100.0%|\n|=====================================|",
+            ],
+        )
+    ],
+)
+def test_full_integration_creates_valid_output(
+    assignment_path, expected_checks, chdir, capsys
+):
     chdir(assignment_path)
     result = runner.invoke(main.app)
 
