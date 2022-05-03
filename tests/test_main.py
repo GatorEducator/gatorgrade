@@ -1,4 +1,7 @@
 """Tests for the main file of the project."""
+import os
+
+import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import main
@@ -33,4 +36,22 @@ def test_generate_force_option_creates_yml():
     """Test that ensures the force command works correctly."""
     result = runner.invoke(main.app, ["generate", "--force"])
 
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("assignment_path,expected_checks", [
+    ("./tests/test_assignment", ["✔  Complete All TODOs",
+                                 "✔  Use an if statement",
+                                 "|=====================================|\n|Passing all GatorGrader Checks "
+                                 "100.0%|\n|=====================================|"])
+])
+def test_full_integration_creates_valid_output(assignment_path, expected_checks, chdir, capsys):
+    chdir(assignment_path)
+    result = runner.invoke(main.app)
+
+    captured = capsys.readouterr()
+
+    for output_check in expected_checks:
+        assert output_check in captured.out
+    assert captured.err == ""
     assert result.exit_code == 0
