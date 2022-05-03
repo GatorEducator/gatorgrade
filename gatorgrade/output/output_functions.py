@@ -10,7 +10,6 @@ import gator
 from gator import exceptions
 
 
-
 def run_commands_and_return_results(commands_input):
     """
     Receive commands and send results to other output methods.
@@ -36,7 +35,11 @@ def run_commands_and_return_results(commands_input):
         except Exception as e:
             bad_command = e.__class__
             result = (command, False, bad_command)
-            print("Whoops!  ", command, "didn't work for some reason.  Check out the diagnostic to find the type of error.\n")
+            print(
+                "Whoops!  ",
+                command,
+                "didn't work for some reason.  Check out the diagnostic to find the type of error.\n",
+            )
         results.append(result)
     # Send results to output methods, to be uncommented when
     # functions are merged
@@ -44,11 +47,22 @@ def run_commands_and_return_results(commands_input):
     # print_description(results)
     return results
 
-commands_input = {'gatorgrader': [['--description',
-        'Have a total of 8 commits, 5 of which were created by you',
-        'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+
+commands_input = {
+    "gatorgrader": [
+        [
+            "--description",
+            "Have a total of 8 commits, 5 of which were created by you",
+            "CountCommitts",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+        ]
+    ]
+}
 
 results = run_commands_and_return_results(commands_input)
 
 print(results)
-

@@ -4,6 +4,7 @@ from output import output_functions
 from gator import exceptions
 import pytest
 
+
 def test_run_commands_and_return_results_returns_correct_results():
     """Make sure the receive function in output_functions.py runs
     and returns the correct results in the form of a tuple list"""
@@ -33,15 +34,26 @@ def test_run_commands_and_return_results_returns_correct_results():
 
     assert expected_result == actual_result
 
-def test_bad_command_creates_diagnostic(capsys) :
+
+def test_bad_command_creates_diagnostic(capsys):
     """an improperly formatted command should produce a failed test and a diagnostic"""
 
-    bad_command = {'gatorgrader': [['--description', 
-    'Have a total of 8 commits, 5 of which were created by you', 
-    'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+    bad_command = {
+        "gatorgrader": [
+            [
+                "--description",
+                "Have a total of 8 commits, 5 of which were created by you",
+                "CountCommitts",
+                "--fragment",
+                "TODO",
+                "--count",
+                "0",
+                "--exact",
+            ]
+        ]
+    }
 
     output_functions.run_commands_and_return_results(bad_command)
     out, err = capsys.readouterr()
 
-    assert 'Whoops' in out
-
+    assert "Whoops" in out
