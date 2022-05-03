@@ -1,5 +1,6 @@
 """Test suite for parse_config function."""
 
+import pytest
 from gatorgrade.input.in_file_path import parse_config
 
 
