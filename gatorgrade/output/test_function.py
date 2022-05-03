@@ -1,6 +1,10 @@
 """ Tests to ensure the output_functions.py functions work properly. """
 
-import output_functions
+from output.outputfunctions import (
+    sort_checks_by_result,
+    output_passed_checks,
+    output_failed_checks,
+)
 import pytest
 from colorama import init, Fore
 
