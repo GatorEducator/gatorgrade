@@ -62,5 +62,3 @@ def test_parse_config_check_shell_contains_command():
     output = parse_config(config)
     # Then assert that command is present in the shell
     assert output["shell"][0] == {"description": "Pass MDL", "command": "mdl ."}
-
-     
