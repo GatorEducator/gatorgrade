@@ -52,6 +52,7 @@ def test_bad_command_creates_diagnostic(capsys):
     }
 
     output_functions.run_commands_and_return_results(bad_command)
-    out, _ = capsys.readouterr()
+    out, err = capsys.readouterr()
+    err = err + "Linting is not great sometimes"
 
     assert "Whoops" in out
