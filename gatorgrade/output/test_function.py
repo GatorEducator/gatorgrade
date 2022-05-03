@@ -8,7 +8,7 @@ init()
 
 @pytest.fixture()
 def test_output_shows_green(capsys):
-
+    """Test for ouput of a passed check will show green check."""
     output_functions.output_passed_checks()
     out, err = capsys.readouterr()
 
@@ -17,6 +17,7 @@ def test_output_shows_green(capsys):
 
 
 def test_output_shows_red(capsys):
+    """Test for output of failed check to show red color using Colorama."""
     output_functions.output_failed_checks()
     out, err = capsys.readouterr()
 
@@ -25,8 +26,8 @@ def test_output_shows_red(capsys):
 
 
 def test_output_shows_yellow(capsys):
-
-    output_functions.output_failed_checks(desc="missing if statement")
+    """Testing the failed check will show a yellow message in output."""
+    output_functions.output_failed_checks(failed_checks=("Implement this with an if.",False,"No if statements found"))
     out, err = capsys.readouterr()
 
     assert f"{Fore.YELLOW}\u2192" in out
@@ -34,44 +35,18 @@ def test_output_shows_yellow(capsys):
 
 
 def test_descrition_in_fail_message(capsys):
-    output_functions.output_failed_checks(check=("todos",False,"no ifs "))
+    """Testing the failed check will show diagnostic yellow message in output."""
+    output_functions.output_failed_checks(failed_checks=("Implement this with an if.",False,"No if statements found"))
     out, err = capsys.readouterr()
-    expected_output = "no ifs "
+    expected_output = "No if"
     actual_output = out
     assert expected_output in actual_output
     assert "" in err
 
 def test_false_result_returns_X(capsys):
-    
-    output_functions.output_failed_checks(check=("todos",False,"no ifs "))
-    
+    """Test for the X will appear in the output for the failed check."""
+    output_functions.output_failed_checks(failed_checks=("Implement this with an if.",False,"No if statements found"))
     out,err = capsys.readouterr()
     
     assert '\u2718' in out
     assert err == ""
-
-
-def test_style_reset():
-
-    """
-    def test_result():
-
-
-
-
-
-
-
-
-
-    Def test_passing_result_has_one_line
-
-
-    def test_output_will_show_diagnostic
-
-
-    def test_Description_taken_as_argument
-
-
-
-    def test style reset changes color"""
