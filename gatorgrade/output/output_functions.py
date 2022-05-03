@@ -10,7 +10,7 @@ import gator
 
 def run_commands_and_return_results(commands_input):
     """Receive commands and send results to other output methods.
-
+    
     Commands are received as dictionary of two keys, shell commands / gator
     commands.
 
@@ -20,7 +20,6 @@ def run_commands_and_return_results(commands_input):
     'gatorgrader': [['--description', 'do command', 'commandType',
     '--arg', '1', '--directory', './home', '--file', 'file.py']]}
     """
-
     # Get first element in list, which is gatorgrader commands
     gatorcommands = commands_input.get("gatorgrader")
     results = []
