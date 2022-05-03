@@ -6,7 +6,7 @@ init()
 
 @pytest.fixture()
 def test_output_shows_green(capsys):
-    output_functions.sample_output_passing_check()
+    output_functions.output_passed_checks()
     out, err = capsys.readouterr()
 
     assert f"{Fore.GREEN}\u2714" in out
@@ -14,7 +14,7 @@ def test_output_shows_green(capsys):
 
 
 def test_output_shows_red(capsys):
-    output_functions.sample_output_failing_check()
+    output_functions.output_failed_checks()
     out, err = capsys.readouterr()
 
     assert f"{Fore.RED}" in out
@@ -23,7 +23,7 @@ def test_output_shows_red(capsys):
 
 def test_output_shows_yellow(capsys):
 
-    output_functions.output_fail_description(desc="missing if statement")
+    output_functions.output_failed_checks(desc="missing if statement")
     out, err = capsys.readouterr()
 
     assert f"{Fore.YELLOW}\u2192" in out
@@ -31,7 +31,7 @@ def test_output_shows_yellow(capsys):
 
 
 def test_descrition_in_fail_message(capsys):
-    output_functions.output_check_result(file="txt",check=("todos",False,"no ifs "))
+    output_functions.output_failed_checks(check=("todos",False,"no ifs "))
     out, err = capsys.readouterr()
     expected_output = "no ifs "
     actual_output = out
@@ -40,7 +40,7 @@ def test_descrition_in_fail_message(capsys):
 
 def test_false_result_returns_X(capsys):
     
-    output_functions.output_check_result(file="txt",check=("todos",False,"no ifs "))
+    output_functions.output_failed_checks(check=("todos",False,"no ifs "))
     
     out,err = capsys.readouterr()
     
