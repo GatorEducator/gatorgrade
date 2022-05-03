@@ -1,7 +1,6 @@
 """Test suite for output_functions.py."""
 
 from gatorgrade.output import output_functions
-import pytest
 
 
 def test_run_commands_and_return_results_returns_correct_results():
