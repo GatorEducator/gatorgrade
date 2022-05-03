@@ -1,6 +1,6 @@
 """Test suite for output_functions.py."""
 
-import output_functions
+from output import output_functions
 
 
 def test_run_commands_and_return_results_returns_correct_results():
