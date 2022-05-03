@@ -22,6 +22,6 @@ def print_percentage(results):
     else:
         print(f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%.\n")
 
-print_percentage()
+print_percentage(results)
 
 
