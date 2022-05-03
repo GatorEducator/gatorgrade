@@ -2,7 +2,7 @@
 
 import pytest
 from colorama import init, Fore
-import output_functions
+from output import output_functions
 
 init()
 
