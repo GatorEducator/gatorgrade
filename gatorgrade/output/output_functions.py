@@ -8,8 +8,7 @@ output, description output, and colorization of text.
 
 import gator
 from gator import exceptions
-
-from gatorgrade.output.output_percentage_testing import print_percentage
+from output_percentage_printing import print_percentage
 
 
 def run_commands_and_return_results(commands_input):
