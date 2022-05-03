@@ -7,7 +7,7 @@ results = [('Complete all TODOs', True, ''), ('Use an if statement', False, 'Fou
 
 
 
-def print_percentage():
+def print_percentage(results):
 #iterate through results tuples
     True_list = []
     for i in results:

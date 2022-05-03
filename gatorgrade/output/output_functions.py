@@ -9,7 +9,7 @@ output, description output, and colorization of text.
 import gator
 from gator import exceptions
 
-from gatorgrade.output.output_percentage_testing import print_percetage
+from gatorgrade.output.output_percentage_testing import print_percentage
 
 
 def run_commands_and_return_results(commands_input):
@@ -50,6 +50,6 @@ def run_commands_and_return_results(commands_input):
             print("Exception is as follows: \n ", exc)
     # Send results to output methods, to be uncommented when
     # functions are merged
-    print_percetage(results)
+    print_percentage(results)
     # print_description(results)
     return results
