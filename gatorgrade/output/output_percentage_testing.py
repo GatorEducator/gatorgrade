@@ -20,7 +20,7 @@ def print_percentage(results):
     if Percent == 100.0:
         print(f"{Fore.GREEN}|=====================================|\n|Passing all GatorGrader Checks {Percent}%|\n|=====================================|")
     else:
-        print(f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%.\n")
+        print(f"\n{Fore.RED}Passing {len(True_list)}/{len(results)}, Grade is {Percent}%.\n")
 
 print_percentage(results)
 
