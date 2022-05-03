@@ -1,12 +1,16 @@
-from sys import stdout
-from output import output_functions
+""" Tests to ensure the output_functions.py functions work properly. """
+
 import pytest
-from colorama import init, Fore, Style
+from colorama import init, Fore
+from output import output_functions
+
 init()
+
 
 @pytest.fixture()
 def test_output_shows_green(capsys):
-    output_functions.sample_output_passing_check()
+    """Test for ouput of a passed check will show green check."""
+    output_functions.output_passed_checks()
     out, err = capsys.readouterr()
 
     assert f"{Fore.GREEN}\u2714" in out
@@ -14,66 +18,43 @@ def test_output_shows_green(capsys):
 
 
 def test_output_shows_red(capsys):
-    output_functions.sample_output_passing_check()
+    """Test for output of failed check to show red color using Colorama."""
+    output_functions.output_failed_checks()
     out, err = capsys.readouterr()
 
-    assert f"{Fore.RED}\u2718" in out
+    assert f"{Fore.RED}" in out
     assert err == ""
 
 
 def test_output_shows_yellow(capsys):
-
-    output_functions.sample_output_passing_check()
+    """Testing the failed check will show a yellow message in output."""
+    output_functions.output_failed_checks(
+        failed_checks=("Implement this with an if.", False, "No if statements found")
+    )
     out, err = capsys.readouterr()
 
     assert f"{Fore.YELLOW}\u2192" in out
-    assert err ==  ""
-
-
-def test_descrition_in_fail_message(capsys,expected_output):
-    output_functions.output_check_result(file="text.txt",check=("have a if statement",False,"no ifs "))
-    out, err = capsys.readouterr()
-    expected_output = "no ifs "
-    actual_output = out
-    assert  expected_output == actual_output
-    assert "" in err 
-
-def test_false_result_returns_X(capsys):
-    
-    output_functions.output_check_result()
-    
-    out,err = capsys.readouterr()
-    
-    assert '\u2718' in out
     assert err == ""
 
 
-
-def test_style_reset():
-
-
-
-
-    '''
-def test_result():
-
-
-
-
+def test_descrition_in_fail_message(capsys):
+    """Testing the failed check will show diagnostic yellow message in output."""
+    output_functions.output_failed_checks(
+        failed_checks=("Implement this with an if.", False, "No if statements found")
+    )
+    out, err = capsys.readouterr()
+    expected_output = "No if"
+    actual_output = out
+    assert expected_output in actual_output
+    assert "" in err
 
 
+def test_false_result_returns_x(capsys):
+    """Test for the X will appear in the output for the failed check."""
+    output_functions.output_failed_checks(
+        failed_checks=("Implement this with an if.", False, "No if statements found")
+    )
+    out, err = capsys.readouterr()
 
-    
-
-Def test_passing_result_has_one_line 
-
-
-def test_output_will_show_diagnostic
-
-
-def test_Description_taken_as_argument
-
-
-
-def test style reset changes color
-'''
+    assert "\u2718" in out
+    assert err == ""
