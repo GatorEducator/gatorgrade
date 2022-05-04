@@ -15,7 +15,7 @@ def run_commands_and_return_results(commands_input):
         commands_input (dict{str: List[dict{str:str, ...}],
         str: List[List[str]]}): The first parameter which
         contains commands.
-        
+
     Returns:
         List[tuple[str, bool, str]]
 
