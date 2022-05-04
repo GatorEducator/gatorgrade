@@ -2,23 +2,6 @@
 from colorama import Fore
 
 
-results = [
-    ("Complete all TODOs", True, ""),
-    (
-        "Use an if statement",
-        False,
-        "Found 0 match(es) of the regular expression in output or yayaya.py",
-    ),
-    ("Complete all TODOs", True, ""),
-    (
-        "Use an if statement",
-        False,
-        "Found 0 match(es) of the regular expression in output or module.py",
-    ),
-    ("Have a total of 8 commits, 5 of which were created by you", True, ""),
-]
-
-
 def print_percentage(results):
     """Print percentage acts as fuction that will produce the output, so the customer can see the percentage."""
     # iterate through results tuples
@@ -38,6 +21,3 @@ def print_percentage(results):
         print(
             f"\n{Fore.RED}Passing {len(True_list)}/{len(results)}, Grade is {Percent}%.\n"
         )
-
-
-print_percentage(results)
