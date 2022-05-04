@@ -1,5 +1,6 @@
-import in_file_path
+"""Set-up the shell commands."""
 import os, sys
+
 
 def run_setup(front_matter):
     """Run the shell set up commands and exit the program if a command fails.
