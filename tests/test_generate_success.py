@@ -4,6 +4,7 @@ import pytest
 
 @pytest.fixture()
 def setup(tmp_path):
+    """Setup directory for tests"""
     # Given this file structure
     src_dir = tmp_path / "src"
     src_dir.mkdir()
@@ -26,7 +27,7 @@ def test_generate_config_creates_gatorgrade_yml(setup):
 
 
 def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(setup):
-    """Test to see that gatorgrade_yml file exist in file structure"""
+    """Test to see if input matches directory"""
     # When generate_config is called
     generate_config(["src"], setup)
     # Then gatorgrade.yml is created
@@ -35,7 +36,7 @@ def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(setup):
 
 
 def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(setup):
-    """Test to see that gatorgrade_yml file exist in file structure"""
+    """Test to see if input does not match directory"""
     # When generate_config is called
     generate_config(["writing"], setup)
     # Then gatorgrade.yml is created
