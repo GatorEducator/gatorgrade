@@ -1,20 +1,22 @@
+"""This module tests the generate.py functionality"""
+
 # Import needed libraries
-import pytest
 from pathlib import Path
 import yaml
 
-# PyYAML function needed for creating a mock "gatorgrade.yml" file
+
 def str_representer(dumper, data):
+    """PyYAML function needed for creating a mock "gatorgrade.yml" file"""
     if data.count("\n") > 0:
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
 
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 
-def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
-    """Check if the generate.py creates a gatorgrade.yml file in the root directory after it's run"""
+def test_generate_should_create_gatorgrade_yml_file(tmp_path):
+    """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run"""
 
-    # Given a lab directory contains all of the files and folders that user inputted when calling generate.py
+    # Given a directory contains all the files and folders user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
 
@@ -48,11 +50,12 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
 
 
 def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(
-    tmp_path, capsys
+    tmp_path,
 ):
     """Check if gatorgrade.yml contains correct paths when successfully created"""
 
-    # Given an assignment directory that contains all of the folders and files that user inputted when calling generate.py
+    # Given an assignment directory that contains all of the folders
+    # and files that user inputted when calling generate.py
     root_directory = tmp_path / "Practical-01"
     root_directory.mkdir()
 
