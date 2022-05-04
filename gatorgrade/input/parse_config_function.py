@@ -9,5 +9,3 @@ def parse_config(file):
         file: Yaml file containing gatorgrade and shell command checks 
     """
     generate_checks(reformat_yaml_data(parse_yaml_file(file))) # Call previously generated function to modify file
-
-    # Create Args section in docstring
