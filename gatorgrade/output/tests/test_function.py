@@ -54,7 +54,7 @@ def test_descrition_in_fail_message(capsys):
 
 
 def test_false_result_returns_x(capsys):
-    """Test for the X will appear in the output for the failed check."""
+    """Test will result a X mark in the output for the failed check."""
     output_functions.output_failed_checks(
         failed_checks=("Implement this with an if.", False, "No if statements found")
     )
