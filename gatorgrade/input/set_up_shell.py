@@ -4,9 +4,11 @@ import os, sys
 
 def run_setup(front_matter):
     """Run the shell set up commands and exit the program if a command fails.
+
     Args:
         front_matter: A dictionary whose 'setup' key contains the set up commands
         as a multi-line string.
+
     """
     print("Running set up commands...")
     for line in front_matter["setup"].splitlines():
