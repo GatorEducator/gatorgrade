@@ -13,7 +13,7 @@ def str_representer(dumper, data):
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
     """Check if the generate.py creates a gatorgrade.yml file in the root directory after it's run"""
-    
+
     # Given a lab directory contains all of the files and folders that user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
@@ -47,7 +47,9 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
     assert file_path.is_file()
 
 
-def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(tmp_path, capsys):
+def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(
+    tmp_path, capsys
+):
     """Check if gatorgrade.yml contains correct paths when successfully created"""
 
     # Given an assignment directory that contains all of the folders and files that user inputted when calling generate.py
@@ -78,7 +80,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     output_directory.mkdir()
     output_file = output_directory / "output.txt"
     output_file.write_text("Test output")
-    
+
     tests_directory = root_directory / "tests"
     tests_directory.mkdir()
     test_file = tests_directory / "test_file.py"
@@ -94,7 +96,6 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
 
     pyproject_file = root_directory / "pyproject.toml"
     pyproject_file.write_text("[tool.poetry]")
-
 
     # When we call the modularized version of "generate.py" with two arguments
 
@@ -116,7 +117,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
             ]
         },
         {
-             "src/output/output.txt": [
+            "src/output/output.txt": [
                 {
                     "description": "Complete all TODOs",
                     "check": "MatchFileFragment",
@@ -159,13 +160,17 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
                     "options": {"fragment": "TODO", "count": 0, "exact": True},
                 }
             ]
-        }
+        },
     ]
 
     yaml.add_representer(str, str_representer)
 
     gatorgrade_yml = root_directory / "gatorgrade.yml"
-    gatorgrade_yml.write_text(yaml.dump_all((setup_dict, files_list), default_flow_style=False, sort_keys=False))
+    gatorgrade_yml.write_text(
+        yaml.dump_all(
+            (setup_dict, files_list), default_flow_style=False, sort_keys=False
+        )
+    )
 
     file = gatorgrade_yml.open()
     file_text = file.read()
