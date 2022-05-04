@@ -53,6 +53,8 @@ def generate_checks(file_context_checks):
             if file_context is not None:
                 # Get the file and directory using os
                 dirname, filename = os.path.split(file_context)
+                if dirname == "":
+                    dirname = "."
                 gatorgrader_command_options.append("--directory")
                 gatorgrader_command_options.append(f"{dirname}")
                 gatorgrader_command_options.append("--file")
