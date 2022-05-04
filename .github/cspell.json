@@ -1,8 +1,6 @@
-// cspell Settings (https://github.com/streetsidesoftware/cspell/tree/main/packages/cspell#cspelljson)
 {
     "version": "0.2",
     "language": "en",
-    // list of words to always be considered correct (may need additions later)
     "words": [
         "pipx",
         "pytest",
