@@ -11,6 +11,13 @@ import gator
 def run_commands_and_return_results(commands_input):
     """Receive commands and send results to other output methods.
 
+    Args:
+        commands_input (dict{List[dict{str:str, ...}], List[List[str]]}):
+        The first parameter.
+        
+    Returns:
+        List[tuple[str, bool, str]]
+
     Commands are received as dictionary of two keys, shell commands / gator
     commands.
 
