@@ -25,7 +25,7 @@ def generate_checks(file_context_checks):
         # If the check has a 'command', then it is a shell check
         if "command" in check:
             shell_checks.append(check)
-        # Else it's a gator grader check
+        # Else it's a GatorGrader check
         else:
             gatorgrader_command_options = []
             # Defining the description and option
