@@ -6,6 +6,8 @@ For instance, functions dealing with percentage output, description output,
 and colorization of text.
 """
 from colorama import init, Fore, Style
+from gatorgrade.output.output_functions import run_commands_and_return_results
+from gatorgrade.output.output_percentage_printing import print_percentage
 
 init()
 
@@ -49,9 +51,19 @@ def output_failed_checks(failed_checks):
         print(f"    {Fore.YELLOW}\u2192  {description}")
 
 
+def run_and_display_command_checks(commands) :
+    """The final function which runs commands through gatorgrader and displays them to the user"""
+    results = run_commands_and_return_results(commands)
+    sort_checks_by_result(results)
+    print_percentage(results)
+
+
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = [
-    ("No TODOS in text", True),
-    ("Has an if statement", False, "No if statements found"),
+    ("Has an if statement", False, "No if statements found")
 ]
-sort_checks_by_result(sample_result)
+# sort_checks_by_result(sample_result)
+
+sample_commands = {'shell': [{'description': 'Pass HTMLHint', 'command': 'htmlhint'}], 'gatorgrader': [['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Have a total of 8 commits, 5 of which were created by you', 'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+
+run_and_display_command_checks(sample_commands)
