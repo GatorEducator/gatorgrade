@@ -12,8 +12,9 @@ def test_output_shows_green(capsys):
     """Test for ouput of a passed check will show green check."""
     output_functions.output_passed_checks()
     out, err = capsys.readouterr()
-
-    assert f"{Fore.GREEN}\u2714" in out
+    expected_output = f"{Fore.GREEN}\u2714"
+    actual_output = out
+    assert expected_output in actual_output
     assert err == ""
 
 
@@ -22,7 +23,9 @@ def test_output_shows_red(capsys):
     output_functions.output_failed_checks()
     out, err = capsys.readouterr()
 
-    assert f"{Fore.RED}" in out
+    expected_output = f"{Fore.RED}"
+    actual_output = out
+    assert expected_output in actual_output
     assert err == ""
 
 
@@ -32,8 +35,9 @@ def test_output_shows_yellow(capsys):
         failed_checks=("Implement this with an if.", False, "No if statements found")
     )
     out, err = capsys.readouterr()
-
-    assert f"{Fore.YELLOW}\u2192" in out
+    expected_output = f"{Fore.YELLOW}\u2192"
+    actual_output = out
+    assert expected_output in actual_output
     assert err == ""
 
 
@@ -55,6 +59,8 @@ def test_false_result_returns_x(capsys):
         failed_checks=("Implement this with an if.", False, "No if statements found")
     )
     out, err = capsys.readouterr()
+    expected_output = "\u2718"
+    actual_output = out
 
-    assert "\u2718" in out
+    assert expected_output in actual_output
     assert err == ""
