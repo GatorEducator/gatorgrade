@@ -12,8 +12,9 @@ def run_commands_and_return_results(commands_input):
     """Receive commands and send results to other output methods.
 
     Args:
-        commands_input (dict{List[dict{str:str, ...}], List[List[str]]}):
-        The first parameter.
+        commands_input (dict{str: List[dict{str:str, ...}],
+        str: List[List[str]]}): The first parameter which
+        contains commands.
         
     Returns:
         List[tuple[str, bool, str]]
@@ -21,7 +22,7 @@ def run_commands_and_return_results(commands_input):
     Commands are received as dictionary of two keys, shell commands / gator
     commands.
 
-    An Example of input for this function is as follows :
+    An Example of arg input for this function is as follows :
 
     {'shell': [{'description': 'Run program', 'command': 'mdl'}],
     'gatorgrader': [['--description', 'do command', 'commandType',
