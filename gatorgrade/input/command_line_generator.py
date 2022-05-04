@@ -2,9 +2,6 @@
 
 import os
 
-
-# Function to generate command options from a list of object checks
-
 # pylint: disable=too-many-nested-blocks
 def generate_checks(file_context_checks):
     """Generate a dictionary of checks based on the configuration file.
