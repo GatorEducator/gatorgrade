@@ -29,15 +29,15 @@ def generate_checks(file_context_checks):
         else:
             gatorgrader_command_options = []
             # Defining the description and option
-            description = check["description"]
-            options = check["options"]
-            # Creating a list that has description, check, and options in it for GatorGrader check
-            gatorgrader_command_options = ["--description", f"{description}"]
+            description = check.get("description")
+            options = check.get("options")
+            if description is not None:
+                # Creating a list that has description, check, and options for the check
+                gatorgrader_command_options = ["--description", f"{description}"]
             gatorgrader_command_options.append(check["check"])
             # If options exist add all the keys and the values into GatorGrader command options
-            if options:
+            if options is not None:
                 for key in options:
-                    # If the type of the value is boolean, add the key but not the boolean value
                     # Checking if the key is a flag
                     if isinstance(options[key], bool):
                         if options[key] is True:
