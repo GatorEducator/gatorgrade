@@ -21,12 +21,12 @@ def run_setup(front_matter):
             # Extracts the exit code value from the exit status.
             exit_code = os.WEXITSTATUS(exit_status)
             # If the exit code tells it was unsuccessful and did not return 0
-        if exit_code != 0:
-            print(
-                f'The set up command "{command}" failed.\
-            Exiting GatorGrader.',
-                file=sys.stderr,
-            )
-            # If a set up command failed, exit the execution
-            # because environment was not set up correctly.
-            sys.exit()
+            if exit_code != 0:
+                print(
+                    f'The set up command "{command}" failed.\
+                Exiting GatorGrade.',
+                    file=sys.stderr,
+                )
+                # If a set up command failed, exit the execution
+                # because environment was not set up correctly.
+                sys.exit(1)
