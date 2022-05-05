@@ -45,9 +45,11 @@ To run checks against an assignment, use the `gator grade` command.
 #### Interpreting Output
 
 All gatorgrader checks will be displayed as output.  Checks that
-have passed gatorgrader will be green, while failing checks will be red.
-The overall percentage of passed checks will be shown
-at the bottom of the display.
+have passed gatorgrader will have a green check mark next to the
+description.  Failing checks will show a red "X" next to the
+description.  The overall percentage of passed checks will be shown
+at the bottom of the display and will be in red until the percentage
+of passed checks reaches 100%.
 
 ### Generating a gatorgrade.yml file
 
