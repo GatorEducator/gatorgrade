@@ -1,5 +1,8 @@
+# Global imports
 import pytest
 from gatorgrade.generate.generate import generate_config
+
+"""Test for best case scenario"""
 
 
 @pytest.fixture()
