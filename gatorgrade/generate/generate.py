@@ -8,7 +8,6 @@ def create_targeted_paths_list(key_word_list: List[str], relative_run_path: str 
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through
     for dirpath, _, filenames in os.walk(relative_run_path):
-        print(dirpath)
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
         # Ignore folder starting with double underscore
