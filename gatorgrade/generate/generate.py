@@ -80,10 +80,3 @@ def create_targeted_paths_list(
         )
 
     return targeted_paths
-
-
-def write_yaml_of_paths_list():  # expected input: A path list
-    """Write YAML file to create gatorgrade file and set default messages."""
-    # Create a new YAML file with PyYaml in the specific path.
-    # Write the default set up messages in YAML file.
-    # List the file paths in specific format.
