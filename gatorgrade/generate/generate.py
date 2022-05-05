@@ -2,8 +2,10 @@
 import os
 from typing import List
 
+
 class Bcolors:
-    """ Define colors for terminal output"""
+    """Define colors for terminal output"""
+
     OKGREEN = "\033[92m"
     WARNING = "\033[93m"
     FAIL = "\033[91m"
