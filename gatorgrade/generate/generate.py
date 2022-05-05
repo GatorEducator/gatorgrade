@@ -23,16 +23,18 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
     # Write the default set up messages in YAML file.
 
     path_names = create_targeted_paths_list(["test"])
-    # Set path_names 
+    # Set path_names to the create_targeted_paths_list function with the parameter "test"
 
     files_list = []
-    # Create an empty list named files_list to store 
+    # Create an empty list to store dictionaries
     for file_path in path_names:
         # Iterate through items in path_names
         file_path_fixed = file_path.replace("./", "")
-        # Make file_path easier to rea by removing unnecessary characters
+        # Make file_path easier to read by removing unnecessary characters
         file_path_dict = {
+            # Dictionary to store the file paths
             file_path_fixed: [
+                # List which stores strings which will be in gatorgrade.yml file
                 {
                     "description": "Complete all TODOs",
                     "check": "MatchFileFragment",
@@ -44,6 +46,7 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
         # Append files_list with the values stored inside file_path_dict
 
     with open("gatorgrade.yml", "w") as file:
-        # Open a new YAML file named gatorgrade
+        # Write a new YAML file named gatorgrade
         data = yaml.dump(files_list, file, sort_keys=False)
-        # 
+        # Dump strings stored in files_list into a new YAML file
+    pass
