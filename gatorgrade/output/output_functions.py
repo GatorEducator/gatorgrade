@@ -5,9 +5,9 @@ Issue Tracker for the output team.
 For instance, functions dealing with percentage output, description output,
 and colorization of text.
 """
-from colorama import init, Fore, Style
+import colorama as color
 
-init()
+color.init()
 
 
 def sort_checks_by_result(results):
@@ -35,7 +35,7 @@ def output_passed_checks(passed_checks):
     for i in passed_checks:
         requirement = i[0]
         # Use colorama to style passing check
-        print(f"{Fore.GREEN}\u2714  {Style.RESET_ALL}{requirement}")
+        print(f"{color.Fore.GREEN}\u2714  {color.Style.RESET_ALL}{requirement}")
 
 
 def output_failed_checks(failed_checks):
@@ -45,13 +45,13 @@ def output_failed_checks(failed_checks):
         requirement = i[0]
         description = i[2]
         # Use colorama to print and style "X"
-        print(f"{Fore.RED}\u2718  {Style.RESET_ALL}{requirement}")
-        print(f"    {Fore.YELLOW}\u2192  {description}")
+        print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
+        print(f"    {color.Fore.YELLOW}\u2192  {description}")
 
 
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = [
-    ("No TODOS in text", True),
+    ("No TODOS in text", True, ""),
     ("Has an if statement", False, "No if statements found"),
 ]
 sort_checks_by_result(sample_result)

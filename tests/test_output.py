@@ -1,10 +1,10 @@
 """ Tests to ensure the output_functions.py functions work properly. """
 
 import pytest
-from colorama import init, Fore
+import colorama as color
 from gatorgrade.output import output_functions
 
-init()
+color.init()
 
 
 @pytest.fixture()
@@ -12,7 +12,7 @@ def test_output_shows_green(capsys):
     """Test for ouput of a passed check will show green check."""
     output_functions.output_passed_checks(passed_checks=("Remove All TODOs", True, ""))
     out, err = capsys.readouterr()
-    expected_output = f"{Fore.GREEN}\u2714"
+    expected_output = f"{color.Fore.GREEN}\u2714"
     actual_output = out
     assert expected_output in actual_output
     assert err == ""
@@ -25,7 +25,7 @@ def test_output_shows_red(capsys):
     )
     out, err = capsys.readouterr()
 
-    expected_output = f"{Fore.RED}"
+    expected_output = f"{color.Fore.RED}"
     actual_output = out
     assert expected_output in actual_output
     assert err == ""
@@ -37,7 +37,7 @@ def test_output_shows_yellow(capsys):
         failed_checks=("Remove all TODOs", False, "3 TODOs found in example.py")
     )
     out, err = capsys.readouterr()
-    expected_output = f"{Fore.YELLOW}\u2192"
+    expected_output = f"{color.Fore.YELLOW}\u2192"
     actual_output = out
     assert expected_output in actual_output
     assert err == ""
