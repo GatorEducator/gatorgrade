@@ -2,14 +2,10 @@
 import os
 from typing import List
 
-
-class Bcolors:
-    """Define colors for terminal output"""
-
-    OKGREEN = "\033[92m"
-    WARNING = "\033[93m"
-    FAIL = "\033[91m"
-
+#Define colors for terminal output
+OKGREEN = "\033[92m"
+WARNING = "\033[93m"
+FAIL = "\033[91m"
 
 def create_targeted_paths_list(
     key_word_list: List[str], relative_run_path: str = "."
@@ -59,7 +55,8 @@ def create_targeted_paths_list(
     # throw an exception indicating failure
     if not targeted_paths:
         raise FileNotFoundError(
-            f"{Bcolors.FAIL}FAILURE: None of the user-provided file paths are found in the provided directory and the 'gatorgrade.yml' is NOT generated"
+            f"{FAIL}FAILURE: None of the user-provided file paths are"
+            + " found in the provided directory and the 'gatorgrade.yml' is NOT generated"
         )
 
     # If some of the files are found and some are not found,
@@ -68,16 +65,20 @@ def create_targeted_paths_list(
     for key in key_word_list:
         if key not in targeted_paths_string:
             print(
-                f"{Bcolors.WARNING}WARNING \N{Warning Sign}: '{key}' file path is not FOUND! \nAll file paths except '{key}' are successfully generated in the 'gatorgrade.yml' file"
+                f"{WARNING}WARNING \N{Warning Sign}: '{key}' file path is not FOUND!"
+                + f"\nAll file paths except '{key}' are successfully"
+                + " generated in the 'gatorgrade.yml' file"
             )
             return targeted_paths
 
     # If all the files exist in the root directory, print out a success message
     if targeted_paths:
         print(
-            f"{Bcolors.OKGREEN}SUCCESS \N{Fire}: All the file paths were successfully generated in the 'gatorgrade.yml' file!"
+            f"{OKGREEN}SUCCESS \N{Fire}: All the file paths were"
+            + " successfully generated in the 'gatorgrade.yml' file!"
         )
-        return targeted_paths
+
+    return targeted_paths
 
 
 def write_yaml_of_paths_list():  # expected input: A path list
@@ -85,4 +86,4 @@ def write_yaml_of_paths_list():  # expected input: A path list
     # Create a new YAML file with PyYaml in the specific path.
     # Write the default set up messages in YAML file.
     # List the file paths in specific format.
-    pass
+
