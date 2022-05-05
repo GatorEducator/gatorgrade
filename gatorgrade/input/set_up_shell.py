@@ -10,13 +10,17 @@ def run_setup(front_matter):
         as a multi-line string.
 
     """
-    print("Running set up commands...")
-    for line in front_matter["setup"].splitlines():
-        # Trims the white space
-        command = line.strip()
-        exit_status = os.system(command)
-        # Extracts the exit code number from the exit status.
-        exit_code = os.WEXITSTATUS(exit_status)
+    # If setup does not exist in the front matter
+    if front_matter.get("setup") is not None:
+        print("Running set up commands...")
+        for line in front_matter["setup"].splitlines():
+            # Trims the white space
+            command = line.strip()
+            # Executes the command
+            exit_status = os.system(command)
+            # Extracts the exit code value from the exit status.
+            exit_code = os.WEXITSTATUS(exit_status)
+            # If the exit code tells it was unsuccessful and did not return 0
         if exit_code != 0:
             print(
                 f'The set up command "{command}" failed.\
