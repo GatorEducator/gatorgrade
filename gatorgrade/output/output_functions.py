@@ -1,8 +1,7 @@
 """
-This class is used for storing the main functions requested from the Github.
-
-Issue Tracker for the output team.
-For instance, functions dealing with percentage output, description output,
+This class is used for storing the main functions requested from the
+Github Issue Tracker for the output team. For instance,
+functions dealing with percentage output, description output,
 and colorization of text.
 """
 import colorama as color
@@ -14,7 +13,8 @@ def sort_checks_by_result(results):
     """
     Process results and determine if the check passed or failed.
 
-    Argument `results` is: list[(check_result_element1, check_result_element2),(...)]]
+    Args:
+        results: list[(check_result_element1, check_result_element2),(...)]]
     """
     passed_checks = []
     failed_checks = []
