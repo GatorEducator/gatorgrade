@@ -52,21 +52,28 @@ Generate team
 
 #### Configuring GatorGrade Checks
 
-There are multiple customizable options with gatorgrade! Gatorgrader checks are able to run within a specific file context and without any file path.
+There are multiple customizable options with gatorgrade!
+Gatorgrader checks are able to run within a specific file context
+and without any file path.
 
-To run a check within the context of a file path please be sure to include the path to the file above description, along with a description of the check and the options. See example below for reference.
+To run a check within the context of a file path,
+please be sure to include the path to the file above description,
+along with a description of the check and the options.
+See example below for reference.
 
 ```yml
 - path/to:
   - file.py:
-    - description: Complete all TODO's
+    - description: Complete all TODOs
       check: MatchFileFragment
       options:
         fragment: TODO
         count: 0
 ```
 
-To run a check without a specified file path start with the description of the check and the options associated with it. See example below for reference.
+To run a check without a specified file path,
+start with the description of the check and the options associated with it.
+See example below for reference.
 
 ```yml
 - description: Have a total of 8 commits, 5 of which were created by you
@@ -75,13 +82,16 @@ To run a check without a specified file path start with the description of the c
     count: 8
 ```
 
-Gatorgrader also allows you to run shell checks in addition to Gatorgrader checks! To run a shell check, be sure to include the description of the shell check along with the command to run the check. See two examples of shell checks below for reference.
+Gatorgrader also allows you to run shell checks as well as Gatorgrader checks!
+To run a shell check, be sure to include the description of the shell check
+along with the command to run the check.
+See two examples of shell checks below for reference.
 
 ```yml
 - description: Pass MDL
   command: mdl .
 - description: Pass HTMLHint
-  command: htmlhint
+  command: HTMLHint
 ```
 
 ## Contributing to GatorGrade
