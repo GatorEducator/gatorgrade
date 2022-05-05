@@ -49,4 +49,4 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
         # Write a new YAML file named gatorgrade
         data = yaml.dump(files_list, file, sort_keys=False)
         # Dump strings stored in files_list into a new YAML file
-    pass
+    
