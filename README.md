@@ -48,7 +48,9 @@ Output team
 
 ### Generating a gatorgrade.yml file
 
-Generate team
+The generation of yml file can be used to configure tests.
+
+In the terminal within the main directory, use the command `gatorgrade generate <path> <root directory>` to generate a yml file.
 
 #### Configuring GatorGrade Checks
 
