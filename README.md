@@ -64,7 +64,7 @@ See example below for reference.
 ```yml
 - path/to:
   - file.py:
-    - description: Complete all TODOs
+    - description: Complete all TODO
       check: MatchFileFragment
       options:
         fragment: TODO
