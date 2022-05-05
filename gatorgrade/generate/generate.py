@@ -2,6 +2,13 @@
 import os
 from typing import List
 
+# Define colors for terminal output
+class bcolors:
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+
+
 def create_targeted_paths_list(key_word_list: List[str], relative_run_path: str = ".") -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
@@ -33,8 +40,24 @@ def create_targeted_paths_list(key_word_list: List[str], relative_run_path: str 
                     targeted_paths.append(os.path.join(dirpath, filename))
 
             if filename in key_word_list:
-                targeted_paths.append(os.path.join(dirpath, filename))               
-    return targeted_paths
+                targeted_paths.append(os.path.join(dirpath, filename)) 
+
+    
+    # If any of the user inputted file does not exist in any directory, throw an exception indicating failure
+    if not targeted_paths:
+        raise FileNotFoundError(f"{bcolors.FAIL}FAILURE: None of the user-provided file paths are found in the provided directory and the 'gatorgrade.yml' is NOT generated")
+    
+    # If some of the files are found and some are not found, output a warning message saying which files were not found
+    targeted_paths_string = " ".join(targeted_paths)
+    for key in key_word_list:
+        if key not in targeted_paths_string:
+            print(f"{bcolors.WARNING}WARNING \N{Warning Sign}: '{key}' file path is not FOUND! \nAll file paths except '{key}' are successfully generated in the 'gatorgrade.yml' file")
+            return targeted_paths
+
+    # If all the files exist in the root directory, print out a success message
+    if targeted_paths:
+        print(f"{bcolors.OKGREEN}SUCCESS \N{Fire}: All the file paths were successfully generated in the 'gatorgrade.yml' file!")
+        return targeted_paths
 
 def write_yaml_of_paths_list(path_names):
     """Write YAML file to create gatorgrade file and set default messages."""
@@ -43,4 +66,4 @@ def write_yaml_of_paths_list(path_names):
     # List the file paths in specific format.
     pass
 
-print(create_targeted_paths_list(["tests"],"../.."))
+print(create_targeted_paths_list(["generate.py", "tests"], "../.."))
