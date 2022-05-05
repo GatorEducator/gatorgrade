@@ -1,54 +1,57 @@
 """
-This module is used for storing the main functions requested.
+This class is used for storing the main functions requested from the Github.
 
-The requested functions are located at the Github Issue Tracker
-for the output team. For instance, functions dealing with percentage
-output, description output, and colorization of text.
+Issue Tracker for the output team.
+For instance, functions dealing with percentage output, description output,
+and colorization of text.
 """
+import colorama as color
 
-import gator
-from gator import exceptions
-from output_percentage_printing import print_percentage
+color.init()
 
 
-def run_commands_and_return_results(commands_input):
+def sort_checks_by_result(results):
     """
-    Receive commands and send results to other output methods.
+    Process results and determine if the check passed or failed.
 
-    Commands are received as dictionary of two keys, shell commands / gator
-    commands.
-
-    An Example of input for this function is as follows :
-
-    {'shell': [{'description': 'Run program', 'command': 'mdl'}],
-    'gatorgrader': [['--description', 'do command', 'commandType',
-    '--arg', '1', '--directory', './home', '--file', 'file.py']]}
+    Argument `results` is: list[(check_result_element1, check_result_element2),(...)]]
     """
-    # Get first element in list, which is gatorgrader commands
-    gatorcommands = commands_input.get("gatorgrader")
-    results = []
+    passed_checks = []
+    failed_checks = []
+    # iterate through results tuples
+    for i in results:
+        for j in i:
+            if isinstance(j, bool):
+                if j is True:
+                    passed_checks.append(i)
+                else:
+                    failed_checks.append(i)
+    output_passed_checks(passed_checks)
+    output_failed_checks(failed_checks)
 
-    for command in gatorcommands:
-        # If command is formatted incorrectly in yaml files,
-        # catch the exception that would be returned and print
-        try:
-            result = gator.grader(command)
-            results.append(result)
-        except (
-            exceptions.InvalidCheckArgumentsError,
-            exceptions.InvalidSystemArgumentsError,
-            exceptions.InvalidCheckError,
-        ) as exc:
-            print(
-                "\033[91m \033[1m \033[4m An exception was detected when",
-                " running the command : \033[0m \n\n \033[91m",
-                " ".join(command),
-                "\033[0m\n",
-            )
-            print("The exception type is : ", type(exc), "\n")
-            print("Exception is as follows: \n ", exc)
-    # Send results to output methods, to be uncommented when
-    # functions are merged
-    print_percentage(results)
-    # print_description(results)
-    return results
+
+def output_passed_checks(passed_checks):
+    """Output the results for all of the checks that passed using the passed_checks list."""
+    for i in passed_checks:
+        requirement = i[0]
+        # Use colorama to style passing check
+        print(f"{color.Fore.GREEN}\u2714  {color.Style.RESET_ALL}{requirement}")
+
+
+def output_failed_checks(failed_checks):
+    """Output the results for all of the checks that did not pass using the failed_checks list."""
+    for i in failed_checks:
+        # Extract the details of each check
+        requirement = i[0]
+        description = i[2]
+        # Use colorama to print and style "X"
+        print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
+        print(f"    {color.Fore.YELLOW}\u2192  {description}")
+
+
+# Display a sample output of how the function could display a result object from GatorGrader
+sample_result = [
+    ("No TODOS in text", True, ""),
+    ("Has an if statement", False, "No if statements found"),
+]
+sort_checks_by_result(sample_result)
