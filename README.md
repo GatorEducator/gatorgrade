@@ -49,7 +49,16 @@ have passed gatorgrader will have a green check mark next to the
 description.  Failing checks will show a red "X" next to the
 description.  The overall percentage of passed checks will be shown
 at the bottom of the display and will be in red until the percentage
-of passed checks reaches 100%.
+of passed checks reaches 100%. 
+
+A passing check indicates that the requirement listed under that check has been fully fulfilled. Whereas a failing check indicates that a the requirement listed has not yet been completely fulfilled. 
+
+Passing check:\
+<span style="color:green">&#10004;</span>   Remove all TODOs
+
+Failing check:\
+<span style="color:red">&#10008;</span>   Remove all TODOs\
+&emsp;<span style="color:yellow">&#10132;</span>   3 TODOs found in example.py
 
 ### Generating a gatorgrade.yml file
 
