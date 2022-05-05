@@ -2,20 +2,21 @@
 import os
 from typing import List
 
-def create_targeted_paths_list(key_word_list: List[str],relative_run_path: str = ".") -> List[str]:
+def create_targeted_paths_list(key_word_list: List[str], relative_run_path: str = ".") -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
     # Go through the root repo, the sub dictionaries and files.
     # The os.walk will only scan the paths. So the empty folders containing nothing won't be gone through
     for dirpath, _, filenames in os.walk(relative_run_path):
-
+        print(dirpath)
         # Split path string into multiple layers of directories
         path_dir_list = dirpath.split("/")
         # Ignore folder starting with double underscore
         if any(path.startswith("__") for path in path_dir_list):
             continue
-        # Ignore hidden folders, the first layer is always dot
-        if any(path.startswith(".") for path in path_dir_list[1:]):
+        # Ignore hidden folders and first layer. the root repo is always dot
+        # Keep double dot. It represents the returning sign
+        if any(path.startswith(".") and not path.startswith("..") for path in path_dir_list[1:]):
             continue
         for filename in filenames:
             # Ignore the file starting with double underscore and hidden file
@@ -43,4 +44,4 @@ def write_yaml_of_paths_list(path_names):
     # List the file paths in specific format.
     pass
 
-print(create_targeted_paths_list(["gatorgrade"]))
+print(create_targeted_paths_list(["tests"],"../.."))
