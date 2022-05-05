@@ -1,6 +1,6 @@
 """Test suite for output_functions.py."""
 
-
+from output import output_functions
 
 
 def test_receive_command_function_returns_correct_results():
