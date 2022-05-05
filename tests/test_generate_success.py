@@ -1,5 +1,5 @@
-from gatorgrade.generate.generate import generate_config
 import pytest
+from gatorgrade.generate.generate import generate_config
 
 
 @pytest.fixture()
