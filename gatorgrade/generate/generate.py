@@ -2,10 +2,11 @@
 import os
 from typing import List
 
-#Define colors for terminal output
+# Define colors for terminal output
 OKGREEN = "\033[92m"
 WARNING = "\033[93m"
 FAIL = "\033[91m"
+
 
 def create_targeted_paths_list(
     key_word_list: List[str], relative_run_path: str = "."
@@ -86,4 +87,3 @@ def write_yaml_of_paths_list():  # expected input: A path list
     # Create a new YAML file with PyYaml in the specific path.
     # Write the default set up messages in YAML file.
     # List the file paths in specific format.
-
