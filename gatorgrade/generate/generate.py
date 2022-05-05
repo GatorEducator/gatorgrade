@@ -42,8 +42,9 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
                 }
             ]
         }
-        files_list.append(file_path_dict)
         # Append files_list with the values stored inside file_path_dict
+        files_list.append(file_path_dict)
+        
 
     with open("gatorgrade.yml", "w") as file:
         # Write a new YAML file named gatorgrade
