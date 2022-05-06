@@ -18,7 +18,7 @@ def test_given_results_returns_percent_Incorrect():
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
-    True_list = [True, True, True]
+   
     expected_result = (
         f"\n\x1b[31mPassing 3/5, Grade is 60.0%.\n"
     )
