@@ -14,11 +14,6 @@ def print_percentage(results):
     math = len(True_list) / len(results)  # procedure of math right/total
     Percent = math * 100  # get the percent to non decimal.
     if Percent == 100.0:
-        return(
-            f"{Fore.GREEN}|=====================================|\n|Passing all GatorGrader Checks {Percent}%|\n|=====================================|"
-        )
+        return f"{Fore.GREEN}|=====================================|\n|Passing all GatorGrader Checks {Percent}%|\n|=====================================|"
     else:
-        return(
-            f"\n{Fore.RED}Passing {len(True_list)}/{len(results)}, Grade is {Percent}%.\n"
-        )
-    
+        return f"\n{Fore.RED}Passing {len(True_list)}/{len(results)}, Grade is {Percent}%.\n"
