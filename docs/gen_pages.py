@@ -21,13 +21,12 @@ for path in sorted(Path("gatorgrade").rglob("*.py")):
     nav[parts] = doc_path.as_posix()
 
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:
-        identifier = "gatorgrade." + ".".join(parts)
-        fd.write("::: " + identifier)
+        identifier = "gatorgrade."+".".join(parts)
+        print("::: " + identifier, file=fd)
 
     mkdocs_gen_files.set_edit_path(full_doc_path, path)
 
 #Generate navigation
 with mkdocs_gen_files.open("reference/Summary.md", "w") as nav_file:
-
     #Generate code reference navigation
     nav_file.writelines(nav.build_literate_nav())
