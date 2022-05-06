@@ -1,5 +1,5 @@
-from colorama import Fore
-import output_percentage_testing
+from colorama import Fore, Style
+from gatorgrade.output import output_percentage_printing
 
 
 def test_given_results_returns_percent_Incorrect():
@@ -20,11 +20,11 @@ def test_given_results_returns_percent_Incorrect():
     ]
     True_list = [True, True, True]
     expected_result = (
-        f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%\n"
+        f"\n\x1b[31mPassing 3/5, Grade is 60.0%.\n"
     )
 
-    actual_result = output_percentage_testing.print_percentage(results)
-    assert expected_result == actual_result
+    actual_result = output_percentage_printing.print_percentage(results)
+    assert expected_result in actual_result
 
 
 def test_given_results_returns_percent_correct():
@@ -43,7 +43,6 @@ def test_given_results_returns_percent_correct():
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
-    Percent = 100.0
-    expected_result = f"\n{Fore.GREEN}Passing all GatorGrader Checks {Percent}%\n"
-    actual_result = output_percentage_testing.print_percentage(results)
-    assert expected_result == actual_result
+    expected_result = f"\x1b[32m|=====================================|\n|Passing all GatorGrader Checks 100.0%|\n|=====================================|"
+    actual_result = output_percentage_printing.print_percentage(results)
+    assert expected_result in actual_result
