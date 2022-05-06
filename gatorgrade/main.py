@@ -21,7 +21,6 @@ def gatorgrade(
     if ctx.invoked_subcommand is None:
         checks = parse_config(FILE)
         checks = run_and_display_command_checks(FILE)
-        checks = generate_config(FILE)
         if filename.suffix == "yml":
             pass
 
@@ -37,6 +36,7 @@ def generate(
 ):
     """Generate a gatorgrade.yml file."""
     if force is False:
+        checks = generate_config(FILE)
         pass
 
 
