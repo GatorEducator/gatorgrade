@@ -43,11 +43,12 @@ def output_failed_checks(failed_checks):
     for i in failed_checks:
         # Extract the details of each check
         requirement = i[0]
+        bool = i[1]
         description = i[2]
         # Use colorama to print and style "X"
         print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
         print(f"    {color.Fore.YELLOW}\u2192  {description}")
-
+        return bool
 
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = [
