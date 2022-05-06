@@ -3,7 +3,7 @@ from colorama import Fore
 
 
 def print_percentage(results):
-    """Print percentage acts as fuction that will produce the output, so the customer can see the percentage."""
+    """Print percentage of passing and failing checks to console for user understanding."""
     # iterate through results tuples
     True_list = []
     for i in results:
@@ -11,8 +11,8 @@ def print_percentage(results):
             if isinstance(j, bool):
                 if j == True:
                     True_list.append(i)
-    math = len(True_list) / len(results)
-    Percent = math * 100
+    decimal_for_percent_true = len(True_list) / len(results)
+    Percent = decimal_for_percent_true * 100
     if Percent == 100.0:
         print(
             f"{Fore.GREEN}|=====================================|\n|Passing all GatorGrader Checks {Percent}%|\n|=====================================|"
