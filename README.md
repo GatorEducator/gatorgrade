@@ -51,7 +51,9 @@ description.  The overall percentage of passed checks will be shown
 at the bottom of the display and will be in red until the percentage
 of passed checks reaches 100%. 
 
-A passing check indicates that the requirement listed under that check has been fully fulfilled. Whereas a failing check indicates that a the requirement listed has not yet been completely fulfilled. 
+A passing check indicates that the requirement listed under that check 
+has been fully fulfilled. Whereas a failing check indicates that 
+the requirement listed has not yet been completely fulfilled. 
 
 Passing check:\
 <span style="color:green">&#10004;</span>   Remove all TODOs
