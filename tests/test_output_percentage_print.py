@@ -1,3 +1,4 @@
+"""Test suite for percent function"""
 from gatorgrade.output import output_percentage_printing
 
 
@@ -41,6 +42,6 @@ def test_given_results_returns_percent_correct():
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
-    expected_result = "\x1b[32m|=====================================|\n|Passing all GatorGrader Checks 100.0%"
+    expected_result = "Passing all GatorGrader Checks 100.0%"
     actual_result = output_percentage_printing.print_percentage(results)
     assert expected_result in actual_result
