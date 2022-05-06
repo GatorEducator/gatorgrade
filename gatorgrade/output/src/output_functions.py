@@ -51,19 +51,85 @@ def output_failed_checks(failed_checks):
         print(f"    {Fore.YELLOW}\u2192  {description}")
 
 
-def run_and_display_command_checks(commands) :
-    """The final function which runs commands through gatorgrader and displays them to the user"""
+def run_and_display_command_checks(commands):
+    """Run commands through gatorgrader and display them to the user."""
     results = run_commands_and_return_results(commands)
     sort_checks_by_result(results)
     print_percentage(results)
 
 
 # Display a sample output of how the function could display a result object from GatorGrader
-sample_result = [
-    ("Has an if statement", False, "No if statements found")
-]
+sample_result = [("Has an if statement", False, "No if statements found")]
 # sort_checks_by_result(sample_result)
 
-sample_commands = {'shell': [{'description': 'Pass HTMLHint', 'command': 'htmlhint'}], 'gatorgrader': [['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'yayaya.py'], ['--description', 'Complete all TODOs', 'MatchFileFragment', '--fragment', 'TODO', '--count', '0', '--exact', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Use an if statement', 'MatchFileRegex', '--regex', 'if .?:', '--count', '1', '--directory', './home/dir/subdir', '--file', 'module.py'], ['--description', 'Have a total of 8 commits, 5 of which were created by you', 'CountCommitts', '--fragment', 'TODO', '--count', '0', '--exact']]}
+sample_commands = {
+    "shell": [{"description": "Pass HTMLHint", "command": "htmlhint"}],
+    "gatorgrader": [
+        [
+            "--description",
+            "Complete all TODOs",
+            "MatchFileFragment",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+            "--directory",
+            "./home/dir/subdir",
+            "--file",
+            "yayaya.py",
+        ],
+        [
+            "--description",
+            "Use an if statement",
+            "MatchFileRegex",
+            "--regex",
+            "if .?:",
+            "--count",
+            "1",
+            "--directory",
+            "./home/dir/subdir",
+            "--file",
+            "yayaya.py",
+        ],
+        [
+            "--description",
+            "Complete all TODOs",
+            "MatchFileFragment",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+            "--directory",
+            "./home/dir/subdir",
+            "--file",
+            "module.py",
+        ],
+        [
+            "--description",
+            "Use an if statement",
+            "MatchFileRegex",
+            "--regex",
+            "if .?:",
+            "--count",
+            "1",
+            "--directory",
+            "./home/dir/subdir",
+            "--file",
+            "module.py",
+        ],
+        [
+            "--description",
+            "Have a total of 8 commits, 5 of which were created by you",
+            "CountCommitts",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+        ],
+    ],
+}
 
 run_and_display_command_checks(sample_commands)
