@@ -1,6 +1,6 @@
 """Generates a list of commands to be run through gatorgrader."""
 import yaml
-import set_up_shell
+from set_up_shell import *
 
 
 def parse_yaml_file(file_path):
