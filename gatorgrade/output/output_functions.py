@@ -43,7 +43,6 @@ def output_failed_checks(failed_checks):
     for i in failed_checks:
         # Extract the details of each check
         requirement = i[0]
-        bool = i[1]
         description = i[2]
         # Use colorama to print and style "X"
         print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
