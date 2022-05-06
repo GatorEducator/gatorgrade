@@ -49,7 +49,7 @@ def test_descrition_in_fail_message(capsys):
         failed_checks=("Implement this with an if.", False, "No if statements found")
     )
     out, err = capsys.readouterr()
-    expected_output = "No if"
+    expected_output = "\x1b[31m✘  \x1b[0mI\n    \x1b[33m→  p\n"
     actual_output = out
     assert expected_output in actual_output
     assert "" in err
