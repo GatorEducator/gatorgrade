@@ -2,7 +2,7 @@
 from pathlib import Path
 import typer
 from gatorgrade.input.in_file_path import parse_config
-from gatorgrade.output.output_functions import run_commands_and_return_results
+from gatorgrade.output.output_functions import run_and_display_command_checks
 from gatorgrade.generate.generate import generate_config
 
 app = typer.Typer(add_completion=False)
@@ -20,7 +20,7 @@ def gatorgrade(
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
         checks = parse_config(FILE)
-        checks = run_commands_and_return_results(FILE)
+        checks = run_and_display_command_checks(FILE)
         checks = generate_config(FILE)
         if filename.suffix == "yml":
             pass
