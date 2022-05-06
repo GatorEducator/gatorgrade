@@ -56,6 +56,7 @@ def test_generate_force_option_creates_yml():
 def test_full_integration_creates_valid_output(
     assignment_path, expected_checks, chdir, capsys
 ):
+    """Tests full integration pipeline to ensure input assignments give the correct output."""
     chdir(assignment_path)
     result = runner.invoke(main.app)
 
