@@ -1,5 +1,6 @@
 """Set-up the shell commands."""
-import os, sys
+import os
+import sys
 
 
 def run_setup(front_matter):
