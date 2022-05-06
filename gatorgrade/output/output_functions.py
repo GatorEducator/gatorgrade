@@ -50,6 +50,7 @@ def output_failed_checks(failed_checks):
         print(f"    {color.Fore.YELLOW}\u2192  {description}")
         return bool
 
+
 # Display a sample output of how the function could display a result object from GatorGrader
 sample_result = [
     ("No TODOS in text", True, ""),
