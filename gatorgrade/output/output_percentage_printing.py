@@ -3,7 +3,7 @@ from colorama import Fore
 
 
 def print_percentage(results):
-    """Print percentage acts as fuction that will produce the output"""
+    """Print percentage acts as fuction that will produce the output."""
     # iterate through results tuples
     true_list = []  # empty list for storing true results
     for i in results:
