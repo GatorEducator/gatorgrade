@@ -10,7 +10,7 @@ def run_setup(front_matter):
         as a multi-line string.
 
     """
-    # If setup does not exist in the front matter
+    # If setup exists in the front matter
     if front_matter.get("setup") is not None:
         print("Running set up commands...")
         for line in front_matter["setup"].splitlines():
