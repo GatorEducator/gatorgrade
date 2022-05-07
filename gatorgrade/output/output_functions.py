@@ -18,14 +18,16 @@ def sort_checks_by_result(results):
     """
     passed_checks = []
     failed_checks = []
-    # iterate through results tuples
-    for i in results:
-        for j in i:
-            if isinstance(j, bool):
-                if j is True:
-                    passed_checks.append(i)
-                else:
-                    failed_checks.append(i)
+    # Iterate through results tuples
+    for result in results:
+        # Grab the boolean from the check tuple
+        check_result = result[1]
+        # Add passing checks to the passed check list and failing checks to
+        # the failed check list
+        if check_result is True:
+            passed_checks.append(result)
+        else:
+            failed_checks.append(result)
     output_passed_checks(passed_checks)
     output_failed_checks(failed_checks)
 
