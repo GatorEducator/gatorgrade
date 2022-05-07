@@ -20,11 +20,9 @@ def sort_checks_by_result(results):
     failed_checks = []
     # Iterate through results tuples
     for result in results:
-        # Grab the boolean from the check tuple
-        check_result = result[1]
         # Add passing checks to the passed check list and failing checks to
         # the failed check list
-        if check_result is True:
+        if result[1] is True:
             passed_checks.append(result)
         else:
             failed_checks.append(result)
