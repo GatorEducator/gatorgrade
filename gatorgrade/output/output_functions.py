@@ -34,18 +34,18 @@ def sort_checks_by_result(results):
 
 def output_passed_checks(passed_checks):
     """Output the results for all of the checks that passed using the passed_checks list."""
-    for i in passed_checks:
-        requirement = i[0]
+    for check in passed_checks:
+        requirement = check[0]
         # Use colorama to style passing check
         print(f"{color.Fore.GREEN}\u2714  {color.Style.RESET_ALL}{requirement}")
 
 
 def output_failed_checks(failed_checks):
     """Output the results for all of the checks that did not pass using the failed_checks list."""
-    for i in failed_checks:
+    for check in failed_checks:
         # Extract the details of each check
-        requirement = i[0]
-        description = i[2]
+        requirement = check[0]
+        description = check[2]
         # Use colorama to print and style "X"
         print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
         print(f"    {color.Fore.YELLOW}\u2192  {description}")
