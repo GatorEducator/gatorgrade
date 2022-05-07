@@ -7,7 +7,7 @@ output, description output, and colorization of text.
 
 import gator
 import colorama as color
-import output_percentage_printing
+from gatorgrade.output import output_percentage_printing
 
 color.init()
 
@@ -53,7 +53,6 @@ def run_commands_and_return_results(commands_input):
         results.append(result)
 
     return results
-
 
 
 def sort_checks_by_result(results):

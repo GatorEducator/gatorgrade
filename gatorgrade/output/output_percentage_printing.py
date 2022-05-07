@@ -1,23 +1,29 @@
-"""Output of percent printing is to show the percentage of checks that the student has met requirments."""
+"""Output of percent printing is to show the percentage
+of checks that the student has met requirments.
+"""
 from colorama import Fore
 
 
 def print_percentage(results):
-    """Print percentage of passing and failing checks to console for user understanding."""
+    """Print percentage of passing and failing
+    checks to console for user understanding.
+    """
     # iterate through results tuples
-    True_list = []
+    true_list = []
     for i in results:
         for j in i:
             if isinstance(j, bool):
-                if j == True:
-                    True_list.append(i)
-    decimal_for_percent_true = len(True_list) / len(results)
-    Percent = decimal_for_percent_true * 100
-    if Percent == 100.0:
+                if j is True:
+                    true_list.append(i)
+    decimal_for_percent_true = len(true_list) / len(results)
+    percent = decimal_for_percent_true * 100
+    if percent == 100.0:
         print(
-            f"{Fore.GREEN}|=====================================|\n|Passing all GatorGrader Checks {Percent}%|\n|=====================================|"
+            f"{Fore.GREEN}|=====================================|\n|",
+            "Passing all GatorGrader Checks {Percent}%|\n|",
+            "=====================================|",
         )
     else:
         print(
-            f"\n{Fore.RED}Passing {len(True_list)}/{len(results)}, Grade is {Percent}%.\n"
+            f"\n{Fore.RED}Passing {len(true_list)}/{len(results)}, Grade is {percent}%.\n"
         )
