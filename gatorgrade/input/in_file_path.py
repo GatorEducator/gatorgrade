@@ -1,5 +1,6 @@
 """Generates a list of commands to be run through gatorgrader."""
 import yaml
+from gatorgrade.input.set_up_shell import run_setup
 
 
 def parse_yaml_file(file_path):
@@ -13,7 +14,8 @@ def reformat_yaml_data(data):
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
     if len(data) == 2:
-        data.pop(0)  # Removes the setup commands
+        setup_commands = data.pop(0)  # Removes the setup commands
+        run_setup(setup_commands)
     add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
 
