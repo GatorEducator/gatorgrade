@@ -1,8 +1,8 @@
 """This module is used for storing the main functions requested.
 
-The requested functions are located at the Github Issue Tracker
-for the output team. For instance, functions dealing with percentage
-output, description output, and colorization of text.
+Issue Tracker for the output team.
+For instance, functions dealing with percentage output, description output,
+and colorization of text.
 """
 
 import gator

@@ -13,7 +13,7 @@ def test_output_shows_green(capsys):
     output_functions.output_passed_checks(passed_checks=("Remove All TODOs", True, ""))
     out, err = capsys.readouterr()
     expected_output = f"{color.Fore.GREEN}\u2714"
-    actual_output = out
+    actual_output = print(out)
     assert expected_output in actual_output
     assert err == ""
 

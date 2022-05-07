@@ -1,8 +1,9 @@
-from colorama import Fore
-import output_percentage_testing
+"""Test suite for percent function"""
+from gatorgrade.output import output_percentage_printing
 
 
-def test_given_results_returns_percent_Incorrect():
+def test_given_results_returns_percent_incorrect():
+    """Test a failing set will show percent"""
     results = [
         ("Complete all TODOs", True, ""),
         (
@@ -18,16 +19,14 @@ def test_given_results_returns_percent_Incorrect():
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
-    True_list = [True, True, True]
-    expected_result = (
-        f"\n{Fore.RED}Passing {len(True_list)} of {len(results)}, Grade is {Percent}%\n"
-    )
 
-    actual_result = output_percentage_testing.print_percentage(results)
-    assert expected_result == actual_result
+    expected_result = "\n\x1b[31mPassing 3/5, Grade is 60.0%.\n"
+    actual_result = output_percentage_printing.print_percentage(results)
+    assert expected_result in actual_result
 
 
 def test_given_results_returns_percent_correct():
+    """Test a passing set will give 100%"""
     results = [
         ("Complete all TODOs", True, ""),
         (
@@ -43,7 +42,6 @@ def test_given_results_returns_percent_correct():
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
-    Percent = 100.0
-    expected_result = f"\n{Fore.GREEN}Passing all GatorGrader Checks {Percent}%\n"
-    actual_result = output_percentage_testing.print_percentage(results)
-    assert expected_result == actual_result
+    expected_result = "Passing all GatorGrader Checks 100.0%"
+    actual_result = output_percentage_printing.print_percentage(results)
+    assert expected_result in actual_result
