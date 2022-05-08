@@ -1,14 +1,14 @@
 """Generate a YAML file with default messages and specific paths."""
 from dataclasses import replace
 import os
-from typing import List
+from typing import List, Dict
 
 # Define colors for terminal output
 OKGREEN = "\033[92m"
 WARNING = "\033[93m"
 FAIL = "\033[91m"
 
-def input_correct(initial_path_list: List[str]) -> List[str]:
+def input_correct(initial_path_list: List[str]) -> Dict:
     """Correct user-written paths."""
     # Recognize the paths users provide are the concise versions.
     # Unify the ending format to avoid different users' different input
@@ -17,7 +17,8 @@ def input_correct(initial_path_list: List[str]) -> List[str]:
         if path.endswith("/") is False:
             path += "/"
         corrected_path.append(path)
-    return corrected_path
+    # Convert list to dictionary for faster iteration
+    return dict.fromkeys(corrected_path,"")
 
 
 
@@ -83,3 +84,4 @@ def create_targeted_paths_list(
 
     return targeted_paths
 
+print(create_targeted_paths_list(["writing"]))
