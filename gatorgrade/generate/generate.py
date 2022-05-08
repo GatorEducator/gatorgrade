@@ -9,7 +9,7 @@ FAIL = "\033[91m"
 
 
 def create_targeted_paths_list(
-    key_word_list: List[str], relative_run_path: str = "."
+    target_path_list: List[str], relative_run_path: str = "."
 ) -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
@@ -37,19 +37,19 @@ def create_targeted_paths_list(
             # For the path with only two directories,
             # check key words in the second directory folder name
             if len(path_dir_list) == 2:
-                if path_dir_list[1] in key_word_list:
+                if path_dir_list[1] in target_path_list:
                     targeted_paths.append(os.path.join(dirpath, filename))
 
             # For the other paths with more than 2 directories,
             # check key words in the second and third directories
             elif len(path_dir_list) > 2:
                 if (
-                    path_dir_list[1] in key_word_list
-                    or path_dir_list[2] in key_word_list
+                    path_dir_list[1] in target_path_list
+                    or path_dir_list[2] in target_path_list
                 ):
                     targeted_paths.append(os.path.join(dirpath, filename))
 
-            if filename in key_word_list:
+            if filename in target_path_list:
                 targeted_paths.append(os.path.join(dirpath, filename))
 
     # If any of the user inputted file does not exist in any directory,
@@ -63,7 +63,7 @@ def create_targeted_paths_list(
     # If some of the files are found and some are not found,
     # output a warning message saying which files were not found
     targeted_paths_string = " ".join(targeted_paths)
-    for key in key_word_list:
+    for key in target_path_list:
         if key not in targeted_paths_string:
             print(
                 f"{WARNING}WARNING \N{Warning Sign}: '{key}' file path is not FOUND!"
