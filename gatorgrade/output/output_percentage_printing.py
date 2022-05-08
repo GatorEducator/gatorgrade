@@ -6,7 +6,7 @@ def print_percentage(results):
     """Print percentage acts as fuction that will produce the output."""
     # iterate through results tuples
     true_list = []  # empty list for storing true results
-    for result in results:  
+    for result in results:
         if result[1] == True:
             true_list.append(result)
     math = len(true_list) / len(results)  # procedure of math right/total
