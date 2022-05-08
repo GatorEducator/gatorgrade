@@ -1,5 +1,4 @@
 """Generate a YAML file with default messages and specific paths."""
-from dataclasses import replace
 import os
 from typing import List, Dict
 
@@ -50,7 +49,6 @@ def create_targeted_paths_list(
                 continue
             # Combine the path with file name to get a complete path
             complete_actual_path = os.path.join(dirpath, filename) + "/"
-            # Align the 
             for target in corrected_paths:
                 if target in complete_actual_path:
                     targeted_paths.append(complete_actual_path)
@@ -83,5 +81,3 @@ def create_targeted_paths_list(
         )
 
     return targeted_paths
-
-print(create_targeted_paths_list(["writing"]))
