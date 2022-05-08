@@ -6,11 +6,9 @@ def print_percentage(results):
     """Print percentage acts as fuction that will produce the output."""
     # iterate through results tuples
     true_list = []  # empty list for storing true results
-    for i in results:
-        for j in i:
-            if isinstance(j, bool):
-                if j is True:
-                    true_list.append(i)
+    for result in results:  
+        if result[1] == True:
+            true_list.append(result)
     math = len(true_list) / len(results)  # procedure of math right/total
     percent = math * 100  # get the percent to non decimal.
     if percent == 100.0:
