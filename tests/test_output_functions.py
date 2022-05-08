@@ -56,7 +56,6 @@ def test_bad_command_creates_diagnostic():
         ]
     }
 
-
     # when run through the function
     results = str(output_functions.run_commands_and_return_results(bad_command))
 
