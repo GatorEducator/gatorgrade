@@ -2,7 +2,6 @@
 from pathlib import Path
 import typer
 
-
 app = typer.Typer(add_completion=False)
 FILE = "gatorgrade.yml"
 
