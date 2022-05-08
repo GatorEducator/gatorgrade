@@ -22,9 +22,6 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
     }
     # Write the default set up messages in YAML file.
 
-    path_names = create_targeted_paths_list(["test"])
-    # Set path_names to the create_targeted_paths_list function with the parameter "test"
-
     files_list = []
     # Create an empty list to store dictionaries
     for file_path in path_names:
