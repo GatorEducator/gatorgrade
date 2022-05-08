@@ -1,4 +1,5 @@
 """Generate a YAML file with default messages and specific paths."""
+from dataclasses import replace
 import os
 from typing import List
 
@@ -7,14 +8,27 @@ OKGREEN = "\033[92m"
 WARNING = "\033[93m"
 FAIL = "\033[91m"
 
+def input_correct(initial_path_list: List[str]) -> List[str]:
+    """Correct user-written paths."""
+    # Recognize the paths users provide are the concise versions.
+    # Unify the ending format to avoid different users' different input
+    corrected_path = []
+    for path in initial_path_list:
+        if path.endswith("/") is False:
+            path += "/"
+        corrected_path.append(path)
+    return corrected_path
+
+
 
 def create_targeted_paths_list(
     target_path_list: List[str], relative_run_path: str = "."
 ) -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
-    # Go through the root repo, the sub dictionaries and files.
-    # The os.walk will only scan the paths.
+    corrected_paths = input_correct(target_path_list)
+    # Go through the root repo, the sub dictionaries and files
+    # The os.walk will only scan the paths
     # So the empty folders containing nothing won't be gone through
     for dirpath, _, filenames in os.walk(relative_run_path):
         # Split path string into multiple layers of directories
@@ -23,34 +37,22 @@ def create_targeted_paths_list(
         if any(path.startswith("__") for path in path_dir_list):
             continue
         # Ignore hidden folders and first layer. the root repo is always dot
-        # Keep double dot. It represents the returning sign
+        # Keep double dot. It means going back to the parent folder
         if any(
             path.startswith(".") and not path.startswith("..")
             for path in path_dir_list[1:]
         ):
             continue
         for filename in filenames:
-            # Ignore the file starting with double underscore and hidden file
+            # Ignore special files
             if filename.startswith("__") or filename.startswith("."):
                 continue
-            # Add paths when they have the key words in the second and the third directories
-            # For the path with only two directories,
-            # check key words in the second directory folder name
-            if len(path_dir_list) == 2:
-                if path_dir_list[1] in target_path_list:
-                    targeted_paths.append(os.path.join(dirpath, filename))
-
-            # For the other paths with more than 2 directories,
-            # check key words in the second and third directories
-            elif len(path_dir_list) > 2:
-                if (
-                    path_dir_list[1] in target_path_list
-                    or path_dir_list[2] in target_path_list
-                ):
-                    targeted_paths.append(os.path.join(dirpath, filename))
-
-            if filename in target_path_list:
-                targeted_paths.append(os.path.join(dirpath, filename))
+            # Combine the path with file name to get a complete path
+            complete_actual_path = os.path.join(dirpath, filename) + "/"
+            # Align the 
+            for target in corrected_paths:
+                if target in complete_actual_path:
+                    targeted_paths.append(complete_actual_path)
 
     # If any of the user inputted file does not exist in any directory,
     # throw an exception indicating failure
@@ -80,3 +82,4 @@ def create_targeted_paths_list(
         )
 
     return targeted_paths
+
