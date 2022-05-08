@@ -7,7 +7,7 @@ def print_percentage(results):
     # iterate through results tuples
     true_list = []  # empty list for storing true results
     for result in results:
-        if result[1] == True:
+        if result[1] is True:
             true_list.append(result)
     math = len(true_list) / len(results)  # procedure of math right/total
     percent = math * 100  # get the percent to non decimal.
