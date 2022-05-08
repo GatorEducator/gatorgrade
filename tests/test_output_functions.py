@@ -7,6 +7,7 @@ def test_run_commands_and_return_results_returns_correct_results():
     """Make sure the receive function in output_functions.py runs
     and returns the correct results in the form of a tuple list"""
 
+    # given a dictionary containing a list of commands
     commands = {
         "shell": [{"description": "Run program", "command": "mdl"}],
         "gatorgrader": [
@@ -28,15 +29,18 @@ def test_run_commands_and_return_results_returns_correct_results():
     }
 
     expected_result = [("Check TODOs", True, "")]
+
+    # when the dictionary is run through the function
     actual_result = output_functions.run_commands_and_return_results(commands)
 
+    # the result is a list containing a tuple with a string, a boolean and another string
     assert expected_result == actual_result
 
 
 def test_bad_command_creates_diagnostic(capsys):
     """an improperly formatted command should produce a failed test and a diagnostic"""
 
-    # Spelling errors and an extra argument are in this dictionary
+    # given an improperly written command
     bad_command = {
         "gatorgrader": [
             [
@@ -52,9 +56,11 @@ def test_bad_command_creates_diagnostic(capsys):
         ]
     }
 
+    # when run through the function
     output_functions.run_commands_and_return_results(bad_command)
 
     # Capture the stdout
     out, _ = capsys.readouterr()
 
+    # an exception is raised and printed without the program failing
     assert "Whoops" in out
