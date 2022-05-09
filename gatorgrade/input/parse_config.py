@@ -13,6 +13,8 @@ def parse_config(file):
 
     Args:
         file: Yaml file containing gatorgrade and shell command checks
+    Returns:
+        Returns a dictionary that specifies shell commands and gatorgrade commands
     """
     parse_con = generate_checks(
         reformat_yaml_data(parse_yaml_file(file))
