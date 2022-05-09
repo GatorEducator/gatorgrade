@@ -59,7 +59,7 @@ within a specific file context and without any file path.
 To configure a check to be run within the context of a file path,
 please be sure to include the path to the file before the check.
 Then, you can define a description by using the `description` key,
-and use `check` and `options` for the check and the options.
+and use `check` and `options` for the associated check and options.
 See example below for reference.
 
 ```yml
