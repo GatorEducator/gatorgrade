@@ -52,13 +52,14 @@ Generate team
 
 #### Configuring GatorGrade Checks
 
-There are multiple customizable options with gatorgrade!
-Gatorgrader checks are able to run within a specific file context
-and without any file path.
+There are multiple customizable options with GatorGrade!
+GatorGrader checks are able to be configured to run
+within a specific file context and without any file path.
 
-To run a check within the context of a file path,
-please be sure to include the path to the file above description,
-along with a description of the check and the options.
+To configure a check to be run within the context of a file path,
+please be sure to include the path to the file before the check.
+Then, you can define a description by using the `description` key,
+and use `check` and `options` for the check and the options.
 See example below for reference.
 
 ```yml
@@ -71,8 +72,9 @@ See example below for reference.
         count: 0
 ```
 
-To run a check without a specified file path,
-start with the description of the check and the options associated with it.
+To configure a check without a specified file path, just start with
+the description using the `description` key, and use `check` and `options`
+for the check and the options associated with it.
 See example below for reference.
 
 ```yml
@@ -80,18 +82,6 @@ See example below for reference.
   check: CountCommits
   options:
     count: 8
-```
-
-Gatorgrader also allows you to run shell checks as well as Gatorgrader checks!
-To run a shell check, be sure to include the description of the shell check
-along with the command to run the check.
-See two examples of shell checks below for reference.
-
-```yml
-- description: Pass MDL
-  command: mdl .
-- description: Pass HTMLHint
-  command: HTMLHint
 ```
 
 ## Contributing to GatorGrade
