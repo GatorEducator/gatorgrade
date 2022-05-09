@@ -47,7 +47,7 @@ def run_commands_and_return_results(commands_input):
 
     for command in gatorcommands:
         # If command is formatted incorrectly in yaml files,
-        # catch the exception that would be retursned and print
+        # catch the exception that would be returned and print
         try:
             result = gator.grader(command)
         # disable pylint so the more general Exception class can be used
