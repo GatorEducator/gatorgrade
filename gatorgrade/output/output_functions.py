@@ -11,6 +11,7 @@ import gator
 
 color.init()
 
+
 def run_commands_and_return_results(commands_input):
     """Run commands through GatorGrader and send results to other output methods.
 
@@ -56,7 +57,7 @@ def run_commands_and_return_results(commands_input):
 
     return results
 
-  
+
 def sort_checks_by_result(results):
     """
     Process results and determine if the check passed or failed.
