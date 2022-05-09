@@ -32,7 +32,7 @@ def generate(
         "--force",
         "-f",
         help="Force gatorgrade to overwrite an existing yml file.",
-        type = [" "],
+        target_path_list = [" "],
     )
 ):
     """Generate a gatorgrade.yml file."""
