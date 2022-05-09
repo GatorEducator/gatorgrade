@@ -101,7 +101,23 @@ def output_failed_checks(failed_checks):
 
 
 def run_and_display_command_checks(commands):
-    """Run commands through gatorgrader and display them to the user."""
+    """Run commands through gatorgrader and display them to the user.
+    
+    Args:
+
+        Commands are received as dictionary of two keys, shell commands / gator
+        commands.
+
+        commands_input (dict{str: List[dict{str:str, ...}],
+        str: List[List[str]]}): The first parameter which
+        contains commands.
+
+        An Example of arg input for this function is as follows :
+
+        {'shell': [{'description': 'Run program', 'command': 'mdl'}],
+        'gatorgrader': [['--description', 'do command', 'commandType',
+        '--arg', '1', '--directory', './home', '--file', 'file.py']]}
+    """
     results = run_commands_and_return_results(commands)
     sort_checks_by_result(results)
     output_percentage_printing.print_percentage(results)
