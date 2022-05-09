@@ -3,6 +3,7 @@
 # Import needed libraries
 from pathlib import Path
 import pytest
+from gatorgrade.generate.generate import generate_config
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path):
@@ -30,8 +31,7 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     reflection_file.write_text("# Reflection on Lab 03")
 
     # When we call the modularized version of "generate.py" with two arguments
-
-    # generate_config(["src", "README.md"], root_directory)
+    generate_config(["src", "README.md"], str(root_directory))
 
     # Then "gatrograde.yml" is generated in the root directory
     file_path = Path(root_directory / "gatorgrade.yml")
@@ -76,7 +76,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     readme_file.write_text("# Practical 01")
 
     # When we call the modularized version of "generate.py" with two arguments
-    # generate_config(["src", "README.md"], str(root_directory))
+    generate_config(["src", "README.md"], str(root_directory))
 
     # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
@@ -118,8 +118,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
 
     # When we call the modularized version of "generate.py"
     # with two arguments, but README.md doesn't exist
-
-    # generate_config(["src", "README.md"], str(root_directory))
+    generate_config(["src", "README.md"], str(root_directory))
 
     # Then "gatorgrade.yml" is created with existing file paths and produce warning
     file = root_directory / "gatorgrade.yml"
