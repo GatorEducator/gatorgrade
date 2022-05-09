@@ -11,6 +11,7 @@ import gator
 
 color.init()
 
+
 def run_commands_and_return_results(commands_input):
     """Run commands through GatorGrader and send results to other output methods.
 
@@ -30,7 +31,7 @@ def run_commands_and_return_results(commands_input):
         '--arg', '1', '--directory', './home', '--file', 'file.py']]}
 
     Returns:
-        List[tuple[str, bool, str]]
+        List[tuple(str, bool, str)]
 
         Each tuple in the list is the result of a specific command
         being run.
@@ -57,7 +58,7 @@ def run_commands_and_return_results(commands_input):
 
     return results
 
-  
+
 def sort_checks_by_result(results):
     """
     Process results and determine if the check passed or failed.
