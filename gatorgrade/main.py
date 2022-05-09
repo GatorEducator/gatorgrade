@@ -37,7 +37,7 @@ def generate(
 ):
     """Generate a gatorgrade.yml file."""
     if force is False:
-        checks = generate_config(target_path_list, relative_run_path)
+        checks = generate_config()
         pass
 
 
