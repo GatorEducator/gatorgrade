@@ -4,6 +4,7 @@ Gatorgrade file will include paths to whitelisted files
 and default GatorGrader checks.
 """
 import yaml
+
 # Import the necessary libraries
 
 
@@ -16,12 +17,6 @@ def create_targeted_paths_list():
 
 def write_yaml_of_paths_list(path_names):  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
-
-    setup_dict = {
-        "setup": "# add setup commands here\n",
-    }
-    # Write the default set up messages in YAML file.
-
     files_list = []
     # Create an empty list to store dictionaries
     for file_path in path_names:
@@ -41,10 +36,8 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
         }
         # Append files_list with the values stored inside file_path_dict
         files_list.append(file_path_dict)
-        
 
-    with open("gatorgrade.yml", "w") as file:
+    with open("gatorgrade.yml", "w", encoding="utf-8") as file:
         # Write a new YAML file named gatorgrade
-        data = yaml.dump(files_list, file, sort_keys=False)
+        yaml.dump(files_list, file, sort_keys=False)
         # Dump strings stored in files_list into a new YAML file
-    
