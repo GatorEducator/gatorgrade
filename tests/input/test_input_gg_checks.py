@@ -21,7 +21,20 @@ def test_parse_config_check_gg_matchfilefragment():
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that match file fragment exists
-    assert ["--description", "Complete all TODOs", "MatchFileFragment", "--fragment", "TODO", "--count", "0", "--exact", "--directory", "path/to", "--file", "file.py"] == output["gatorgrader"][0]
+    assert [
+        "--description",
+        "Complete all TODOs",
+        "MatchFileFragment",
+        "--fragment",
+        "TODO",
+        "--count",
+        "0",
+        "--exact",
+        "--directory",
+        "path/to",
+        "--file",
+        "file.py",
+    ] == output["gatorgrader"][0]
     # Assert that output["gatorgrader"] is equal to expected output
 
 
@@ -57,7 +70,7 @@ def test_parse_config_puts_checks_in_correct_keys():
         "TODO",
         "--count",
         "0",
-        "--exact"
+        "--exact",
     ] in output["gatorgrader"]
 
 
