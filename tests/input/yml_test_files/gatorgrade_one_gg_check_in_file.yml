@@ -1,6 +1,6 @@
-setup: |
-  echo "Setup Complete!"
----
+# setup: |
+#   echo "Setup Complete!"
+# ---
 - path/to:
   - file.py:
     - description: Complete all TODOs
