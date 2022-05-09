@@ -29,9 +29,6 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 03")
 
-    gatorgrade_yml = root_directory / "gatorgrade.yml"
-    gatorgrade_yml.write_text("Setup: ")
-
     # When we call the modularized version of "generate.py" with two arguments
 
     # generate_config(["src", "README.md"], root_directory)
