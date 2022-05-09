@@ -59,7 +59,7 @@ def run_commands_and_return_results(commands_input):
     return results
 
 
-def sort_checks_by_result(results):
+def display_check_results(results):
     """
     Process results and determine if the check passed or failed.
 
@@ -101,7 +101,7 @@ def output_failed_checks(failed_checks):
 
 
 def run_and_display_command_checks(commands):
-    """Run commands through gatorgrader and display them to the user.
+    """Run commands through GatorGrader and display them to the user.
 
     Args:
         Commands are received as dictionary of two keys, shell commands / gator
@@ -118,5 +118,5 @@ def run_and_display_command_checks(commands):
         '--arg', '1', '--directory', './home', '--file', 'file.py']]}
     """
     results = run_commands_and_return_results(commands)
-    sort_checks_by_result(results)
+    display_check_results(results)
     output_percentage_printing.print_percentage(results)
