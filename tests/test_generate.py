@@ -76,7 +76,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     readme_file.write_text("# Practical 01")
 
     # When we call the modularized version of "generate.py" with two arguments
-    # generate_config(["src", "README.md"], root_directory)
+    # generate_config(["src", "README.md"], str(root_directory))
 
     # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
@@ -119,7 +119,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     # When we call the modularized version of "generate.py"
     # with two arguments, but README.md doesn't exist
 
-    # generate_config(["src", "README.md"], root_directory)
+    # generate_config(["src", "README.md"], str(root_directory))
 
     # Then "gatorgrade.yml" is created with existing file paths and produce warning
     file = root_directory / "gatorgrade.yml"
@@ -128,7 +128,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
 
     assert "- src/main.py:" in file_text
     assert "- README.md:" not in file_text
-    assert "WARNING" in captured.out
+    assert "file path is not FOUND!" in captured.out
 
 
 def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
@@ -160,12 +160,10 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     # When we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
 
-    # generate_config(["tests", "README.md"], root_directory)
+    with pytest.raises(FileNotFoundError) as exc_info:
+        generate_config(["tests", "README.md"], str(root_directory))
 
     # Then "gatorgrade.yml" should not be generated and generate.py should throw a FileNotFoundError
     file = root_directory / "gatorgrade.yml"
-
-    with pytest.raises(FileNotFoundError) as exc_info:
-        assert not file.is_file()
-
-    assert "FAILURE" in str(exc_info.value)
+    assert not file.is_file()
+    assert "'gatorgrade.yml' is NOT generated" in str(exc_info.value)
