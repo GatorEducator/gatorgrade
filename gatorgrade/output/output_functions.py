@@ -31,7 +31,7 @@ def run_commands_and_return_results(commands_input):
         '--arg', '1', '--directory', './home', '--file', 'file.py']]}
 
     Returns:
-        List[tuple[str, bool, str]]
+        List[tuple(str, bool, str)]
 
         Each tuple in the list is the result of a specific command
         being run.
