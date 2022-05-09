@@ -1,0 +1,5 @@
+setup: |
+  ./script.sh
+  poetry install
+  echo "Setup Complete!"
+  # additional commands to be added
