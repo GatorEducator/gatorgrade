@@ -36,7 +36,7 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     output = parse_config(config)
 
     # Then assert that there is no file path indicated in the first index of list
-    assert output == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
+    assert output["gatorgrader"][0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
 
 
 def test_parse_config_puts_checks_in_correct_keys():
@@ -55,7 +55,7 @@ def test_parse_config_puts_checks_in_correct_keys():
     ] in output["gatorgrader"]
 
 
-def test_parse_config_setup_shell_checks():
+def test_parse_config_yml_file_runs_setup_shell_checks():
     """Run a yml file without shell setup commands to see if the program allows a yml file without those commands."""
     # given the path to the test yml file
     config = "tests/input/yml_test_files/gatorgrade_no_shell_setup_check.yml"
