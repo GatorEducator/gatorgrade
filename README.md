@@ -50,7 +50,22 @@ Output team
 
 The generation of yml file can be used to configure tests.
 
-In the terminal within the main directory, use the command `gatorgrade generate <path> <root directory>` to generate a yml file.
+In the terminal within the main directory.
+
+Use command `gatorgrade generate <path> <root directory>` to gen a yml file.
+
+- User should provide precise names of folders or files.
+
+- The user should also provide correct character case as input.
+
+- All folder(s) containing files starting with `__` or `.` will be ignore
+
+- Don't name folder or file starting with dot or double underscore.
+- These files will be ignored.
+
+All sub-dirs and files will be reserved except ones starting with `.` or `__`
+
+- Don't put the target folders too deep.
 
 #### Configuring GatorGrade Checks
 
