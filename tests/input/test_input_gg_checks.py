@@ -36,7 +36,13 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     output = parse_config(config)
 
     # Then assert that there is no file path indicated in the first index of list
-    assert output["gatorgrader"][0] == ["--description", "Have 8 commits", "CountCommits", "--count", "8"]
+    assert output["gatorgrader"][0] == [
+        "--description",
+        "Have 8 commits",
+        "CountCommits",
+        "--count",
+        "8",
+    ]
 
 
 def test_parse_config_puts_checks_in_correct_keys():
