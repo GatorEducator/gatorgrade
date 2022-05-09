@@ -32,13 +32,13 @@ def test_given_results_returns_percent_correct():
         (
             "Use an if statement",
             True,
-            "Found 0 match(es) of the regular expression in output or yayaya.py",
+            "",
         ),
         ("Complete all TODOs", True, ""),
         (
             "Use an if statement",
             True,
-            "Found 0 match(es) of the regular expression in output or module.py",
+            "",
         ),
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]

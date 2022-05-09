@@ -13,7 +13,8 @@ def test_output_shows_green(capsys):
     output_functions.output_passed_checks(passed_checks=("Remove All TODOs", True, ""))
     out, err = capsys.readouterr()
     expected_output = f"{color.Fore.GREEN}\u2714"
-    actual_output = print(out)
+
+    actual_output = out
     assert expected_output in actual_output
     assert err == ""
 
@@ -61,7 +62,8 @@ def test_false_result_returns_x(capsys):
         failed_checks=("Implement this with an if.", False, "No if statements found")
     )
     out, err = capsys.readouterr()
-    expected_output = "\u2718"
+    unicode_x = "\u2718"
+    expected_output = unicode_x
     actual_output = out
 
     assert expected_output in actual_output
