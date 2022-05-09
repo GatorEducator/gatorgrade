@@ -50,7 +50,7 @@ def run_commands_and_return_results(commands_input):
         # catch the exception that would be returned and print
         try:
             result = gator.grader(command)
-            # disable pylint so the more general Exception class can be used
+        # disable pylint so the more general Exception class can be used
         except Exception as command_exception:  # pylint: disable=W0703
             bad_command = command_exception.__class__
             result = (command, False, bad_command)
