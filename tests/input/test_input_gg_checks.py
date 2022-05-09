@@ -7,7 +7,7 @@ from gatorgrade.input.parse_config import parse_config
 def test_parse_config_gg_check_in_file_context_contains_file():
     """Test to make sure gatorgrader checks that have a file context include the file name in the list of lists."""
     # Given the path to the test yml file
-    config = "tests/input/yml_test_files/gatorgrade_one_gg_check_in_file_context.yml"
+    config = "tests/input/yml_test_files/gatorgrade_one_gg_check_in_file.yml"
     # when the parse_config function is run
     output = parse_config(config)
     # then assert that the file path exists in the first index of the list

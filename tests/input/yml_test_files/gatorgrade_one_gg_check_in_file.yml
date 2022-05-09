@@ -1,6 +1,4 @@
 setup: |
-  ./script.sh
-  poetry install
   echo "Setup Complete!"
 ---
 - path/to:
