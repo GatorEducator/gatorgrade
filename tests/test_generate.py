@@ -89,3 +89,46 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     assert "- src/main.py:" in file_text
     assert "- src/test_file_1.py:" in file_text
     assert "- README.md:" in file_text
+
+
+def test_generate_should_produce_warning_message_when_some_user_inputted_files_dont_exist(
+    tmp_path, capsys
+):
+    """Check if gatorgrade.yml is created with existing file paths
+    when some user-provded file paths don't exist and if generate.py outputs a warning message"""
+
+    # Given an assignment directory that contains some folders
+    root_directory = tmp_path / "Practical-02"
+    root_directory.mkdir()
+
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+
+    main_py = src_directory / "main.py"
+    main_py.write_text("import sys")
+
+    writing_directory = root_directory / "writing"
+    writing_directory.mkdir()
+
+    reflection_file = writing_directory / "reflection.md"
+    reflection_file.write_text("# Reflection on Practical 02")
+
+    tests_directory = root_directory / "tests"
+    tests_directory.mkdir()
+    test_file = tests_directory / "test_file.py"
+    test_file.write_text("import pytest")
+
+    # When we call the modularized version of "generate.py"
+    # with two arguments, but README.md doesn't exist
+
+    # generate_config(["src", "README.md"], root_directory)
+
+    # Then "gatorgrade.yml" is created with existing file paths and produce warning
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    captured = capsys.readouterr()
+
+    assert "- src/main.py:" in file_text
+    assert "- README.md:" not in file_text
+    assert "WARNING" in captured.out
+
