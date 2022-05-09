@@ -22,5 +22,4 @@ plugins:
         - gatorgrade
 nav:
   - Home: ./index.md
-  - source/*.md
   - Code Reference: reference/
