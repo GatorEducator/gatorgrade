@@ -14,7 +14,7 @@ def sort_checks_by_result(results):
     Process results and determine if the check passed or failed.
 
     Args:
-        results: list[(check_result_element1, check_result_element2),(...)]]
+        results: list[(description, passed, diagnostic),(...)]
     """
     passed_checks = []
     failed_checks = []
