@@ -1,7 +1,7 @@
 """Test suite for parse_config function."""
 
 import pytest
-from gatorgrade.input.in_file_path import parse_config
+from gatorgrade.input.parse_config import parse_config
 
 
 def test_parse_config_gg_check_in_file_context_contains_file():
