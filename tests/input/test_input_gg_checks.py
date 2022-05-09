@@ -17,7 +17,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
 def test_parse_config_check_gg_matchfilefragment():
     """Test to make sure keywords like MatchFileFragment appear inside the gator grader check list."""
     # Given the path to the test yml file
-    config = "test/input/yml_test_files/gatorgrade_matchfilefragment.yml"  # Make fixture that will create yml file to be parsed instead of expected file
+    config = "test/input/yml_test_files/gatorgrade_matchfilefragment.yml"
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that match file fragment exists
@@ -34,7 +34,6 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     config = "tests/input/yml_test_files/gatorgrade_one_gg_check_no_file_context.yml"
     # When parse_config is run
     output = parse_config(config)
-
     # Then assert that there is no file path indicated in the first index of list
     assert output["gatorgrader"][0] == [
         "--description",
