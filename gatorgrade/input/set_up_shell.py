@@ -20,7 +20,7 @@ def run_setup(front_matter):
             # Executes the command
             exit_status = os.system(command)
             # Extracts the exit code value from the exit status.
-            exit_code = os.WEXITSTATUS(exit_status)
+            exit_code = os.waitstatus_to_exitcode(exit_status)
             # If the exit code tells it was unsuccessful and did not return 0
             if exit_code != 0:
                 print(
