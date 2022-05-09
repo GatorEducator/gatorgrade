@@ -7,6 +7,7 @@ OKGREEN = "\033[92m"
 WARNING = "\033[93m"
 FAIL = "\033[91m"
 
+
 def input_correct(initial_path_list: List[str]) -> Dict:
     """Correct user-written paths."""
     # Recognize the paths users provide are the concise versions.
@@ -17,8 +18,7 @@ def input_correct(initial_path_list: List[str]) -> Dict:
             path += "/"
         corrected_path.append(path)
     # Convert list to dictionary for faster iteration
-    return dict.fromkeys(corrected_path,"")
-
+    return dict.fromkeys(corrected_path, "")
 
 
 def create_targeted_paths_list(
