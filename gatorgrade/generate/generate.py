@@ -3,7 +3,7 @@
 Gatorgrade file will include paths to whitelisted files
 and default GatorGrader checks.
 """
-
+import yaml
 # Import the necessary libraries
 
 
