@@ -11,7 +11,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
     # when the parse_config function is run
     output = parse_config(config)
     # then assert that the file path exists in the first index of the list
-    assert "file.py" in output["gatorgrader"]
+    assert "file.py" in output["gatorgrader"][0]
 
 
 def test_parse_config_check_gg_matchfilefragment():
