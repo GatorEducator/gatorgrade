@@ -102,7 +102,7 @@ def output_failed_checks(failed_checks):
 
 def run_and_display_command_checks(commands):
     """Run commands through gatorgrader and display them to the user.
-    
+
     Args:
 
         Commands are received as dictionary of two keys, shell commands / gator
