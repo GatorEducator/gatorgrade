@@ -17,15 +17,12 @@ def test_parse_config_gg_check_in_file_context_contains_file():
 def test_parse_config_check_gg_matchfilefragment():
     """Test to make sure keywords like MatchFileFragment appear inside the gator grader check list."""
     # Given the path to the test yml file
-    config = "test/input/yml_test_files/gatorgrade_matchfilefragment.yml"
+    config = "tests/input/yml_test_files/gatorgrade_matchfilefragment.yml"
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that match file fragment exists
-    assert set(
-        [["--description", "Complete all TODOs"], ["check", "MatchFileFragment"]]
-    ) == set(
-        output["gatorgrader"]
-    )  # Assert that output["gatorgrader"] is equal to expected output
+    assert ["--description", "Complete all TODOs", "MatchFileFragment", "--fragment", "TODO", "--count", "0", "--exact", "--directory", "path/to", "--file", "file.py"] == output["gatorgrader"][0]
+    # Assert that output["gatorgrader"] is equal to expected output
 
 
 def test_parse_config_gg_check_no_file_context_contains_no_file():
@@ -53,10 +50,14 @@ def test_parse_config_puts_checks_in_correct_keys():
     # Then assert that there will be outputs in the shell and in gatorgrader
     assert {"description": "Pass MDL", "command": "mdl ."} in output["shell"]
     assert [
-        "description",
-        "Complete All TODOs",
-        "check",
+        "--description",
+        "Complete all TODOs",
         "MatchFileFragment",
+        "--fragment",
+        "TODO",
+        "--count",
+        "0",
+        "--exact"
     ] in output["gatorgrader"]
 
 
@@ -79,7 +80,7 @@ def test_parse_config_yml_file_runs_setup_shell_checks():
 def test_parse_config_check_shell_contains_command():
     """Test to make sure that the shell commands are found inside the 'shell' list."""
     # Given the path to the test yml file
-    config = "test/input/yml_test_files/gatorgrade_one_shell_command_check.yml"
+    config = "tests/input/yml_test_files/gatorgrade_one_shell_command_check.yml"
     # When the parse_config is run
     output = parse_config(config)
     # Then assert that command is present in the shell
