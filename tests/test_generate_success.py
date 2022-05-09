@@ -1,8 +1,9 @@
 # Global imports
+"""Import of pytest module for testing"""
 import pytest
-from gatorgrade.generate.generate import generate_config
 
-"""Test for best case scenario"""
+"""Import generate config functions test perfect scenario from that function"""
+from gatorgrade.generate.generate import generate_config
 
 
 @pytest.fixture()
@@ -52,6 +53,6 @@ def test_generate_success_message(capsys, setup):
     """Test to see that there is a success message"""
     # When generate_config is called
     generate_config(["src"], setup)
-    out, err = capsys.readouterr()
+    out = capsys.readouterr()
     # Then a success message is printed
     assert "<Message>" in out
