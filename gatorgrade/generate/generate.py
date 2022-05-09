@@ -4,7 +4,7 @@ Gatorgrade file will include paths to whitelisted files
 and default GatorGrader checks.
 """
 from typing import List
-# Import the necessary libraries
+
 
 
 def create_targeted_paths_list():
