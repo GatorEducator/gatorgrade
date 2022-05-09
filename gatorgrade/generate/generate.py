@@ -4,6 +4,7 @@ Gatorgrade file will include paths to whitelisted files
 and default GatorGrader checks.
 """
 from typing import List
+
 # Import the necessary libraries
 
 
@@ -22,7 +23,6 @@ def write_yaml_of_paths_list():  # expected input: A path list
 
 
 def generate_config(target_path_list: List[str], relative_run_path: str = "."):
-    """Generate config by creating targeted paths in a list of strings, then writing the list of strings to a YAML file"""
+    """Generate config by creating targeted paths in a list of strings, then create a YAML file"""
     targeted_paths = create_targeted_paths_list(target_path_list, relative_run_path)
     write_yaml_of_paths_list(targeted_paths)
-    
