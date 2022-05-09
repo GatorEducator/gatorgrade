@@ -2,6 +2,7 @@
 
 # Import needed libraries
 from pathlib import Path
+import pytest
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path):
@@ -92,7 +93,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
 
 
 def test_generate_should_produce_warning_message_when_some_user_inputted_files_dont_exist(
-    tmp_path, capsys
+    tmp_path,
 ):
     """Check if gatorgrade.yml is created with existing file paths
     when some user-provded file paths don't exist and if generate.py outputs a warning message"""
@@ -132,3 +133,42 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     assert "- README.md:" not in file_text
     assert "WARNING" in captured.out
 
+
+def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
+    tmp_path,
+):
+    """Check if generate.py throws an error and produce a failure message
+    when none of user provided file paths exist in the root directory"""
+
+    # Given an assignment directory
+    root_directory = tmp_path / "Lab-01"
+    root_directory.mkdir()
+
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+
+    input_directory = src_directory / "input"
+    input_directory.mkdir()
+    input_file = input_directory / "input.txt"
+    input_file.write_text("Test input")
+
+    main_py = src_directory / "main.py"
+    main_py.write_text("import sys")
+
+    writing_directory = root_directory / "writing"
+    writing_directory.mkdir()
+    reflection_file = writing_directory / "reflection.md"
+    reflection_file.write_text("# Reflection on Lab 01")
+
+    # When we call the modularized version of "generate.py"
+    # with two arguments, but none of the files exist in the root directory
+
+    # generate_config(["tests", "README.md"], root_directory)
+
+    # Then "gatorgrade.yml" should not be generated and generate.py should throw a FileNotFoundError
+    file = root_directory / "gatorgrade.yml"
+
+    with pytest.raises(FileNotFoundError) as exc_info:
+        assert not file.is_file()
+
+    assert "FAILURE" in str(exc_info.value)
