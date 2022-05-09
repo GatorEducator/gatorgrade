@@ -9,7 +9,7 @@ import gator
 
 
 def run_commands_and_return_results(commands_input):
-    """Run commands throughGatorGrader and send results to other output methods.
+    """Run commands through GatorGrader and send results to other output methods.
 
     Args:
 
