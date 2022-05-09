@@ -23,7 +23,7 @@ def write_yaml_of_paths_list():  # expected input: A path list
     # List the file paths in specific format.
 
 
-def generate_config(target_path_list: List[str], relative_run_path: str = "."):
+def generate_config(target_path_list: List[str], search_root: str = "."):
     """Generate config by creating targeted paths in a list of strings, then create a YAML file"""
-    targeted_paths = create_targeted_paths_list(target_path_list, relative_run_path)
+    targeted_paths = create_targeted_paths_list(target_path_list, search_root)
     write_yaml_of_paths_list(targeted_paths)
