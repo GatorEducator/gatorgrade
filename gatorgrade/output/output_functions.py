@@ -119,4 +119,4 @@ def run_and_display_command_checks(commands):
     """
     results = run_commands_and_return_results(commands)
     display_check_results(results)
-    output_percentage_printing.print_percentage(results)
+    print(output_percentage_printing.print_percentage(results))
