@@ -25,7 +25,7 @@ lint = "task black && task pylint && task pydocstyle"
 black = { cmd= "black gatorgrade/ tests/ --check", help = "Run the black checks for source code format" }
 pylint = { cmd = "pylint gatorgrade/ tests/", help = "Run the pylint checks for source code documentation" }
 pydocstyle = { cmd = "pydocstyle gatorgrade/ tests/", help = "Run the pydocstyle checks for source code documentation" }
-mkdocs = { cmd = ""}
+mkdocs = { cmd = "mkdocs gh-pages"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
