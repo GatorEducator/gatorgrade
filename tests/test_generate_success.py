@@ -19,7 +19,7 @@ def setup_files(tmp_path):
     yield tmp_path
 
 
-def test_generate_config_creates_gatorgrade_yml(testing_dir):
+def test_generate_config_create_gatorgrade_yml(testing_dir):
     """Test to see that gatorgrade_yml file exist in file structure"""
     # When generate_config is called
     generate_config(["src"], testing_dir)
