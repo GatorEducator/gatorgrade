@@ -53,7 +53,7 @@ red, while 100% of checks passed will appear in green.
 
 ### Generating a gatorgrade.yml file
 
-The generation of yml file can be used to create assignments.
+The generation of `gatorgrade.yml` file can be used to create assignments.
 
 In the terminal within the main directory.
 
