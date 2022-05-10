@@ -58,12 +58,11 @@ Use command `gatorgrade generate <TARGET_PATH_LIST>` to gen a yml file.
 
 - The user should also provide correct character case as input.
 
-- All folder(s) containing files starting with `__` or `.` will be ignore
+- All folder(s) containing files starting with `__` or `.` will be ignored
 
 - Don't name folder or file starting with dot or double underscore.
-- These files will be ignored.
 
-All sub-dirs and files will be reserved except ones starting with `.` or `__`
+All sub-dirs and files will be stored except ones starting with `.` or `__`
 
 #### Configuring GatorGrade Checks
 
