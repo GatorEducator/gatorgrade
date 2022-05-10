@@ -4,7 +4,6 @@ import typer
 from typing import List
 from gatorgrade.input.in_file_path import parse_config
 from gatorgrade.output.output_functions import run_and_display_command_checks
-from gatorgrade.generate.generate import generate_config
 
 app = typer.Typer(add_completion=False)
 FILE = "gatorgrade.yml"
@@ -27,7 +26,7 @@ def gatorgrade(
 @app.command()
 def generate(target_path_list: List[str]):
     """Generate a gatorgrade.yml file."""
-    generate_config(target_path_list)
+    pass
 
 
 if __name__ == "__main__":
