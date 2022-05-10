@@ -22,7 +22,6 @@ jobs:
           python-version: 3.9
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
-      - name: Use Poetry Dependency Cache
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true
