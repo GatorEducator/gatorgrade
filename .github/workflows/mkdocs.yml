@@ -7,7 +7,7 @@ name: Build MKDocs
 on:
   push:
     branches:
-      -main
+      - main
 jobs:
   mkdocs:
     name: MkDocs
