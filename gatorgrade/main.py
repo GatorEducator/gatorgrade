@@ -1,7 +1,6 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 from pathlib import Path
 import typer
-from typing import List
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output_functions import run_and_display_command_checks
 
@@ -22,9 +21,9 @@ def gatorgrade(
 
 
 @app.command()
-def generate(target_path_list: List[str]):
+def generate():
     """Generate a gatorgrade.yml file."""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 if __name__ == "__main__":
