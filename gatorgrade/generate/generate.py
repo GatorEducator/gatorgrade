@@ -111,3 +111,9 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
         # Write a new YAML file named gatorgrade
         yaml.dump(files_list, file, sort_keys=False)
         # Dump strings stored in files_list into a new YAML file
+
+
+def generate_config(target_path_list: List[str], search_root: str = "."):
+    """Generate config by creating targeted paths in a list of strings, then create a YAML file."""
+    targeted_paths = create_targeted_paths_list(target_path_list, search_root)
+    write_yaml_of_paths_list(targeted_paths)
