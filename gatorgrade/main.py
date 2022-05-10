@@ -32,12 +32,11 @@ def generate(
         "--force",
         "-f",
         help="Force gatorgrade to overwrite an existing yml file."
-    )
+    )  
 ):
     """Generate a gatorgrade.yml file."""
     if force is False:
-        checks = generate_config()
-        pass
+        generate_config(target_path_list)
 
 
 if __name__ == "__main__":
