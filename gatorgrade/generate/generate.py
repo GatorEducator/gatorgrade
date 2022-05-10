@@ -1,7 +1,7 @@
 """Generate a YAML file with default messages and specific paths."""
 import os
-import yaml
 from typing import List, Dict
+import yaml
 
 # Define colors for terminal output
 OKGREEN = "\033[92m"
