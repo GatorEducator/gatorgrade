@@ -26,6 +26,7 @@ def gatorgrade(
 
 @app.command()
 def generate(
+    target_path_list: List[str],
     force: bool = typer.Option(
         False,
         "--force",
