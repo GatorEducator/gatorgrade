@@ -57,9 +57,9 @@ The generation of yml file can be used to create assignments.
 
 In the terminal within the main directory.
 
-Use command `gatorgrade generate <TARGET_PATH_LIST>` to generate a yml file.
+Use `gatorgrade generate <TARGET_PATH_LIST>` to generate `gatorgrade.yml` file.
 
-- User should provide precise names of folders or files.
+- User should provide precise name of the of target list .
 
 - The user should also provide correct character case as input.
 
