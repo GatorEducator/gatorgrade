@@ -57,7 +57,39 @@ Generate team
 
 #### Configuring GatorGrade Checks
 
-Input team
+There are multiple customizable options with GatorGrade!
+GatorGrader checks are able to be configured to run
+within a specific file context and without any file path.
+
+To configure a check to be run within the context of a file path,
+please be sure to include the path to the file before the check.
+Then, you can define a description for the check by using the `description` key,
+and use the `check` and `options` keys
+for the name of the check and the options for the check.
+See example below for reference.
+
+```yml
+- path/to:
+  - file.py:
+    - description: Complete all TODO
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+```
+
+To configure a check without a specified file path, just start with
+the description for the check by using the `description` key, and use
+the `check` and `options` keys for the name of the check
+and the options for the check.
+See example below for reference.
+
+```yml
+- description: Have a total of 8 commits, 5 of which were created by you
+  check: CountCommits
+  options:
+    count: 8
+```
 
 ## Contributing to GatorGrade
 
