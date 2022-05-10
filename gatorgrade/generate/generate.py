@@ -1,5 +1,6 @@
 """Generate a YAML file with default messages and specific paths."""
 import os
+import yaml
 from typing import List, Dict
 
 # Define colors for terminal output
@@ -80,5 +81,33 @@ def create_targeted_paths_list(
             f"{OKGREEN}SUCCESS \N{Fire}: All the file paths were"
             + " successfully generated in the 'gatorgrade.yml' file!"
         )
-
+        
     return targeted_paths
+
+  
+def write_yaml_of_paths_list(path_names):  # expected input: A path list
+    """Write YAML file to create gatorgrade file and set default messages."""
+    files_list = []
+    # Create an empty list to store dictionaries
+    for file_path in path_names:
+        # Iterate through items in path_names
+        file_path_fixed = file_path.replace("./", "")
+        # Make file_path easier to read by removing unnecessary characters
+        file_path_dict = {
+            # Dictionary to store the file paths
+            file_path_fixed: [
+                # List which stores strings which will be in gatorgrade.yml file
+                {
+                    "description": "Complete all TODOs",
+                    "check": "MatchFileFragment",
+                    "options": {"fragment": "TODO", "count": 0, "exact": True},
+                }
+            ]
+        }
+        # Append files_list with the values stored inside file_path_dict
+        files_list.append(file_path_dict)
+
+    with open("gatorgrade.yml", "w", encoding="utf-8") as file:
+        # Write a new YAML file named gatorgrade
+        yaml.dump(files_list, file, sort_keys=False)
+        # Dump strings stored in files_list into a new YAML file
