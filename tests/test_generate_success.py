@@ -10,10 +10,13 @@ def setup_files(tmp_path):
     # Given this file structure
     src_dir = tmp_path / "src"
     src_dir.mkdir()
+
     python_file = src_dir / "test.py"
     python_file.write_text("import sys")
+
     writing_dir = tmp_path / "writing"
     writing_dir.mkdir()
+
     reflection = writing_dir / "reflection.md"
     reflection.write_text("# Reflection")
     yield tmp_path
