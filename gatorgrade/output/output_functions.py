@@ -5,9 +5,9 @@ for the output team. For instance, functions dealing with percentage
 output, description output, and colorization of text.
 """
 
-import colorama as color
 import gator
-
+import colorama as color
+from gatorgrade.output import output_percentage_printing
 
 color.init()
 
@@ -59,7 +59,7 @@ def run_commands_and_return_results(commands_input):
     return results
 
 
-def sort_checks_by_result(results):
+def display_check_results(results):
     """
     Process results and determine if the check passed or failed.
 
@@ -98,3 +98,25 @@ def output_failed_checks(failed_checks):
         print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
         print(f"    {color.Fore.YELLOW}\u2192  {description}")
         return bool
+
+
+def run_and_display_command_checks(commands):
+    """Run commands through GatorGrader and display them to the user.
+
+    Args:
+        Commands are received as dictionary of two keys, shell commands / gator
+        commands.
+
+        commands_input (dict{str: List[dict{str:str, ...}],
+        str: List[List[str]]}): The first parameter which
+        contains commands.
+
+        An Example of arg input for this function is as follows :
+
+        {'shell': [{'description': 'Run program', 'command': 'mdl'}],
+        'gatorgrader': [['--description', 'do command', 'commandType',
+        '--arg', '1', '--directory', './home', '--file', 'file.py']]}
+    """
+    results = run_commands_and_return_results(commands)
+    display_check_results(results)
+    output_percentage_printing.print_percentage(results)
