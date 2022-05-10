@@ -1,13 +1,11 @@
 # Global imports
-"""Import of pytest module for testing"""
+"""Test the generate_config function in a perfect situation."""
 import pytest
-
-"""Import generate config functions test perfect scenario from that function"""
 from gatorgrade.generate.generate import generate_config
 
 
-@pytest.fixture()
-def setup(tmp_path):
+@pytest.fixture(name="testing_dir")
+def setup_files(tmp_path):
     """Setup directory for tests"""
     # Given this file structure
     src_dir = tmp_path / "src"
@@ -21,38 +19,40 @@ def setup(tmp_path):
     yield tmp_path
 
 
-def test_generate_config_creates_gatorgrade_yml(setup):
+def test_generate_config_creates_gatorgrade_yml(testing_dir):
     """Test to see that gatorgrade_yml file exist in file structure"""
     # When generate_config is called
-    generate_config(["src"], setup)
+    generate_config(["src"], testing_dir)
     # Then gatorgrade.yml is created
-    gatorgrade_yml = setup / "gatorgrade.yml"
+    gatorgrade_yml = testing_dir / "gatorgrade.yml"
     assert gatorgrade_yml.is_file()
 
 
-def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(setup):
+def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(testing_dir):
     """Test to see if input matches directory"""
     # When generate_config is called
-    generate_config(["src"], setup)
+    generate_config(["src"], testing_dir)
     # Then gatorgrade.yml is created
-    gatorgrade_yml = setup / "gatorgrade.yml"
+    gatorgrade_yml = testing_dir / "gatorgrade.yml"
     assert "src/test.py" in gatorgrade_yml.open().read()
 
 
-def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(setup):
+def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
+    testing_dir,
+):
     """Test to see if input does not match directory"""
     # When generate_config is called
-    generate_config(["writing"], setup)
+    generate_config(["writing"], testing_dir)
     # Then gatorgrade.yml is created
-    gatorgrade_yml = setup / "gatorgrade.yml"
+    gatorgrade_yml = testing_dir / "gatorgrade.yml"
     assert "src/test.py" not in gatorgrade_yml.open().read()
     assert "writing/reflection.md" in gatorgrade_yml.open().read()
 
 
-def test_generate_success_message(capsys, setup):
+def test_generate_success_message(capsys, testing_dir):
     """Test to see that there is a success message"""
     # When generate_config is called
-    generate_config(["src"], setup)
+    generate_config(["src"], testing_dir)
     out = capsys.readouterr()
     # Then a success message is printed
     assert "<Message>" in out
