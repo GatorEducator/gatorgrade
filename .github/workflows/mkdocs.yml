@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Setup Python 3.9
         uses: actions/setup-python@v2
         id: setup-python
@@ -31,6 +33,4 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
       - name: Update MkDocs
-        run: |
-          git pull
-          poetry run task mkdocs
+        run: poetry run task mkdocs
