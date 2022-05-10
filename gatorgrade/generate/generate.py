@@ -81,10 +81,10 @@ def create_targeted_paths_list(
             f"{OKGREEN}SUCCESS \N{Fire}: All the file paths were"
             + " successfully generated in the 'gatorgrade.yml' file!"
         )
-        
+
     return targeted_paths
 
-  
+
 def write_yaml_of_paths_list(path_names):  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
     files_list = []
