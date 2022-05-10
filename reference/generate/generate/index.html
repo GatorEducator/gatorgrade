@@ -325,6 +325,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gatorgrade.generate.generate.generate_config" class="md-nav__link">
+    generate_config()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#gatorgrade.generate.generate.input_correct" class="md-nav__link">
     input_correct()
   </a>
@@ -577,6 +584,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#gatorgrade.generate.generate.generate_config" class="md-nav__link">
+    generate_config()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#gatorgrade.generate.generate.input_correct" class="md-nav__link">
     input_correct()
   </a>
@@ -769,6 +783,38 @@
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">targeted_paths</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="gatorgrade.generate.generate.generate_config" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">,</span> <span class="n">search_root</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span></code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Generate config by creating targeted paths in a list of strings, then create a YAML file.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate config by creating targeted paths in a list of strings, then create a YAML file.&quot;&quot;&quot;</span>
+    <span class="n">targeted_paths</span> <span class="o">=</span> <span class="n">create_targeted_paths_list</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
+    <span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>

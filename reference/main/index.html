@@ -619,7 +619,7 @@
 
 
 <h2 id="gatorgrade.main.gatorgrade" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">gatorgrade</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the yml file.&#39;</span><span class="p">))</span></code>
+<code class="highlight language-python"><span class="n">gatorgrade</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the yml file.&#39;</span><span class="p">))</span></code>
 
 
 </h2>
@@ -631,9 +631,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/main.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
@@ -645,15 +643,13 @@
 <span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">invoke_without_command</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">gatorgrade</span><span class="p">(</span>
     <span class="n">ctx</span><span class="p">:</span> <span class="n">typer</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span>
-    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span>
-        <span class="s2">&quot;FILE&quot;</span><span class="p">,</span> <span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the yml file.&quot;</span>
-    <span class="p">),</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the yml file.&quot;</span><span class="p">),</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Run the GatorGrader checks in the gatorgrade.yml file.&quot;&quot;&quot;</span>
     <span class="c1"># check if ctx.subcommand is none</span>
     <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">invoked_subcommand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;yml&quot;</span><span class="p">:</span>
-            <span class="k">pass</span>
+        <span class="n">checks</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">run_and_display_command_checks</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -667,7 +663,7 @@
 
 
 <h2 id="gatorgrade.main.generate" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">generate</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;--force&#39;</span><span class="p">,</span> <span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Force gatorgrade to overwrite an existing yml file.&#39;</span><span class="p">))</span></code>
+<code class="highlight language-python"><span class="n">generate</span><span class="p">()</span></code>
 
 
 </h2>
@@ -682,26 +678,10 @@
           <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
-<span class="k">def</span> <span class="nf">generate</span><span class="p">(</span>
-    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span>
-        <span class="kc">False</span><span class="p">,</span>
-        <span class="s2">&quot;--force&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;-f&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Force gatorgrade to overwrite an existing yml file.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">):</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">generate</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Generate a gatorgrade.yml file.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">force</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-        <span class="k">pass</span>
+    <span class="k">pass</span>  <span class="c1"># pylint: disable=unnecessary-pass</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
