@@ -2,7 +2,7 @@
 from pathlib import Path
 import typer
 from typing import List
-from gatorgrade.input.in_file_path import parse_config
+from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output_functions import run_and_display_command_checks
 
 app = typer.Typer(add_completion=False)
