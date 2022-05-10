@@ -59,15 +59,13 @@ In the terminal within the main directory.
 
 Use `gatorgrade generate <TARGET_PATH_LIST>` to generate `gatorgrade.yml` file.
 
-- User should provide precise name of the of target list .
+`<TARGET_PATH_LIST>` should be a list of paths to files or folders that
+will be included in the generated `gatorgrade.yml`. These paths will be
+relative to where you run `gatorgrade generate`.
 
-- The user should also provide correct character case as input.
-
-- All folder(s) containing files starting with `__` or `.` will be ignored
-
-- Don't name folder or file starting with dot or double underscore.
-
-All sub-dirs and files will be stored except ones starting with `.` or `__`
+Paths should be precisely named since they will be exactly matched.
+Please note that files and folders that start with `__` or `.` will
+automatically be ignored.
 
 #### Configuring GatorGrade Checks
 
