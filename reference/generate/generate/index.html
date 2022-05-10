@@ -814,7 +814,7 @@
 <span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate config by creating targeted paths in a list of strings, then create a YAML file.&quot;&quot;&quot;</span>
     <span class="n">targeted_paths</span> <span class="o">=</span> <span class="n">create_targeted_paths_list</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
-    <span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">)</span>
+    <span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -874,7 +874,7 @@
 
 
 <h2 id="gatorgrade.generate.generate.write_yaml_of_paths_list" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span></code>
 
 
 </h2>
@@ -910,7 +910,7 @@
 <span class="normal">109</span>
 <span class="normal">110</span>
 <span class="normal">111</span>
-<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
+<span class="normal">112</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
     <span class="sd">&quot;&quot;&quot;Write YAML file to create gatorgrade file and set default messages.&quot;&quot;&quot;</span>
     <span class="n">files_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Create an empty list to store dictionaries</span>
@@ -932,7 +932,7 @@
         <span class="c1"># Append files_list with the values stored inside file_path_dict</span>
         <span class="n">files_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_path_dict</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;gatorgrade.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">search_root</span><span class="si">}</span><span class="s2">/gatorgrade.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="c1"># Write a new YAML file named gatorgrade</span>
         <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">files_list</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
