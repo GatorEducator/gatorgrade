@@ -1,0 +1,4 @@
+- description: Have 8 commits
+  check: CountCommits
+  options:
+    count: 8
