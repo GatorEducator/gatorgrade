@@ -25,18 +25,9 @@ def gatorgrade(
 
 
 @app.command()
-def generate(
-    target_path_list: List[str],
-    force: bool = typer.Option(
-        False,
-        "--force",
-        "-f",
-        help="Force gatorgrade to overwrite an existing yml file."
-    )  
-):
+def generate(target_path_list: List[str]):
     """Generate a gatorgrade.yml file."""
-    if force is False:
-        generate_config(target_path_list)
+    generate_config(target_path_list)
 
 
 if __name__ == "__main__":
