@@ -21,9 +21,7 @@ def gatorgrade(
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
         checks = parse_config(FILE)
-        checks = run_and_display_command_checks(parse_con)
-        if filename.suffix == "yml":
-            pass
+        run_and_display_command_checks(checks)
 
 
 @app.command()
