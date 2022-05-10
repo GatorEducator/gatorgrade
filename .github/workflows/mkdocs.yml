@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - integ_fix_mkdocs_workflow
 jobs:
   mkdocs:
     name: MkDocs
