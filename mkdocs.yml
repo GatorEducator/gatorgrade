@@ -5,6 +5,18 @@ site_author: GatorGrade Team
 repo_url: https://github.com/GatorEducator/gatorgrade
 theme:
   name: material
+  palette:
+      scheme: slate
+      primary: green
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+extra_css:
+  - stylesheets/extra.css
 plugins:
   - search
   - gen-files:
