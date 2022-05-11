@@ -1,7 +1,6 @@
 """This module tests the generate.py functionality"""
 
 # Import needed libraries
-from pathlib import Path
 import pytest
 from gatorgrade.generate.generate import generate_config
 
@@ -34,7 +33,7 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     generate_config(["src", "README.md"], str(root_directory))
 
     # Then "gatrograde.yml" is generated in the root directory
-    file_path = Path(root_directory / "gatorgrade.yml")
+    file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
 
 
