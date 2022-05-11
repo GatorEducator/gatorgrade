@@ -7,7 +7,8 @@ name: Build MKDocs
 on:
   push:
     branches:
-      -main
+      - main
+
 jobs:
   mkdocs:
     name: MkDocs
@@ -15,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Setup Python 3.9
         uses: actions/setup-python@v2
         id: setup-python
@@ -22,7 +25,6 @@ jobs:
           python-version: 3.9
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
-      - name: Use Poetry Dependency Cache
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true

@@ -15,6 +15,7 @@
         "pwsh",
         "gatorgrader",
         "gatorgrade",
+        "TODOs",
         "gatorgradle"
     ],
     "ignorePaths": [

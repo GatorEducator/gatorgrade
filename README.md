@@ -44,15 +44,64 @@ To run checks against an assignment, use the `gator grade` command.
 
 #### Interpreting Output
 
-Output team
+All GatorGrader checks will be displayed as output.  Checks that
+have passed gatorgrader will have a green check mark (:heavy_check_mark:)
+next to the description.  Failing checks will show a red (:x:) next to the
+description.  The overall percentage of passed checks will be shown
+at the bottom of the display.  Anything less than 100% will appear in
+red, while 100% of checks passed will appear in green.
 
 ### Generating a gatorgrade.yml file
 
-Generate team
+The generation of `gatorgrade.yml` file can be used to create assignments.
+
+In the terminal within the main directory.
+
+Use `gatorgrade generate <TARGET_PATH_LIST>` to generate `gatorgrade.yml` file.
+
+`<TARGET_PATH_LIST>` should be a list of paths to files or folders that
+will be included in the generated `gatorgrade.yml`. These paths will be
+relative to where you run `gatorgrade generate`.
+
+Paths should be precisely named since they will be exactly matched.
+Please note that files and folders that start with `__` or `.` will
+automatically be ignored.
 
 #### Configuring GatorGrade Checks
 
-Input team
+There are multiple customizable options with GatorGrade!
+GatorGrader checks are able to be configured to run
+within a specific file context and without any file path.
+
+To configure a check to be run within the context of a file path,
+please be sure to include the path to the file before the check.
+Then, you can define a description for the check by using the `description` key,
+and use the `check` and `options` keys
+for the name of the check and the options for the check.
+See example below for reference.
+
+```yml
+- path/to:
+  - file.py:
+    - description: Complete all TODO
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+```
+
+To configure a check without a specified file path, just start with
+the description for the check by using the `description` key, and use
+the `check` and `options` keys for the name of the check
+and the options for the check.
+See example below for reference.
+
+```yml
+- description: Have a total of 8 commits, 5 of which were created by you
+  check: CountCommits
+  options:
+    count: 8
+```
 
 ## Contributing to GatorGrade
 
