@@ -82,11 +82,11 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
 
-    assert "- src/input/input.txt:" in file_text
-    assert "- src/output/output.txt:" in file_text
-    assert "- src/main.py:" in file_text
-    assert "- src/test_file_1.py:" in file_text
-    assert "- README.md:" in file_text
+    assert "src/input/input.txt" in file_text
+    assert "src/output/output.txt" in file_text
+    assert "src/main.py" in file_text
+    assert "src/test_file_1.py" in file_text
+    assert "README.md" in file_text
 
 
 def test_generate_should_produce_warning_message_when_some_user_inputted_files_dont_exist(
@@ -125,8 +125,8 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     file_text = file.open().read()
     captured = capsys.readouterr()
 
-    assert "- src/main.py:" in file_text
-    assert "- README.md:" not in file_text
+    assert "src/main.py" in file_text
+    assert "README.md" not in file_text
     assert "file path is not FOUND!" in captured.out
 
 
