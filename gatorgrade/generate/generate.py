@@ -15,8 +15,8 @@ def input_correct(initial_path_list: List[str]) -> Dict:
     # Unify the ending format to avoid different users' different input
     corrected_path = []
     for path in initial_path_list:
-        if path.endswith("/") is False:
-            path += "/"
+        if path.endswith(os.path.sep) is False:
+            path += os.path.sep
         corrected_path.append(path)
     # Convert list to dictionary for faster iteration
     return dict.fromkeys(corrected_path, "")
@@ -109,7 +109,7 @@ def write_yaml_of_paths_list(path_names, search_root):  # expected input: A path
         # Append files_list with the values stored inside file_path_dict
         files_list.append(file_path_dict)
 
-    with open(f"{search_root}/gatorgrade.yml", "w", encoding="utf-8") as file:
+    with open(f"{search_root}{os.path.sep}gatorgrade.yml", "w", encoding="utf-8") as file:
         # Write a new YAML file named gatorgrade
         yaml.dump(files_list, file, sort_keys=False)
         # Dump strings stored in files_list into a new YAML file
