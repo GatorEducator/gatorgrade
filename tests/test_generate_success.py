@@ -37,7 +37,7 @@ def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(testing_d
     generate_config(["src"], testing_dir)
     # Then gatorgrade.yml is created
     gatorgrade_yml = testing_dir / "gatorgrade.yml"
-    assert "src/test.py" in gatorgrade_yml.open().read()
+    assert os.path.normpath("src/test.py") in gatorgrade_yml.open().read()
 
 
 def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
@@ -48,7 +48,7 @@ def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
     generate_config(["writing"], testing_dir)
     # Then gatorgrade.yml is created
     gatorgrade_yml = testing_dir / "gatorgrade.yml"
-    assert "src/test.py" not in gatorgrade_yml.open().read()
+    assert os.path.normpath("src/test.py") not in gatorgrade_yml.open().read()
     assert "writing/reflection.md" in gatorgrade_yml.open().read()
 
 
