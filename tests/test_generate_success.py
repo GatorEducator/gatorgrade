@@ -50,7 +50,7 @@ def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
     # Then gatorgrade.yml is created
     gatorgrade_yml = testing_dir / "gatorgrade.yml"
     assert os.path.normpath("src/test.py") not in gatorgrade_yml.open().read()
-    assert "writing/reflection.md" in gatorgrade_yml.open().read()
+    assert os.path.normpath("writing/reflection.md") in gatorgrade_yml.open().read()
 
 
 def test_generate_success_message(capsys, testing_dir):
