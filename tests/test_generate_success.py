@@ -56,6 +56,6 @@ def test_generate_success_message(capsys, testing_dir):
     """Test to see that there is a success message"""
     # When generate_config is called
     generate_config(["src"], testing_dir)
-    out = capsys.readouterr()
+    out, _ = capsys.readouterr()
     # Then a success message is printed
     assert "SUCCESS" in out

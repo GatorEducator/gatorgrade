@@ -1,0 +1,7 @@
+- ? /private/var/folders/y6/yxszy49d45d_vqkhbn13xvfm0000gn/T/pytest-of-anthonygrant-cook/pytest-1/test_generate_config_creates_g0/writing/reflection.md/
+  : - description: Complete all TODOs
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
