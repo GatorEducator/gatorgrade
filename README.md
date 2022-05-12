@@ -53,7 +53,19 @@ red, while 100% of checks passed will appear in green.
 
 ### Generating a gatorgrade.yml file
 
-Generate team
+The generation of `gatorgrade.yml` file can be used to create assignments.
+
+In the terminal within the main directory.
+
+Use `gatorgrade generate <TARGET_PATH_LIST>` to generate `gatorgrade.yml` file.
+
+`<TARGET_PATH_LIST>` should be a list of paths to files or folders that
+will be included in the generated `gatorgrade.yml`. These paths will be
+relative to where you run `gatorgrade generate`.
+
+Paths should be precisely named since they will be exactly matched.
+Please note that files and folders that start with `__` or `.` will
+automatically be ignored.
 
 #### Configuring GatorGrade Checks
 
