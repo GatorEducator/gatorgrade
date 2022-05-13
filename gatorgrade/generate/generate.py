@@ -15,10 +15,9 @@ def input_correct(initial_path_list: List[str]) -> Dict:
     # Unify the ending format to avoid different users' different input
     corrected_path = []
     for path in initial_path_list:
-        # Make sure the target path gets started in the current directory
-        path = "./" + path
-        if path.endswith("/") is False:
-            path += "/"
+
+        if path.endswith(os.path.sep) is False:
+            path += os.path.sep
         corrected_path.append(path)
     # Convert list to dictionary for faster iteration
     return dict.fromkeys(corrected_path, "")
@@ -35,7 +34,7 @@ def create_targeted_paths_list(
     # So the empty folders containing nothing won't be gone through
     for dirpath, _, filenames in os.walk(relative_run_path):
         # Split path string into multiple layers of directories
-        path_dir_list = dirpath.split("/")
+        path_dir_list = dirpath.split(os.path.sep)
         # Ignore folder starting with double underscore
         if any(path.startswith("__") for path in path_dir_list):
             continue
@@ -51,12 +50,12 @@ def create_targeted_paths_list(
             if filename.startswith("__") or filename.startswith("."):
                 continue
             # Combine the path with file name to get a complete path
-            # align format with target path
-            complete_actual_path = os.path.join(dirpath, filename) + "/"
+
+            complete_actual_path = os.path.join(dirpath, filename) + os.path.sep
             for target in corrected_paths:
                 if target in complete_actual_path:
-                    polished_paths = complete_actual_path.replace("../", "").replace(
-                        "./", ""
+                    polished_paths = complete_actual_path.replace(
+                        f"..{os.path.sep}", ""
                     )
                     targeted_paths.append(polished_paths)
 
@@ -90,13 +89,13 @@ def create_targeted_paths_list(
     return targeted_paths
 
 
-def write_yaml_of_paths_list(path_names):  # expected input: A path list
+def write_yaml_of_paths_list(path_names, search_root):  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
     files_list = []
     # Create an empty list to store dictionaries
     for file_path in path_names:
         # Iterate through items in path_names
-        file_path_fixed = file_path.replace("./", "")
+        file_path_fixed = file_path.replace(f".{os.path.sep}", "")
         # Make file_path easier to read by removing unnecessary characters
         file_path_dict = {
             # Dictionary to store the file paths
@@ -112,7 +111,9 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
         # Append files_list with the values stored inside file_path_dict
         files_list.append(file_path_dict)
 
-    with open("gatorgrade.yml", "w", encoding="utf-8") as file:
+    with open(
+        f"{search_root}{os.path.sep}gatorgrade.yml", "w", encoding="utf-8"
+    ) as file:
         # Write a new YAML file named gatorgrade
         yaml.dump(files_list, file, sort_keys=False)
         # Dump strings stored in files_list into a new YAML file
@@ -121,4 +122,4 @@ def write_yaml_of_paths_list(path_names):  # expected input: A path list
 def generate_config(target_path_list: List[str], search_root: str = "."):
     """Generate config by creating targeted paths in a list of strings, then create a YAML file."""
     targeted_paths = create_targeted_paths_list(target_path_list, search_root)
-    write_yaml_of_paths_list(targeted_paths)
+    write_yaml_of_paths_list(targeted_paths, search_root)
