@@ -15,6 +15,8 @@ def input_correct(initial_path_list: List[str]) -> Dict:
     # Unify the ending format to avoid different users' different input
     corrected_path = []
     for path in initial_path_list:
+        # Make sure the target path gets started in the current directory
+        path = "./" + path
         if path.endswith("/") is False:
             path += "/"
         corrected_path.append(path)
@@ -49,6 +51,7 @@ def create_targeted_paths_list(
             if filename.startswith("__") or filename.startswith("."):
                 continue
             # Combine the path with file name to get a complete path
+            # align format with target path
             complete_actual_path = os.path.join(dirpath, filename) + "/"
             for target in corrected_paths:
                 if target in complete_actual_path:
