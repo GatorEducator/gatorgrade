@@ -16,7 +16,7 @@ theme:
     - search.suggest
     - search.highlight
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/gator.css
 plugins:
   - search
   - gen-files:
