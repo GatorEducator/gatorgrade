@@ -15,7 +15,8 @@ def input_correct(initial_path_list: List[str]) -> Dict:
     # Unify the ending format to avoid different users' different input
     corrected_path = []
     for path in initial_path_list:
-
+        # Make sure the target path starts from the current directory
+        path = f".{os.path.sep}" + path
         if path.endswith(os.path.sep) is False:
             path += os.path.sep
         corrected_path.append(path)
