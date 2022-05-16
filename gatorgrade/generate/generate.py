@@ -128,6 +128,3 @@ def generate_config(target_path_list: List[str], search_root: str = "."):
     """Generate config by creating targeted paths in a list of strings, then create a YAML file."""
     targeted_paths = create_targeted_paths_list(target_path_list, search_root)
     write_yaml_of_paths_list(targeted_paths, search_root)
-
-
-generate_config(["index.md"], "../docs")
