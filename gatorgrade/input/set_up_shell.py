@@ -1,6 +1,7 @@
 """Set-up the shell commands."""
+
 import subprocess
-import sys
+import typer
 
 
 def run_setup(front_matter):
@@ -14,7 +15,7 @@ def run_setup(front_matter):
     # If setup exists in the front matter
     setup = front_matter.get("setup")
     if setup:
-        print("Running set up commands...")
+        typer.echo("Running set up commands...")
         for line in setup.splitlines():
             # Trims the white space
             command = line.strip()
@@ -22,12 +23,13 @@ def run_setup(front_matter):
             proc = subprocess.run(command, shell=True, check=False, timeout=300)
             # If the exit code tells it was unsuccessful and did not return 0
             if proc.returncode != 0:
-                print(
+                typer.secho(
                     f'The set up command "{command}" failed.\
                 Exiting GatorGrade.',
-                    file=sys.stderr,
+                    err=True,
+                    fg=typer.colors.RED,
                 )
                 # If a set up command failed, exit the execution
                 # because environment was not set up correctly.
-                sys.exit(1)
-        print("Finished!\n")
+                raise typer.Exit(1)
+        typer.echo("Finished!\n")
