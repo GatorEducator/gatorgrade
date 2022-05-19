@@ -1,4 +1,4 @@
-"""Pytest fixtures for testing various functions in GatorGrade"""
+"""Pytest fixtures for testing various functions in GatorGrade."""
 
 import os
 import pytest
@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture
 def chdir():
-    """Changes working directory to a specified directory then changes back to base directory."""
+    """Change working directory to a specified directory then changes back to base directory."""
     prev_dir = os.getcwd()
 
     def do_change(change_to):
