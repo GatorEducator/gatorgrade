@@ -2,6 +2,7 @@
 
 
 def greet(person):
+    """Say hello to someone."""
     if person:
         print(f"Hello, {person}")
 
