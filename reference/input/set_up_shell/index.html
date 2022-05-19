@@ -696,17 +696,16 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># If setup exists in the front matter</span>
-    <span class="k">if</span> <span class="n">front_matter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;setup&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">setup</span> <span class="o">=</span> <span class="n">front_matter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;setup&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">setup</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running set up commands...&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">front_matter</span><span class="p">[</span><span class="s2">&quot;setup&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">setup</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
             <span class="c1"># Trims the white space</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="c1"># Executes the command</span>
-            <span class="n">exit_status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
-            <span class="c1"># Extracts the exit code value from the exit status.</span>
-            <span class="n">exit_code</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">WEXITSTATUS</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
             <span class="c1"># If the exit code tells it was unsuccessful and did not return 0</span>
-            <span class="k">if</span> <span class="n">exit_code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s1">&#39;The set up command &quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">&quot; failed.</span><span class="se">\</span>
 <span class="s1">                Exiting GatorGrade.&#39;</span><span class="p">,</span>
@@ -715,6 +714,7 @@
                 <span class="c1"># If a set up command failed, exit the execution</span>
                 <span class="c1"># because environment was not set up correctly.</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
