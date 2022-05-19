@@ -1,8 +1,8 @@
 setup: |
   echo "Setup Complete!"
 ---
-- path/to:
-  - file.py:
+- src:
+  - hello-world.py:
     - description: Complete all TODOs
       check: MatchFileFragment
       options:
@@ -15,7 +15,7 @@ setup: |
         regex: "if .*?:"
         count: 1
         exact: false
-  - file2.py:
+  - reflection.md:
     - description: Complete all TODOs
       check: MatchFileFragment
       options:
@@ -26,7 +26,3 @@ setup: |
   command: mdl .
 - description: Pass HTMLHint
   command: htmlhint
-- description: Have a total of 8 commits, 5 of which were created by you
-  check: CountCommits
-  options:
-    count: 8

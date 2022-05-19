@@ -43,24 +43,19 @@ def test_generate_force_option_creates_yml():
         (
             "./tests/test_assignment",
             [
-                "✔  Complete All TODOs",
-                "✔  Use an if statement",
+                "\u2714  Complete all TODOs",
+                "\u2714  Use an if statement",
                 "|=====================================|\n|Passing all GatorGrader Checks "
                 "100.0%|\n|=====================================|",
             ],
         )
     ],
 )
-def test_full_integration_creates_valid_output(
-    assignment_path, expected_checks, chdir, capsys
-):
+def test_full_integration_creates_valid_output(assignment_path, expected_checks, chdir):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     chdir(assignment_path)
     result = runner.invoke(main.app)
 
-    captured = capsys.readouterr()
-
-    assert captured.err == ""
     assert result.exit_code == 0
     for output_check in expected_checks:
-        assert output_check in captured.out
+        assert output_check in result.stdout
