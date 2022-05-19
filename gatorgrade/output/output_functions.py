@@ -96,8 +96,7 @@ def output_failed_checks(failed_checks):
         description = check[2]
         # Use colorama to print and style "X"
         print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
-        print(f"    {color.Fore.YELLOW}\u2192  {description}")
-        return bool
+        print(f"    {color.Fore.YELLOW}\u2192  {description}{color.Style.RESET_ALL}")
 
 
 def run_and_display_command_checks(commands):
