@@ -60,7 +60,7 @@ def test_full_integration_creates_valid_output(
 
     captured = capsys.readouterr()
 
-    for output_check in expected_checks:
-        assert output_check in captured.out
     assert captured.err == ""
     assert result.exit_code == 0
+    for output_check in expected_checks:
+        assert output_check in captured.out
