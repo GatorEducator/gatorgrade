@@ -1,5 +1,4 @@
 """Tests for the main file of the project."""
-import os
 
 import pytest
 from typer.testing import CliRunner
