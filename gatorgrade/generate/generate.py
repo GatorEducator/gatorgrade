@@ -54,7 +54,7 @@ def create_targeted_paths_list(
                 if target in complete_actual_path:
                     polished_paths = complete_actual_path.replace(
                         f"..{os.path.sep}", ""
-                    )
+                    ).replace(f".{os.path.sep}", "")
                     targeted_paths.append(polished_paths)
 
     # If any of the user inputted file does not exist in any directory,
