@@ -1,5 +1,5 @@
 """Output with the percentage of checks that the student has met requirments."""
-from colorama import Fore
+import colorama as color
 
 
 def print_percentage(results):
@@ -13,11 +13,14 @@ def print_percentage(results):
     percent = math * 100  # get the percent to non decimal.
     if percent == 100.0:
         return (
-            f"{Fore.GREEN}|=====================================|\n"
+            color.Fore.GREEN
+            + "|=====================================|\n"
             + f"|Passing all GatorGrader Checks {percent}%|\n"
             + "|=====================================|"
+            + color.Style.RESET_ALL
         )
 
     return (
-        f"\n{Fore.RED}Passing {len(true_list)}/{len(results)}, Grade is {percent}%.\n"
+        f"\n{color.Fore.RED}Passing {len(true_list)}/{len(results)}, "
+        f"Grade is {percent}%.\n{color.Style.RESET_ALL}"
     )
