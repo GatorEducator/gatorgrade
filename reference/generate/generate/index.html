@@ -756,7 +756,7 @@
                 <span class="k">if</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">complete_actual_path</span><span class="p">:</span>
                     <span class="n">polished_paths</span> <span class="o">=</span> <span class="n">complete_actual_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;..</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
-                    <span class="p">)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
                     <span class="n">targeted_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polished_paths</span><span class="p">)</span>
 
     <span class="c1"># If any of the user inputted file does not exist in any directory,</span>
