@@ -1,40 +1,30 @@
-""" Tests to ensure the output_functions.py functions work properly. """
+""" Tests to ensure the output_functions.py functions work properly."""
 
 from gatorgrade.output import output_functions
 
 
-def test_description_in_fail_message(capsys):
-    """Testing the failed check will show diagnostic yellow message in output."""
-    output_functions.output_failed_checks(
-        [("Implement this with an if.", False, "No if statements found")]
-    )
-    out, err = capsys.readouterr()
-    expected_output = f"→  No if statements found"
-    actual_output = out
-    assert expected_output in actual_output
-    assert "" in err
-
-
 def test_passed_result_returns_check(capsys):
-    """Test will result a check mark in the output for the passed check."""
+    """Verify that output contains a check mark for a passed check."""
     output_functions.output_passed_checks([("Remove All TODOs", True, "")])
-    out, err = capsys.readouterr()
-    expected_output = f"\u2714"
 
-    actual_output = out
-    assert expected_output in actual_output
+    out, err = capsys.readouterr()
+    assert "✔" in out
     assert err == ""
 
 
-def test_false_result_returns_x(capsys):
-    """Test will result a X mark in the output for the failed check."""
-    output_functions.output_failed_checks(
-        [("Implement this with an if.", False, "No if statements found")]
-    )
-    out, err = capsys.readouterr()
-    unicode_x = "\u2718"
-    expected_output = unicode_x
-    actual_output = out
+def test_failed_result_contains_diagnostic(capsys):
+    """Verify that output contains a diagnostic for a failed check."""
+    output_functions.output_failed_checks([("Remove All TODOs", False, "More TODOs")])
 
-    assert expected_output in actual_output
+    out, err = capsys.readouterr()
+    assert "→  More TODOs" in out
+    assert err == ""
+
+
+def test_failed_result_returns_cross(capsys):
+    """Verify that output contains a cross mark for a failed check."""
+    output_functions.output_failed_checks([("Remove All TODOs", False, "More TODOs")])
+
+    out, err = capsys.readouterr()
+    assert "✘" in out
     assert err == ""
