@@ -15,6 +15,17 @@ def test_description_in_fail_message(capsys):
     assert "" in err
 
 
+def test_passed_result_returns_check(capsys):
+    """Test will result a check mark in the output for the passed check."""
+    output_functions.output_passed_checks([("Remove All TODOs", True, "")])
+    out, err = capsys.readouterr()
+    expected_output = f"\u2714"
+
+    actual_output = out
+    assert expected_output in actual_output
+    assert err == ""
+
+
 def test_false_result_returns_x(capsys):
     """Test will result a X mark in the output for the failed check."""
     output_functions.output_failed_checks(
