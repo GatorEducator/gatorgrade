@@ -753,16 +753,15 @@ output, description output, and colorization of text.</p>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output_functions.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">output_failed_checks</span><span class="p">(</span><span class="n">failed_checks</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">output_failed_checks</span><span class="p">(</span><span class="n">failed_checks</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Output the results for all of the checks that did not pass using the failed_checks list.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">failed_checks</span><span class="p">:</span>
         <span class="c1"># Extract the details of each check</span>
@@ -770,8 +769,7 @@ output, description output, and colorization of text.</p>
         <span class="n">description</span> <span class="o">=</span> <span class="n">check</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="c1"># Use colorama to print and style &quot;X&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="se">\u2718</span><span class="s2">  </span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Style</span><span class="o">.</span><span class="n">RESET_ALL</span><span class="si">}{</span><span class="n">requirement</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="se">\u2192</span><span class="s2">  </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">bool</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">YELLOW</span><span class="si">}</span><span class="se">\u2192</span><span class="s2">  </span><span class="si">{</span><span class="n">description</span><span class="si">}{</span><span class="n">color</span><span class="o">.</span><span class="n">Style</span><span class="o">.</span><span class="n">RESET_ALL</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -894,7 +892,8 @@ output, description output, and colorization of text.</p>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output_functions.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
+<span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
@@ -912,8 +911,7 @@ output, description output, and colorization of text.</p>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_and_display_command_checks</span><span class="p">(</span><span class="n">commands</span><span class="p">):</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_and_display_command_checks</span><span class="p">(</span><span class="n">commands</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Run commands through GatorGrader and display them to the user.</span>
 
 <span class="sd">    Args:</span>

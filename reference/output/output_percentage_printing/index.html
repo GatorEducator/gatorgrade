@@ -655,7 +655,10 @@
 <span class="normal">20</span>
 <span class="normal">21</span>
 <span class="normal">22</span>
-<span class="normal">23</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_percentage</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_percentage</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Print percentage acts as fuction that will produce the output.&quot;&quot;&quot;</span>
     <span class="c1"># iterate through results tuples</span>
     <span class="n">true_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># empty list for storing true results</span>
@@ -666,13 +669,16 @@
     <span class="n">percent</span> <span class="o">=</span> <span class="n">math</span> <span class="o">*</span> <span class="mi">100</span>  <span class="c1"># get the percent to non decimal.</span>
     <span class="k">if</span> <span class="n">percent</span> <span class="o">==</span> <span class="mf">100.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Fore</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2">|=====================================|</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">color</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">GREEN</span>
+            <span class="o">+</span> <span class="s2">&quot;|=====================================|</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;|Passing all GatorGrader Checks </span><span class="si">{</span><span class="n">percent</span><span class="si">}</span><span class="s2">%|</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="o">+</span> <span class="s2">&quot;|=====================================|&quot;</span>
+            <span class="o">+</span> <span class="n">color</span><span class="o">.</span><span class="n">Style</span><span class="o">.</span><span class="n">RESET_ALL</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">Fore</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">Passing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">true_list</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2">, Grade is </span><span class="si">{</span><span class="n">percent</span><span class="si">}</span><span class="s2">%.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Fore</span><span class="o">.</span><span class="n">RED</span><span class="si">}</span><span class="s2">Passing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">true_list</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;Grade is </span><span class="si">{</span><span class="n">percent</span><span class="si">}</span><span class="s2">%.</span><span class="se">\n</span><span class="si">{</span><span class="n">color</span><span class="o">.</span><span class="n">Style</span><span class="o">.</span><span class="n">RESET_ALL</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
