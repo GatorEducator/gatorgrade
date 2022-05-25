@@ -4,12 +4,9 @@ The requested functions are located at the Github Issue Tracker
 for the output team. For instance, functions dealing with percentage
 output, description output, and colorization of text.
 """
-
+import typer
 import gator
-import colorama as color
 from gatorgrade.output import output_percentage_printing
-
-color.init()
 
 
 def run_commands_and_return_results(commands_input):
@@ -85,7 +82,8 @@ def output_passed_checks(passed_checks):
     for check in passed_checks:
         requirement = check[0]
         # Use colorama to style passing check
-        print(f"{color.Fore.GREEN}\u2714  {color.Style.RESET_ALL}{requirement}")
+        typer.secho("\u2714  ", nl=False, fg=typer.colors.GREEN)
+        typer.echo(requirement)
 
 
 def output_failed_checks(failed_checks):
@@ -95,9 +93,9 @@ def output_failed_checks(failed_checks):
         requirement = check[0]
         description = check[2]
         # Use colorama to print and style "X"
-        print(f"{color.Fore.RED}\u2718  {color.Style.RESET_ALL}{requirement}")
-        print(f"    {color.Fore.YELLOW}\u2192  {description}")
-        return bool
+        typer.secho("\u2718  ", nl=False, fg=typer.colors.RED)
+        typer.echo(requirement)
+        typer.secho(f"    \u2192  {description}", fg=typer.colors.YELLOW)
 
 
 def run_and_display_command_checks(commands):
@@ -119,4 +117,4 @@ def run_and_display_command_checks(commands):
     """
     results = run_commands_and_return_results(commands)
     display_check_results(results)
-    print(output_percentage_printing.print_percentage(results))
+    typer.echo(output_percentage_printing.print_percentage(results))
