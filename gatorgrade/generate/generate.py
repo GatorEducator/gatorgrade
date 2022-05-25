@@ -2,11 +2,7 @@
 import os
 from typing import List, Dict
 import yaml
-
-# Define colors for terminal output
-OKGREEN = "\033[92m"
-WARNING = "\033[93m"
-FAIL = "\033[91m"
+import typer
 
 
 def input_correct(initial_path_list: List[str]) -> Dict:
@@ -60,28 +56,33 @@ def create_targeted_paths_list(
     # If any of the user inputted file does not exist in any directory,
     # throw an exception indicating failure
     if not targeted_paths:
-        raise FileNotFoundError(
-            f"{FAIL}FAILURE: None of the user-provided file paths are"
-            + " found in the provided directory and the 'gatorgrade.yml' is NOT generated"
+        typer.secho(
+            "FAILURE: None of the user-provided file paths are"
+            " found in the provided directory and the 'gatorgrade.yml' is NOT generated",
+            fg=typer.colors.RED,
+            err=True,
         )
+        raise typer.Exit(1)
 
     # If some of the files are found and some are not found,
     # output a warning message saying which files were not found
     targeted_paths_string = " ".join(targeted_paths)
     for key in target_path_list:
         if key not in targeted_paths_string:
-            print(
-                f"{WARNING}WARNING \N{Warning Sign}: '{key}' file path is not FOUND!"
-                + f"\nAll file paths except '{key}' are successfully"
-                + " generated in the 'gatorgrade.yml' file"
+            typer.secho(
+                f"WARNING \u26A0: '{key}' file path is not FOUND!"
+                f"\nAll file paths except '{key}' are successfully"
+                " generated in the 'gatorgrade.yml' file",
+                fg=typer.colors.YELLOW,
             )
             return targeted_paths
 
     # If all the files exist in the root directory, print out a success message
     if targeted_paths:
-        print(
-            f"{OKGREEN}SUCCESS \N{Fire}: All the file paths were"
-            + " successfully generated in the 'gatorgrade.yml' file!"
+        typer.secho(
+            "SUCCESS \U0001F525: All the file paths were"
+            " successfully generated in the 'gatorgrade.yml' file!",
+            fg=typer.colors.GREEN,
         )
 
     return targeted_paths
