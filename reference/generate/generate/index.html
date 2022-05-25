@@ -641,9 +641,6 @@
 
 
 
-
-
-
   <div class="doc doc-object doc-function">
 
 
@@ -661,7 +658,11 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">25</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
 <span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
@@ -723,7 +724,8 @@
 <span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span>
-<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_targeted_paths_list</span><span class="p">(</span>
+<span class="normal">87</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_targeted_paths_list</span><span class="p">(</span>
     <span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">relative_run_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Generate a list of targeted paths by walking the paths.&quot;&quot;&quot;</span>
@@ -761,28 +763,33 @@
     <span class="c1"># If any of the user inputted file does not exist in any directory,</span>
     <span class="c1"># throw an exception indicating failure</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">targeted_paths</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">FAIL</span><span class="si">}</span><span class="s2">FAILURE: None of the user-provided file paths are&quot;</span>
-            <span class="o">+</span> <span class="s2">&quot; found in the provided directory and the &#39;gatorgrade.yml&#39; is NOT generated&quot;</span>
+        <span class="n">typer</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+            <span class="s2">&quot;FAILURE: None of the user-provided file paths are&quot;</span>
+            <span class="s2">&quot; found in the provided directory and the &#39;gatorgrade.yml&#39; is NOT generated&quot;</span><span class="p">,</span>
+            <span class="n">fg</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span>
+            <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">typer</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="c1"># If some of the files are found and some are not found,</span>
     <span class="c1"># output a warning message saying which files were not found</span>
     <span class="n">targeted_paths_string</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">target_path_list</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">targeted_paths_string</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">WARNING</span><span class="si">}</span><span class="s2">WARNING </span><span class="se">\N{Warning Sign}</span><span class="s2">: &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; file path is not FOUND!&quot;</span>
-                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">All file paths except &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; are successfully&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot; generated in the &#39;gatorgrade.yml&#39; file&quot;</span>
+            <span class="n">typer</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WARNING </span><span class="se">\u26A0</span><span class="s2">: &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; file path is not FOUND!&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">All file paths except &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; are successfully&quot;</span>
+                <span class="s2">&quot; generated in the &#39;gatorgrade.yml&#39; file&quot;</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">YELLOW</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="n">targeted_paths</span>
 
     <span class="c1"># If all the files exist in the root directory, print out a success message</span>
     <span class="k">if</span> <span class="n">targeted_paths</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">OKGREEN</span><span class="si">}</span><span class="s2">SUCCESS </span><span class="se">\N{Fire}</span><span class="s2">: All the file paths were&quot;</span>
-            <span class="o">+</span> <span class="s2">&quot; successfully generated in the &#39;gatorgrade.yml&#39; file!&quot;</span>
+        <span class="n">typer</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+            <span class="s2">&quot;SUCCESS </span><span class="se">\U0001F525</span><span class="s2">: All the file paths were&quot;</span>
+            <span class="s2">&quot; successfully generated in the &#39;gatorgrade.yml&#39; file!&quot;</span><span class="p">,</span>
+            <span class="n">fg</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">GREEN</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">targeted_paths</span>
@@ -811,10 +818,10 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
-<span class="normal">121</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
 <span class="normal">122</span>
-<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate config by creating targeted paths in a list of strings, then create a YAML file.&quot;&quot;&quot;</span>
     <span class="n">targeted_paths</span> <span class="o">=</span> <span class="n">create_targeted_paths_list</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
     <span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
@@ -843,17 +850,17 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">12</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
 <span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">input_correct</span><span class="p">(</span><span class="n">initial_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">input_correct</span><span class="p">(</span><span class="n">initial_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Correct user-written paths.&quot;&quot;&quot;</span>
     <span class="c1"># Recognize the paths users provide are the concise versions.</span>
     <span class="c1"># Unify the ending format to avoid different users&#39; different input</span>
@@ -889,8 +896,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 90</span>
-<span class="normal"> 91</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 91</span>
 <span class="normal"> 92</span>
 <span class="normal"> 93</span>
 <span class="normal"> 94</span>
@@ -915,7 +921,8 @@
 <span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
-<span class="normal">116</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
+<span class="normal">116</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
     <span class="sd">&quot;&quot;&quot;Write YAML file to create gatorgrade file and set default messages.&quot;&quot;&quot;</span>
     <span class="n">files_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Create an empty list to store dictionaries</span>

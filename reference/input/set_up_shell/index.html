@@ -660,8 +660,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/set_up_shell.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
-<span class="normal"> 7</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
@@ -687,7 +686,9 @@
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
-<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_setup</span><span class="p">(</span><span class="n">front_matter</span><span class="p">):</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_setup</span><span class="p">(</span><span class="n">front_matter</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Run the shell set up commands and exit the program if a command fails.</span>
 
 <span class="sd">    Args:</span>
@@ -698,7 +699,7 @@
     <span class="c1"># If setup exists in the front matter</span>
     <span class="n">setup</span> <span class="o">=</span> <span class="n">front_matter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;setup&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">setup</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running set up commands...&quot;</span><span class="p">)</span>
+        <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Running set up commands...&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">setup</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
             <span class="c1"># Trims the white space</span>
             <span class="n">command</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -706,15 +707,16 @@
             <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
             <span class="c1"># If the exit code tells it was unsuccessful and did not return 0</span>
             <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span>
+                <span class="n">typer</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s1">&#39;The set up command &quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1">&quot; failed.</span><span class="se">\</span>
 <span class="s1">                Exiting GatorGrade.&#39;</span><span class="p">,</span>
-                    <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                    <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">fg</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">RED</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="c1"># If a set up command failed, exit the execution</span>
                 <span class="c1"># because environment was not set up correctly.</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">typer</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Finished!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
