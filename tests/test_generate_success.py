@@ -2,7 +2,6 @@
 """Test the generate_config function in a perfect situation."""
 import os
 import pytest
-from pathlib import Path
 from gatorgrade.generate.generate import generate_config
 
 
