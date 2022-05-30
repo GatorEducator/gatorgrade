@@ -5,12 +5,19 @@ import yaml
 import typer
 
 
-def input_correct(initial_path_list: List[str]) -> Dict:
+def input_correct(initial_path_list: List[str], run_path: str) -> Dict:
     """Correct user-written paths."""
     # Recognize the paths users provide are the concise versions.
     # Unify the ending format to avoid different users' different input
     corrected_path = []
+    # Run_path unify
+    if run_path.endswith(os.path.sep) is False:
+        run_path += os.path.sep
     for path in initial_path_list:
+        # Combine the running path with the target path
+        # To make sure the target path starts from the running directory
+        path = run_path + path
+        # Treat the last unit of the path as a concise name unit
         if path.endswith(os.path.sep) is False:
             path += os.path.sep
         corrected_path.append(path)
@@ -23,7 +30,7 @@ def create_targeted_paths_list(
 ) -> List[str]:
     """Generate a list of targeted paths by walking the paths."""
     targeted_paths = []
-    corrected_paths = input_correct(target_path_list)
+    corrected_paths = input_correct(target_path_list, relative_run_path)
     # Go through the root repo, the sub dictionaries and files
     # The os.walk will only scan the paths
     # So the empty folders containing nothing won't be gone through
