@@ -18,6 +18,7 @@ def test_generate_creates_valid_yml():
     """Test that ensures that the generate command creates
     the .yml file correctly."""
     result = runner.invoke(main.app, ["generate"])
+    print(result.stdout)
 
     assert result.exit_code == 0
 
@@ -26,6 +27,7 @@ def test_generate_fails_with_existing_yml():
     """Test that ensures that a second yml file isn't generated
     without the force command."""
     result = runner.invoke(main.app, ["generate"])
+    print(result.stdout)
 
     assert result.exit_code == 0
 
@@ -33,6 +35,7 @@ def test_generate_fails_with_existing_yml():
 def test_generate_force_option_creates_yml():
     """Test that ensures the force command works correctly."""
     result = runner.invoke(main.app, ["generate"])
+    print(result.stdout)
 
     assert result.exit_code == 0
 
@@ -55,6 +58,7 @@ def test_full_integration_creates_valid_output(assignment_path, expected_checks,
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     chdir(assignment_path)
     result = runner.invoke(main.app)
+    print(result.stdout)
 
     assert result.exit_code == 0
     for output_check in expected_checks:
