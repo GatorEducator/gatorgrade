@@ -3,6 +3,7 @@
 # Import needed libraries
 import os
 import pytest
+import typer
 from gatorgrade.generate.generate import generate_config
 
 
@@ -131,7 +132,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
 
 
 def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
-    tmp_path,
+    tmp_path, capsys
 ):
     """Check if generate.py throws an error and produce a failure message
     when none of user provided file paths exist in the root directory"""
@@ -159,10 +160,13 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     # When we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
 
-    with pytest.raises(FileNotFoundError) as exc_info:
+    with pytest.raises(typer.Exit) as exc_info:
         generate_config(["tests", "README.md"], str(root_directory))
 
-    # Then "gatorgrade.yml" should not be generated and generate.py should throw a FileNotFoundError
+    _, err = capsys.readouterr()
+
+    # Then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
     file = root_directory / "gatorgrade.yml"
     assert not file.is_file()
-    assert "'gatorgrade.yml' is NOT generated" in str(exc_info.value)
+    assert "'gatorgrade.yml' is NOT generated" in err
+    assert exc_info.value.exit_code == 1

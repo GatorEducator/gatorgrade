@@ -1,5 +1,5 @@
 """Output with the percentage of checks that the student has met requirments."""
-import colorama as color
+import typer
 
 
 def print_percentage(results):
@@ -11,16 +11,21 @@ def print_percentage(results):
             true_list.append(result)
     math = len(true_list) / len(results)  # procedure of math right/total
     percent = math * 100  # get the percent to non decimal.
+    result = ""
     if percent == 100.0:
-        return (
-            color.Fore.GREEN
-            + "|=====================================|\n"
-            + f"|Passing all GatorGrader Checks {percent}%|\n"
-            + "|=====================================|"
-            + color.Style.RESET_ALL
+        result += typer.style(
+            "|=====================================|\n",
+            fg=typer.colors.GREEN,
+            reset=False,
+        )
+        result += typer.style(
+            f"|Passing all GatorGrader Checks {percent}%|\n", reset=False
+        )
+        result += typer.style("|=====================================|")
+    else:
+        result += typer.style(
+            f"Passing {len(true_list)}/{len(results)}, Grade is {percent}%.",
+            fg=typer.colors.RED,
         )
 
-    return (
-        f"\n{color.Fore.RED}Passing {len(true_list)}/{len(results)}, "
-        f"Grade is {percent}%.\n{color.Style.RESET_ALL}"
-    )
+    return result
