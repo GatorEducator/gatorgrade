@@ -1,0 +1,24 @@
+setup: |
+  echo "Setup Complete!"
+---
+- src:
+  - hello-world.py:
+    - description: Complete all TODOs
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
+    - description: Use an if statement
+      check: MatchFileRegex
+      options:
+        regex: "if .*?:"
+        count: 1
+        exact: false
+  - reflection.md:
+    - description: Complete all TODOs
+      check: MatchFileFragment
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
