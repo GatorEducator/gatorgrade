@@ -45,8 +45,6 @@ def generate(
     targets = []
     for path in paths:
         targets.extend(glob.iglob(path.as_posix(), recursive=True))
-
-    typer.echo(f"Root: {root}; Targets: {targets}")
     generate_config(targets, root.as_posix())
 
 
