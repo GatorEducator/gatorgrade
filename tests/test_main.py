@@ -45,25 +45,29 @@ def test_generate_force_option_creates_yml():
 
 
 @pytest.mark.parametrize(
-    "assignment_path,expected_checks",
+    "assignment_path,expected_output_and_freqs",
     [
         (
             "./tests/test_assignment",
             [
-                "\u2714  Complete all TODOs",
-                "\u2714  Use an if statement",
-                "|=====================================|\n|Passing all GatorGrader Checks "
-                "100.0%|\n|=====================================|",
+                ("Complete all TODOs", 2),
+                ("Use an if statement", 1),
+                ("\u2714", 3),  # Checkmarks
+                ("\u2718", 0),  # Crossmarks
+                ("Passing all GatorGrader Checks", 1),
+                ("100.0%", 1),
             ],
         )
     ],
 )
-def test_full_integration_creates_valid_output(assignment_path, expected_checks, chdir):
+def test_full_integration_creates_valid_output(
+    assignment_path, expected_output_and_freqs, chdir
+):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     chdir(assignment_path)
     result = runner.invoke(main.app)
     print(result.stdout)
 
     assert result.exit_code == 0
-    for output_check in expected_checks:
-        assert output_check in result.stdout
+    for output, freq in expected_output_and_freqs:
+        assert result.stdout.count(output) == freq
