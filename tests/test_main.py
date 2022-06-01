@@ -1,4 +1,8 @@
-"""Tests for the main file of the project."""
+"""Tests for the main file of the project.
+
+In the tests below, print statements that print Typer's captured stdout will only display output when tests fail.
+These print statements are required because disabling output capture through pytest does not work on Typer's output capturing.
+"""
 
 import pytest
 from typer.testing import CliRunner
