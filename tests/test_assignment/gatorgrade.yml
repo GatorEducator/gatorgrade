@@ -22,7 +22,3 @@ setup: |
         fragment: TODO
         count: 0
         exact: true
-- description: Pass MDL
-  command: mdl .
-- description: Pass HTMLHint
-  command: htmlhint
