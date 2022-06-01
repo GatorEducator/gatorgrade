@@ -4,6 +4,7 @@ from typing import List
 from pathlib import Path
 
 import typer
+import glob
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output_functions import run_and_display_command_checks
@@ -34,13 +35,17 @@ def generate(
         dir_okay=True,
         writable=True,
     ),
-    paths: List[str] = typer.Option(
-        ["."],
+    paths: List[Path] = typer.Option(
+        ["*"],
         help="Paths to recurse through and generate checks for",
+        exists=False,
     ),
 ):
     """Generate a gatorgrade.yml file."""
-    targets = [Path(p).as_posix() for p in paths]
+    targets = []
+    for p in paths:
+        targets.extend(glob.iglob(p.as_posix(), recursive=True))
+
     typer.echo(f"Root: {root}; Targets: {targets}")
     generate_config(targets, root.as_posix())
 
