@@ -818,10 +818,10 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/generate/generate.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">search_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate config by creating targeted paths in a list of strings, then create a YAML file.&quot;&quot;&quot;</span>
     <span class="n">targeted_paths</span> <span class="o">=</span> <span class="n">create_targeted_paths_list</span><span class="p">(</span><span class="n">target_path_list</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
     <span class="n">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">targeted_paths</span><span class="p">,</span> <span class="n">search_root</span><span class="p">)</span>
@@ -936,20 +936,28 @@
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_yaml_of_paths_list</span><span class="p">(</span><span class="n">path_names</span><span class="p">,</span> <span class="n">search_root</span><span class="p">):</span>  <span class="c1"># expected input: A path list</span>
     <span class="sd">&quot;&quot;&quot;Write YAML file to create gatorgrade file and set default messages.&quot;&quot;&quot;</span>
     <span class="n">files_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Create an empty list to store dictionaries</span>
     <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">path_names</span><span class="p">:</span>
         <span class="c1"># Iterate through items in path_names</span>
-        <span class="n">file_path_fixed</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Convert file separators to &#39;/&#39;</span>
+        <span class="n">file_path_fixed</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
         <span class="c1"># Make file_path easier to read by removing unnecessary characters</span>
         <span class="n">file_path_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="c1"># Dictionary to store the file paths</span>
             <span class="n">file_path_fixed</span><span class="p">:</span> <span class="p">[</span>
                 <span class="c1"># List which stores strings which will be in gatorgrade.yml file</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Complete all TODOs&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Complete all TODOs in </span><span class="si">{</span><span class="n">file_path_fixed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;check&quot;</span><span class="p">:</span> <span class="s2">&quot;MatchFileFragment&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fragment&quot;</span><span class="p">:</span> <span class="s2">&quot;TODO&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;exact&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
                 <span class="p">}</span>
