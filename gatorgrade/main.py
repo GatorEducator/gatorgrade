@@ -3,8 +3,8 @@
 from typing import List
 from pathlib import Path
 
-import typer
 import glob
+import typer
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output_functions import run_and_display_command_checks
@@ -43,8 +43,8 @@ def generate(
 ):
     """Generate a gatorgrade.yml file."""
     targets = []
-    for p in paths:
-        targets.extend(glob.iglob(p.as_posix(), recursive=True))
+    for path in paths:
+        targets.extend(glob.iglob(path.as_posix(), recursive=True))
 
     typer.echo(f"Root: {root}; Targets: {targets}")
     generate_config(targets, root.as_posix())
