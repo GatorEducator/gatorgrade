@@ -2,7 +2,7 @@
 
 In the tests below, print statements that print Typer's captured stdout will
 only display output when tests fail. These print statements are required
-because disabling output capture through pytest does not work on Typer's output
+because disabling output capture through pytest does not disable Typer's output
 capturing.
 """
 
