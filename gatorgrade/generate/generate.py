@@ -56,8 +56,8 @@ def create_targeted_paths_list(
             for target in corrected_paths:
                 if target in complete_actual_path:
                     polished_paths = complete_actual_path.replace(
-                        f"..{os.path.sep}", ""
-                    ).replace(f".{os.path.sep}", "")
+                        f"{relative_run_path}{os.path.sep}", ""
+                    )
                     targeted_paths.append(polished_paths)
 
     # If any of the user inputted file does not exist in any directory,
@@ -95,24 +95,23 @@ def create_targeted_paths_list(
     return targeted_paths
 
 
-def write_yaml_of_paths_list(path_names, search_root):  # expected input: A path list
+def write_yaml_of_paths_list(
+    path_names: List[str], search_root: str
+):  # expected input: A path list
     """Write YAML file to create gatorgrade file and set default messages."""
     files_list = []
     # Create an empty list to store dictionaries
     for file_path in path_names:
         # Iterate through items in path_names
-        file_path = file_path.replace(f".{os.path.sep}", "")
         if file_path.endswith(os.path.sep):
             file_path = file_path[0:-1]
         # Convert file separators to '/'
-        file_path_fixed = file_path.replace(os.path.sep, "/")
-        # Make file_path easier to read by removing unnecessary characters
         file_path_dict = {
             # Dictionary to store the file paths
-            file_path_fixed: [
+            file_path: [
                 # List which stores strings which will be in gatorgrade.yml file
                 {
-                    "description": f"Complete all TODOs in {file_path_fixed}",
+                    "description": f"Complete all TODOs in {file_path}",
                     "check": "MatchFileFragment",
                     "options": {"fragment": "TODO", "count": 0, "exact": True},
                 }
