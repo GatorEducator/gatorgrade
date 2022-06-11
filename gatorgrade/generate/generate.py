@@ -105,9 +105,9 @@ def write_yaml_of_paths_list(
         # Iterate through items in path_names
         if file_path.endswith(os.path.sep):
             file_path = file_path[0:-1]
+        # Convert file separators to '/'
         file_path_fixed = file_path.replace(os.path.sep, "/")
         # Make file_path easier to read by removing unnecessary characters
-        # Convert file separators to '/'
         file_path_dict = {
             # Dictionary to store the file paths
             file_path_fixed: [
