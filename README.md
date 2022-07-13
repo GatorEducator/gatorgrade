@@ -8,7 +8,6 @@ the newer Python-based version of
 ## Table of Contents
 
 - [Installing GatorGrade](#installing-gatorgrade)
-  - [Including GatorGrade in Your Project](#including-gatorgrade-in-your-project)
 - [Using GatorGrade](#using-gatorgrade)
   - [Running Checks](#running-checks)
     - [Interpreting Output](#interpreting-output)
@@ -20,17 +19,9 @@ the newer Python-based version of
 
 ## Installing GatorGrade
 
-Installing GatorGrade requires a version of Python greater than 3.7. You can
-install GatorGrade from PyPi using `pip` or `pipx` package installers. This
-method of installation allows for GatorGrade to be accessible to all Python
-projects on your computer.
-
-### Including GatorGrade in Your Project
-
-To include GatorGrade in your project we recommend using the `Poetry` package
-manager. When using `Poetry` to install, use the `poetry add` command to add
-the GatorGrade package. If you use another package manager, you can add
-GatorGrade as a dependency the same way you would with other `pip` or `pipx` packages.
+GatorGrade requires Python 3.7 or later. To install GatorGrade, we recommend
+using the [`pipx`](https://pypa.github.io/pipx/) Python application installer.
+Once you have `pipx` installed, you can install GatorGrade by running `pipx install gatorgrade`.
 
 ## Using GatorGrade
 
@@ -44,11 +35,11 @@ To run checks against an assignment, use the `gator grade` command.
 
 #### Interpreting Output
 
-All GatorGrader checks will be displayed as output.  Checks that
+All GatorGrader checks will be displayed as output. Checks that
 have passed gatorgrader will have a green check mark (:heavy_check_mark:)
-next to the description.  Failing checks will show a red (:x:) next to the
-description.  The overall percentage of passed checks will be shown
-at the bottom of the display.  Anything less than 100% will appear in
+next to the description. Failing checks will show a red (:x:) next to the
+description. The overall percentage of passed checks will be shown
+at the bottom of the display. Anything less than 100% will appear in
 red, while 100% of checks passed will appear in green.
 
 ### Generating a gatorgrade.yml file
@@ -82,12 +73,12 @@ See example below for reference.
 
 ```yml
 - path/to:
-  - file.py:
-    - description: Complete all TODO
-      check: MatchFileFragment
-      options:
-        fragment: TODO
-        count: 0
+    - file.py:
+        - description: Complete all TODO
+          check: MatchFileFragment
+          options:
+            fragment: TODO
+            count: 0
 ```
 
 To configure a check without a specified file path, just start with
