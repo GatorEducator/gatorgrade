@@ -31,7 +31,7 @@ GatorGrade to to generate a `gatorgrade.yml` file that configures the checks.
 
 ### Running Checks
 
-To run checks against an assignment, use the `gator grade` command.
+To run checks against an assignment, use the `gatorgrade` command.
 
 #### Interpreting Output
 
