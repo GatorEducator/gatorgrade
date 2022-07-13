@@ -5,18 +5,6 @@ that can be used to check assignments through user-created checks. GatorGrade is
 the newer Python-based version of
 [GatorGradle](https://github.com/GatorEducator/gatorgradle/blob/master/README.md).
 
-## Table of Contents
-
-- [Installing GatorGrade](#installing-gatorgrade)
-- [Using GatorGrade](#using-gatorgrade)
-  - [Running Checks](#running-checks)
-    - [Interpreting Output](#interpreting-output)
-  - [Generating a gatorgrade.yml File](#generating-a-gatorgrade.yml-file)
-    - [Configuring GatorGrade Checks](#configuring-gatorgrade-checks)
-- [Contributing to GatorGrade](#contributing-to-gatorgrade)
-  - [Installing Dev Environment](#installing-dev-environment)
-- [Contributors](#contributors)
-
 ## Installing GatorGrade
 
 GatorGrade requires Python 3.7 or later. To install GatorGrade, we recommend
@@ -25,67 +13,51 @@ Once you have `pipx` installed, you can install GatorGrade by running `pipx inst
 
 ## Using GatorGrade
 
-You can use GatorGrade as a student or instructor to run a series of
-pre-prescribed checks against a project. Additionally, instructors can use
-GatorGrade to to generate a `gatorgrade.yml` file that configures the checks.
+To use GatorGrade to run GatorGrader checks for an assignment, the assignment
+must contain a `gatorgrade.yml` file that defines the GatorGrader checks.
+Instructors, for more information on configuring the `gatorgrade.yml` file, see
+the [Configuring GatorGrader Checks](#configuring-gatorgrader-checks) section
+below.
 
-### Running Checks
+To use GatorGrade to run GatorGrader checks, run the `gatorgrade` command within
+the assignment. This command will produce output that shows the passing
+(:heavy_check_mark:) or failing status (:x:) of each GatorGrader check as well
+as the overall percentage of passing checks.
 
-To run checks against an assignment, use the `gatorgrade` command.
+<!-- TODO: Add sample output -->
 
-#### Interpreting Output
+## Configuring GatorGrader Checks
 
-All GatorGrader checks will be displayed as output. Checks that
-have passed gatorgrader will have a green check mark (:heavy_check_mark:)
-next to the description. Failing checks will show a red (:x:) next to the
-description. The overall percentage of passed checks will be shown
-at the bottom of the display. Anything less than 100% will appear in
-red, while 100% of checks passed will appear in green.
+Instructors can configure GatorGrader checks for an assignment by creating a
+`gatorgrade.yml` file. In this file, you can configure GatorGrader checks to run
+within a file context (i.e. for a specific file; `MatchFileFragment` is an
+example of a GatorGrader check that should be run within a file context) _or_ in
+the global context (i.e. for the assignment in general; `CountCommits` is an
+example of a GatorGrader check that should be run in the global context).
 
-### Generating a gatorgrade.yml file
-
-The generation of `gatorgrade.yml` file can be used to create assignments.
-
-In the terminal within the main directory.
-
-Use `gatorgrade generate <TARGET_PATH_LIST>` to generate `gatorgrade.yml` file.
-
-`<TARGET_PATH_LIST>` should be a list of paths to files or folders that
-will be included in the generated `gatorgrade.yml`. These paths will be
-relative to where you run `gatorgrade generate`.
-
-Paths should be precisely named since they will be exactly matched.
-Please note that files and folders that start with `__` or `.` will
-automatically be ignored.
-
-#### Configuring GatorGrade Checks
-
-There are multiple customizable options with GatorGrade!
-GatorGrader checks are able to be configured to run
-within a specific file context and without any file path.
-
-To configure a check to be run within the context of a file path,
-please be sure to include the path to the file before the check.
-Then, you can define a description for the check by using the `description` key,
-and use the `check` and `options` keys
-for the name of the check and the options for the check.
-See example below for reference.
+To configure GatorGrader checks to run within a file context, specify the path
+to the file as a key (or nested keys) before specifying the GatorGrader checks.
+For each GatorGrader check, define a `description` to print in the
+output, the name of the `check`, and any [`options` specific to the GatorGrader check](https://www.gatorgrader.org/ember).
 
 ```yml
-- path/to:
-    - file.py:
-        - description: Complete all TODO
+- src:
+    - hello_world.py:
+        - description: Complete all TODOs
           check: MatchFileFragment
           options:
             fragment: TODO
             count: 0
+        - description: Define a print statement
+          check: MatchFileFragment
+          options:
+            fragment: print(
+            count: 1
 ```
 
-To configure a check without a specified file path, just start with
-the description for the check by using the `description` key, and use
-the `check` and `options` keys for the name of the check
-and the options for the check.
-See example below for reference.
+To configure GatorGrader checks to run in the global context, specify the
+GatorGrader checks at the top level of the `gatorgrade.yml` file (i.e. not
+nested within any path).
 
 ```yml
 - description: Have a total of 8 commits, 5 of which were created by you
@@ -94,16 +66,20 @@ See example below for reference.
     count: 8
 ```
 
+### Using GatorGrade to Generate A Boilerplate `gatorgrade.yml` File
+
+For convenience, instructors can use GatorGrade to generate a boilerplate
+`gatorgrade.yml` file that contains files or folders given to the GatorGrade command.
+
+To generate a `gatorgrade.yml` file, run `gatorgrade generate <TARGET_PATH_LIST>`, where `<TARGET_PATH_LIST>` is a list of relative paths to
+files or folders you want to include in the `gatorgrade.yml` file. These paths
+must correspond to existing files or folders in the current directory. Any given
+folders will be expanded to the files they contain. Please note that files and
+folders that start with `__` or `.` and empty folders will be automatically
+ignored.
+
 ## Contributing to GatorGrade
 
-If you'd like to contribute to GatorGrade, refer to the
-[GatorGrade wiki](https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines)
-with details on contributing guidelines.
-
-### Installing Dev Environment
-
-To install the dev environment, you must first have a version of python greater
-than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your
-computer, run a `poetry install` to install all of the necessary dependencies
-onto your computer. Now you can begin to contribute to the project following
-the contributing guidelines.
+If you would like to contribute to GatorGrade, please refer to the [GatorGrade
+Wiki](https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines)
+for contributing guidelines.
