@@ -107,5 +107,3 @@ than 3.7 as well as Poetry. After cloning the GatorGrade repository onto your
 computer, run a `poetry install` to install all of the necessary dependencies
 onto your computer. Now you can begin to contribute to the project following
 the contributing guidelines.
-
-## Contributors
