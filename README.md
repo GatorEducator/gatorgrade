@@ -9,7 +9,8 @@ the newer Python-based version of
 
 GatorGrade requires Python 3.7 or later. To install GatorGrade, we recommend
 using the [`pipx`](https://pypa.github.io/pipx/) Python application installer.
-Once you have `pipx` installed, you can install GatorGrade by running `pipx install gatorgrade`.
+Once you have `pipx` installed, you can install GatorGrade by running
+`pipx install gatorgrade`.
 
 ## Using GatorGrade
 
@@ -71,12 +72,12 @@ nested within any path).
 For convenience, instructors can use GatorGrade to generate a boilerplate
 `gatorgrade.yml` file that contains files or folders given to the GatorGrade command.
 
-To generate a `gatorgrade.yml` file, run `gatorgrade generate <TARGET_PATH_LIST>`, where `<TARGET_PATH_LIST>` is a list of relative paths to
-files or folders you want to include in the `gatorgrade.yml` file. These paths
-must correspond to existing files or folders in the current directory. Any given
-folders will be expanded to the files they contain. Please note that files and
-folders that start with `__` or `.` and empty folders will be automatically
-ignored.
+To generate a `gatorgrade.yml` file, run `gatorgrade generate <TARGET_PATH_LIST>`,
+where `<TARGET_PATH_LIST>` is a list of relative paths to files or folders you
+want to include in the `gatorgrade.yml` file. These paths must correspond to
+existing files or folders in the current directory. Any given folders will be
+expanded to the files they contain. Please note that files and folders that
+start with `__` or `.` and empty folders will be automatically ignored.
 
 ## Contributing to GatorGrade
 
