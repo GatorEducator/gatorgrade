@@ -25,7 +25,37 @@ the assignment. This command will produce output that shows the passing
 (:heavy_check_mark:) or failing status (:x:) of each GatorGrader check as well
 as the overall percentage of passing checks.
 
-<!-- TODO: Add sample output -->
+```console
+Running set up commands...
+Installing dependencies from lock file
+
+No dependencies to install or update
+Setup complete!
+Finished!
+
+✘  Complete all TODOs
+✔  Call the say_hello function
+✔  Call the say_hello_color function
+✘  Complete all TODOs
+✘  Write at least 25 words in writing/reflection.md
+✘  Pass MDL
+✔  Have a total of 5 commits, 2 of which were created by you
+
+-~-  FAILURES  -~-
+
+✘  Complete all TODOs
+   → Found 2 fragment(s) in the hello_world.py or the output
+✘  Complete all TODOs
+   → Found 3 fragment(s) in the reflection.md or the output
+✘  Write at least 25 words in writing/reflection.md
+   → Found 3 word(s) in total of file reflection.md
+✘  Pass MDL
+   → The command "mdl ." failed
+
+        ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+        ┃ Passed 3/7 (43%) of checks for gatorgrade-hello-world! ┃
+        ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
 
 ## Configuring GatorGrader Checks
 
