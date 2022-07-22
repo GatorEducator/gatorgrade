@@ -23,7 +23,10 @@ below.
 To use GatorGrade to run GatorGrader checks, run the `gatorgrade` command within
 the assignment. This command will produce output that shows the passing
 (:heavy_check_mark:) or failing status (:x:) of each GatorGrader check as well
-as the overall percentage of passing checks.
+as the overall percentage of passing checks. The following is the output of
+running GatorGrade on the [GatorGrade Hello
+World](https://github.com/GatorEducator/gatorgrade-hello-world/tree/main)
+assignment.
 
 ```console
 Running set up commands...
