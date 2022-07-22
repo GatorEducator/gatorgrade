@@ -1,65 +1,63 @@
 """Generates a dictionary of shell and gator grader command options from a list of dict checks."""
 
 import os
+from typing import List, Union
+from .checks import ShellCheck, GatorGraderCheck
+from .in_file_path import CheckData
+
 
 # pylint: disable=too-many-nested-blocks
-def generate_checks(file_context_checks):
-    """Generate a dictionary of checks based on the configuration file.
+def generate_checks(
+    check_data_list: List[CheckData],
+) -> List[Union[ShellCheck, GatorGraderCheck]]:
+    """Generate a list of checks based on check data from the configuration file.
 
-        This dictionary will have the format:
-        {
-            "shell": List of shell checks,
-            "gatorgrader": List of GatorGrader checks
-        },
     Args:
-        file_context_checks: List containing dictionaries that contain file contexts
-            (either a file path or None if no file context) and checks in another dictionary
-            (can be either GatorGrader or shell checks).
-            The input list is generated based on the configuration file.
+        check_data_list: A list of CheckData that each represent a check from the
+            configuration file.
+
+    Returns:
+        A list of ShellChecks and GatorGraderChecks.
     """
-    gatorgrader_checks = []
-    shell_checks = []
-    for file_context_check in file_context_checks:
-        # assigning the check from the dict object
-        check = file_context_check["check"]
-        # If the check has a 'command', then it is a shell check
-        if "command" in check:
-            shell_checks.append(check)
-        # Else it's a GatorGrader check
+    checks = []
+    for check_data in check_data_list:
+        # If the check has a `command` key, then it is a shell check
+        if "command" in check_data.check:
+            checks.append(
+                ShellCheck(
+                    command=check_data.check.get("command"),
+                    description=check_data.check.get("description"),
+                )
+            )
+        # Otherwise, it is a GatorGrader check
         else:
-            gatorgrader_command_options = []
-            # Defining the description and option
-            description = check.get("description")
-            options = check.get("options")
+            gg_args = []
+            # Add description option if in data
+            description = check_data.check.get("description")
             if description is not None:
-                # Creating a list that has description, check, and options for the check
-                gatorgrader_command_options = ["--description", f"{description}"]
-            gatorgrader_command_options.append(check["check"])
-            # If options exist add all the keys and the values into GatorGrader command options
+                gg_args.extend(["--description", str(description)])
+            # Always add name of check, which should be in data
+            gg_args.append(str(check_data.check.get("check")))
+            # Add any additional options
+            options = check_data.check.get("options")
             if options is not None:
-                for key in options:
-                    # Checking if the key is a flag
-                    if isinstance(options[key], bool):
-                        if options[key] is True:
-                            gatorgrader_command_options.append(f"--{key}")
-                    # Else if it's not a flag, then adding both key and values
+                for option in options:
+                    # If option should be a flag (i.e. its value is the `True` boolean),
+                    # add only the option without a value
+                    option_value = options[option]
+                    if isinstance(option_value, bool):
+                        if option_value:
+                            gg_args.append(f"--{option}")
+                    # Otherwise, add both the option and its value
                     else:
-                        gatorgrader_command_options.append(f"--{key}")
-                        gatorgrader_command_options.append(f"{options[key]}")
-            # assigning the file context from the dict object
-            file_context = file_context_check["file_context"]
-            # If it is a gator grade check with a file context,
-            # then add the directory and the file name into the command options
-            if file_context is not None:
+                        gg_args.extend([f"--{option}", str(option_value)])
+            # Add directory and file if file context in data
+            if check_data.file_context is not None:
                 # Get the file and directory using os
-                dirname, filename = os.path.split(file_context)
+                dirname, filename = os.path.split(check_data.file_context)
                 if dirname == "":
                     dirname = "."
-                gatorgrader_command_options.append("--directory")
-                gatorgrader_command_options.append(f"{dirname}")
-                gatorgrader_command_options.append("--file")
-                gatorgrader_command_options.append(f"{filename}")
-            # Add the contents inside the temporary list into the final GatorGrader list.
-            gatorgrader_checks.append(gatorgrader_command_options)
+                gg_args.extend(["--directory", dirname, "--file", filename])
+            checks.append(GatorGraderCheck(gg_args=gg_args))
 
-    return {"shell": shell_checks, "gatorgrader": gatorgrader_checks}
+    return checks
