@@ -33,7 +33,7 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
     passed = result.returncode == 0
     diagnostic = (
         "" if passed else result.stdout.decode().strip().replace("\n", "\n     ")
-    ) # Add spaces after each newline to indent all lines of diagnostic
+    )  # Add spaces after each newline to indent all lines of diagnostic
     return CheckResult(
         passed=passed, description=check.description, diagnostic=diagnostic
     )
