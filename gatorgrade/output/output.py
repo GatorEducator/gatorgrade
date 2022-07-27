@@ -26,11 +26,14 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         shell=True,
         check=False,
         timeout=300,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured together as diagnostic
+        stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
-    diagnostic = "" if passed else f'The command "{check.command}" failed'
+    diagnostic = (
+        "" if passed else result.stdout.decode().strip().replace("\n", "\n     ")
+    ) # Add spaces after each newline to indent all lines of diagnostic
     return CheckResult(
         passed=passed, description=check.description, diagnostic=diagnostic
     )
@@ -83,9 +86,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> None:
             results.append(result)
 
     failed_results = list(filter(lambda result: not result.passed, results))
-    if (
-        len(failed_results) > 0
-    ):  # Only print failures list if there are failures to print
+    # Only print failures list if there are failures to print
+    if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             result.print(show_diagnostic=True)
