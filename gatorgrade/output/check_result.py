@@ -5,7 +5,12 @@ import rich
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
 
-    def __init__(self, passed: bool, description: str, diagnostic: str = "No diagnostic message available"):
+    def __init__(
+        self,
+        passed: bool,
+        description: str,
+        diagnostic: str = "No diagnostic message available",
+    ):
         """Construct a CheckResult.
 
         Args:
