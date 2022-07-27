@@ -5,7 +5,7 @@ import rich
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
 
-    def __init__(self, passed: bool, description: str, diagnostic: str = None):
+    def __init__(self, passed: bool, description: str, diagnostic: str = "No diagnostic message available"):
         """Construct a CheckResult.
 
         Args:
@@ -33,6 +33,4 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         rich.print(f"[{icon_color}]{icon}[/]  {self.description}")
 
         if not self.passed and show_diagnostic:
-            if self.diagnostic is None:
-                self.diagnostic = "No diagnostic message available"
             rich.print(f"[yellow]   → {self.diagnostic}")
