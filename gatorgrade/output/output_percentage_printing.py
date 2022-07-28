@@ -27,5 +27,4 @@ def print_percentage(results):
             f"Passing {len(true_list)}/{len(results)}, Grade is {percent}%.",
             fg=typer.colors.RED,
         )
-
-    return result
+    return result, percent

@@ -4,6 +4,9 @@ The requested functions are located at the Github Issue Tracker
 for the output team. For instance, functions dealing with percentage
 output, description output, and colorization of text.
 """
+import json
+import traceback
+
 import typer
 import gator
 from gatorgrade.output import output_percentage_printing
@@ -48,15 +51,15 @@ def run_commands_and_return_results(commands_input):
         try:
             result = gator.grader(command)
         # disable pylint so the more general Exception class can be used
-        except Exception as command_exception:  # pylint: disable=W0703
-            bad_command = command_exception.__class__
-            result = (command, False, bad_command)
+        except Exception:  # pylint: disable=W0703
+            # bad_command = command_exception.__class__
+            result = (command, False, traceback.format_exc())
         results.append(result)
 
     return results
 
 
-def display_check_results(results):
+def display_check_results(results, output_file=None):
     """
     Process results and determine if the check passed or failed.
 
@@ -75,6 +78,10 @@ def display_check_results(results):
             failed_checks.append(result)
     output_passed_checks(passed_checks)
     output_failed_checks(failed_checks)
+
+    if output_file is not None:
+        return passed_checks, failed_checks
+    return None, None
 
 
 def output_passed_checks(passed_checks):
@@ -98,7 +105,7 @@ def output_failed_checks(failed_checks):
         typer.secho(f"    \u2192  {description}", fg=typer.colors.YELLOW)
 
 
-def run_and_display_command_checks(commands):
+def run_and_display_command_checks(commands, report=None):
     """Run commands through GatorGrader and display them to the user.
 
     Args:
@@ -116,5 +123,12 @@ def run_and_display_command_checks(commands):
         '--arg', '1', '--directory', './home', '--file', 'file.py']]}
     """
     results = run_commands_and_return_results(commands)
-    display_check_results(results)
-    typer.echo(output_percentage_printing.print_percentage(results))
+    passed_checks, failed_checks = display_check_results(results, output_file=report)
+    percent_string, percent = output_percentage_printing.print_percentage(results)
+    typer.echo(percent_string)
+
+    if report is not None:
+        r = {"passed_checks": passed_checks, "failed_checks": failed_checks, "percent": percent}
+        with open(report, "w") as f:
+            f.write(json.dumps(r))
+            f.close()
