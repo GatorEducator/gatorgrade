@@ -7,7 +7,7 @@ import glob
 import typer
 
 from gatorgrade.input.parse_config import parse_config
-from gatorgrade.output.output_functions import run_and_display_command_checks
+from gatorgrade.output.output import run_checks
 from gatorgrade.generate.generate import generate_config
 
 app = typer.Typer(add_completion=False)
@@ -23,7 +23,7 @@ def gatorgrade(
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
         checks = parse_config(filename)
-        run_and_display_command_checks(checks)
+        run_checks(checks)
 
 
 @app.command()

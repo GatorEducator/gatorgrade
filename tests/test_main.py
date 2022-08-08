@@ -50,14 +50,13 @@ def test_generate_force_option_creates_yml():
     "assignment_path,expected_output_and_freqs",
     [
         (
-            "./tests/test_assignment",
+            "tests/test_assignment",
             [
                 ("Complete all TODOs", 2),
                 ("Use an if statement", 1),
-                ("\u2714", 3),  # Checkmarks
-                ("\u2718", 0),  # Crossmarks
-                ("Passing all GatorGrader Checks", 1),
-                ("100.0%", 1),
+                ("✔", 3),
+                ("✘", 0),
+                ("Passed 3/3 (100%) of checks", 1),
             ],
         )
     ],
