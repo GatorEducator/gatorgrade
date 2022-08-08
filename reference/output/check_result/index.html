@@ -12,14 +12,14 @@
         <meta name="author" content="GatorGrade Team">
       
       
-        <link rel="canonical" href="https://gatoreducator.github.io/gatorgrade/docs/reference/output/output_tools/">
+        <link rel="canonical" href="https://gatoreducator.github.io/gatorgrade/docs/reference/output/check_result/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.14">
     
     
       
-        <title>output_tools - GatorGrade Documentation</title>
+        <title>check_result - GatorGrade Documentation</title>
       
     
     
@@ -73,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#gatorgrade.output.output_tools" class="md-skip">
+        <a href="#gatorgrade.output.check_result" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              output_tools
+              check_result
             
           </span>
         </div>
@@ -384,6 +384,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../../input/checks/" class="md-nav__link">
+        checks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../input/command_line_generator/" class="md-nav__link">
         command_line_generator
       </a>
@@ -487,34 +501,6 @@
               
   
   
-  
-    <li class="md-nav__item">
-      <a href="../output_functions/" class="md-nav__link">
-        output_functions
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../output_percentage_printing/" class="md-nav__link">
-        output_percentage_printing
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
     
   
   
@@ -525,12 +511,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          output_tools
+          check_result
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        output_tools
+        check_result
       </a>
       
         
@@ -547,9 +533,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gatorgrade.output.output_tools" class="md-nav__link">
-    gatorgrade.output.output_tools
+  <a href="#gatorgrade.output.check_result" class="md-nav__link">
+    gatorgrade.output.check_result
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gatorgrade.output.check_result.CheckResult" class="md-nav__link">
+    CheckResult
+  </a>
+  
+    <nav class="md-nav" aria-label="CheckResult">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gatorgrade.output.check_result.CheckResult.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gatorgrade.output.check_result.CheckResult.print" class="md-nav__link">
+    print()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -557,6 +570,20 @@
   
 </nav>
       
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output/" class="md-nav__link">
+        output
+      </a>
     </li>
   
 
@@ -587,26 +614,340 @@
             <article class="md-content__inner md-typeset">
               
                 
-  <a href="https://github.com/GatorEducator/edit/master/docs/gatorgrade/output/output_tools.py" title="Edit this page" class="md-content__button md-icon">
+  <a href="https://github.com/GatorEducator/edit/master/docs/gatorgrade/output/check_result.py" title="Edit this page" class="md-content__button md-icon">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
   </a>
 
 
 
-  <h1>output_tools</h1>
+  <h1>check_result</h1>
 
 <div class="doc doc-object doc-module">
 
-<a id="gatorgrade.output.output_tools"></a>
+<a id="gatorgrade.output.check_result"></a>
     <div class="doc doc-contents first">
 
-      <p>This file is used for storing supporting functions and tools.</p>
-<p>These functions and tools are used by the methods in output_functions.
-The main use of this class is to de-clutter output_functions.py for
-better readability. One example of a function to be written here is
-the splitting of strings retrieved from the input team, at spaces, into
-lists.</p>
+      <p>Define check result class.</p>
 
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="gatorgrade.output.check_result.CheckResult" class="doc doc-heading">
+          <code>CheckResult</code>
+
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+
+      <p>Represent the result of running a check.</p>
+
+
+          <details class="quote">
+            <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CheckResult</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+    <span class="sd">&quot;&quot;&quot;Represent the result of running a check.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">diagnostic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;No diagnostic message available&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct a CheckResult.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            passed: The passed or failed status of the check result. If true, indicates that the</span>
+<span class="sd">                check has passed.</span>
+<span class="sd">            description: The description to use in output.</span>
+<span class="sd">            diagnostic: The message to use in output if the check has failed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="n">passed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span> <span class="o">=</span> <span class="n">diagnostic</span>
+
+    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Print check&#39;s passed or failed status, description, and, optionally, diagnostic message.</span>
+
+<span class="sd">        If no diagnostic message is avaiable, then the output will say so.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            show_diagnostic: If true, show the diagnostic message if the check has failed.</span>
+<span class="sd">                Defaults to false.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">icon</span> <span class="o">=</span> <span class="s2">&quot;✔&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;✘&quot;</span>
+        <span class="n">icon_color</span> <span class="o">=</span> <span class="s2">&quot;green&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;red&quot;</span>
+
+        <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">icon_color</span><span class="si">}</span><span class="s2">]</span><span class="si">{</span><span class="n">icon</span><span class="si">}</span><span class="s2">[/]  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">show_diagnostic</span><span class="p">:</span>
+            <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[yellow]   → </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="gatorgrade.output.check_result.CheckResult.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">passed</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">diagnostic</span><span class="o">=</span><span class="s1">&#39;No diagnostic message available&#39;</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Construct a CheckResult.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>passed</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>The passed or failed status of the check result. If true, indicates that the
+check has passed.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The description to use in output.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>diagnostic</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>The message to use in output if the check has failed.</p></td>
+          <td>
+                <code>&#39;No diagnostic message available&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+        <details class="quote">
+          <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">diagnostic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;No diagnostic message available&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Construct a CheckResult.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        passed: The passed or failed status of the check result. If true, indicates that the</span>
+<span class="sd">            check has passed.</span>
+<span class="sd">        description: The description to use in output.</span>
+<span class="sd">        diagnostic: The message to use in output if the check has failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="n">passed</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span> <span class="o">=</span> <span class="n">diagnostic</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h3 id="gatorgrade.output.check_result.CheckResult.print" class="doc doc-heading">
+<code class="highlight language-python"><span class="nb">print</span><span class="p">(</span><span class="n">show_diagnostic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Print check's passed or failed status, description, and, optionally, diagnostic message.</p>
+<p>If no diagnostic message is avaiable, then the output will say so.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>show_diagnostic</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>If true, show the diagnostic message if the check has failed.
+Defaults to false.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+        <details class="quote">
+          <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Print check&#39;s passed or failed status, description, and, optionally, diagnostic message.</span>
+
+<span class="sd">    If no diagnostic message is avaiable, then the output will say so.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        show_diagnostic: If true, show the diagnostic message if the check has failed.</span>
+<span class="sd">            Defaults to false.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">icon</span> <span class="o">=</span> <span class="s2">&quot;✔&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;✘&quot;</span>
+    <span class="n">icon_color</span> <span class="o">=</span> <span class="s2">&quot;green&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="k">else</span> <span class="s2">&quot;red&quot;</span>
+
+    <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">icon_color</span><span class="si">}</span><span class="s2">]</span><span class="si">{</span><span class="n">icon</span><span class="si">}</span><span class="s2">[/]  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">show_diagnostic</span><span class="p">:</span>
+        <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[yellow]   → </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+  </div>
 
     </div>
 
@@ -629,7 +970,7 @@ lists.</p>
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../output_percentage_printing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: output_percentage_printing" rel="prev">
+        <a href="../../main/" class="md-footer__link md-footer__link--prev" aria-label="Previous: main" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
@@ -638,11 +979,26 @@ lists.</p>
               <span class="md-footer__direction">
                 Previous
               </span>
-              output_percentage_printing
+              main
             </div>
           </div>
         </a>
       
+      
+        
+        <a href="../output/" class="md-footer__link md-footer__link--next" aria-label="Next: output" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              output
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
       
     </nav>
   

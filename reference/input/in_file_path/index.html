@@ -386,6 +386,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../checks/" class="md-nav__link">
+        checks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../command_line_generator/" class="md-nav__link">
         command_line_generator
       </a>
@@ -547,8 +561,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../output/output_functions/" class="md-nav__link">
-        output_functions
+      <a href="../../output/check_result/" class="md-nav__link">
+        check_result
       </a>
     </li>
   
@@ -561,22 +575,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../output/output_percentage_printing/" class="md-nav__link">
-        output_percentage_printing
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../output/output_tools/" class="md-nav__link">
-        output_tools
+      <a href="../../output/output/" class="md-nav__link">
+        output
       </a>
     </li>
   
@@ -634,6 +634,7 @@
 
 
 
+
   <div class="doc doc-object doc-function">
 
 
@@ -651,14 +652,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/in_file_path.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
@@ -669,7 +663,14 @@
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
-<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_checks_to_list</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data_list</span><span class="p">,</span> <span class="n">reformatted_data</span><span class="p">):</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">add_checks_to_list</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data_list</span><span class="p">,</span> <span class="n">reformatted_data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">CheckData</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Recursively loop through the data and add checks that are found to the reformatted list.&quot;&quot;&quot;</span>
     <span class="n">current_path</span> <span class="o">=</span> <span class="n">path</span>  <span class="c1"># Saves the current path to keep track of the location</span>
     <span class="k">for</span> <span class="n">ddict</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
@@ -686,7 +687,7 @@
                 <span class="p">)</span>  <span class="c1"># Runs this same function on the list inside of a dictionary</span>
                 <span class="n">path</span> <span class="o">=</span> <span class="n">current_path</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># Adds the current check to the reformatted data list</span>
-                <span class="n">reformatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;file_context&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;check&quot;</span><span class="p">:</span> <span class="n">ddict</span><span class="p">})</span>
+                <span class="n">reformatted_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CheckData</span><span class="p">(</span><span class="n">file_context</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="n">ddict</span><span class="p">))</span>
                 <span class="k">break</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -713,11 +714,11 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/in_file_path.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">parse_yaml_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">parse_yaml_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parse a YAML file and return its contents as a list of dictionaries.&quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load_all</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
@@ -747,14 +748,14 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/in_file_path.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">reformat_yaml_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">reformat_yaml_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Reformat the raw data from a YAML file into a list of tuples.&quot;&quot;&quot;</span>
     <span class="n">reformatted_data</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>

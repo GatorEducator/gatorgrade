@@ -384,6 +384,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../input/checks/" class="md-nav__link">
+        checks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../input/command_line_generator/" class="md-nav__link">
         command_line_generator
       </a>
@@ -538,8 +552,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../output/output_functions/" class="md-nav__link">
-        output_functions
+      <a href="../output/check_result/" class="md-nav__link">
+        check_result
       </a>
     </li>
   
@@ -552,22 +566,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../output/output_percentage_printing/" class="md-nav__link">
-        output_percentage_printing
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../output/output_tools/" class="md-nav__link">
-        output_tools
+      <a href="../output/output/" class="md-nav__link">
+        output
       </a>
     </li>
   
@@ -662,7 +662,7 @@
     <span class="c1"># check if ctx.subcommand is none</span>
     <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">invoked_subcommand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">checks</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="n">run_and_display_command_checks</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span>
+        <span class="n">run_checks</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -776,13 +776,13 @@
       
       
         
-        <a href="../output/output_functions/" class="md-footer__link md-footer__link--next" aria-label="Next: output_functions" rel="next">
+        <a href="../output/check_result/" class="md-footer__link md-footer__link--next" aria-label="Next: check_result" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              output_functions
+              check_result
             </div>
           </div>
           <div class="md-footer__button md-icon">

@@ -384,6 +384,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../checks/" class="md-nav__link">
+        checks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -533,8 +547,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../output/output_functions/" class="md-nav__link">
-        output_functions
+      <a href="../../output/check_result/" class="md-nav__link">
+        check_result
       </a>
     </li>
   
@@ -547,22 +561,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../output/output_percentage_printing/" class="md-nav__link">
-        output_percentage_printing
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../output/output_tools/" class="md-nav__link">
-        output_tools
+      <a href="../../output/output/" class="md-nav__link">
+        output
       </a>
     </li>
   
@@ -625,7 +625,7 @@
 
 
 <h2 id="gatorgrade.input.command_line_generator.generate_checks" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">generate_checks</span><span class="p">(</span><span class="n">file_context_checks</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">generate_checks</span><span class="p">(</span><span class="n">check_data_list</span><span class="p">)</span></code>
 
 
 </h2>
@@ -633,13 +633,7 @@
 
     <div class="doc doc-contents ">
 
-      <p>Generate a dictionary of checks based on the configuration file.</p>
-<pre><code>This dictionary will have the format:
-{
-    "shell": List of shell checks,
-    "gatorgrader": List of GatorGrader checks
-},
-</code></pre>
+      <p>Generate a list of checks based on check data from the configuration file.</p>
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -653,13 +647,12 @@
     </thead>
     <tbody>
         <tr>
-          <td><code>file_context_checks</code></td>
+          <td><code>check_data_list</code></td>
           <td>
+                <code><span title="typing.List">List</span>[<span title="gatorgrade.input.in_file_path.CheckData">CheckData</span>]</code>
           </td>
-          <td><p>List containing dictionaries that contain file contexts
-(either a file path or None if no file context) and checks in another dictionary
-(can be either GatorGrader or shell checks).
-The input list is generated based on the configuration file.</p></td>
+          <td><p>A list of CheckData that each represent a check from the
+configuration file.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -667,13 +660,27 @@ The input list is generated based on the configuration file.</p></td>
     </tbody>
   </table>
 
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="gatorgrade.input.checks.ShellCheck" href="../checks/#gatorgrade.input.checks.ShellCheck">ShellCheck</a>, <a class="autorefs autorefs-internal" title="gatorgrade.input.checks.GatorGraderCheck" href="../checks/#gatorgrade.input.checks.GatorGraderCheck">GatorGraderCheck</a>]]</code>
+          </td>
+          <td><p>A list of ShellChecks and GatorGraderChecks.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/command_line_generator.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">10</span>
 <span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
@@ -726,68 +733,60 @@ The input list is generated based on the configuration file.</p></td>
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_checks</span><span class="p">(</span><span class="n">file_context_checks</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate a dictionary of checks based on the configuration file.</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate_checks</span><span class="p">(</span>
+    <span class="n">check_data_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CheckData</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ShellCheck</span><span class="p">,</span> <span class="n">GatorGraderCheck</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a list of checks based on check data from the configuration file.</span>
 
-<span class="sd">        This dictionary will have the format:</span>
-<span class="sd">        {</span>
-<span class="sd">            &quot;shell&quot;: List of shell checks,</span>
-<span class="sd">            &quot;gatorgrader&quot;: List of GatorGrader checks</span>
-<span class="sd">        },</span>
 <span class="sd">    Args:</span>
-<span class="sd">        file_context_checks: List containing dictionaries that contain file contexts</span>
-<span class="sd">            (either a file path or None if no file context) and checks in another dictionary</span>
-<span class="sd">            (can be either GatorGrader or shell checks).</span>
-<span class="sd">            The input list is generated based on the configuration file.</span>
+<span class="sd">        check_data_list: A list of CheckData that each represent a check from the</span>
+<span class="sd">            configuration file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ShellChecks and GatorGraderChecks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">gatorgrader_checks</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">shell_checks</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">file_context_check</span> <span class="ow">in</span> <span class="n">file_context_checks</span><span class="p">:</span>
-        <span class="c1"># assigning the check from the dict object</span>
-        <span class="n">check</span> <span class="o">=</span> <span class="n">file_context_check</span><span class="p">[</span><span class="s2">&quot;check&quot;</span><span class="p">]</span>
-        <span class="c1"># If the check has a &#39;command&#39;, then it is a shell check</span>
-        <span class="k">if</span> <span class="s2">&quot;command&quot;</span> <span class="ow">in</span> <span class="n">check</span><span class="p">:</span>
-            <span class="n">shell_checks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">check</span><span class="p">)</span>
-        <span class="c1"># Else it&#39;s a GatorGrader check</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">check_data</span> <span class="ow">in</span> <span class="n">check_data_list</span><span class="p">:</span>
+        <span class="c1"># If the check has a `command` key, then it is a shell check</span>
+        <span class="k">if</span> <span class="s2">&quot;command&quot;</span> <span class="ow">in</span> <span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="p">:</span>
+            <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ShellCheck</span><span class="p">(</span>
+                    <span class="n">command</span><span class="o">=</span><span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;command&quot;</span><span class="p">),</span>
+                    <span class="n">description</span><span class="o">=</span><span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="c1"># Otherwise, it is a GatorGrader check</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">gatorgrader_command_options</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="c1"># Defining the description and option</span>
-            <span class="n">description</span> <span class="o">=</span> <span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
-            <span class="n">options</span> <span class="o">=</span> <span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">)</span>
+            <span class="n">gg_args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># Add description option if in data</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;description&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Creating a list that has description, check, and options for the check</span>
-                <span class="n">gatorgrader_command_options</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;--description&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
-            <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">check</span><span class="p">[</span><span class="s2">&quot;check&quot;</span><span class="p">])</span>
-            <span class="c1"># If options exist add all the keys and the values into GatorGrader command options</span>
+                <span class="n">gg_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--description&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">description</span><span class="p">)])</span>
+            <span class="c1"># Always add name of check, which should be in data</span>
+            <span class="n">gg_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;check&quot;</span><span class="p">)))</span>
+            <span class="c1"># Add any additional options</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">check_data</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;options&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
-                    <span class="c1"># Checking if the key is a flag</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">bool</span><span class="p">):</span>
-                        <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                            <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="c1"># Else if it&#39;s not a flag, then adding both key and values</span>
+                <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+                    <span class="c1"># If option should be a flag (i.e. its value is the `True` boolean),</span>
+                    <span class="c1"># add only the option without a value</span>
+                    <span class="n">option_value</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="n">option</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">option_value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">option_value</span><span class="p">:</span>
+                            <span class="n">gg_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="c1"># Otherwise, add both the option and its value</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="c1"># assigning the file context from the dict object</span>
-            <span class="n">file_context</span> <span class="o">=</span> <span class="n">file_context_check</span><span class="p">[</span><span class="s2">&quot;file_context&quot;</span><span class="p">]</span>
-            <span class="c1"># If it is a gator grade check with a file context,</span>
-            <span class="c1"># then add the directory and the file name into the command options</span>
-            <span class="k">if</span> <span class="n">file_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">gg_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">option</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">option_value</span><span class="p">)])</span>
+            <span class="c1"># Add directory and file if file context in data</span>
+            <span class="k">if</span> <span class="n">check_data</span><span class="o">.</span><span class="n">file_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Get the file and directory using os</span>
-                <span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_context</span><span class="p">)</span>
+                <span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">check_data</span><span class="o">.</span><span class="n">file_context</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">dirname</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
                     <span class="n">dirname</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span>
-                <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--directory&quot;</span><span class="p">)</span>
-                <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dirname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--file&quot;</span><span class="p">)</span>
-                <span class="n">gatorgrader_command_options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="c1"># Add the contents inside the temporary list into the final GatorGrader list.</span>
-            <span class="n">gatorgrader_checks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gatorgrader_command_options</span><span class="p">)</span>
+                <span class="n">gg_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--directory&quot;</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="s2">&quot;--file&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">])</span>
+            <span class="n">checks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GatorGraderCheck</span><span class="p">(</span><span class="n">gg_args</span><span class="o">=</span><span class="n">gg_args</span><span class="p">))</span>
 
-    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;shell&quot;</span><span class="p">:</span> <span class="n">shell_checks</span><span class="p">,</span> <span class="s2">&quot;gatorgrader&quot;</span><span class="p">:</span> <span class="n">gatorgrader_checks</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">checks</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -821,7 +820,7 @@ The input list is generated based on the configuration file.</p></td>
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../generate/generate/" class="md-footer__link md-footer__link--prev" aria-label="Previous: generate" rel="prev">
+        <a href="../checks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: checks" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
@@ -830,7 +829,7 @@ The input list is generated based on the configuration file.</p></td>
               <span class="md-footer__direction">
                 Previous
               </span>
-              generate
+              checks
             </div>
           </div>
         </a>
