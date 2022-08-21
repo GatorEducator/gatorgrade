@@ -1,10 +1,11 @@
 """Set-up the shell commands."""
 
+from typing import Dict
 import subprocess
 import typer
 
 
-def run_setup(front_matter):
+def run_setup(front_matter: Dict):
     """Run the shell set up commands and exit the program if a command fails.
 
     Args:
