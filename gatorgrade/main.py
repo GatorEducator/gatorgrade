@@ -7,7 +7,7 @@ import glob
 import typer
 
 from gatorgrade.input.parse_config import parse_config
-from gatorgrade.output.output_functions import run_and_display_command_checks
+from gatorgrade.output.output import run_checks
 from gatorgrade.generate.generate import generate_config
 
 app = typer.Typer(add_completion=False)
@@ -18,13 +18,12 @@ FILE = "gatorgrade.yml"
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    report: Path = typer.Option(None, "--report", "-r", help="Name of the report file"),
 ):
     """Run the GatorGrader checks in the gatorgrade.yml file."""
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
         checks = parse_config(filename)
-        run_and_display_command_checks(checks, report=report)
+        run_checks(checks)
 
 
 @app.command()
