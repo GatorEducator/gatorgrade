@@ -26,6 +26,7 @@ def gatorgrade(
         checks = parse_config(filename)
         run_and_display_command_checks(checks, report=report)
 
+
 @app.command()
 def generate(
     root: Path = typer.Argument(
