@@ -128,7 +128,11 @@ def run_and_display_command_checks(commands, report=None):
     typer.echo(percent_string)
 
     if report is not None:
-        r = {"passed_checks": passed_checks, "failed_checks": failed_checks, "percent": percent}
+        r = {
+            "passed_checks": passed_checks,
+            "failed_checks": failed_checks,
+            "percent": percent,
+        }
         with open(report, "w") as f:
             f.write(json.dumps(r))
             f.close()
