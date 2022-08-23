@@ -133,6 +133,6 @@ def run_and_display_command_checks(commands, report=None):
             "failed_checks": failed_checks,
             "percent": percent,
         }
-        with open(report, "w", encoding='utf-8') as file:
+        with open(report, "w", encoding="utf-8") as file:
             file.write(json.dumps(report_json))
             file.close()
