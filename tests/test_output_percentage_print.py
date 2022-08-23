@@ -21,7 +21,7 @@ def test_given_results_returns_percent_incorrect():
     ]
 
     expected_result = "Passing 3/5, Grade is 60.0%."
-    actual_result = output_percentage_printing.print_percentage(results)
+    actual_result, _ = output_percentage_printing.print_percentage(results)
     assert expected_result in actual_result
 
 
@@ -43,5 +43,5 @@ def test_given_results_returns_percent_correct():
         ("Have a total of 8 commits, 5 of which were created by you", True, ""),
     ]
     expected_result = "Passing all GatorGrader Checks 100.0%"
-    actual_result = output_percentage_printing.print_percentage(results)
+    actual_result, _ = output_percentage_printing.print_percentage(results)
     assert expected_result in actual_result
