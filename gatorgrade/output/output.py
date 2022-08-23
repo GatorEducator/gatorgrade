@@ -60,7 +60,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     except Exception as command_exception:  # pylint: disable=W0703
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
-        diagnostic = f'"{str(command_exception.__class__.__name__)}" thrown by GatorGrader'
+        diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
@@ -107,7 +107,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
         report_json = {
             "results": results,
             "failed_checks": failed_results,
-            "percent": percent
+            "percent": percent,
         }
         with open(report, "w", encoding="utf-8") as file:
             file.write(json.dumps(report_json, cls=CheckJsonEncoder))
