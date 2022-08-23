@@ -5,8 +5,9 @@ from pathlib import Path
 from typing import List, Union
 import gator
 import rich
+import json
 from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
-from gatorgrade.output.check_result import CheckResult
+from gatorgrade.output.check_result import CheckResult, CheckJsonEncoder
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -59,11 +60,11 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     except Exception as command_exception:  # pylint: disable=W0703
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
-        diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
+        diagnostic = f'"{str(command_exception.__class__.__name__)}" thrown by GatorGrader'
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> None:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -> None:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -101,6 +102,16 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> None:
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
+
+    if report is not None:
+        report_json = {
+            "results": results,
+            "failed_checks": failed_results,
+            "percent": percent
+        }
+        with open(report, "w", encoding="utf-8") as file:
+            file.write(json.dumps(report_json, cls=CheckJsonEncoder))
+            file.close()
 
 
 def print_with_border(text: str, rich_color: str):
