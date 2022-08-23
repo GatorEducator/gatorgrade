@@ -1,6 +1,6 @@
 """Define check result class."""
-import rich
 from json import JSONEncoder
+import rich
 
 
 class CheckResult:  # pylint: disable=too-few-public-methods
@@ -43,5 +43,12 @@ class CheckResult:  # pylint: disable=too-few-public-methods
 
 
 class CheckJsonEncoder(JSONEncoder):
+    """Custom JSON encoder so CheckResult can be json serialized."""
+
     def default(self, o):
+        """Serialize method used by default.
+
+        Args:
+            o: The object to serialize.
+        """
         return o.__dict__

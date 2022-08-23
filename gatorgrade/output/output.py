@@ -3,9 +3,9 @@
 import subprocess
 from pathlib import Path
 from typing import List, Union
+import json
 import gator
 import rich
-import json
 from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
 from gatorgrade.output.check_result import CheckResult, CheckJsonEncoder
 
