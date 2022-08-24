@@ -1,4 +1,8 @@
 """Returns the list of commands to be run through gatorgrader."""
+from pathlib import Path
+from typing import List, Union
+from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
+
 from gatorgrade.input.command_line_generator import (
     generate_checks,
 )  # Import function to generate shell and gatorgrader checks
@@ -8,7 +12,7 @@ from gatorgrade.input.in_file_path import (
 )  # Import functions to parse and set up yaml file
 
 
-def parse_config(file):
+def parse_config(file: Path) -> List[Union[ShellCheck, GatorGraderCheck]]:
     """Parse the input yaml file and generate specified checks.
 
     Args:

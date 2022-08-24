@@ -1,6 +1,7 @@
 """Generates a list of commands to be run through gatorgrader."""
 from collections import namedtuple
-from typing import List
+from pathlib import Path
+from typing import List, Union
 import yaml
 from gatorgrade.input.set_up_shell import run_setup
 
@@ -10,14 +11,14 @@ from gatorgrade.input.set_up_shell import run_setup
 CheckData = namedtuple("CheckData", ["file_context", "check"])
 
 
-def parse_yaml_file(file_path):
+def parse_yaml_file(file_path: Path) -> List:
     """Parse a YAML file and return its contents as a list of dictionaries."""
     with open(file_path, encoding="utf8") as file:
         data = yaml.load_all(file, Loader=yaml.FullLoader)
         return list(data)
 
 
-def reformat_yaml_data(data):
+def reformat_yaml_data(data: List) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
     if len(data) == 2:
@@ -27,7 +28,9 @@ def reformat_yaml_data(data):
     return reformatted_data
 
 
-def add_checks_to_list(path, data_list, reformatted_data) -> List[CheckData]:
+def add_checks_to_list(
+    path: Union[None, str], data_list: List, reformatted_data: List[CheckData]
+):
     """Recursively loop through the data and add checks that are found to the reformatted list."""
     current_path = path  # Saves the current path to keep track of the location
     for ddict in data_list:
