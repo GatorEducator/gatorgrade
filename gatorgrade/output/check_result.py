@@ -26,7 +26,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
     def print(self, show_diagnostic: bool = False) -> None:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
-        If no diagnostic message is avaiable, then the output will say so.
+        If no diagnostic message is available, then the output will say so.
 
         Args:
             show_diagnostic: If true, show the diagnostic message if the check has failed.
