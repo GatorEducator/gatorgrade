@@ -102,7 +102,9 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
 
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
+    summary_status = True if passed_count == len(results) else False
     print_with_border(summary, summary_color)
+    return summary_status
 
 
 def print_with_border(text: str, rich_color: str):
