@@ -4,6 +4,7 @@ from typing import List
 from pathlib import Path
 
 import glob
+import sys
 import typer
 
 from gatorgrade.input.parse_config import parse_config
@@ -11,7 +12,9 @@ from gatorgrade.output.output import run_checks
 from gatorgrade.generate.generate import generate_config
 
 app = typer.Typer(add_completion=False)
+
 FILE = "gatorgrade.yml"
+FAILURE = 1
 
 
 @app.callback(invoke_without_command=True)
@@ -23,7 +26,9 @@ def gatorgrade(
     # check if ctx.subcommand is none
     if ctx.invoked_subcommand is None:
         checks = parse_config(filename)
-        run_checks(checks)
+        checks_status = run_checks(checks)
+        if checks_status is not True:
+            sys.exit(FAILURE)
 
 
 @app.command()
