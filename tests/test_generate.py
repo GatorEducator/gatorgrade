@@ -33,7 +33,7 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     # When we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
 
-    # Then "gatrograde.yml" is generated in the root directory
+    # Then "gatorgrade.yml" is generated in the root directory
     file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
 
