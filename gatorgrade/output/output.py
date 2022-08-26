@@ -87,7 +87,6 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
             results.append(result)
 
     failed_results = list(filter(lambda result: not result.passed, results))
-    print(f"Failed results: {failed_results}")
     # Only print failures list if there are failures to print
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
