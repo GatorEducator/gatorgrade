@@ -26,7 +26,6 @@ mkdocs-typer = "^0.0.2"
 mkdocs-literate-nav = "^0.4.1"
 toml = "^0.10.2"
 
-
 [tool.taskipy.tasks]
 test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
 lint = "task black && task pylint && task pydocstyle"
