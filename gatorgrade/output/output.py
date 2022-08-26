@@ -27,7 +27,8 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         check=False,
         timeout=300,
         stdout=subprocess.PIPE,
-        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured together as diagnostic
+        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured
+        # together as diagnostic
         stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
@@ -63,7 +64,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> None:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -86,6 +87,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> None:
             results.append(result)
 
     failed_results = list(filter(lambda result: not result.passed, results))
+    print(f"Failed results: {failed_results}")
     # Only print failures list if there are failures to print
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
