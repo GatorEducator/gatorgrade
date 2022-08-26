@@ -25,6 +25,9 @@ mkdocs-gen-files = "^0.3.4"
 mkdocs-typer = "^0.0.2"
 mkdocs-literate-nav = "^0.4.1"
 toml = "^0.10.2"
+pytest-sugar = "^0.9.5"
+pytest-randomly = "^3.12.0"
+pytest-clarity = "^1.0.1"
 
 [tool.taskipy.tasks]
 test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
