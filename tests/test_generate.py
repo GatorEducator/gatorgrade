@@ -93,7 +93,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     tmp_path, capsys
 ):
     """Check if gatorgrade.yml is created with existing file paths
-    when some user-provded file paths don't exist and if generate.py outputs a warning message"""
+    when some user-provided file paths don't exist and if generate.py outputs a warning message"""
 
     # Given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"
