@@ -21,9 +21,7 @@ def parse_config(file: Path):
         # use it to generate all of the checks;
         # these will be valid checks that are now
         # ready for execution with this tool
-        parse_con = generate_checks(
-            reformat_yaml_data(parsed_yaml_file)
-        )
+        parse_con = generate_checks(reformat_yaml_data(parsed_yaml_file))
         return parse_con
     # return an empty list because of the fact that the
     # parsing process did not return a list with content;
