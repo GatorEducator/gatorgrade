@@ -14,35 +14,24 @@ from gatorgrade import main
 runner = CliRunner()
 
 
-def test_gatorgrade_runs():
-    """Test that ensures that the default command runs correctly."""
-
-    assert True
-
-
 def test_generate_creates_valid_yml():
-    """Test that ensures that the generate command creates
-    the .yml file correctly."""
+    """Ensure that the generate command creates the .yml file correctly."""
     result = runner.invoke(main.app, ["generate"])
     print(result.stdout)
-
     assert result.exit_code == 0
 
 
 def test_generate_fails_with_existing_yml():
-    """Test that ensures that a second yml file isn't generated
-    without the force command."""
+    """Ensure that a second yml file isn't generated without the force command."""
     result = runner.invoke(main.app, ["generate"])
     print(result.stdout)
-
     assert result.exit_code == 0
 
 
 def test_generate_force_option_creates_yml():
-    """Test that ensures the force command works correctly."""
+    """Ensure that the force command works correctly."""
     result = runner.invoke(main.app, ["generate"])
     print(result.stdout)
-
     assert result.exit_code == 0
 
 
@@ -54,7 +43,7 @@ def test_generate_force_option_creates_yml():
             [
                 ("Complete all TODOs", 2),
                 ("Use an if statement", 1),
-                ("✔", 3),
+                ("", 3),
                 ("✘", 0),
                 ("Passed 3/3 (100%) of checks", 1),
             ],
