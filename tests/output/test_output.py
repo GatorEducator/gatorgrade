@@ -1,7 +1,8 @@
 """Test suite for output_functions.py."""
 
+from gatorgrade.input.checks import GatorGraderCheck
+from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output import output
-from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
 
 
 def test_run_checks_gg_check_should_show_passed(capsys):

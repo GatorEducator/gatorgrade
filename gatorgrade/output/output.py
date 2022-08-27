@@ -2,10 +2,14 @@
 
 import subprocess
 from pathlib import Path
-from typing import List, Union
+from typing import List
+from typing import Union
+
 import gator
 import rich
-from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
+
+from gatorgrade.input.checks import GatorGraderCheck
+from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
 
 # Disable rich's default highlight to stop number coloring

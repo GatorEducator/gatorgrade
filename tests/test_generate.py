@@ -1,8 +1,8 @@
 """This module tests the generate.py functionality"""
 
-# Import needed libraries
 import pytest
 import typer
+
 from gatorgrade.generate.generate import generate_config
 
 

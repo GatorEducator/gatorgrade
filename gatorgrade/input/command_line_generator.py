@@ -1,8 +1,11 @@
 """Generates a dictionary of shell and gator grader command options from a list of dict checks."""
 
 import os
-from typing import List, Union
-from .checks import ShellCheck, GatorGraderCheck
+from typing import List
+from typing import Union
+
+from .checks import GatorGraderCheck
+from .checks import ShellCheck
 from .in_file_path import CheckData
 
 
