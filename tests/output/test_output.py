@@ -6,7 +6,6 @@ from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
 
 def test_run_checks_gg_check_should_show_passed(capsys):
     """Test that run_checks runs a GatorGrader check and prints that the check has passed."""
-
     # Given a GatorGrader check that should pass
     check = GatorGraderCheck(
         gg_args=[
@@ -24,10 +23,8 @@ def test_run_checks_gg_check_should_show_passed(capsys):
             "hello-world.py",
         ]
     )
-
     # When run_checks is called
     output.run_checks([check])
-
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "  Check TODOs" in out
@@ -35,7 +32,6 @@ def test_run_checks_gg_check_should_show_passed(capsys):
 
 def test_run_checks_invalid_gg_args_prints_exception(capsys):
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
-
     # Given a GatorGrader check with invalid arguments
     check = GatorGraderCheck(
         gg_args=[
@@ -49,13 +45,14 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
             "--exact",
         ]
     )
-
     # When run_checks is called
     output.run_checks([check])
-
-    # Then the output contains the exception
+    # Then the output contains a declaration
+    # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
-    assert "gator.exceptions" in out
+    print("** ", out, " **")
+    print()
+    assert "Invalid GatorGrader check:" in out
 
 
 def test_run_checks_some_failed_prints_correct_summary(capsys):
@@ -95,10 +92,8 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
             ]
         ),
     ]
-
     # When run_checks is called
     output.run_checks(checks)
-
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 2/3 (67%) of checks" in out
@@ -141,10 +136,8 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
             ]
         ),
     ]
-
     # When run_checks is called
     output.run_checks(checks)
-
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
