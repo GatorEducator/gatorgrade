@@ -6,12 +6,56 @@ because disabling output capture through pytest does not disable Typer's output
 capturing.
 """
 
+import builtins
+import io
+import os
+
 import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import main
 
 runner = CliRunner()
+
+
+def patch_open(open_func, files):
+    """Create a patch to for file opening to track and later delete opened files."""
+
+    def open_patched(
+        path,
+        mode="r",
+        buffering=-1,
+        encoding=None,
+        errors=None,
+        newline=None,
+        closefd=True,
+        opener=None,
+    ):
+        if "w" in mode and not os.path.isfile(path):
+            files.append(path)
+        return open_func(
+            path,
+            mode=mode,
+            buffering=buffering,
+            encoding=encoding,
+            errors=errors,
+            newline=newline,
+            closefd=closefd,
+            opener=opener,
+        )
+
+    return open_patched
+
+
+@pytest.fixture(autouse=True)
+def cleanup_files(monkeypatch):
+    """Cleanup any files that are created by the tests in this test suite."""
+    files = []
+    monkeypatch.setattr(builtins, "open", patch_open(builtins.open, files))
+    monkeypatch.setattr(io, "open", patch_open(io.open, files))
+    yield
+    for file in files:
+        os.remove(file)
 
 
 def test_generate_creates_valid_yml():
