@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 from typing import List
 
-from rich.console import Console
 import typer
+from rich.console import Console
 
 from gatorgrade.generate.generate import generate_config
 from gatorgrade.input.parse_config import parse_config
