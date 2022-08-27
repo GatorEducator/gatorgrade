@@ -38,7 +38,7 @@ isort = { cmd = "isort -c gatorgrade tests", help = "Run the isort checks for so
 test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
 pylint = { cmd = "pylint gatorgrade tests", help = "Run the pylint checks for source code documentation" }
 pydocstyle = { cmd = "pydocstyle gatorgrade tests", help = "Run the pydocstyle checks for source code documentation" }
-all = "task black && task pydocstyle && task pylint && task test"
+all = "task black && task isort && task pydocstyle && task pylint && task test"
 lint = "task black && task isort && task pydocstyle && task pylint"
 mkdocs = { cmd = "mkdocs gh-deploy", help = "Build and deploy MKDocs documentation" }
 
