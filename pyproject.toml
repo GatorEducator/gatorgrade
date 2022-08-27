@@ -28,9 +28,13 @@ toml = "^0.10.2"
 pytest-sugar = "^0.9.5"
 pytest-randomly = "^3.12.0"
 pytest-clarity = "^1.0.1"
+isort = "^5.10.1"
 
 [tool.taskipy.tasks]
 black = { cmd= "black gatorgrade tests --check", help = "Run the black checks for source code format" }
+fiximports = { cmd = "isort gatorgrade tests", help = "Run isort to fix source code imports" }
+fixformat = { cmd = "black gatorgrade tests", help = "Run the black checks for source code format" }
+isort = { cmd = "isort -c gatorgrade tests", help = "Run the isort checks for source code" }
 flake8 = { cmd = "flake8 gatorgrade tests", help = "Run the flake8 checks for source code documentation" }
 test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
 pylint = { cmd = "pylint gatorgrade tests", help = "Run the pylint checks for source code documentation" }
@@ -38,6 +42,14 @@ pydocstyle = { cmd = "pydocstyle gatorgrade tests", help = "Run the pydocstyle c
 all = "task black && task flake8 && task pydocstyle && task pylint && task test"
 lint = "task black && task flake8 && task pydocstyle && task pylint"
 mkdocs = { cmd = "mkdocs gh-deploy", help = "Build and deploy MKDocs documentation" }
+
+[tool.isort]
+include_trailing_comma = true
+force_single_line = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
