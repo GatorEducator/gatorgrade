@@ -74,35 +74,45 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
+    # run each of the checks
     for check in checks:
         result = None
-
+        # run a shell check; this means
+        # that it is going to run a command
+        # in the shell as a part of a check
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
+        # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
-
+        # there were results from running checks
+        # and thus they must be displayed
         if result is not None:
             result.print()
             results.append(result)
-
+    # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
-    # Only print failures list if there are failures to print
+    # only print failures list if there are failures to print
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             result.print(show_diagnostic=True)
-
+    # determine how many of the checks passed and then
+    # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
-    if len(results) == 0:  # Prevent division by zero if no results
+    # prevent division by zero if no results
+    if len(results) == 0:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
-
+    # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
-    summary_status = True if passed_count == len(results) else False
     print_with_border(summary, summary_color)
+    # determine whether or not the run was a success or not:
+    # if all of the tests pass then the function returns True;
+    # otherwise the function must return False
+    summary_status = True if passed_count == len(results) else False
     return summary_status
 
 
