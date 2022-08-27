@@ -1,11 +1,7 @@
 """Returns the list of commands to be run through gatorgrader."""
 
-from gatorgrade.input.command_line_generator import (
-    generate_checks,
-)
-from gatorgrade.input.in_file_path import (
-    parse_yaml_file,
-)
+from gatorgrade.input.command_line_generator import generate_checks
+from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
 
 
