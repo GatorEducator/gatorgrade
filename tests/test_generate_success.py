@@ -1,6 +1,7 @@
-# Global imports
 """Test the generate_config function in a perfect situation."""
+
 import pytest
+
 from gatorgrade.generate.generate import generate_config
 
 
