@@ -27,7 +27,7 @@ def test_report_flag_creates_file_output(assignment_path, tmp_path, chdir):
     [("tests/test_assignment")],
 )
 def test_report_flag_creates_valid_json_file_output(assignment_path, tmp_path, chdir):
-    """Check if json output creates an output .json file after it's run"""
+    """Check if output .json file is valid JSON after it's run"""
     import json
 
     chdir(assignment_path)
