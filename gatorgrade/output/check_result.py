@@ -1,5 +1,7 @@
 """Define check result class."""
+
 from json import JSONEncoder
+
 import rich
 
 

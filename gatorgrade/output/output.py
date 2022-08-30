@@ -1,17 +1,18 @@
 """Run checks and display whether each has passed or failed."""
 
+import json
 import subprocess
 from pathlib import Path
 from typing import List
 from typing import Union
 
-import json
 import gator
 import rich
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
-from gatorgrade.output.check_result import CheckResult, CheckJsonEncoder
+from gatorgrade.output.check_result import CheckJsonEncoder
+from gatorgrade.output.check_result import CheckResult
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -77,6 +78,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
+        report: Path to where report file should be created
     """
     results = []
     # run each of the checks
@@ -118,7 +120,6 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
-    return summary_status
 
     if report is not None:
         report_json = {
@@ -129,6 +130,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
         with open(report, "w", encoding="utf-8") as file:
             file.write(json.dumps(report_json, cls=CheckJsonEncoder))
             file.close()
+
+    return summary_status
 
 
 def print_with_border(text: str, rich_color: str):
