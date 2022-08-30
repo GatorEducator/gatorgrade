@@ -64,6 +64,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         message = self.display_result()
         rich.print(message)
 
+
 class CheckJsonEncoder(JSONEncoder):
     """Custom JSON encoder so CheckResult can be json serialized."""
 
