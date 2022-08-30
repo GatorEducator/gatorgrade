@@ -1,7 +1,10 @@
 """Generates a list of commands to be run through gatorgrader."""
+
 from collections import namedtuple
 from typing import List
+
 import yaml
+
 from gatorgrade.input.set_up_shell import run_setup
 
 # Represent data for a check from the configuration file.

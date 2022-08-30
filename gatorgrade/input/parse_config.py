@@ -1,11 +1,8 @@
 """Returns the list of commands to be run through gatorgrader."""
-from gatorgrade.input.command_line_generator import (
-    generate_checks,
-)  # Import function to generate shell and gatorgrader checks
-from gatorgrade.input.in_file_path import (
-    parse_yaml_file,
-    reformat_yaml_data,
-)  # Import functions to parse and set up yaml file
+
+from gatorgrade.input.command_line_generator import generate_checks
+from gatorgrade.input.in_file_path import parse_yaml_file
+from gatorgrade.input.in_file_path import reformat_yaml_data
 
 
 def parse_config(file):

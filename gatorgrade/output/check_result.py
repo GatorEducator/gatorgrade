@@ -24,23 +24,45 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.description = description
         self.diagnostic = diagnostic
 
-    def print(self, show_diagnostic: bool = False) -> None:
+    def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
-        If no diagnostic message is avaiable, then the output will say so.
+        If no diagnostic message is available, then the output will say so.
 
         Args:
             show_diagnostic: If true, show the diagnostic message if the check has failed.
                 Defaults to false.
         """
-        icon = "✔" if self.passed else "✘"
+        icon = "" if self.passed else "✘"
         icon_color = "green" if self.passed else "red"
-
-        rich.print(f"[{icon_color}]{icon}[/]  {self.description}")
-
+        message = f"[{icon_color}]{icon}[/]  {self.description}"
         if not self.passed and show_diagnostic:
-            rich.print(f"[yellow]   → {self.diagnostic}")
+            message = f"[yellow]   → {self.diagnostic}"
+        return message
 
+    def __str__(self, show_diagnostic: bool = False) -> str:
+        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+
+        If no diagnostic message is available, then the output will say so.
+
+        Args:
+            show_diagnostic: If true, show the diagnostic message if the check has failed.
+                Defaults to false.
+        """
+        message = self.display_result(show_diagnostic)
+        return message
+
+    def print(self, show_diagnostic: bool = False) -> None:
+        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+
+        If no diagnostic message is available, then the output will say so.
+
+        Args:
+            show_diagnostic: If true, show the diagnostic message if the check has failed.
+                Defaults to false.
+        """
+        message = self.display_result()
+        rich.print(message)
 
 class CheckJsonEncoder(JSONEncoder):
     """Custom JSON encoder so CheckResult can be json serialized."""

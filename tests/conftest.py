@@ -1,6 +1,7 @@
 """Pytest fixtures for testing various functions in GatorGrade."""
 
 import os
+
 import pytest
 
 

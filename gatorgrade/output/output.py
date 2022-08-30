@@ -2,11 +2,15 @@
 
 import subprocess
 from pathlib import Path
-from typing import List, Union
+from typing import List
+from typing import Union
+
 import json
 import gator
 import rich
-from gatorgrade.input.checks import ShellCheck, GatorGraderCheck
+
+from gatorgrade.input.checks import GatorGraderCheck
+from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult, CheckJsonEncoder
 
 # Disable rich's default highlight to stop number coloring
@@ -28,7 +32,8 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         check=False,
         timeout=300,
         stdout=subprocess.PIPE,
-        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured together as diagnostic
+        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured
+        # together as diagnostic
         stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
@@ -64,7 +69,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -> None:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -74,34 +79,46 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
+    # run each of the checks
     for check in checks:
         result = None
-
+        # run a shell check; this means
+        # that it is going to run a command
+        # in the shell as a part of a check
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
+        # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
-
+        # there were results from running checks
+        # and thus they must be displayed
         if result is not None:
             result.print()
             results.append(result)
-
+    # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
-    # Only print failures list if there are failures to print
+    # only print failures list if there are failures to print
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             result.print(show_diagnostic=True)
-
+    # determine how many of the checks passed and then
+    # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
-    if len(results) == 0:  # Prevent division by zero if no results
+    # prevent division by zero if no results
+    if len(results) == 0:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
-
+    # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
+    # determine whether or not the run was a success or not:
+    # if all of the tests pass then the function returns True;
+    # otherwise the function must return False
+    summary_status = True if passed_count == len(results) else False
+    return summary_status
 
     if report is not None:
         report_json = {

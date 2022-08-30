@@ -1,6 +1,7 @@
 """Test suite for parse_config function."""
 
-from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.checks import GatorGraderCheck
+from gatorgrade.input.checks import ShellCheck
 from gatorgrade.input.parse_config import parse_config
 
 
