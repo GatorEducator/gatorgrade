@@ -42,7 +42,7 @@ def generate(
     ),
 ):
     """Generate a gatorgrade.yml file."""
-    targets = []
+    targets: List[str] = []
     for path in paths:
         targets.extend(glob.iglob(path.as_posix(), recursive=True))
     generate_config(targets, root.as_posix())
