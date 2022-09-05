@@ -30,7 +30,7 @@ mypy = "^0.971"
 
 [tool.taskipy.tasks]
 test = { cmd = "pytest --cov-report term-missing --cov-branch --cov=gatorgrade tests/", help = "Run the pytest test suite" }
-lint = "task black && task pylint && task pydocstyle && myp"
+lint = "task black && task pylint && task pydocstyle && task mypy"
 black = { cmd= "black gatorgrade/ tests/ --check", help = "Run the black checks for source code format" }
 pylint = { cmd = "pylint gatorgrade/ tests/", help = "Run the pylint checks for source code documentation" }
 pydocstyle = { cmd = "pydocstyle gatorgrade/ tests/", help = "Run the pydocstyle checks for source code documentation" }
