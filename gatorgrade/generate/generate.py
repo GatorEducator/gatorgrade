@@ -1,7 +1,7 @@
 """Generate a YAML file with default messages and specific paths."""
 import os
 from typing import List, Dict
-import yaml # type: ignore 
+import yaml  # type: ignore
 import typer
 
 
