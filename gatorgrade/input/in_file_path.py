@@ -2,7 +2,7 @@
 from collections import namedtuple
 from pathlib import Path
 from typing import List, Union
-import yaml
+import yaml # type: ignore 
 from gatorgrade.input.set_up_shell import run_setup
 
 # Represent data for a check from the configuration file.
