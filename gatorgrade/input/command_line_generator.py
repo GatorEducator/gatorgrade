@@ -19,7 +19,7 @@ def generate_checks(
     Returns:
         A list of ShellChecks and GatorGraderChecks.
     """
-    checks = []
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
         # If the check has a `command` key, then it is a shell check
         if "command" in check_data.check:

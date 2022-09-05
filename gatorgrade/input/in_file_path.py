@@ -20,7 +20,7 @@ def parse_yaml_file(file_path: Path) -> List:
 
 def reformat_yaml_data(data: List) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
-    reformatted_data = []
+    reformatted_data: List[CheckData] = []
     if len(data) == 2:
         setup_commands = data.pop(0)  # Removes the setup commands
         run_setup(setup_commands)
