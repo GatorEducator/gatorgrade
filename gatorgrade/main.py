@@ -55,26 +55,26 @@ def gatorgrade(
             sys.exit(FAILURE)
 
 
-@app.command()
-def generate(
-    root: Path = typer.Argument(
-        Path("."),
-        help="Root directory of the assignment",
-        exists=True,
-        dir_okay=True,
-        writable=True,
-    ),
-    paths: List[Path] = typer.Option(
-        ["*"],
-        help="Paths to recurse through and generate checks for",
-        exists=False,
-    ),
-):
-    """Generate a gatorgrade.yml file."""
-    targets = []
-    for path in paths:
-        targets.extend(glob.iglob(path.as_posix(), recursive=True))
-    generate_config(targets, root.as_posix())
+# @app.command()
+# def generate(
+#     root: Path = typer.Argument(
+#         Path("."),
+#         help="Root directory of the assignment",
+#         exists=True,
+#         dir_okay=True,
+#         writable=True,
+#     ),
+#     paths: List[Path] = typer.Option(
+#         ["*"],
+#         help="Paths to recurse through and generate checks for",
+#         exists=False,
+#     ),
+# ):
+#     """Generate a gatorgrade.yml file."""
+#     targets = []
+#     for path in paths:
+#         targets.extend(glob.iglob(path.as_posix(), recursive=True))
+#     generate_config(targets, root.as_posix())
 
 
 if __name__ == "__main__":
