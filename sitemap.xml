@@ -2,57 +2,57 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>None</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/main/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/generate/generate/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/input/checks/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/input/command_line_generator/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/input/in_file_path/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/input/parse_config/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/input/set_up_shell/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/output/check_result/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://gatoreducator.github.io/gatorgrade/docs/reference/output/output/</loc>
-         <lastmod>2022-08-27</lastmod>
+         <lastmod>2022-09-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

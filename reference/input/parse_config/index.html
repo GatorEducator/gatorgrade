@@ -650,6 +650,7 @@
         <tr>
           <td><code>file</code></td>
           <td>
+                <code><span title="pathlib.Path">Path</span></code>
           </td>
           <td><p>Yaml file containing gatorgrade and shell command checks</p></td>
           <td>
@@ -678,9 +679,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/parse_config.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">10</span>
 <span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
@@ -689,7 +688,20 @@
 <span class="normal">16</span>
 <span class="normal">17</span>
 <span class="normal">18</span>
-<span class="normal">19</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">parse_config</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">parse_config</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parse the input yaml file and generate specified checks.</span>
 
 <span class="sd">    Args:</span>
@@ -697,10 +709,21 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Returns a dictionary that specifies shell commands and gatorgrade commands</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parse_con</span> <span class="o">=</span> <span class="n">generate_checks</span><span class="p">(</span>
-        <span class="n">reformat_yaml_data</span><span class="p">(</span><span class="n">parse_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
-    <span class="p">)</span>  <span class="c1"># Call previously generated function to modify file</span>
-    <span class="k">return</span> <span class="n">parse_con</span>
+    <span class="c1"># parse the YAML file using parse_yaml_file provided by gatorgrade</span>
+    <span class="n">parsed_yaml_file</span> <span class="o">=</span> <span class="n">parse_yaml_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="c1"># the parsed YAML file contains some contents in a list and thus</span>
+    <span class="c1"># the tool should generate a GatorGrader check for each element in list</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_yaml_file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># after reformatting the parse YAML file,</span>
+        <span class="c1"># use it to generate all of the checks;</span>
+        <span class="c1"># these will be valid checks that are now</span>
+        <span class="c1"># ready for execution with this tool</span>
+        <span class="n">parse_con</span> <span class="o">=</span> <span class="n">generate_checks</span><span class="p">(</span><span class="n">reformat_yaml_data</span><span class="p">(</span><span class="n">parsed_yaml_file</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">parse_con</span>
+    <span class="c1"># return an empty list because of the fact that the</span>
+    <span class="c1"># parsing process did not return a list with content;</span>
+    <span class="c1"># allow the calling function to handle the empty list</span>
+    <span class="k">return</span> <span class="p">[]</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
