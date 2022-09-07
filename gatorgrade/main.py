@@ -10,7 +10,17 @@ from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
 # create an app for the Typer-based CLI
-app = typer.Typer(add_completion=False)
+
+# define the emoji that will be prepended to the help message
+gatorgrade_emoji = "🐊"
+
+# create a Typer app that
+# --> does not support completion
+# --> has a specified help message with an emoji
+app = typer.Typer(
+    add_completion=False,
+    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified gatorgrade.yml file.",
+)
 
 # create a default console for printing with rich
 console = Console()
