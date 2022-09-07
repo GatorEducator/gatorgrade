@@ -31,7 +31,7 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
             return list(data)
     # some aspect of the file does not exist
     # (i.e., wrong file or wrong directory)
-    # and thus parsing with yaml is not possible;
+    # and thus parsing with YAML is not possible;
     # return a blank list that calling function handles
     return []
 
