@@ -1,14 +1,11 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 
-# import glob
 import sys
 from pathlib import Path
-# from typing import List
 
 import typer
 from rich.console import Console
 
-# from gatorgrade.generate.generate import generate_config
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
