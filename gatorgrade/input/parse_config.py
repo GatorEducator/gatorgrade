@@ -15,7 +15,10 @@ def parse_config(file: Path):
     Returns:
         Returns a dictionary that specifies shell commands and gatorgrade commands
     """
+    # parse the YAML file using parse_yaml_file provided by gatorgrade
     parsed_yaml_file = parse_yaml_file(file)
+    # the parsed YAML file contains some contents in a list and thus
+    # the tool should generate a GatorGrader check for each element in list
     if len(parsed_yaml_file) > 0:
         # after reformatting the parse YAML file,
         # use it to generate all of the checks;
