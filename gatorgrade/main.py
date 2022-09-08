@@ -28,11 +28,6 @@ gatorgrader_version = version.get_gatorgrader_version()
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
 
 # define the overall help message
-help_message = (
-    f"{gatorgrade_emoji} Run the GatorGrader checks in the specified gatorgrade.yml file."
-    f"\n\n\t   GatorGrade Version: {gatorgrade_version}"
-)
-
 help_message = f"""
     :crocodile: Run the GatorGrader checks in the specified configuration file.
 
@@ -78,7 +73,9 @@ def gatorgrade(
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
-        if not version:
+        if version:
+            console.print(version)
+        else:
             # parse the provided configuration file
             checks = parse_config(filename)
             # there are valid checks and thus the
@@ -100,8 +97,6 @@ def gatorgrade(
             # code to designate some type of failure
             if checks_status is not True:
                 sys.exit(FAILURE)
-        else:
-            console.print(version)
 
 
 # @app.command()
