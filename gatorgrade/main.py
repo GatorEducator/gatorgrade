@@ -6,6 +6,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from gatorgrade import version
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
@@ -14,12 +15,48 @@ from gatorgrade.output.output import run_checks
 # define the emoji that will be prepended to the help message
 gatorgrade_emoji = "🐊"
 
+# define the current version of GatorGrade
+gatorgrade_version = version.get_gatorgrade_version()
+
+# define the GitHub repository URL for GatorGrade
+gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
+
+# define the current version of GatorGrader
+gatorgrader_version = version.get_gatorgrader_version()
+
+# define the GitHub repository URL for GatorGrader
+gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
+
+# define the overall help message
+help_message = (
+    f"{gatorgrade_emoji} Run the GatorGrader checks in the specified gatorgrade.yml file."
+    f"\n\n\t   GatorGrade Version: {gatorgrade_version}"
+)
+
+help_message = f"""
+    :crocodile: Run the GatorGrader checks in the specified configuration file.
+
+    * GatorGrade version: {gatorgrade_version}
+
+    * GatorGrader version: {gatorgrader_version}
+    """
+
+epilog_message = f"""
+    :tada: Want to contribute to the project? Check these sites!
+
+    * GatorGrade: {gatorgrade_github}
+
+    * GatorGrader: {gatorgrader_github}
+    """
+
 # create a Typer app that
 # --> does not support completion
 # --> has a specified help message with an emoji
 app = typer.Typer(
     add_completion=False,
-    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified gatorgrade.yml file.",
+    epilog=epilog_message,
+    help=help_message,
+    rich_markup_mode="markdown",
 )
 
 # create a default console for printing with rich
@@ -35,7 +72,7 @@ def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the YML file."),
 ):
-    """Run the GatorGrader checks in the specified gatorgrade.yml file."""
+    """Run the GatorGrader checks in the specified configuration file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
