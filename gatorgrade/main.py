@@ -63,6 +63,7 @@ app = typer.Typer(
 console = Console()
 
 # define constants used in this module
+DEFAULT_VERSION = False
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
@@ -71,32 +72,36 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the YML file."),
+    version: bool = typer.Option(DEFAULT_VERSION, "--version", "-v", help="Display version information."),
 ):
     """Run the GatorGrader checks in the specified configuration file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
-        # parse the provided configuration file
-        checks = parse_config(filename)
-        # there are valid checks and thus the
-        # tool should run them with run_checks
-        if len(checks) > 0:
-            checks_status = run_checks(checks)
-        # no checks were created and this means
-        # that, most likely, the file was not
-        # valid and thus the tool cannot run checks
+        if not version:
+            # parse the provided configuration file
+            checks = parse_config(filename)
+            # there are valid checks and thus the
+            # tool should run them with run_checks
+            if len(checks) > 0:
+                checks_status = run_checks(checks)
+            # no checks were created and this means
+            # that, most likely, the file was not
+            # valid and thus the tool cannot run checks
+            else:
+                checks_status = False
+                console.print()
+                console.print(f"The file {filename} either does not exist or is not valid.")
+                console.print("Exiting now!")
+                console.print()
+            # at least one of the checks did not pass or
+            # the provided file was not valid and thus
+            # the tool should return a non-zero exit
+            # code to designate some type of failure
+            if checks_status is not True:
+                sys.exit(FAILURE)
         else:
-            checks_status = False
-            console.print()
-            console.print(f"The file {filename} either does not exist or is not valid.")
-            console.print("Exiting now!")
-            console.print()
-        # at least one of the checks did not pass or
-        # the provided file was not valid and thus
-        # the tool should return a non-zero exit
-        # code to designate some type of failure
-        if checks_status is not True:
-            sys.exit(FAILURE)
+            console.print(version)
 
 
 # @app.command()
