@@ -42,7 +42,7 @@ help_message = f"""
     """
 
 epilog_message = f"""
-    :tada: Want to contribute to the project? Check these sites!
+    :tada: Want to contribute to this project? Check these GitHub sites!
 
     * GatorGrade: {gatorgrade_github}
 
