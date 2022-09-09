@@ -6,9 +6,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from gatorgrade import version
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
+from gatorgrade.util import version
 
 # create an app for the Typer-based CLI
 
