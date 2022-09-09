@@ -29,19 +29,19 @@ gatorgrader_version = version.get_gatorgrader_version()
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
 
 # define the version message with markdown formatting
+project_version_str = version.get_project_versions()
 version_info_markdown = f"""
     :wrench: Version information:
 
-    - {gatorgrade_version}
-
-    - {gatorgrader_version}
+    {project_version_str}
 """
 
 # define the overall help message
-help_message_markdown = f"""
+help_message_markdown = """
     :crocodile: Run the GatorGrader checks in the specified configuration file.
     """
 
+# define the epilog that appears after the help details
 epilog_message_markdown = f"""
     {version_info_markdown}
 
