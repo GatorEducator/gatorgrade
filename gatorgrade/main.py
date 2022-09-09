@@ -42,9 +42,6 @@ help_message_markdown = f"""
     :crocodile: Run the GatorGrader checks in the specified configuration file.
     """
 
-# # define the overall help message
-# help_message_markdown = f":crocodile: Run the GatorGrader checks in the specified configuration file. \b\n\n\n {version_info_markdown}"
-
 epilog_message_markdown = f"""
     {version_info_markdown}
 
