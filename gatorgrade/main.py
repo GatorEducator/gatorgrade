@@ -105,8 +105,6 @@ def gatorgrade(
             # code to designate some type of failure
             if checks_status is not True:
                 sys.exit(FAILURE)
-        if help:
-            console.print("ran help")
 
 
 # @app.command()
