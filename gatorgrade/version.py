@@ -1,9 +1,16 @@
 """Extract version information for display in various aspects of the command-line interface."""
 
 from importlib.metadata import version
+from typing import List
 
 COLON = ":"
+DASH = "-"
 SPACE = " "
+NEWLINE = "\n"
+NEWLINE_NEWLINE = "\n\n"
+
+
+PROJECTS = ["gatorgrade", "gatorgrader", "pyyaml", "rich", "typer"]
 
 
 def get_project_version(project: str) -> str:
@@ -22,3 +29,12 @@ def get_gatorgrader_version() -> str:
     """Determine and return the information about GatorGrade's version."""
     gatorgrader_version_str = get_project_version("gatorgrader")
     return gatorgrader_version_str
+
+
+def get_project_versions(project_list: List[str] = PROJECTS) -> str:
+    """Create a version string for all specified projects."""
+    project_version_str = ""
+    for project in project_list:
+        current_project_version_str = DASH + SPACE + get_project_version(project) + NEWLINE_NEWLINE
+        project_version_str = project_version_str + current_project_version_str
+    return project_version_str
