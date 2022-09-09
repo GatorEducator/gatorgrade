@@ -5,7 +5,6 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.markdown import Markdown
 
 from gatorgrade import version
 from gatorgrade.input.parse_config import parse_config
@@ -16,14 +15,8 @@ from gatorgrade.output.output import run_checks
 # define the emoji that will be prepended to the help message
 gatorgrade_emoji = "🐊"
 
-# define the current version of GatorGrade
-gatorgrade_version = version.get_gatorgrade_version()
-
 # define the GitHub repository URL for GatorGrade
 gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
-
-# define the current version of GatorGrader
-gatorgrader_version = version.get_gatorgrader_version()
 
 # define the GitHub repository URL for GatorGrader
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
@@ -51,7 +44,7 @@ epilog_message_markdown = f"""
     * GatorGrade: {gatorgrade_github}
 
     * GatorGrader: {gatorgrader_github}
-    """
+"""
 
 # create a Typer app that
 # --> does not support completion
@@ -110,6 +103,8 @@ def gatorgrade(
             # code to designate some type of failure
             if checks_status is not True:
                 sys.exit(FAILURE)
+        if help:
+            console.print("ran help")
 
 
 # @app.command()
