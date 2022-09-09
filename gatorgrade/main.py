@@ -5,6 +5,7 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.markdown import Markdown
 
 from gatorgrade import version
 from gatorgrade.input.parse_config import parse_config
@@ -27,16 +28,27 @@ gatorgrader_version = version.get_gatorgrader_version()
 # define the GitHub repository URL for GatorGrader
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
 
+# define the version message with markdown formatting
+version_info_markdown = f"""
+    :wrench: Version information:
+
+    - {gatorgrade_version}
+
+    - {gatorgrader_version}
+"""
+
 # define the overall help message
-help_message = f"""
+help_message_markdown = f"""
     :crocodile: Run the GatorGrader checks in the specified configuration file.
-
-    * GatorGrade version: {gatorgrade_version}
-
-    * GatorGrader version: {gatorgrader_version}
     """
 
-epilog_message = f"""
+# # define the overall help message
+# help_message_markdown = f":crocodile: Run the GatorGrader checks in the specified configuration file. \b\n\n\n {version_info_markdown}"
+
+epilog_message_markdown = f"""
+    {version_info_markdown}
+
+
     :tada: Want to contribute to this project? Check these GitHub sites!
 
     * GatorGrade: {gatorgrade_github}
@@ -49,8 +61,8 @@ epilog_message = f"""
 # --> has a specified help message with an emoji
 app = typer.Typer(
     add_completion=False,
-    epilog=epilog_message,
-    help=help_message,
+    epilog=epilog_message_markdown,
+    help=help_message_markdown,
     rich_markup_mode="markdown",
 )
 
@@ -67,14 +79,16 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the YML file."),
-    version: bool = typer.Option(DEFAULT_VERSION, "--version", "-v", help="Display version information."),
+    version: bool = typer.Option(
+        DEFAULT_VERSION, "--version", "-v", help="Display version information."
+    ),
 ):
     """Run the GatorGrader checks in the specified configuration file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         if version:
-            console.print(version)
+            console.print()
         else:
             # parse the provided configuration file
             checks = parse_config(filename)
@@ -88,7 +102,9 @@ def gatorgrade(
             else:
                 checks_status = False
                 console.print()
-                console.print(f"The file {filename} either does not exist or is not valid.")
+                console.print(
+                    f"The file {filename} either does not exist or is not valid."
+                )
                 console.print("Exiting now!")
                 console.print()
             # at least one of the checks did not pass or
