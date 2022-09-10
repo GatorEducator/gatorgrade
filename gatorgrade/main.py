@@ -9,6 +9,7 @@ from rich.markdown import Markdown
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
+from gatorgrade.util import github
 from gatorgrade.util import versions
 
 # define constants used in this module
@@ -22,6 +23,9 @@ gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
 
 # define the GitHub repository URL for GatorGrader
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
+
+# define the message about GitHub repositories
+github_message = github.get_github_projects()
 
 # define the version message with markdown formatting
 project_version_str = versions.get_project_versions()
@@ -44,9 +48,7 @@ epilog_message_markdown = f"""
 
     :tada: Want to contribute to this project? Check these GitHub sites!
 
-    * GatorGrade: {gatorgrade_github}
-
-    * GatorGrader: {gatorgrader_github}
+    {github_message}
 """
 
 # create a Typer app that
@@ -63,7 +65,6 @@ app = typer.Typer(
 
 # create a default console for printing with rich
 console = Console()
-
 
 
 @app.callback(invoke_without_command=True)
