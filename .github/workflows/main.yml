@@ -87,7 +87,7 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.13
+          poetry-version: 1.2
       - name: Setup Poetry
         run: |
           poetry --version
