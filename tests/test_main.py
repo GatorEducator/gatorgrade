@@ -58,25 +58,25 @@ def cleanup_files(monkeypatch):
         os.remove(file)
 
 
-def test_generate_creates_valid_yml():
-    """Ensure that the generate command creates the .yml file correctly."""
-    result = runner.invoke(main.app, ["generate"])
-    print(result.stdout)
-    assert result.exit_code == 0
+# def test_generate_creates_valid_yml():
+#     """Ensure that the generate command creates the .yml file correctly."""
+#     result = runner.invoke(main.app, ["generate"])
+#     print(result.stdout)
+#     assert result.exit_code == 0
 
 
-def test_generate_fails_with_existing_yml():
-    """Ensure that a second yml file isn't generated without the force command."""
-    result = runner.invoke(main.app, ["generate"])
-    print(result.stdout)
-    assert result.exit_code == 0
+# def test_generate_fails_with_existing_yml():
+#     """Ensure that a second yml file isn't generated without the force command."""
+#     result = runner.invoke(main.app, ["generate"])
+#     print(result.stdout)
+#     assert result.exit_code == 0
 
 
-def test_generate_force_option_creates_yml():
-    """Ensure that the force command works correctly."""
-    result = runner.invoke(main.app, ["generate"])
-    print(result.stdout)
-    assert result.exit_code == 0
+# def test_generate_force_option_creates_yml():
+#     """Ensure that the force command works correctly."""
+#     result = runner.invoke(main.app, ["generate"])
+#     print(result.stdout)
+#     assert result.exit_code == 0
 
 
 @pytest.mark.parametrize(
