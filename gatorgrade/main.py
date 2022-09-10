@@ -19,12 +19,6 @@ GATORGRADE_EMOJI_RICH = ":crocodile:"
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
-# define the GitHub repository URL for GatorGrade
-gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
-
-# define the GitHub repository URL for GatorGrader
-gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
-
 # define the message about GitHub repositories
 github_message = github.get_github_projects()
 
