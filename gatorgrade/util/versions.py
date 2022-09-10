@@ -35,6 +35,8 @@ def get_project_versions(project_list: List[str] = PROJECTS) -> str:
     """Create a version string for all specified projects."""
     project_version_str = ""
     for project in project_list:
-        current_project_version_str = DASH + SPACE + get_project_version(project) + NEWLINE_NEWLINE
+        current_project_version_str = (
+            DASH + SPACE + get_project_version(project) + NEWLINE_NEWLINE
+        )
         project_version_str = project_version_str + current_project_version_str
     return project_version_str
