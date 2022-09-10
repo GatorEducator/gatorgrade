@@ -15,6 +15,7 @@ from gatorgrade.util import versions
 # define constants used in this module
 DEFAULT_VERSION = False
 GATORGRADE_EMOJI = "🐊"
+GATORGRADE_EMOJI_RICH = ":crocodile:"
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
@@ -37,8 +38,8 @@ version_info_markdown = f"""
 """
 
 # define the overall help message
-help_message_markdown = """
-:crocodile: GatorGrade runs the GatorGrader checks in a specified configuration file.
+help_message_markdown = f"""
+{GATORGRADE_EMOJI_RICH} GatorGrade runs the GatorGrader checks in a specified configuration file.
 """
 
 # define the epilog that appears after the help details
