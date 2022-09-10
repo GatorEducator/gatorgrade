@@ -5,7 +5,7 @@ description = "Python tool to execute GatorGrader"
 authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Gregory M. Kapfhammer", "Peyton Kelly", "Luke Lacaria", "Lauren Nevill", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4.0"
+python = ">=3.8,<4.0"
 PyYAML = "^6.0"
 gatorgrader = "^1.1.0"
 rich = "^12.5.1"
