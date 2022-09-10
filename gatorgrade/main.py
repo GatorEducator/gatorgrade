@@ -11,10 +11,11 @@ from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 from gatorgrade.util import versions
 
-# create an app for the Typer-based CLI
-
-# define the emoji that will be prepended to the help message
-gatorgrade_emoji = "🐊"
+# define constants used in this module
+DEFAULT_VERSION = False
+GATORGRADE_EMOJI = "🐊"
+FILE = "gatorgrade.yml"
+FAILURE = 1
 
 # define the GitHub repository URL for GatorGrade
 gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
@@ -63,10 +64,6 @@ app = typer.Typer(
 # create a default console for printing with rich
 console = Console()
 
-# define constants used in this module
-DEFAULT_VERSION = False
-FILE = "gatorgrade.yml"
-FAILURE = 1
 
 
 @app.callback(invoke_without_command=True)
