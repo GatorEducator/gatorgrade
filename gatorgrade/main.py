@@ -18,6 +18,7 @@ GATORGRADE_EMOJI = "🐊"
 GATORGRADE_EMOJI_RICH = ":crocodile:"
 FILE = "gatorgrade.yml"
 FAILURE = 1
+RICH_MARKUP_MODE_DEFAULT = "markdown"
 
 # define the message about GitHub repositories
 github_message = github.get_github_projects()
@@ -55,7 +56,7 @@ app = typer.Typer(
     add_completion=False,
     epilog=epilog_message_markdown,
     help=help_message_markdown,
-    rich_markup_mode="markdown",
+    rich_markup_mode=RICH_MARKUP_MODE_DEFAULT,
 )
 
 # create a default console for printing with rich
