@@ -33,7 +33,7 @@ version_info_markdown = f"""
 
 # define the overall help message
 help_message_markdown = """
-:crocodile: Run the GatorGrader checks in the specified configuration file.
+:crocodile: GatorGrade runs the GatorGrader checks in a specified configuration file.
 """
 
 # define the epilog that appears after the help details
