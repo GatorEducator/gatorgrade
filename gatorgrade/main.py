@@ -82,7 +82,7 @@ def gatorgrade(
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         # requesting version information overrides all other commands;
-        # if the version details are requested, print them only
+        # if the version details are requested, print them and exit
         if version:
             console.print(help_message_markdown)
             console.print(version_label)
