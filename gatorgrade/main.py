@@ -5,10 +5,11 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.markdown import Markdown
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
-from gatorgrade.util import version
+from gatorgrade.util import versions
 
 # create an app for the Typer-based CLI
 
@@ -22,21 +23,22 @@ gatorgrade_github = "https://github.com/GatorEducator/gatorgrade"
 gatorgrader_github = "https://github.com/GatorEducator/gatorgrader"
 
 # define the version message with markdown formatting
-project_version_str = version.get_project_versions()
+project_version_str = versions.get_project_versions()
+version_label = ":wrench: Version information:"
 version_info_markdown = f"""
-    :wrench: Version information:
+    {version_label}
 
     {project_version_str}
 """
 
 # define the overall help message
 help_message_markdown = """
-    :crocodile: Run the GatorGrader checks in the specified configuration file.
+:crocodile: Run the GatorGrader checks in the specified configuration file.
 """
 
 # define the epilog that appears after the help details
 epilog_message_markdown = f"""
-    {version_info_markdown}
+{version_info_markdown}
 
 
     :tada: Want to contribute to this project? Check these GitHub sites!
@@ -79,7 +81,12 @@ def gatorgrade(
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
+        # requesting version information overrides all other commands;
+        # if the version details are requested, print them only
         if version:
+            console.print(help_message_markdown)
+            console.print(version_label)
+            console.print(Markdown(versions.get_project_versions()))
             console.print()
         else:
             # parse the provided configuration file
