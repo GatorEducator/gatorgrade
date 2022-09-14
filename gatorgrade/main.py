@@ -10,6 +10,7 @@ import typer
 from gatorgrade.generate.generate import generate_config
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
+from gatorgrade.output.output import save_checks
 
 app = typer.Typer(add_completion=False)
 
@@ -28,6 +29,7 @@ def gatorgrade(
     if ctx.invoked_subcommand is None:
         checks = parse_config(filename)
         checks_status = run_checks(checks, report=report)
+        save_checks(report)
         if checks_status is not True:
             sys.exit(FAILURE)
 
