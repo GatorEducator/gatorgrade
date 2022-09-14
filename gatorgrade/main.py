@@ -29,7 +29,6 @@ def gatorgrade(
     if ctx.invoked_subcommand is None:
         checks = parse_config(filename)
         checks_status = run_checks(checks, report=report)
-        save_checks(report)
         if checks_status is not True:
             sys.exit(FAILURE)
 
