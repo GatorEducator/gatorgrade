@@ -3,7 +3,7 @@
 import json
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 from typing import Union
 
 import gator
@@ -121,48 +121,41 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
 
+    # if a file for the report was listed:
     if report is not None:
+        # create a dictionary containing the results of the gatorgrade run
         report_json = {
             "results": results,
             "failed_checks": failed_results,
             "percent": percent,
         }
+        # record this information in a permanent hidden file
+        path_to_file = ".gatorgrade.json"
+        path = Path(path_to_file)
+        # if .gatorgrade.json exists, turn it into a string
+        if path.is_file() == True:
+            with open(path_to_file, "r") as json_file:
+                compiled_report = json.load(json_file)
+            # append the new_report data into the compiled report
+            compiled_report = report_json + compiled_report
+            # rewrite file with new data
+            output_file = open(path_to_file, "w")
+            # change compiled_checks back into a JSON stored at .gatorgrade.json
+            json.dump(compiled_report, output_file, indent=CheckJsonEncoder)
+            output_file.close()
+
+        else:
+            # if no .gatorgrade.json exists, no previous checks ran, create new file with checks
+            with open(path_to_file, "w") as file:
+                file.write(json.dumps(report_json, indent=CheckJsonEncoder))
+                file.close()
+
+        # put this information in a JSON file under the name the user entered
         with open(report, "w", encoding="utf-8") as file:
             file.write(json.dumps(report_json, cls=CheckJsonEncoder))
             file.close()
 
     return summary_status
-
-
-def save_checks(new_report: FILE):
-    """Save the output in JSON format in a hidden file
-
-    Args:
-        new_report: the file that the report is held in
-    """
-    # change the new checks from JSON format to string format
-    with open(new_report, "r") as json_file:
-        new_report = json.load(new_report)
-
-    path_to_file = ".gatorgrade.json"
-    path = Path(path_to_file)
-    # if .gatorgrade.json exists, turn it into a string
-    if path.is_file() == True:
-        with open(path_to_file, "r") as json_file:
-            compiled_report = json.load(json_file)
-        # append the new_report data into the compiled report
-        compiled_report = new_report + compiled_report
-        # rewrite file with new data
-        output_file = open(path_to_file, "w")
-        # change compiled_checks back into a JSON stored at .gatorgrade.json
-        json.dump(compiled_report, output_file, indent=CheckJsonEncoder)
-        output_file.close()
-
-    else:
-        # if no .gatorgrade.json exists, no previous checks ran, create new file with checks
-        with open(path_to_file, "w") as file:
-            file.write(json.dumps(new_report, indent=CheckJsonEncoder))
-            file.close()
 
 
 def print_with_border(text: str, rich_color: str):
