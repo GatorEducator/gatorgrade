@@ -2,10 +2,6 @@
 
 import rich
 
-import unicodedata
-
-UTF_ENCODE = "utf-8"
-
 
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
