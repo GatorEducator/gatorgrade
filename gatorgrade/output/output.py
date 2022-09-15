@@ -121,13 +121,14 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
 
+    # Once results are finished:
     # create a dictionary containing the results of the gatorgrade run
     report_json = {
         "results": results,
         "failed_checks": failed_results,
         "percent": percent,
     }
-    # record this information in a permanent hidden file
+    # record this information in a permanent hidden file called .gatorgrade.json
     path_to_file = ".gatorgrade.json"
     path = Path(path_to_file)
     # if .gatorgrade.json exists, turn it into a string
@@ -154,6 +155,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report=None) -
             file.write(json.dumps(report_json, cls=CheckJsonEncoder))
             file.close()
 
+    # return the checks summary
     return summary_status
 
 
