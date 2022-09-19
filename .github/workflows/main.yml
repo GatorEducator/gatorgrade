@@ -68,12 +68,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.7", "3.10"]
+        python-version: ["3.8", "3.10"]
         include:
           - os: macos-latest
             python-version: "3.9"
           - os: windows-latest
-            python-version: "3.8"
+            python-version: "3.9"
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
@@ -87,7 +87,7 @@ jobs:
       - name: Install Poetry
         uses: Gr1N/setup-poetry@v7
         with:
-          poetry-version: 1.1.13
+          poetry-version: 1.1.14
       - name: Setup Poetry
         run: |
           poetry --version
