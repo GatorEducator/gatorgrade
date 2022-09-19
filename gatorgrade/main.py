@@ -19,9 +19,6 @@ FILE = "gatorgrade.yml"
 FAILURE = 1
 RICH_MARKUP_MODE_DEFAULT = "markdown"
 
-# define the version message with markdown formatting
-project_version_str = versions.get_project_versions()
-
 # define the overall help message
 help_message_markdown = f"""
 {GATORGRADE_EMOJI_RICH} GatorGrade runs the GatorGrader checks in a specified configuration file.
