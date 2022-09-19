@@ -20,29 +20,12 @@ FILE = "gatorgrade.yml"
 FAILURE = 1
 RICH_MARKUP_MODE_DEFAULT = "markdown"
 
-# define the message about GitHub repositories
-github_message = github.get_github_projects()
-
 # define the version message with markdown formatting
 project_version_str = versions.get_project_versions()
-version_label = ":wrench: Version information:"
-version_info_markdown = f"""
-    {version_label}
-
-    {project_version_str}
-"""
 
 # define the overall help message
 help_message_markdown = f"""
 {GATORGRADE_EMOJI_RICH} GatorGrade runs the GatorGrader checks in a specified configuration file.
-"""
-
-# define the epilog that appears after the help details
-epilog_message_markdown = f"""
-{version_info_markdown}
-:tada: Want to contribute to this project? Check these GitHub sites!
-
-{github_message}
 """
 
 # create a Typer app that:
@@ -75,14 +58,28 @@ def gatorgrade(
         # requesting version information overrides all other commands;
         # if the version details are requested, print them and exit
         if version:
+            # define the version label with suitable emoji
+            version_label = ":wrench: Version information:"
+            # define the message about the project versions
+            version_message = versions.get_project_versions()
+            # define a contribution message with suitable emoji
+            contribution_message = (
+                ":tada: Want to contribute to this project? Check these GitHub sites!"
+            )
+            # define the message about GitHub repositories
+            github_message = github.get_github_projects()
+            # output all of the details about gatorgrade
+            # 1) standard help message (defined previously)
             console.print(help_message_markdown)
+            # 2) version information
             console.print(version_label)
-            console.print(Markdown(versions.get_project_versions()))
+            console.print(Markdown(version_message))
             console.print()
-            console.print(":tada: Want to contribute to this project? Check these GitHub sites!")
+            # 3) contribution message
+            console.print(contribution_message)
             console.print(Markdown(github_message))
-            # console.print((epilog_message_markdown))
             console.print()
+        # run the checking function since --version was not provided
         else:
             # parse the provided configuration file
             checks = parse_config(filename)
