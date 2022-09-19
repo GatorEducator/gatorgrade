@@ -14,7 +14,6 @@ from gatorgrade.util import versions
 
 # define constants used in this module
 DEFAULT_VERSION = False
-GATORGRADE_EMOJI = "🐊"
 GATORGRADE_EMOJI_RICH = ":crocodile:"
 FILE = "gatorgrade.yml"
 FAILURE = 1
