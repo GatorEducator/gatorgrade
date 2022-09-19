@@ -28,7 +28,7 @@ def test_run_checks_gg_check_should_show_passed(capsys):
     output.run_checks([check])
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
-    assert "  Check TODOs" in out
+    assert "✓  Check TODOs" in out
 
 
 def test_run_checks_invalid_gg_args_prints_exception(capsys):

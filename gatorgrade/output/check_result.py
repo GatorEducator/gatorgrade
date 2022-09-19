@@ -1,4 +1,5 @@
 """Define check result class."""
+
 import rich
 
 
@@ -32,7 +33,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             show_diagnostic: If true, show the diagnostic message if the check has failed.
                 Defaults to false.
         """
-        icon = "" if self.passed else "✘"
+        icon = "✓" if self.passed else "✕"
         icon_color = "green" if self.passed else "red"
         message = f"[{icon_color}]{icon}[/]  {self.description}"
         if not self.passed and show_diagnostic:

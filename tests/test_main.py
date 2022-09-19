@@ -87,8 +87,8 @@ def cleanup_files(monkeypatch):
             [
                 ("Complete all TODOs", 2),
                 ("Use an if statement", 1),
-                ("", 3),
-                ("✘", 0),
+                ("✓", 3),
+                ("✕", 0),
                 ("Passed 3/3 (100%) of checks", 1),
             ],
         )
