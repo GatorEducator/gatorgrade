@@ -1,4 +1,4 @@
-"""Use Typer to run gatorgrade to run the checks and generate the yml file."""
+"""Use Typer to run gatorgrade to run the GatorGrader checks."""
 
 import sys
 from pathlib import Path
