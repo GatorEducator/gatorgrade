@@ -69,9 +69,9 @@ def gatorgrade(
             # define the message about GitHub repositories
             github_message = github.get_github_projects()
             # output all of the details about gatorgrade
-            # 1) standard help message (defined previously)
+            # 1) standard help message that was defined previously
             console.print(help_message_markdown)
-            # 2) version information
+            # 2) version message
             console.print(version_label)
             console.print(Markdown(version_message))
             console.print()
