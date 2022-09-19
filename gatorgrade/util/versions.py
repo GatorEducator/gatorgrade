@@ -37,7 +37,11 @@ def get_gatorgrader_version() -> str:
 
 def get_project_versions(project_list: List[str] = PROJECTS) -> str:
     """Create a version string for all specified projects."""
+    # create an empty version string that this function
+    # will append to for each of the projects in the project_list
     project_version_str = ""
+    # iterate through every project in the project_list and then
+    # include its name and its current version in project_version_str
     for project in project_list:
         current_project_version_str = (
             DASH + SPACE + get_project_version(project) + NEWLINE_NEWLINE
