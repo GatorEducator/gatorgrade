@@ -10,6 +10,10 @@ NEWLINE = "\n"
 NEWLINE_NEWLINE = "\n\n"
 
 
+# Projects are hard-coded and may need to be updated if there are
+# new dependencies specified inside of the pyproject.toml file.
+# With that said, this approach avoids the need to parse the
+# dependencies listed in the pyproject.toml file.
 PROJECTS = ["gatorgrade", "gatorgrader", "pyyaml", "rich", "typer"]
 
 
