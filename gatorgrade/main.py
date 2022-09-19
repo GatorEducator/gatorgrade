@@ -40,21 +40,18 @@ help_message_markdown = f"""
 # define the epilog that appears after the help details
 epilog_message_markdown = f"""
 {version_info_markdown}
+:tada: Want to contribute to this project? Check these GitHub sites!
 
-
-    :tada: Want to contribute to this project? Check these GitHub sites!
-
-    {github_message}
+{github_message}
 """
 
-# create a Typer app that
+# create a Typer app that:
 # --> does not support completion
 # --> has an epilog with version information and contact
 # --> has a specified help message with an emoji for tagline
 # --> uses "markdown" mode so that markdown and emojis work
 app = typer.Typer(
     add_completion=False,
-    epilog=epilog_message_markdown,
     help=help_message_markdown,
     rich_markup_mode=RICH_MARKUP_MODE_DEFAULT,
 )
@@ -81,6 +78,10 @@ def gatorgrade(
             console.print(help_message_markdown)
             console.print(version_label)
             console.print(Markdown(versions.get_project_versions()))
+            console.print()
+            console.print(":tada: Want to contribute to this project? Check these GitHub sites!")
+            console.print(Markdown(github_message))
+            # console.print((epilog_message_markdown))
             console.print()
         else:
             # parse the provided configuration file
