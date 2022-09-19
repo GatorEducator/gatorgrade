@@ -30,7 +30,7 @@ def get_gatorgrade_version() -> str:
 
 
 def get_gatorgrader_version() -> str:
-    """Determine and return the information about GatorGrade's version."""
+    """Determine and return the information about GatorGrader's version."""
     gatorgrader_version_str = get_project_version("gatorgrader")
     return gatorgrader_version_str
 
