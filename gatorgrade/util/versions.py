@@ -23,18 +23,6 @@ def get_project_version(project: str) -> str:
     return project + COLON + SPACE + project_version_str
 
 
-def get_gatorgrade_version() -> str:
-    """Determine and return the information about GatorGrade's version."""
-    gatorgrade_version_str = get_project_version("gatorgrade")
-    return gatorgrade_version_str
-
-
-def get_gatorgrader_version() -> str:
-    """Determine and return the information about GatorGrader's version."""
-    gatorgrader_version_str = get_project_version("gatorgrader")
-    return gatorgrader_version_str
-
-
 def get_project_versions(project_list: List[str] = PROJECTS) -> str:
     """Create a version string for all specified projects."""
     # create an empty version string that this function
