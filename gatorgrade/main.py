@@ -26,7 +26,6 @@ help_message_markdown = f"""
 
 # create a Typer app that:
 # --> does not support completion
-# --> has an epilog with version information and contact
 # --> has a specified help message with an emoji for tagline
 # --> uses "markdown" mode so that markdown and emojis work
 app = typer.Typer(
