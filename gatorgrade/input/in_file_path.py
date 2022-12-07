@@ -36,12 +36,33 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
     return []
 
 
+def get_assignment_name(file: Path) -> (str):
+    """Get the name for the project the YAML is set up for."""
+
+    # set the base assignment name to display, the file path.
+    assignment_name = str(file)
+
+    # change the file path into data to look through
+    data = parse_yaml_file(file)
+
+    # if they have a setup, name, and checks
+    if len(data) == 3:
+        assignment_name = str(data.pop(1))
+
+    return assignment_name
+
+
 def reformat_yaml_data(data):
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
     if len(data) == 2:
         setup_commands = data.pop(0)  # Removes the setup commands
         run_setup(setup_commands)
+    elif len(data) == 3:
+        setup_commands = data.pop(0)  # Removes the setup commands
+        project_name = data.pop(0)  # Removes the name entry
+        run_setup(setup_commands)
+
     add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
 

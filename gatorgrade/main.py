@@ -6,6 +6,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from gatorgrade.input.in_file_path import get_assignment_name
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
@@ -43,6 +44,8 @@ def gatorgrade(
         checks = parse_config(filename)
         # there are valid checks and thus the
         # tool should run them with run_checks
+        project_name = get_assignment_name(filename)
+
         if len(checks) > 0:
             checks_status = run_checks(checks)
         # no checks were created and this means
