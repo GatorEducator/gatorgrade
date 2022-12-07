@@ -38,7 +38,6 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
 
 def get_assignment_name(file: Path) -> (str):
     """Get the name for the project the YAML is set up for."""
-
     # set the base assignment name to display, the file path.
     assignment_name = str(file)
 
