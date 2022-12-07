@@ -46,10 +46,11 @@ def get_assignment_name(file: Path) -> (str):
 
     # if they have a name field
     if len(data) > 1:
-        for i in range(len(data) - 1):
-            if "{'name':" in str(data[i]):
+        for i in range(len(data)):
+            if "'name':" in str(data[i]):
                 # ex. need to go from {'name': 'top\n'} to top: split by space
                 unedited_assignment_name = str(data[i])[9:].split("\\")[0]
+            print(data)
 
     return assignment_name
 
