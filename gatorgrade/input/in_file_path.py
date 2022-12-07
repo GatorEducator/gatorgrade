@@ -47,7 +47,7 @@ def get_assignment_name(file: Path) -> (str):
     # if they have a setup, name, and checks
     if len(data) == 3:
         # ex. need to go from {'name': 'top\n'} to top: split by space
-        unedited_assignment_name = str(data.pop(1)).split(" ")
+        unedited_assignment_name = str(data.pop(1)).split(" ")[1]
         # split by space, grab second, grab before \n
         assignment_name = unedited_assignment_name[1:].split("\n")[0]
 
