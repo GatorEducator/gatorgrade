@@ -47,7 +47,7 @@ def gatorgrade(
         project_name = get_assignment_name(filename)
 
         if len(checks) > 0:
-            checks_status = run_checks(checks)
+            checks_status = run_checks(checks, project_name)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
