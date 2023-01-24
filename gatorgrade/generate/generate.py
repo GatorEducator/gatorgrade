@@ -1,8 +1,11 @@
 """Generate a YAML file with default messages and specific paths."""
+
 import os
-from typing import List, Dict
-import yaml
+from typing import Dict
+from typing import List
+
 import typer
+import yaml
 
 
 def input_correct(initial_path_list: List[str], run_path: str) -> Dict:

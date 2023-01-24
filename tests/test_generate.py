@@ -1,8 +1,8 @@
 """This module tests the generate.py functionality"""
 
-# Import needed libraries
 import pytest
 import typer
+
 from gatorgrade.generate.generate import generate_config
 
 
@@ -33,7 +33,7 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     # When we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
 
-    # Then "gatrograde.yml" is generated in the root directory
+    # Then "gatorgrade.yml" is generated in the root directory
     file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
 
@@ -93,7 +93,7 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     tmp_path, capsys
 ):
     """Check if gatorgrade.yml is created with existing file paths
-    when some user-provded file paths don't exist and if generate.py outputs a warning message"""
+    when some user-provided file paths don't exist and if generate.py outputs a warning message"""
 
     # Given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"

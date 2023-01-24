@@ -1,6 +1,7 @@
 """Set-up the shell commands."""
 
 import subprocess
+
 import typer
 
 
