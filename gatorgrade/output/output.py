@@ -1,5 +1,6 @@
 """Run checks and display whether each has passed or failed."""
 
+import json
 import subprocess
 from pathlib import Path
 from typing import List
@@ -68,7 +69,50 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
+def create_report_json(
+    passed_count, checkResults: List[CheckResult], percent_passed, reportFile: Path
+):
+    """Take checks and put them into json format in the provided reportFile Path.
+
+    Args:
+        passed_count: the number of checks that passed
+        checkResults: the list of check results that will be put in json
+        percent_passed: the percentage of checks that passed
+        reportFile: the location where the json will be put
+    """
+    # create list to hold the key values for the dictionary that
+    # will be converted into json
+    overall_key_list = ["amount correct", "percentage score", "checks"]
+
+    checks_dict = {}
+    overall_dict = {}
+
+    # create the dictionary for the checks
+    for i in range(len(checkResults)):
+        checks_dict.update(
+            {
+                f"check {i + 1}": {
+                    "description": checkResults[i].description,
+                    "status": checkResults[i].passed,
+                }
+            }
+        )
+
+    # create the dictionary for all of the check information
+    overall_dict = dict(
+        zip(overall_key_list, [passed_count, percent_passed, checks_dict])
+    )
+
+    # use json.dump in order to turn the check results into json
+    # create the file that was requested from cli input and
+    # put the json into it
+    with open(reportFile, "w") as fp:
+        json.dump(overall_dict, fp)
+
+
+def run_checks(
+    checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path
+) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -94,6 +138,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
         if result is not None:
             result.print()
             results.append(result)
+
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # only print failures list if there are failures to print
@@ -109,6 +154,10 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
+
+    # run the json creation function
+    create_report_json(passed_count, results, percent, reportFile)
+
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
