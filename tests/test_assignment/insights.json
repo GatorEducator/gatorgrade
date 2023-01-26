@@ -1,0 +1,1 @@
+{"amount correct": 3, "percentage score": 100, "checks": {"check 1": {"description": "Complete all TODOs", "status": true}, "check 2": {"description": "Use an if statement", "status": true}, "check 3": {"description": "Complete all TODOs", "status": true}}}
