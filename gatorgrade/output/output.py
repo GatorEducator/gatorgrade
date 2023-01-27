@@ -144,6 +144,44 @@ def create_report_json(
         json.dump(overall_dict, fp)
 
 
+def create_markdown_report_file(json_file: Path):
+    """Create a markdown file using the created json to use in github actions summary,
+    among other places.
+
+    Args:
+        json_file: the path at which the json is stored.
+    """
+
+    markdown_file = "insights.md"
+
+    # create the markdown file if it doesn't already exist
+    file = open(markdown_file, "w")
+    file.write("# Gatorgrade Insights")
+    file.close()
+
+    file = open(json_file)
+    json_str = file.read()
+    json_object = json.loads(json_str)
+    file.close()
+
+    # write the amt correct and percentage score to md file
+    file = open(markdown_file, "a")
+    file.write(f"\n\n**Amount Correct:** {(json_object.get('amount correct'))}\n")
+    file.write(f"**Percentage Correct:** {(json_object.get('percentage score'))}\n")
+
+    file.write("\n## Checks\n")
+    # for each check in the checks dict
+    for check in json_object.get("checks"):
+        # write it to the md file
+        file.write(f"\n### {check}\n")
+        file.write(
+            f"\n**Description:** {json_object.get('checks').get(check).get('description')}"
+        )
+        file.write(
+            f"\n**Correct? :** {json_object.get('checks').get(check).get('status')}\n"
+        )
+
+
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path
 ) -> bool:
@@ -191,6 +229,7 @@ def run_checks(
 
     # run the json creation function
     create_report_json(passed_count, checks, results, percent, reportFile)
+    create_markdown_report_file(reportFile)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"

@@ -30,6 +30,7 @@ def test_run_checks_gg_check_should_show_passed(capsys):
     # When run_checks is called
     output.run_checks([check], reportFile)
     os.remove(reportFile)
+    os.remove("insights.md")
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "✓  Check TODOs" in out
@@ -54,6 +55,7 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
     # When run_checks is called
     output.run_checks([check], reportFile)
     os.remove(reportFile)
+    os.remove("insights.md")
     # Then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
@@ -103,6 +105,7 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     # When run_checks is called
     output.run_checks(checks, reportFile)
     os.remove(reportFile)
+    os.remove("insights.md")
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 2/3 (67%) of checks" in out
@@ -149,6 +152,7 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     # When run_checks is called
     output.run_checks(checks, reportFile)
     os.remove(reportFile)
+    os.remove("insights.md")
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
