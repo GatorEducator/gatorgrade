@@ -159,6 +159,7 @@ def create_markdown_report_file(json_file: Path):
     file.write("# Gatorgrade Insights")
     file.close()
 
+    # load the json from the json file
     file = open(json_file)
     json_str = file.read()
     json_object = json.loads(json_str)
@@ -169,17 +170,38 @@ def create_markdown_report_file(json_file: Path):
     file.write(f"\n\n**Amount Correct:** {(json_object.get('amount correct'))}\n")
     file.write(f"**Percentage Correct:** {(json_object.get('percentage score'))}\n")
 
-    file.write("\n## Checks\n")
-    # for each check in the checks dict
+    passing_checks = []
+    failing_checks = []
+    # split checks into passing and not passing
     for check in json_object.get("checks"):
-        # write it to the md file
-        file.write(f"\n### {check}\n")
-        file.write(
-            f"\n**Description:** {json_object.get('checks').get(check).get('description')}"
-        )
-        file.write(
-            f"\n**Correct? :** {json_object.get('checks').get(check).get('status')}\n"
-        )
+        # if the check is passing
+        if json_object.get("checks").get(check).get("status") == True:
+            passing_checks.append(json_object.get("checks").get(check))
+        # if the check is failing
+        else:
+            failing_checks.append(json_object.get("checks").get(check))
+
+    # give short info about passing checks as students have already
+    # satisfied that requirement
+    file.write("\n## Passing Checks\n")
+    for check in passing_checks:
+        file.write(f"\n### {check.get('description')}\n")
+        file.write(f"\n**Correct? :** {check.get('status')}\n")
+
+    # give extended information about failing checks to help
+    # students solve them without looking in the gg yml file
+    file.write("\n## Failing Checks\n")
+    for check in failing_checks:
+        file.write(f"\n### {check.get('description')}\n")
+        # if a shell check, include command
+        if check.get("command") != None:
+            file.write(f"\n**Command:** {check.get('command')}")
+        else:
+            # if a gg check, include fragment and count
+            file.write(f"\n**Keyword:** {check.get('fragment')}")
+            file.write(f"\n**Amount:** {check.get('count')}")
+
+        file.write(f"\n**Correct? :** {check.get('status')}\n")
 
 
 def run_checks(
