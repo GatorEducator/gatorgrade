@@ -3,19 +3,18 @@
 **Amount Correct:** 3
 **Percentage Correct:** 100
 
-## Checks
+## Passing Checks
 
-### check 1
+### Complete all TODOs
 
-**Description:** Complete all TODOs
 **Correct? :** True
 
-### check 2
+### Use an if statement
 
-**Description:** Use an if statement
 **Correct? :** True
 
-### check 3
+### Complete all TODOs
 
-**Description:** Complete all TODOs
 **Correct? :** True
+
+## Failing Checks
