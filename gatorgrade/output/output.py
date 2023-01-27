@@ -70,12 +70,17 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
 
 
 def create_report_json(
-    passed_count, checkResults: List[CheckResult], percent_passed, reportFile: Path
+    passed_count,
+    check_information,
+    checkResults: List[CheckResult],
+    percent_passed,
+    reportFile: Path,
 ):
     """Take checks and put them into json format in the provided reportFile Path.
 
     Args:
         passed_count: the number of checks that passed
+        check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
         reportFile: the location where the json will be put
@@ -89,14 +94,43 @@ def create_report_json(
 
     # create the dictionary for the checks
     for i in range(len(checkResults)):
-        checks_dict.update(
-            {
-                f"check {i + 1}": {
-                    "description": checkResults[i].description,
-                    "status": checkResults[i].passed,
+        # if the corresponding check_info is a shell check:
+        # include the command that was run
+        if isinstance(check_information[i], ShellCheck):
+            checks_dict.update(
+                {
+                    f"check {i + 1}": {
+                        "description": checkResults[i].description,
+                        "command": check_information[i].command,
+                        "status": checkResults[i].passed,
+                    }
                 }
-            }
-        )
+            )
+        else:  # if a gatorgrade check
+            pass
+            # if MatchFileFragment or CountCommandOutput
+            # add fragment/command (the first key/val match in) and its value,
+            # count and its value
+            try:
+                checks_dict.update(
+                    {
+                        f"check {i + 1}": {
+                            "description": checkResults[i].description,
+                            "fragment": check_information[i].gg_args[4],
+                            "count": check_information[i].gg_args[6],
+                            "status": checkResults[i].passed,
+                        }
+                    }
+                )
+            except:
+                checks_dict.update(
+                    {
+                        f"check {i + 1}": {
+                            "description": checkResults[i].description,
+                            "status": checkResults[i].passed,
+                        }
+                    }
+                )
 
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -156,7 +190,7 @@ def run_checks(
         percent = round(passed_count / len(results) * 100)
 
     # run the json creation function
-    create_report_json(passed_count, results, percent, reportFile)
+    create_report_json(passed_count, checks, results, percent, reportFile)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
