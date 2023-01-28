@@ -107,7 +107,6 @@ def create_report_json(
                 }
             )
         else:  # if a gatorgrade check
-            pass
             # if MatchFileFragment or CountCommandOutput
             # add fragment/command (the first key/val match in) and its value,
             # count and its value
