@@ -284,7 +284,7 @@ def dump_report_file_in_github_action(markdown_summary_file: Path):
         os.remove(markdown_summary_file)
         original_dir = os.getcwd()
         os.chdir(".github/workflows")
-
+        print(summary)
         # dump the content into github summary file
         # github summary file is an environment file so it can't be created manually
         os.system(f"echo {summary} >> $GITHUB_STEP_SUMMARY")
