@@ -34,7 +34,9 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    advanced_mode: bool = typer.Option(False,"--advance","-a", help="Enable advanced mode"),
+    advanced_mode: bool = typer.Option(
+        False, "--advance", "-a", help="Enable advanced mode"
+    ),
     reportFile: Path = typer.Option(
         "insights.json", "--report", "-r", help="Name of the report file"
     ),

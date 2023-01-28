@@ -1,6 +1,7 @@
 """Run checks and display whether each has passed or failed."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import List
@@ -203,7 +204,9 @@ def create_markdown_report_file(json_file: Path):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path, advanced_mode: bool
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    reportFile: Path,
+    advanced_mode: bool,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -252,8 +255,9 @@ def run_checks(
     # run the advanced checks if advanced_mode is enabled
     if advanced_mode:
         # run the json creation function
-            create_report_json(passed_count, checks, results, percent, reportFile)
-            create_markdown_report_file(reportFile)
+        create_report_json(passed_count, checks, results, percent, reportFile)
+        create_markdown_report_file(reportFile)
+        dump_report_file_in_github_action("insights.md")
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
@@ -264,6 +268,24 @@ def run_checks(
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
     return summary_status
+
+
+def dump_report_file_in_github_action(markdown_summary_file: Path):
+    """Dump markdown summary file into GitHub action job summary and remove it.
+
+    Args:
+        markdown_summary_file: Path to the Markdown summary file
+    """
+    # Check if md file exists
+    if os.path.isfile(markdown_summary_file):
+        with open(markdown_summary_file, "r") as md:
+            summary = md.read()
+        os.chdir(".github/workflows")
+        # delete markdown summary file
+        os.remove(markdown_summary_file)
+        # dump the content into github summary file
+        # github summary file is an environment file so it can't be created manually
+        os.system(f"echo {summary} >> $GITHUB_STEP_SUMMARY")
 
 
 def print_with_border(text: str, rich_color: str):
