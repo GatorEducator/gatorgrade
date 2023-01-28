@@ -203,7 +203,7 @@ def create_markdown_report_file(json_file: Path):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path
+    checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path, advanced_mode: bool
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -212,6 +212,8 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
+        reportFile: The path of report file
+        advanced_mode: Switch to advanced_mode
     """
     results = []
     # run each of the checks
@@ -247,9 +249,11 @@ def run_checks(
     else:
         percent = round(passed_count / len(results) * 100)
 
-    # run the json creation function
-    create_report_json(passed_count, checks, results, percent, reportFile)
-    create_markdown_report_file(reportFile)
+    # run the advanced checks if advanced_mode is enabled
+    if advanced_mode:
+        # run the json creation function
+            create_report_json(passed_count, checks, results, percent, reportFile)
+            create_markdown_report_file(reportFile)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
