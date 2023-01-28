@@ -280,17 +280,17 @@ def dump_report_file_in_github_action(markdown_summary_file: Path):
     if os.path.isfile(markdown_summary_file):
         with open(markdown_summary_file, "r") as md:
             summary = md.read()
-        # delete markdown summary file
-        os.remove(markdown_summary_file)
         original_dir = os.getcwd()
         os.chdir(".github/workflows")
         print(summary)
         # dump the content into github summary file
         # github summary file is an environment file so it can't be created manually
-        os.system(f"echo {summary} >> $GITHUB_STEP_SUMMARY")
+        os.system(f"cat ../../{markdown_summary_file} >> $GITHUB_STEP_SUMMARY")
 
         # Switch back to the old directory
         os.chdir(original_dir)
+        # delete markdown summary file
+        os.remove(markdown_summary_file)
 
 
 def print_with_border(text: str, rich_color: str):
