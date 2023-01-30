@@ -167,7 +167,7 @@ def create_markdown_report_file(json_file: Path):
     file.close()
 
     # write the amt correct and percentage score to md file
-    file = open(markdown_file, "a")
+    file = open(markdown_file, "a", encoding="utf-8")
     file.write(f"\n\n**Amount Correct:** {(json_object.get('amount correct'))}\n")
     file.write(f"**Percentage Correct:** {(json_object.get('percentage score'))}\n")
 
@@ -186,7 +186,7 @@ def create_markdown_report_file(json_file: Path):
     # satisfied that requirement
     file.write("\n## Passing Checks\n")
     for check in passing_checks:
-        file.write(f"\n### {check.get('description')}\n")
+        file.write(f"\n### {check_icon} {check.get('description')}\n")
 
     # give extended information about failing checks to help
     # students solve them without looking in the gg yml file
@@ -196,7 +196,7 @@ def create_markdown_report_file(json_file: Path):
         # for each key val pair in the check dictionary
         for i in check:
             if i == "description":
-                file.write(f"\n### {check.get('description')}\n")
+                file.write(f"\n### {x_icon} {check.get('description')}\n")
             elif i != "status":
                 file.write(f"\n**{i}** {check[i]}\n")
 
