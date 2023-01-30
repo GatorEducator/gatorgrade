@@ -152,6 +152,9 @@ def create_markdown_report_file(json_file: Path):
     """
     markdown_file = "insights.md"
 
+    check_icon = "✓"
+    x_icon = "✕"
+
     # create the markdown file if it doesn't already exist
     file = open(markdown_file, "w")
     file.write("# Gatorgrade Insights")
@@ -183,7 +186,7 @@ def create_markdown_report_file(json_file: Path):
     # satisfied that requirement
     file.write("\n## Passing Checks\n")
     for check in passing_checks:
-        file.write(f"\n### ✓ {check.get('description')}\n")
+        file.write(f"\n### {check_icon} {check.get('description')}\n")
 
     # give extended information about failing checks to help
     # students solve them without looking in the gg yml file
@@ -193,7 +196,7 @@ def create_markdown_report_file(json_file: Path):
         # for each key val pair in the check dictionary
         for i in check:
             if i == "description":
-                file.write(f"\n### ✕ {check.get('description')}\n")
+                file.write(f"\n### {x_icon} {check.get('description')}\n")
             elif i != "status":
                 file.write(f"\n**{i}** {check[i]}\n")
 
