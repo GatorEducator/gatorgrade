@@ -112,7 +112,7 @@ def create_report_json(
                     checks_dict[i].update(
                         {"Fragment": check_information[i].gg_args[arg_index + 1]}
                     )
-                if arg == "tag":
+                if arg == "--tag":
                     checks_dict[i].update(
                         {"Tag": check_information[i].gg_args[arg_index + 1]}
                     )
