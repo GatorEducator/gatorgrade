@@ -92,45 +92,45 @@ def create_report_json(
     checks_dict = {}
     overall_dict = {}
 
-    # create the dictionary for the checks
-    for i in range(len(checkResults)):
-        # if the corresponding check_info is a shell check:
-        # include the command that was run
-        if isinstance(check_information[i], ShellCheck):
-            checks_dict.update(
-                {
-                    f"check {i + 1}": {
-                        "description": checkResults[i].description,
-                        "command": check_information[i].command,
-                        "status": checkResults[i].passed,
-                    }
+    # for each check:
+    for i in range(len(check_information)):
+        # grab all of the information out of it, as well as check result status and description
+        checks_dict.update(
+            {
+                i: {
+                    "description": checkResults[i].description,
+                    "status": checkResults[i].passed,
                 }
-            )
-        else:  # if a gatorgrade check
-            pass
-            # if MatchFileFragment or CountCommandOutput
-            # add fragment/command (the first key/val match in) and its value,
-            # count and its value
-            try:
-                checks_dict.update(
-                    {
-                        f"check {i + 1}": {
-                            "description": checkResults[i].description,
-                            "fragment": check_information[i].gg_args[4],
-                            "count": check_information[i].gg_args[6],
-                            "status": checkResults[i].passed,
-                        }
-                    }
-                )
-            except:
-                checks_dict.update(
-                    {
-                        f"check {i + 1}": {
-                            "description": checkResults[i].description,
-                            "status": checkResults[i].passed,
-                        }
-                    }
-                )
+            }
+        )
+        # add the remaining information from check_information
+        # if there are gg_args, add all of them
+        try:
+            for arg in check_information[i].gg_args:
+                arg_index = check_information[i].gg_args.index(arg)
+                if arg == "--fragment":
+                    checks_dict[i].update(
+                        {"Fragment": check_information[i].gg_args[arg_index + 1]}
+                    )
+                if arg == "tag":
+                    checks_dict[i].update(
+                        {"Tag": check_information[i].gg_args[arg_index + 1]}
+                    )
+                if arg == "--count":
+                    checks_dict[i].update(
+                        {"Count": check_information[i].gg_args[arg_index + 1]}
+                    )
+                if arg == "--directory":
+                    checks_dict[i].update(
+                        {"Directory": check_information[i].gg_args[arg_index + 1]}
+                    )
+                if arg == "--file":
+                    checks_dict[i].update(
+                        {"File": check_information[i].gg_args[arg_index + 1]}
+                    )
+        # if not, is a shell check, include
+        except:
+            checks_dict[i].update({"Command": check_information[i].command})
 
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -183,23 +183,19 @@ def create_markdown_report_file(json_file: Path):
     # satisfied that requirement
     file.write("\n## Passing Checks\n")
     for check in passing_checks:
-        file.write(f"\n### {check.get('description')}\n")
-        file.write(f"\n**Correct? :** {check.get('status')}\n")
+        file.write(f"\n### ✓ {check.get('description')}\n")
 
     # give extended information about failing checks to help
     # students solve them without looking in the gg yml file
     file.write("\n## Failing Checks\n")
+    # for each failing check, print out all related information
     for check in failing_checks:
-        file.write(f"\n### {check.get('description')}\n")
-        # if a shell check, include command
-        if check.get("command") != None:
-            file.write(f"\n**Command:** {check.get('command')}")
-        else:
-            # if a gg check, include fragment and count
-            file.write(f"\n**Keyword:** {check.get('fragment')}")
-            file.write(f"\n**Amount:** {check.get('count')}")
-
-        file.write(f"\n**Correct? :** {check.get('status')}\n")
+        # for each key val pair in the check dictionary
+        for i in check:
+            if i == "description":
+                file.write(f"\n### ✕ {check.get('description')}\n")
+            elif i != "status":
+                file.write(f"\n**{i}** {check[i]}\n")
 
 
 def run_checks(
