@@ -5,16 +5,10 @@
 
 ## Passing Checks
 
-### Complete all TODOs
+### ✓ Complete all TODOs
 
-**Correct? :** True
+### ✓ Use an if statement
 
-### Use an if statement
-
-**Correct? :** True
-
-### Complete all TODOs
-
-**Correct? :** True
+### ✓ Complete all TODOs
 
 ## Failing Checks
