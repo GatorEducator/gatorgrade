@@ -284,7 +284,9 @@ def dump_report_file_in_github_action(markdown_summary_file: Path):
         os.chdir(".github/workflows")
         # dump the content into github summary file
         # github summary file is an environment file so it can't be created manually
-        os.system(f"cat ../../{markdown_summary_file} >> $GITHUB_STEP_SUMMARY")
+        if "GITHUB_STEP_SUMMARY" in os.environ:
+            print(os.name)
+            os.system(f"cat ../../{markdown_summary_file} >> $GITHUB_STEP_SUMMARY")
 
         # Switch back to the old directory
         os.chdir(original_dir)
