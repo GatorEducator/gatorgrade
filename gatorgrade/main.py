@@ -34,8 +34,8 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    reportFile: Path = typer.Option(
-        "insights.json", "--report", "-r", help="Name of the report file"
+    report: bool = typer.Option(
+        False, "--report", "-r", help="Name of the report file"
     ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
@@ -47,7 +47,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, reportFile)
+            checks_status = run_checks(checks, report)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
