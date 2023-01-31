@@ -82,7 +82,6 @@ def create_report_json(
         check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
-        reportFile: the location where the json will be put
     """
     # create list to hold the key values for the dictionary that
     # will be converted into json
@@ -143,7 +142,7 @@ def create_markdown_report_file(json: dict) -> str:
     """Create a markdown file using the created json to use in github actions summary, among other places.
 
     Args:
-        json_file: the path at which the json is stored.
+        json: a dictionary containing the json that should be converted to markdown
     """
     markdown_contents = ""
 
