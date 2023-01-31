@@ -74,8 +74,7 @@ def create_report_json(
     check_information,
     checkResults: List[CheckResult],
     percent_passed,
-    reportFile: Path,
-):
+) -> dict:
     """Take checks and put them into json format in the provided reportFile Path.
 
     Args:
@@ -137,73 +136,60 @@ def create_report_json(
         zip(overall_key_list, [passed_count, percent_passed, checks_dict])
     )
 
-    # use json.dump in order to turn the check results into json
-    # create the file that was requested from cli input and
-    # put the json into it
-    with open(reportFile, "w") as fp:
-        json.dump(overall_dict, fp)
+    return overall_dict
 
 
-def create_markdown_report_file(json_file: Path):
+def create_markdown_report_file(json: dict) -> str:
     """Create a markdown file using the created json to use in github actions summary, among other places.
 
     Args:
         json_file: the path at which the json is stored.
     """
-    markdown_file = "insights.md"
+    markdown_contents = ""
 
     check_icon = "✓"
     x_icon = "✕"
 
-    # create the markdown file if it doesn't already exist
-    file = open(markdown_file, "w")
-    file.write("# Gatorgrade Insights")
-    file.close()
-
-    # load the json from the json file
-    file = open(json_file)
-    json_str = file.read()
-    json_object = json.loads(json_str)
-    file.close()
+    # add the markdown to the string
+    markdown_contents += "# Gatorgrade Insights"
 
     # write the amt correct and percentage score to md file
-    file = open(markdown_file, "a", encoding="utf-8")
-    file.write(f"\n\n**Amount Correct:** {(json_object.get('amount correct'))}\n")
-    file.write(f"**Percentage Correct:** {(json_object.get('percentage score'))}\n")
+    markdown_contents += f"\n\n**Amount Correct:** {(json.get('amount correct'))}\n"
+    markdown_contents += f"**Percentage Correct:** {(json.get('percentage score'))}\n"
 
     passing_checks = []
     failing_checks = []
     # split checks into passing and not passing
-    for check in json_object.get("checks"):
+    for check in json.get("checks"):
         # if the check is passing
-        if json_object.get("checks").get(check).get("status") == True:
-            passing_checks.append(json_object.get("checks").get(check))
+        if json.get("checks").get(check).get("status") == True:
+            passing_checks.append(json.get("checks").get(check))
         # if the check is failing
         else:
-            failing_checks.append(json_object.get("checks").get(check))
+            failing_checks.append(json.get("checks").get(check))
 
     # give short info about passing checks as students have already
     # satisfied that requirement
-    file.write("\n## Passing Checks\n")
+    markdown_contents += "\n## Passing Checks\n"
     for check in passing_checks:
-        file.write(f"\n### {check_icon} {check.get('description')}\n")
+        markdown_contents += f"\n### {check_icon} {check.get('description')}\n"
 
     # give extended information about failing checks to help
     # students solve them without looking in the gg yml file
-    file.write("\n## Failing Checks\n")
+    markdown_contents += "\n## Failing Checks\n"
     # for each failing check, print out all related information
     for check in failing_checks:
         # for each key val pair in the check dictionary
         for i in check:
             if i == "description":
-                file.write(f"\n### {x_icon} {check.get('description')}\n")
+                markdown_contents += f"\n### {x_icon} {check.get('description')}\n"
             elif i != "status":
-                file.write(f"\n**{i}** {check[i]}\n")
+                markdown_contents += f"\n**{i}** {check[i]}\n"
+
+    return markdown_contents
 
 
-def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], reportFile: Path
-) -> bool:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: bool) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -246,9 +232,10 @@ def run_checks(
     else:
         percent = round(passed_count / len(results) * 100)
 
-    # run the json creation function
-    create_report_json(passed_count, checks, results, percent, reportFile)
-    create_markdown_report_file(reportFile)
+    # if the report was run, create json and markdown
+    if report is True:
+        json = create_report_json(passed_count, checks, results, percent)
+        md = create_markdown_report_file(json)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
