@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Tuple
 
 import typer
 from rich.console import Console
@@ -34,8 +35,14 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    report: bool = typer.Option(
-        False, "--report", "-r", help="Name of the report file"
+    report: Tuple[str, str, str] = typer.Option(
+        (None, None, None),
+        "--report",
+        "-r",
+        help="A tuple containing the following REQUIRED values: \
+            1. The destination of the report (either file of env) \
+            2. The format of the report (either json or md) \
+            3. the name of the file, if using a file destination.)",
     ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
