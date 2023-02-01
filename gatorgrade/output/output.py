@@ -1,5 +1,5 @@
 """Run checks and display whether each has passed or failed."""
-
+import os
 import subprocess
 from pathlib import Path
 from typing import List
@@ -75,7 +75,7 @@ def create_report_json(
     checkResults: List[CheckResult],
     percent_passed,
 ) -> dict:
-    """Take checks and put them into json format in the provided reportFile Path.
+    """Take checks and put them into json format in a dictionary. 
 
     Args:
         passed_count: the number of checks that passed
@@ -204,14 +204,14 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
 
     # if the user wants the data stored in a file:
     if report_params[0] == "file":
-        # store it in that file
-        file = open(report_params[2], "w", encoding="utf-8")
-        file.write(str(report_output_data))
-    # otherwise, they want it in an env:
+        # try to store it in that file
+        try:
+            with open(report_params[2], "w", encoding="utf-8") as file:
+                file.write(str(report_output_data))
+        except:
+            print("Can't open or write the target file, check if you provide a valid path")
     else:
-        # Yanqiao, logic for env here:
-        pass
-
+        os.environ[report_params[2]] = str(report_output_data)
 
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
@@ -259,7 +259,9 @@ def run_checks(
         percent = round(passed_count / len(results) * 100)
 
     # if the report is wanted, create output in line with their specifications
-    if report[0] is not None:
+    if any(report) is None:
+        print("At least one argument is missing, use 'gatorgrade --help' to check valid commands")
+    else:
         report_output_data = create_report_json(passed_count, checks, results, percent)
         configure_report(report, report_output_data)
 
