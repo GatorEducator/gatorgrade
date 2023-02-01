@@ -214,7 +214,6 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
             )
     else:
         os.environ[report_params[2]] = str(report_output_data)
-        print(os.environ[report_params[2]])
 
 
 def run_checks(
