@@ -195,6 +195,7 @@ def test_json_report_file_created_correctly():
 
     file = open("insights.json", "r")
     file_contents = file.read()
+    file.close()
 
     os.remove("insights.json")
 
@@ -247,6 +248,7 @@ def test_md_report_file_created_correctly():
     file = open("insights.md", "r")
     file_contents = file.read()
     print(file_contents)
+    file.close()
 
     os.remove("insights.md")
 
