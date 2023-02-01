@@ -75,7 +75,7 @@ def create_report_json(
     checkResults: List[CheckResult],
     percent_passed,
 ) -> dict:
-    """Take checks and put them into json format in a dictionary. 
+    """Take checks and put them into json format in a dictionary.
 
     Args:
         passed_count: the number of checks that passed
@@ -209,10 +209,13 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
             with open(report_params[2], "w", encoding="utf-8") as file:
                 file.write(str(report_output_data))
         except:
-            rich.print("\n[red]Can't open or write the target file, check if you provide a valid path")
+            rich.print(
+                "\n[red]Can't open or write the target file, check if you provide a valid path"
+            )
     else:
         os.environ[report_params[2]] = str(report_output_data)
         print(os.environ[report_params[2]])
+
 
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
