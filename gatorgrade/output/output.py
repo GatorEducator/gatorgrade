@@ -205,7 +205,7 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
     # if the user wants the data stored in a file:
     if report_params[0] == "file":
         # store it in that file
-        file = open(report_params[2], "w")
+        file = open(report_params[2], "w", encoding="utf-8")
         file.write(str(report_output_data))
     # otherwise, they want it in an env:
     else:
