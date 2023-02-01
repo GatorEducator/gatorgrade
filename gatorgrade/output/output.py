@@ -209,9 +209,10 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
             with open(report_params[2], "w", encoding="utf-8") as file:
                 file.write(str(report_output_data))
         except:
-            print("Can't open or write the target file, check if you provide a valid path")
+            rich.print("\n[red]Can't open or write the target file, check if you provide a valid path")
     else:
         os.environ[report_params[2]] = str(report_output_data)
+        print(os.environ[report_params[2]])
 
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
