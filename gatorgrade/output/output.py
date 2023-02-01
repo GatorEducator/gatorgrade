@@ -1,9 +1,9 @@
 """Run checks and display whether each has passed or failed."""
 
-import json
 import subprocess
 from pathlib import Path
 from typing import List
+from typing import Tuple
 from typing import Union
 
 import gator
@@ -188,7 +188,34 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: bool) -> bool:
+def configure_report(report_params: Tuple[str, str, str], report_output_data: dict):
+    """Put together the contents of the report depending on the inputs of the user.
+
+    Args:
+        report_params: The details of what the user wants the report to look like
+            report_params[0]: file or env
+            report_params[1]: json or md
+            report_params[2]: name of the file or env
+        report_output_data: the json dictionary that will be used or converted to md
+    """
+    # if the user wants markdown, convert the json into md
+    if report_params[1] == "md":
+        report_output_data = create_markdown_report_file(report_output_data)
+
+    # if the user wants the data stored in a file:
+    if report_params[0] == "file":
+        # store it in that file
+        file = open(report_params[2], "w")
+        file.write(str(report_output_data))
+    # otherwise, they want it in an env:
+    else:
+        # Yanqiao, logic for env here:
+        pass
+
+
+def run_checks(
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -231,10 +258,10 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: bool) 
     else:
         percent = round(passed_count / len(results) * 100)
 
-    # if the report was run, create json and markdown
-    if report is True:
-        json = create_report_json(passed_count, checks, results, percent)
-        md = create_markdown_report_file(json)
+    # if the report is wanted, create output in line with their specifications
+    if report[0] is not None:
+        report_output_data = create_report_json(passed_count, checks, results, percent)
+        configure_report(report, report_output_data)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
