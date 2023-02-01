@@ -1,5 +1,7 @@
 """Test suite for output_functions.py."""
 
+import os
+
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output import output
@@ -194,6 +196,8 @@ def test_json_report_file_created_correctly():
     file = open("insights.json", "r")
     file_contents = file.read()
 
+    os.remove("insights.json")
+
     assert expected_file_contents == file_contents
 
 
@@ -243,5 +247,7 @@ def test_md_report_file_created_correctly():
     file = open("insights.md", "r")
     file_contents = file.read()
     print(file_contents)
+
+    os.remove("insights.md")
 
     assert expected_file_contents == file_contents
