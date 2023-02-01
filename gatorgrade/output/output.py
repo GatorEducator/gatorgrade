@@ -260,9 +260,7 @@ def run_checks(
         percent = round(passed_count / len(results) * 100)
 
     # if the report is wanted, create output in line with their specifications
-    if any(report) is None:
-        print("At least one argument is missing, use 'gatorgrade --help' to check valid commands")
-    else:
+    if not any(report):
         report_output_data = create_report_json(passed_count, checks, results, percent)
         configure_report(report, report_output_data)
 
