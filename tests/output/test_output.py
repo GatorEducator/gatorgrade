@@ -1,6 +1,7 @@
 """Test suite for output_functions.py."""
 
 import os
+import subprocess
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
@@ -253,3 +254,45 @@ def test_md_report_file_created_correctly():
     os.remove("insights.md")
 
     assert expected_file_contents in file_contents
+
+
+def test_print_error_with_invalid_report_path(capsys):
+    """Test the terminal should provide a decent error message if target path of report doesn't exist"""
+    checks = [
+        ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                "Complete all TODOs in hello-world.py",
+                "MatchFileFragment",
+                "--fragment",
+                "TODO",
+                "--count",
+                "1",
+                "--exact",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ]
+        ),
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                'Call the "greet" function in hello-world.py',
+                "MatchFileFragment",
+                "--fragment",
+                "greet(",
+                "--count",
+                "2",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ]
+        ),
+    ]
+    report = ("file", "md", "invalid_path/insight.md")
+    output.run_checks(checks, report)
+    out, _ = capsys.readouterr()
+    assert "Can't open or write" in out
