@@ -43,7 +43,7 @@ def reformat_yaml_data(data):
         # Removes the setup commands
         setup_commands = data.pop(0)
         run_setup(setup_commands)
-    add_checks_to_list(None, data[0], reformatted_data)
+    add_checks_to_list(data[0], reformatted_data)
     return reformatted_data
 
 
