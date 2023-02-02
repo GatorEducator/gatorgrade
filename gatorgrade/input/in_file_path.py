@@ -46,7 +46,7 @@ def reformat_yaml_data(data):
     return reformatted_data
 
 
-def add_checks_to_list(path, data_list, reformatted_data) -> List[CheckData]:
+def add_checks_to_list(data_list, reformatted_data, path=None) -> List[CheckData]:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
     current_path = path  # Saves the current path to keep track of the location
     for ddict in data_list:
@@ -59,7 +59,7 @@ def add_checks_to_list(path, data_list, reformatted_data) -> List[CheckData]:
                 else:
                     path = f"{path}/{item}"
                 add_checks_to_list(
-                    path, ddict[item], reformatted_data
+                    ddict[item], reformatted_data, path
                 )  # Runs this same function on the list inside of a dictionary
                 path = current_path
             else:  # Adds the current check to the reformatted data list
