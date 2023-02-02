@@ -40,7 +40,8 @@ def reformat_yaml_data(data):
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
     if len(data) == 2:
-        setup_commands = data.pop(0)  # Removes the setup commands
+        # Removes the setup commands
+        setup_commands = data.pop(0)
         run_setup(setup_commands)
     add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
@@ -48,20 +49,20 @@ def reformat_yaml_data(data):
 
 def add_checks_to_list(data_list, reformatted_data, path=None) -> List[CheckData]:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
-    current_path = path  # Saves the current path to keep track of the location
+    # Saves the current path to keep track of the location
+    current_path = path
     for ddict in data_list:
         for item in ddict:
-            if isinstance(
-                ddict[item], list
-            ):  # Checks if the current dictionary has another list as its value
+            # Checks if the current dictionary has another list as its value
+            if isinstance(ddict[item], list):
                 if not path:
                     path = item
                 else:
                     path = f"{path}/{item}"
-                add_checks_to_list(
-                    ddict[item], reformatted_data, path
-                )  # Runs this same function on the list inside of a dictionary
+                # Runs this same function on the list inside of a dictionary
+                add_checks_to_list(ddict[item], reformatted_data, path)
                 path = current_path
-            else:  # Adds the current check to the reformatted data list
+            # Adds the current check to the reformatted data list
+            else:
                 reformatted_data.append(CheckData(file_context=path, check=ddict))
                 break
