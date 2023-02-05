@@ -40,7 +40,7 @@ def gatorgrade(
         "--report",
         "-r",
         help="A tuple containing the following REQUIRED values: \
-            1. The destination of the report (either file of env) \
+            1. The destination of the report (either file or env) \
             2. The format of the report (either json or md) \
             3. the name of the file, if using a file destination.)",
     ),
