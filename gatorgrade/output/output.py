@@ -85,21 +85,19 @@ def create_report_json(
     """
     # create list to hold the key values for the dictionary that
     # will be converted into json
-    overall_key_list = ["amount correct", "percentage score", "checks"]
+    overall_key_list = ["amount_correct", "percentage_score", "checks"]
 
-    checks_dict = {}
+    checks_list = []
     overall_dict = {}
 
     # for each check:
     for i in range(len(check_information)):
         # grab all of the information out of it, as well as check result status and description
-        checks_dict.update(
-            {
-                i: {
+        checks_list.append(
+                 {
                     "description": checkResults[i].description,
                     "status": checkResults[i].passed,
                 }
-            }
         )
         # add the remaining information from check_information
         # if there are gg_args, add all of them
@@ -107,32 +105,32 @@ def create_report_json(
             for arg in check_information[i].gg_args:
                 arg_index = check_information[i].gg_args.index(arg)
                 if arg == "--fragment":
-                    checks_dict[i].update(
+                    checks_list[i].update(
                         {"Fragment": check_information[i].gg_args[arg_index + 1]}
                     )
                 if arg == "--tag":
-                    checks_dict[i].update(
+                    checks_list[i].update(
                         {"Tag": check_information[i].gg_args[arg_index + 1]}
                     )
                 if arg == "--count":
-                    checks_dict[i].update(
+                    checks_list[i].update(
                         {"Count": check_information[i].gg_args[arg_index + 1]}
                     )
                 if arg == "--directory":
-                    checks_dict[i].update(
+                    checks_list[i].update(
                         {"Directory": check_information[i].gg_args[arg_index + 1]}
                     )
                 if arg == "--file":
-                    checks_dict[i].update(
+                    checks_list[i].update(
                         {"File": check_information[i].gg_args[arg_index + 1]}
                     )
         # if not, is a shell check, include
         except:
-            checks_dict[i].update({"Command": check_information[i].command})
+            checks_list[i].update({"Command": check_information[i].command})
 
     # create the dictionary for all of the check information
     overall_dict = dict(
-        zip(overall_key_list, [passed_count, percent_passed, checks_dict])
+        zip(overall_key_list, [passed_count, percent_passed, checks_list])
     )
 
     return overall_dict
@@ -153,19 +151,19 @@ def create_markdown_report_file(json: dict) -> str:
     markdown_contents += "# Gatorgrade Insights"
 
     # write the amt correct and percentage score to md file
-    markdown_contents += f"\n\n**Amount Correct:** {(json.get('amount correct'))}\n"
-    markdown_contents += f"**Percentage Correct:** {(json.get('percentage score'))}\n"
+    markdown_contents += f"\n\n**Amount Correct:** {(json.get('amount_correct'))}\n"
+    markdown_contents += f"**Percentage Correct:** {(json.get('percentage_score'))}\n"
 
     passing_checks = []
     failing_checks = []
     # split checks into passing and not passing
     for check in json.get("checks"):
         # if the check is passing
-        if json.get("checks").get(check).get("status") == True:
-            passing_checks.append(json.get("checks").get(check))
+        if check.get("status") == True:
+            passing_checks.append(check)
         # if the check is failing
         else:
-            failing_checks.append(json.get("checks").get(check))
+            failing_checks.append(check)
 
     # give short info about passing checks as students have already
     # satisfied that requirement
