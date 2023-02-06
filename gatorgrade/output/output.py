@@ -94,10 +94,10 @@ def create_report_json(
     for i in range(len(check_information)):
         # grab all of the information out of it, as well as check result status and description
         checks_list.append(
-                 {
-                    "description": checkResults[i].description,
-                    "status": checkResults[i].passed,
-                }
+            {
+                "description": checkResults[i].description,
+                "status": checkResults[i].passed,
+            }
         )
         # add the remaining information from check_information
         # if there are gg_args, add all of them
