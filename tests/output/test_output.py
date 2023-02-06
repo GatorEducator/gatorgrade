@@ -1,5 +1,6 @@
 """Test suite for output_functions.py."""
 
+import json
 import os
 import subprocess
 
@@ -192,7 +193,30 @@ def test_json_report_file_created_correctly():
     report = ("file", "json", "insights.json")
     output.run_checks(checks, report)
     # check to make sure the created file matches the expected output
-    expected_file_contents = """{'amount_correct': 1, 'percentage_score': 33, 'checks': [{'description': "Echo 'Hello!'", 'status': True, 'Command': "echo 'hello'"}, {'description': 'Complete all TODOs in hello-world.py', 'status': False, 'Fragment': 'TODO', 'Count': '1', 'Directory': 'tests/test_assignment/src', 'File': 'hello-world.py'}, {'description': 'Invalid GatorGrader check: "--description Call the "greet" function in hello-world.py MatchFileFragment --fragment greet( --count 2 --directory tests/test_assignment/src --file hello-world.py"', 'status': False, 'Fragment': 'greet(', 'Count': '2', 'Directory': 'tests/test_assignment/src', 'File': 'hello-world.py'}]}"""
+    expected_file_contents_dict = {
+        "amount_correct": 1,
+        "percentage_score": 33,
+        "checks": [
+            {"description": "Echo 'Hello!'", "status": True, "Command": "echo 'hello'"},
+            {
+                "description": "Complete all TODOs in hello-world.py",
+                "status": False,
+                "Fragment": "TODO",
+                "Count": "1",
+                "Directory": "tests/test_assignment/src",
+                "File": "hello-world.py",
+            },
+            {
+                "description": 'Invalid GatorGrader check: "--description Call the "greet" function in hello-world.py MatchFileFragment --fragment greet( --count 2 --directory tests/test_assignment/src --file hello-world.py"',
+                "status": False,
+                "Fragment": "greet(",
+                "Count": "2",
+                "Directory": "tests/test_assignment/src",
+                "File": "hello-world.py",
+            },
+        ],
+    }
+    expected_file_contents = json.dumps(expected_file_contents_dict)
     file = open("insights.json", "r")
     file_contents = file.read()
     file.close()
