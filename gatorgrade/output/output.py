@@ -1,4 +1,5 @@
 """Run checks and display whether each has passed or failed."""
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -204,14 +205,25 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
     if report_params[0] == "file":
         # try to store it in that file
         try:
-            with open(report_params[2], "w", encoding="utf-8") as file:
-                file.write(str(report_output_data))
+            # Second argument has to be json or md
+            if report_params[1] != "json" and report_params[1] != "md":
+                rich.print(
+                    "\n[red]The second argument of report has to be 'md' or 'json' "
+                )
+            else:
+                with open(report_params[2], "w", encoding="utf-8") as file:
+                    if report_params[1] == "json":
+                        file.write(json.dumps(report_output_data))
+                    else:
+                        file.write(str(report_output_data))
         except:
             rich.print(
                 "\n[red]Can't open or write the target file, check if you provide a valid path"
             )
-    else:
+    elif report_params[0] == "env":
         os.environ[report_params[2]] = str(report_output_data)
+    else:
+        rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
 
 
 def run_checks(
