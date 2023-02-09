@@ -177,9 +177,9 @@ def create_markdown_report_file(json: dict) -> str:
         # for each key val pair in the check dictionary
         for i in check:
             if i == "description":
-                markdown_contents += f"\n### [] {check.get('description')}\n"
+                markdown_contents += f"\n- [] {check.get('description')}\n"
             elif i != "status":
-                markdown_contents += f"\n- **{i}** {check[i]}\n"
+                markdown_contents += f"\n\t- **{i}** {check[i]}\n"
 
     return markdown_contents
 
