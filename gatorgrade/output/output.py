@@ -145,9 +145,6 @@ def create_markdown_report_file(json: dict) -> str:
     """
     markdown_contents = ""
 
-    check_icon = "✓"
-    x_icon = "✕"
-
     # add the markdown to the string
     markdown_contents += "# Gatorgrade Insights"
 
@@ -170,7 +167,7 @@ def create_markdown_report_file(json: dict) -> str:
     # satisfied that requirement
     markdown_contents += "\n## Passing Checks\n"
     for check in passing_checks:
-        markdown_contents += f"\n### {check_icon} {check.get('description')}\n"
+        markdown_contents += f"\n- [x] {check.get('description')}\n"
 
     # give extended information about failing checks to help
     # students solve them without looking in the gg yml file
@@ -180,9 +177,9 @@ def create_markdown_report_file(json: dict) -> str:
         # for each key val pair in the check dictionary
         for i in check:
             if i == "description":
-                markdown_contents += f"\n### {x_icon} {check.get('description')}\n"
+                markdown_contents += f"\n### [] {check.get('description')}\n"
             elif i != "status":
-                markdown_contents += f"\n**{i}** {check[i]}\n"
+                markdown_contents += f"\n- **{i}** {check[i]}\n"
 
     return markdown_contents
 
