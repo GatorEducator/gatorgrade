@@ -17,7 +17,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         """
         self.command = command
         self.description = description if description is not None else command
-        self.json_info = json_info if json_info is not None else command
+        self.json_info = json_info
 
 
 class GatorGraderCheck:  # pylint: disable=too-few-public-methods

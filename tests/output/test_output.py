@@ -162,7 +162,16 @@ def test_json_report_file_created_correctly():
     """Test that with the cli input '--report file json insights.json' the file is created correctly."""
     # given the following checks
     checks = [
-        ShellCheck(description="Echo 'Hello!'", command="echo 'hello'"),
+        ShellCheck(
+            description="Echo 'Hello!'",
+            command="echo 'hello'",
+            json_info={
+                "description": "Echo 'Hello!'",
+                "options": {
+                    "command": "echo 'hello'",
+                },
+            },
+        ),
         GatorGraderCheck(
             gg_args=[
                 "--description",
@@ -202,6 +211,7 @@ def test_json_report_file_created_correctly():
             ],
             json_info={
                 "description": "test",
+                "check": "MatchFileFragment",
                 "options": {
                     "file": "test.txt",
                     "directory": "tests/test_assignment/src",
@@ -215,12 +225,12 @@ def test_json_report_file_created_correctly():
     # check to make sure the created file matches the expected output
     expected_file_contents_dict = {
         "amount_correct": 1,
-        "percentage_score": 33,
+     "percentage_score": 33,
         "checks": [
             {"description": "Echo 'Hello!'", "status": True, "Command": "echo 'hello'"},
             {
                 "description": "Complete all TODOs in hello-world.py",
-                "status": False,
+          "status": False,
                 "Fragment": "TODO",
                 "Count": "1",
                 "Directory": "tests/test_assignment/src",
@@ -249,7 +259,17 @@ def test_md_report_file_created_correctly():
     """Test that with the cli input '--report file md insights.md' the file is created correctly."""
     # given the following checks
     checks = [
-        ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={
+                "description": "test",
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
+        ),
         GatorGraderCheck(
             gg_args=[
                 "--description",
@@ -300,7 +320,7 @@ def test_md_report_file_created_correctly():
     report = ("file", "md", "insights.md")
     output.run_checks(checks, report)
     # check to make sure the created file matches the expected output
-    expected_file_contents = """# Gatorgrade Insights\n\n**Amount Correct:** 1\n**Percentage Correct:** 33\n\n## Passing Checks"""
+    expected_file_contents = """# Gatorgrade Insights\n\n**Amount Correct:** 1/3\n**Percentage Correct:** 33\n\n## Passing Checks"""
 
     file = open("insights.md", "r")
     file_contents = file.read()
