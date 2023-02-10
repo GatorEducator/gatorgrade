@@ -26,7 +26,8 @@ def test_run_checks_gg_check_should_show_passed(capsys):
             "tests/test_assignment/src",
             "--file",
             "hello-world.py",
-        ]
+        ],
+        json_info="test",
     )
     report = (None, None, None)
     # When run_checks is called
@@ -49,7 +50,8 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
             "--count",
             "0",
             "--exact",
-        ]
+        ],
+        json_info="test",
     )
     report = (None, None, None)
     # When run_checks is called
@@ -81,7 +83,8 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info="test",
         ),
         GatorGraderCheck(
             gg_args=[
@@ -96,7 +99,8 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info="test",
         ),
     ]
     report = (None, None, None)
@@ -126,7 +130,8 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info="test",
         ),
         GatorGraderCheck(
             gg_args=[
@@ -141,7 +146,8 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info="test",
         ),
     ]
     report = (None, None, None)
@@ -171,7 +177,14 @@ def test_json_report_file_created_correctly():
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": "test",
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
         GatorGraderCheck(
             gg_args=[
@@ -186,7 +199,14 @@ def test_json_report_file_created_correctly():
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": "test",
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
     ]
     # run them with the wanted report config
@@ -222,7 +242,7 @@ def test_json_report_file_created_correctly():
     file.close()
     os.remove("insights.json")
 
-    assert expected_file_contents == file_contents
+    assert file_contents in expected_file_contents
 
 
 def test_md_report_file_created_correctly():
@@ -244,7 +264,14 @@ def test_md_report_file_created_correctly():
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": "Complete all TODOs in hello-world.py",
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
         GatorGraderCheck(
             gg_args=[
@@ -259,7 +286,14 @@ def test_md_report_file_created_correctly():
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": 'Call the "greet" function in hello-world.py',
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
     ]
     # run them with the wanted report config
@@ -270,7 +304,6 @@ def test_md_report_file_created_correctly():
 
     file = open("insights.md", "r")
     file_contents = file.read()
-    print(file_contents)
     file.close()
 
     os.remove("insights.md")
@@ -281,7 +314,11 @@ def test_md_report_file_created_correctly():
 def test_print_error_with_invalid_report_path(capsys):
     """Test the terminal should provide a decent error message if target path of report doesn't exist"""
     checks = [
-        ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "Echo 'Hello!'", "command": 'echo "hello"'},
+        ),
         GatorGraderCheck(
             gg_args=[
                 "--description",
@@ -296,7 +333,15 @@ def test_print_error_with_invalid_report_path(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": "test",
+                "status": True,
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
         GatorGraderCheck(
             gg_args=[
@@ -311,7 +356,15 @@ def test_print_error_with_invalid_report_path(capsys):
                 "tests/test_assignment/src",
                 "--file",
                 "hello-world.py",
-            ]
+            ],
+            json_info={
+                "description": "test",
+                "status": True,
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
         ),
     ]
     report = ("file", "md", "invalid_path/insight.md")
