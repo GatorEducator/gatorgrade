@@ -120,7 +120,6 @@ def create_markdown_report_file(json: dict) -> str:
     Args:
         json: a dictionary containing the json that should be converted to markdown
     """
-
     markdown_contents = ""
     passing_checks = []
     failing_checks = []
