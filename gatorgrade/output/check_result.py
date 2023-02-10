@@ -10,6 +10,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self,
         passed: bool,
         description: str,
+        json_info,
         diagnostic: str = "No diagnostic message available",
     ):
         """Construct a CheckResult.
@@ -18,10 +19,12 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             passed: The passed or failed status of the check result. If true, indicates that the
                 check has passed.
             description: The description to use in output.
+            json_info: the overall information to be included in json output
             diagnostic: The message to use in output if the check has failed.
         """
         self.passed = passed
         self.description = description
+        self.json_info = json_info
         self.diagnostic = diagnostic
 
     def display_result(self, show_diagnostic: bool = False) -> str:
