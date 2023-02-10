@@ -103,9 +103,9 @@ def create_report_json(
     # for each check:
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
-        check_information = checkResults[i].json_info
-        check_information["status"] = checkResults[i].passed
-        checks_list.append(check_information)
+        results_json = checkResults[i].json_info
+        results_json["status"] = checkResults[i].passed
+        checks_list.append(results_json)
 
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -125,8 +125,10 @@ def create_markdown_report_file(json: dict) -> str:
     passing_checks = []
     failing_checks = []
 
+    num_checks = len(json.get("checks"))
+
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Amount Correct:** {(json.get('amount_correct'))}\n**Percentage Correct:** {(json.get('percentage_score'))}\n"
+    markdown_contents += f"# Gatorgrade Insights\n\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks}\n**Percentage Correct:** {(json.get('percentage_score'))}\n"
 
     # split checks into passing and not passing
     for check in json.get("checks"):
@@ -141,43 +143,44 @@ def create_markdown_report_file(json: dict) -> str:
     markdown_contents += "\n## Passing Checks\n"
     for check in passing_checks:
         if "description" in check:
-            markdown_contents += f"\n- [x] {check['description']}\n"
+            markdown_contents += f"\n- [x] {check['description']}"
         else:
-            markdown_contents += f"\n- [x] {check['check']}\n"
+            markdown_contents += f"\n- [x] {check['check']}"
 
     # give extended information about failing checks
-    markdown_contents += "\n## Failing Checks\n"
+    markdown_contents += "\n\n## Failing Checks\n"
     # for each failing check, print out all related information
     for check in failing_checks:
         # for each key val pair in the check dictionary
         if "description" in check:
-            markdown_contents += f"\n- [] {check['description']}\n"
+            markdown_contents += f"\n- [] {check['description']}"
         else:
-            markdown_contents += f"\n- [] {check['check']}\n"
+            markdown_contents += f"\n- [] {check['check']}"
 
         if "options" in check:
             for i in check.get("options"):
                 if "command" == i:
                     val = check["options"]["command"]
-                    markdown_contents += f"\n\t- {val}\n"
+                    markdown_contents += f"\n\t- **command** {val}"
                 if "fragment" == i:
                     val = check["options"]["fragment"]
-                    markdown_contents += f"\n\t- **fragment:** {val}\n"
+                    markdown_contents += f"\n\t- **fragment:** {val}"
                 if "tag" == i:
                     val = check["options"]["tag"]
-                    markdown_contents += f"\n\t- **tag:** {val}\n"
+                    markdown_contents += f"\n\t- **tag:** {val}"
                 if "count" == i:
                     val = check["options"]["count"]
-                    markdown_contents += f"\n\t- **count:** {val}\n"
+                    markdown_contents += f"\n\t- **count:** {val}"
                 if "directory" == i:
                     val = check["options"]["directory"]
-                    markdown_contents += f"\n\t- **directory:** {val}\n"
+                    markdown_contents += f"\n\t- **directory:** {val}"
                 if "file" == i:
                     val = check["options"]["file"]
-                    markdown_contents += f"\n\t- **file:** {val}\n"
+                    markdown_contents += f"\n\t- **file:** {val}"
         elif "command" in check:
             val = check["command"]
-            markdown_contents += f"\n\t- **command:** {val}\n"
+            markdown_contents += f"\n\t- **command:** {val}"
+        markdown_contents += "\n"
 
     return markdown_contents
 
