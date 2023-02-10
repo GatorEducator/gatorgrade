@@ -38,11 +38,16 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
+
+    # Add spaces after each newline to indent all lines of diagnostic
     diagnostic = (
         "" if passed else result.stdout.decode().strip().replace("\n", "\n     ")
-    )  # Add spaces after each newline to indent all lines of diagnostic
+    )
     return CheckResult(
-        passed=passed, description=check.description, diagnostic=diagnostic
+        passed=passed,
+        description=check.description,
+        json_info=check.json_info,
+        diagnostic=diagnostic,
     )
 
 
@@ -67,12 +72,16 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
         diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
-    return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
+    return CheckResult(
+        passed=passed,
+        description=description,
+        json_info=check.json_info,
+        diagnostic=diagnostic,
+    )
 
 
 def create_report_json(
     passed_count,
-    check_information,
     checkResults: List[CheckResult],
     percent_passed,
 ) -> dict:
@@ -92,48 +101,16 @@ def create_report_json(
     overall_dict = {}
 
     # for each check:
-    for i in range(len(check_information)):
-        # grab all of the information out of it, as well as check result status and description
-        checks_list.append(
-            {
-                "description": checkResults[i].description,
-                "status": checkResults[i].passed,
-            }
-        )
-        # add the remaining information from check_information
-        # if there are gg_args, add all of them
-        try:
-            for arg in check_information[i].gg_args:
-                arg_index = check_information[i].gg_args.index(arg)
-                if arg == "--fragment":
-                    checks_list[i].update(
-                        {"Fragment": check_information[i].gg_args[arg_index + 1]}
-                    )
-                if arg == "--tag":
-                    checks_list[i].update(
-                        {"Tag": check_information[i].gg_args[arg_index + 1]}
-                    )
-                if arg == "--count":
-                    checks_list[i].update(
-                        {"Count": check_information[i].gg_args[arg_index + 1]}
-                    )
-                if arg == "--directory":
-                    checks_list[i].update(
-                        {"Directory": check_information[i].gg_args[arg_index + 1]}
-                    )
-                if arg == "--file":
-                    checks_list[i].update(
-                        {"File": check_information[i].gg_args[arg_index + 1]}
-                    )
-        # if not, is a shell check, include
-        except:
-            checks_list[i].update({"Command": check_information[i].command})
+    for i in range(len(checkResults)):
+        # grab all of the information in it and add it to the checks list
+        check_information = checkResults[i].json_info
+        check_information["status"] = checkResults[i].passed
+        checks_list.append(check_information)
 
     # create the dictionary for all of the check information
     overall_dict = dict(
         zip(overall_key_list, [passed_count, percent_passed, checks_list])
     )
-
     return overall_dict
 
 
@@ -143,43 +120,64 @@ def create_markdown_report_file(json: dict) -> str:
     Args:
         json: a dictionary containing the json that should be converted to markdown
     """
+
     markdown_contents = ""
-
-    # add the markdown to the string
-    markdown_contents += "# Gatorgrade Insights"
-
-    # write the amt correct and percentage score to md file
-    markdown_contents += f"\n\n**Amount Correct:** {(json.get('amount_correct'))}\n"
-    markdown_contents += f"**Percentage Correct:** {(json.get('percentage_score'))}\n"
-
     passing_checks = []
     failing_checks = []
+
+    # write the total, amt correct and percentage score to md file
+    markdown_contents += f"# Gatorgrade Insights\n\n**Amount Correct:** {(json.get('amount_correct'))}\n**Percentage Correct:** {(json.get('percentage_score'))}\n"
+
     # split checks into passing and not passing
     for check in json.get("checks"):
         # if the check is passing
-        if check.get("status") == True:
+        if check["status"] == True:
             passing_checks.append(check)
         # if the check is failing
         else:
             failing_checks.append(check)
 
-    # give short info about passing checks as students have already
-    # satisfied that requirement
+    # give short info about passing checks
     markdown_contents += "\n## Passing Checks\n"
     for check in passing_checks:
-        markdown_contents += f"\n- [x] {check.get('description')}\n"
+        if "description" in check:
+            markdown_contents += f"\n- [x] {check['description']}\n"
+        else:
+            markdown_contents += f"\n- [x] {check['check']}\n"
 
-    # give extended information about failing checks to help
-    # students solve them without looking in the gg yml file
+    # give extended information about failing checks
     markdown_contents += "\n## Failing Checks\n"
     # for each failing check, print out all related information
     for check in failing_checks:
         # for each key val pair in the check dictionary
-        for i in check:
-            if i == "description":
-                markdown_contents += f"\n- [] {check.get('description')}\n"
-            elif i != "status":
-                markdown_contents += f"\n\t- **{i}** {check[i]}\n"
+        if "description" in check:
+            markdown_contents += f"\n- [] {check['description']}\n"
+        else:
+            markdown_contents += f"\n- [] {check['check']}\n"
+
+        if "options" in check:
+            for i in check.get("options"):
+                if "command" == i:
+                    val = check["options"]["command"]
+                    markdown_contents += f"\n\t- {val}\n"
+                if "fragment" == i:
+                    val = check["options"]["fragment"]
+                    markdown_contents += f"\n\t- **fragment:** {val}\n"
+                if "tag" == i:
+                    val = check["options"]["tag"]
+                    markdown_contents += f"\n\t- **tag:** {val}\n"
+                if "count" == i:
+                    val = check["options"]["count"]
+                    markdown_contents += f"\n\t- **count:** {val}\n"
+                if "directory" == i:
+                    val = check["options"]["directory"]
+                    markdown_contents += f"\n\t- **directory:** {val}\n"
+                if "file" == i:
+                    val = check["options"]["file"]
+                    markdown_contents += f"\n\t- **file:** {val}\n"
+        elif "command" in check:
+            val = check["command"]
+            markdown_contents += f"\n\t- **command:** {val}\n"
 
     return markdown_contents
 
@@ -270,7 +268,7 @@ def run_checks(
 
     # if the report is wanted, create output in line with their specifications
     if all(report):
-        report_output_data = create_report_json(passed_count, checks, results, percent)
+        report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
 
     # compute summary results and display them in the console
