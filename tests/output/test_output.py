@@ -166,9 +166,9 @@ def test_json_report_file_created_correctly():
             description="Echo 'Hello!'",
             command="echo 'hello'",
             json_info={
-                "description": "Echo 'Hello!'",
+                "description": "Echo'Hello!'",
                 "options": {
-                    "command": "echo 'hello'",
+                    "command ": "echo 'hello'",
                 },
             },
         ),
@@ -188,10 +188,12 @@ def test_json_report_file_created_correctly():
                 "hello-world.py",
             ],
             json_info={
-                "description": "test",
+                "description ": "Complete all TODOs in hello - world.py ",
                 "options": {
-                    "file": "test.txt",
-                    "directory": "tests/test_assignment/src",
+                    "Fragment ": "TODO ",
+                    "Count ": "1",
+                    "Directory": "tests/test_assignment/src",
+                    "File": "hello-world.py",
                 },
             },
         ),
@@ -210,11 +212,12 @@ def test_json_report_file_created_correctly():
                 "hello-world.py",
             ],
             json_info={
-                "description": "test",
-                "check": "MatchFileFragment",
+                "description": 'Invalid GatorGrader check: "--description Call the "greet" function in hello - world.py MatchFileFragment--fragment greet(--count 2 E--directory tests / test_assignment / src--file hello - world.py\ ',
                 "options": {
-                    "file": "test.txt",
-                    "directory": "tests/test_assignment/src",
+                    "Fragment": "greet(",
+                    "Count": "2",
+                    "Directory": "tests/test_assignment/src",
+                    "File": "hello-world.py",
                 },
             },
         ),
@@ -227,22 +230,32 @@ def test_json_report_file_created_correctly():
         "amount_correct": 1,
         "percentage_score": 33,
         "checks": [
-            {"description": "Echo 'Hello!'", "status": True, "Command": "echo 'hello'"},
             {
-                "description": "Complete all TODOs in hello-world.py",
-                "status": False,
-                "Fragment": "TODO",
-                "Count": "1",
-                "Directory": "tests/test_assignment/src",
-                "File": "hello-world.py",
+                "description": "Echo'Hello!'",
+                "options": {
+                    "command ": "echo 'hello'",
+                },
+                "status": True,
             },
             {
-                "description": 'Invalid GatorGrader check: "--description Call the "greet" function in hello-world.py MatchFileFragment --fragment greet( --count 2 --directory tests/test_assignment/src --file hello-world.py"',
+                "description ": "Complete all TODOs in hello - world.py ",
+                "options": {
+                    "Fragment ": "TODO ",
+                    "Count ": "1",
+                    "Directory": "tests/test_assignment/src",
+                    "File": "hello-world.py",
+                },
                 "status": False,
-                "Fragment": "greet(",
-                "Count": "2",
-                "Directory": "tests/test_assignment/src",
-                "File": "hello-world.py",
+            },
+            {
+                "description": 'Invalid GatorGrader check: "--description Call the "greet" function in hello - world.py MatchFileFragment--fragment greet(--count 2 E--directory tests / test_assignment / src--file hello - world.py\ ',
+                "options": {
+                    "Fragment": "greet(",
+                    "Count": "2",
+                    "Directory": "tests/test_assignment/src",
+                    "File": "hello-world.py",
+                },
+                "status": False,
             },
         ],
     }
