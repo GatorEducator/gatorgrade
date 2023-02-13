@@ -225,12 +225,12 @@ def test_json_report_file_created_correctly():
     # check to make sure the created file matches the expected output
     expected_file_contents_dict = {
         "amount_correct": 1,
-     "percentage_score": 33,
+        "percentage_score": 33,
         "checks": [
             {"description": "Echo 'Hello!'", "status": True, "Command": "echo 'hello'"},
             {
                 "description": "Complete all TODOs in hello-world.py",
-          "status": False,
+                "status": False,
                 "Fragment": "TODO",
                 "Count": "1",
                 "Directory": "tests/test_assignment/src",
