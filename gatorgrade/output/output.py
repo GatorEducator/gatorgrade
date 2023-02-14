@@ -127,7 +127,7 @@ def create_markdown_report_file(json: dict) -> str:
     num_checks = len(json.get("checks"))
 
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks}\n**Percentage Correct:** {(json.get('percentage_score'))}\n"
+    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks}\n**Percentage Correct:** {(json.get('percentage_score'))}\n"
 
     # split checks into passing and not passing
     for check in json.get("checks"):
