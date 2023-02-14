@@ -218,7 +218,7 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
                 "\n[red]Can't open or write the target file, check if you provide a valid path"
             )
     elif report_params[0] == "env":
-        os.environ[report_params[2]] = str(report_output_data)
+        os.system(f"echo'{str(report_output_data)}'>>${report_params[2]}")
     else:
         rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
 
