@@ -333,7 +333,7 @@ def test_md_report_file_created_correctly():
     report = ("file", "md", "insights.md")
     output.run_checks(checks, report)
     # check to make sure the created file matches the expected output
-    expected_file_contents = """# Gatorgrade Insights\n\n**Amount Correct:** 1/3\n**Percentage Correct:** 33\n\n## Passing Checks"""
+    expected_file_contents = """# Gatorgrade Insights\n\n**Project Name:** gatorgrade\n**Amount Correct:** 1/3\n**Percentage Correct:** 33\n\n## Passing Checks"""
 
     file = open("insights.md", "r")
     file_contents = file.read()
