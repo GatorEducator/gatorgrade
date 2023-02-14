@@ -42,7 +42,8 @@ def gatorgrade(
         help="A tuple containing the following REQUIRED values: \
             1. The destination of the report (either file or env) \
             2. The format of the report (either json or md) \
-            3. the name of the file, if using a file destination.)",
+            3. the name of the file or environment variable\
+            4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
     ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
