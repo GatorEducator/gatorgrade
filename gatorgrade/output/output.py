@@ -218,7 +218,12 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
                 "\n[red]Can't open or write the target file, check if you provide a valid path"
             )
     elif report_params[0] == "env":
-        os.environ[report_params[2]] = str(report_output_data)
+        if report_params[2] == "GITHUB_STEP_SUMMARY":
+            env_file = os.getenv("GITHUB_STEP_SUMMARY")
+            with open(env_file, "a") as env_file:
+                env_file.write(str(report_output_data))
+        else:
+            os.environ[report_params[2]] = str(report_output_data)
     else:
         rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
 
