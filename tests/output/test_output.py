@@ -246,6 +246,7 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
+                "diagnostic": "Found 0 fragment(s) in the hello-world.py or the output while expecting exactly 1",
             },
             {
                 "description": 'Invalid GatorGrader check: "--description Call the "greet" function in hello - world.py MatchFileFragment--fragment greet(--count 2 E--directory tests / test_assignment / src--file hello - world.py\ ',
@@ -256,6 +257,7 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
+                "diagnostic":"\"<class 'gator.exceptions.InvalidSystemArgumentsError'>\" thrown by GatorGrader",
             },
         ],
     }

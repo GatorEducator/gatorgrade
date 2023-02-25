@@ -105,6 +105,8 @@ def create_report_json(
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
         results_json["status"] = checkResults[i].passed
+        if not checkResults[i].passed:
+            results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
 
     # create the dictionary for all of the check information
@@ -179,6 +181,8 @@ def create_markdown_report_file(json: dict) -> str:
         elif "command" in check:
             val = check["command"]
             markdown_contents += f"\n\t- **command:** {val}"
+        if 'diagnostic' in check:
+            markdown_contents += f"\n\t- **diagnostic:** {check['diagnostic']}"
         markdown_contents += "\n"
 
     return markdown_contents
