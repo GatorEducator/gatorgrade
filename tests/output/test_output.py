@@ -257,7 +257,7 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
-                "diagnostic":"\"<class 'gator.exceptions.InvalidSystemArgumentsError'>\" thrown by GatorGrader",
+                "diagnostic": "\"<class 'gator.exceptions.InvalidSystemArgumentsError'>\" thrown by GatorGrader",
             },
         ],
     }
