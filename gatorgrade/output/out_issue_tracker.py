@@ -30,7 +30,7 @@ def create_issue(github_object:Github,repo_name:str, issue_name:str = "Gatorgrad
     repo.create_issue(title= issue_name,body = issue_body, labels=labels + ["Gatorgrade"] )
     
 
-def rewrite_issue(github_object:Github,repo_name:str, new_issue_name:str = "Gatorgrade: Insight Report",new_issue_body:str = "", target_label_name: str = "Gatorgrade"):
+def update_issue(github_object:Github,repo_name:str, new_issue_name:str = "Gatorgrade: Insight Report",new_issue_body:str = "", target_label_name: str = "Gatorgrade"):
     # TODO: add github issue body
     repo = github_object.get_repo(repo_name)
     # Find target issue by target label to rewrite it(default: Gatorgrade)
