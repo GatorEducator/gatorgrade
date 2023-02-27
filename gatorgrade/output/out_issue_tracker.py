@@ -17,7 +17,7 @@ def authenticate() -> Union[None, Github]:
         # TODO: Provide ability to run locally
         return None
 
-def create_issue(github_object:Github,repo_name:str, issue_name:str = "Insight: Gatorgrade Report",issue_body:str = "",labels:List[str]= []):
+def create_issue(github_object:Github,repo_name:str, issue_name:str = "Gatorgrade: Insight Report",issue_body:str = "",labels:List[str]= []):
     """Create a new issue
 
     Args:
@@ -29,12 +29,21 @@ def create_issue(github_object:Github,repo_name:str, issue_name:str = "Insight: 
     # TODO: add github issue body
     repo.create_issue(title= issue_name,body = issue_body, labels=labels + ["Gatorgrade"] )
     
-def update_issue(github_object:Github,repo_name:str, new_issue_name:str = "Insight: Gatorgrade Report",new_issue_body:str = ""):
+
+def rewrite_issue(github_object:Github,repo_name:str, new_issue_name:str = "Gatorgrade: Insight Report",new_issue_body:str = "", target_label_name: str = "Gatorgrade"):
     # TODO: add github issue body
     repo = github_object.get_repo(repo_name)
+    # Find target issue by target label to rewrite it(default: Gatorgrade)
+    # TODO: conflict may happen when there are multiple issues with target label. They may be re-written with the same content
     for issue in repo.get_issues():
-        # TODO: find way to find target issues
-        pass
+        for label in issue.get_labels():
+            if label.name == target_label_name:
+                issue.edit(new_issue_name,new_issue_body)
+
+
+
+        # TODO: try to target issue by names
+            pass
 
 def run_issue_tracker_out():
     """Access to issue tracker"""
@@ -44,7 +53,7 @@ def run_issue_tracker_out():
     if not api_object:
         # TODO: add error msg
         return None
-    create_issue(api_object,repo_name)
+    update_issue(api_object,repo_name,"Updated Issue","Hello Dog")
 
 if __name__ == "__main__":
     run_issue_tracker_out()
