@@ -1,36 +1,67 @@
-"""Create or rewrite a GitHub issue tracker message about json or markdown report"""
+"""Create or rewrite a GitHub issue tracker message about json or markdown report."""
 
 import os
+from typing import List
+from typing import Union
+
+import rich
 from github import Github
-from typing import Union, List
+
 
 def authenticate() -> Union[None, Github]:
+    """Create GitHub objects """
     # Only write issue tracker message when running in GitHub Action
     if os.environ.get("GITHUB_ACTIONS") == "true":
         # Create an instance with GitHub Action Automatic Token to access to GitHub REST API
-        token = os.environ['GITHUB_TOKEN']
+        token = os.environ["GITHUB_TOKEN"]
         github_api = Github(token)
         # Get the full of Repo like repos/repo1/
-        repository_full_name = os.environ.get('GITHUB_REPOSITORY')
+        repository_full_name = os.environ.get("GITHUB_REPOSITORY")
         return github_api, repository_full_name
     else:
         # TODO: Provide ability to run locally
         return None
 
-def create_issue(github_object:Github,repo_name:str, issue_name:str = "Gatorgrade: Insight Report",issue_body:str = "",labels:List[str]= []):
-    """Create a new issue
+
+def create_issue(
+    github_object: Github,
+    repo_name: str,
+    issue_name: str = "Gatorgrade: Insight Report",
+    issue_body: str = "",
+    labels: List[str] = [],
+):
+    """Create a new issue.
 
     Args:
         github_object(GitHub): An authenticated GitHub object allows to interact with GitHub REST API
         repo_name(str): A whole name of repo following in the format : `repositories/repo-A`
+        issue_name(str): The name (i.e. title) is used to create a issue
+        issue_body(str): content used to make issue body
+        labels(list of str): labels that will be attached into the issue
     """
 
     repo = github_object.get_repo(repo_name)
     # TODO: add github issue body
-    repo.create_issue(title= issue_name,body = issue_body, labels=labels + ["Gatorgrade"] )
-    
+    repo.create_issue(title=issue_name, body=issue_body, labels=labels + ["Gatorgrade"])
 
-def update_issue(github_object:Github,repo_name:str, new_issue_name:str = "Gatorgrade: Insight Report",new_issue_body:str = "", target_label_name: str = "Gatorgrade"):
+
+def update_issue(
+    github_object: Github,
+    repo_name: str,
+    target_label_name: str = "Gatorgrade",
+    new_issue_name: str = "Gatorgrade: Insight Report",
+    new_issue_body: str = "",
+):
+    """
+    Update an issue that already existed.
+
+    Args:
+        github_object(GitHub): An authenticated GitHub object allows to interact with GitHub REST API
+        repo_name(str): A whole name of repo following in the format : `repositories/repo-A`
+        target_label_name(str): The label used to search for target issues
+        new_issue_name(str): The new name (i.e. title) is used to replace the old name
+        new_issue_body(str): the new content used to replace the old issue body
+    """
     # TODO: add github issue body
     repo = github_object.get_repo(repo_name)
     # Find target issue by target label to rewrite it(default: Gatorgrade)
@@ -38,22 +69,25 @@ def update_issue(github_object:Github,repo_name:str, new_issue_name:str = "Gator
     for issue in repo.get_issues():
         for label in issue.get_labels():
             if label.name == target_label_name:
-                issue.edit(new_issue_name,new_issue_body)
+                issue.edit(new_issue_name, new_issue_body)
 
-
-
-        # TODO: try to target issue by names
+            # TODO: try to target issue by names
             pass
 
+
 def run_issue_tracker_out():
-    """Access to issue tracker"""
+    """Access to issue tracker."""
     api_object, repo_name = authenticate()
 
     # Can't get valid github object so exit this program
     if not api_object:
+        rich.print(
+            "\n[red] Warning: issue tracker report will only work in GitHub Action"
+        )
         # TODO: add error msg
         return None
-    update_issue(api_object,repo_name,"Updated Issue","Hello Dog")
+    update_issue(api_object, repo_name, "Updated Issue", "Hello Dog")
+
 
 if __name__ == "__main__":
     run_issue_tracker_out()
