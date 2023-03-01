@@ -4,12 +4,15 @@ import os
 from typing import List
 from typing import Union
 
+from pathlib import Path
+
 import rich
 from github import Github
+from gatorgrade.input.in_file_path import parse_yaml_file
 
 
 def authenticate() -> Union[None, Github]:
-    """Create GitHub objects """
+    """Create GitHub objects"""
     # Only write issue tracker message when running in GitHub Action
     if os.environ.get("GITHUB_ACTIONS") == "true":
         # Create an instance with GitHub Action Automatic Token to access to GitHub REST API
@@ -23,13 +26,17 @@ def authenticate() -> Union[None, Github]:
         return None
 
 
+def parse_config(config_file: Path):
+    """Find needed information from configuration file"""
+
+
 def create_issue(
     github_object: Github,
     repo_name: str,
-    issue_name: str = "Gatorgrade: Insight Report",
+    issue_name: str,
     issue_body: str = "",
     labels: List[str] = [],
-):
+) -> bool:
     """Create a new issue.
 
     Args:
@@ -41,52 +48,82 @@ def create_issue(
     """
 
     repo = github_object.get_repo(repo_name)
-    # TODO: add github issue body
     repo.create_issue(title=issue_name, body=issue_body, labels=labels + ["Gatorgrade"])
+    return True
+
+
+def rewrite_issue(
+    github_object: Github,
+    repo_name: str,
+    new_issue_name: str = "Gatorgrade: Insight Report",
+    new_issue_body: str = "",
+    old_issue_name: str = "",
+) -> bool:
+    """
+    Rewrite an issue that already existed.
+
+    Args:
+        github_object(GitHub): An authenticated GitHub object allows to interact with GitHub REST API
+        repo_name(str): A whole name of repo following in the format : `repositories/repo-A`
+        new_issue_name(str): The new name (i.e. title) is used to replace the old name
+        new_issue_body(str): the new content used to replace the old issue body
+        old_issue_name(str): The name of the issue you want to edit
+    """
+    repo = github_object.get_repo(repo_name)
+    find_issue = False
+    for issue in repo.get_issues():
+        if issue.title == old_issue_name:
+            issue.edit(new_issue_name, new_issue_body)
+            # Allow rewrite all the issues which share the same issue name
+            find_issue = True
+    if find_issue:
+        return True
+    rich.print(f"\n[red] WARNING: issue called {new_issue_name}, rewrite skipped")
+    return False
 
 
 def update_issue(
     github_object: Github,
     repo_name: str,
-    target_label_name: str = "Gatorgrade",
-    new_issue_name: str = "Gatorgrade: Insight Report",
-    new_issue_body: str = "",
+    added_issue_body: str = "",
+    issue_name: str = "",
 ):
     """
-    Update an issue that already existed.
+    Update an issue by adding material in comment.
 
     Args:
         github_object(GitHub): An authenticated GitHub object allows to interact with GitHub REST API
         repo_name(str): A whole name of repo following in the format : `repositories/repo-A`
-        target_label_name(str): The label used to search for target issues
-        new_issue_name(str): The new name (i.e. title) is used to replace the old name
-        new_issue_body(str): the new content used to replace the old issue body
+        added_issue_body(str): the new content used to replace the old issue body
+        issue_name(str): The name of the issue you want to edit
     """
-    # TODO: add github issue body
     repo = github_object.get_repo(repo_name)
-    # Find target issue by target label to rewrite it(default: Gatorgrade)
-    # TODO: conflict may happen when there are multiple issues with target label. They may be re-written with the same content
+    find_issue = False
     for issue in repo.get_issues():
-        for label in issue.get_labels():
-            if label.name == target_label_name:
-                issue.edit(new_issue_name, new_issue_body)
+        if issue.title == issue_name:
+            issue.create_comment(added_issue_body)
+            # Allow rewrite all the issues which share the same issue name
+            find_issue = True
+    if find_issue:
+        return True
+    rich.print(f"\n[red] WARNING: issue called {issue_name}, rewrite skipped")
+    return False
 
-            # TODO: try to target issue by names
-            pass
 
-
-def run_issue_tracker_out():
-    """Access to issue tracker."""
+def run_issue_tracker_out(
+    issue_name: str = "Gatorgrade: Insight Report", issue_body: str = ""
+):
+    """Access to issue tracker, it's the main function."""
     api_object, repo_name = authenticate()
 
     # Can't get valid github object so exit this program
     if not api_object:
         rich.print(
-            "\n[red] Warning: issue tracker report will only work in GitHub Action"
+            "\n[red] WARNING: issue tracker report will only work in GitHub Action, skipped creating issue."
         )
         # TODO: add error msg
         return None
-    update_issue(api_object, repo_name, "Updated Issue", "Hello Dog")
+    create_issue(api_object, repo_name, "Updated Issue", "Hello Dog")
 
 
 if __name__ == "__main__":
