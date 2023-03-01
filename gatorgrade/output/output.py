@@ -1,5 +1,6 @@
 """Run checks and display whether each has passed or failed."""
 
+from datetime import datetime
 import subprocess
 from pathlib import Path
 from typing import List
@@ -68,7 +69,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
     return CheckResult(passed=passed, description=description, diagnostic=diagnostic)
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], deadline) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -109,6 +110,38 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> bool:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
+
+    # if a deadline is included:
+    if deadline != None:
+        # turn the string into a datetime variable
+
+        deadline = datetime.strptime(deadline[:-1], "%m/%d/%y %H:%M:%S")
+        # if the deadline has passed, print out late
+        now = datetime.now()
+        if now > deadline:
+            time_after_deadline = now - deadline
+            # days
+            days = time_after_deadline.days
+            # hours
+            hours, remainder = divmod(time_after_deadline.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            print(
+                f"\n-~- Your assignment is late. The deadline was {abs(days)} days, {hours} hours, {minutes} minutes, and {seconds} seconds ago. -~-"
+            )
+        # else, print out the remaining time until the assignment is due
+        else:
+            time_until_deadline = deadline - now
+            # days
+            days = time_until_deadline.days
+            # hours
+            hours, remainder = divmod(time_until_deadline.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            print(
+                f"\n-~- Your assignment is due in {days * -1} days, {hours} hours, {minutes} minutes, and {seconds} seconds. -~-"
+            )
+
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
