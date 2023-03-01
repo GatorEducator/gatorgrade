@@ -38,11 +38,15 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
 
 
 def reformat_yaml_data(data):
-    """Reformat the raw data from a YAML file into a list of tuples."""
+    """Reformat the raw data from a YAML file into a list of tuples.
+
+    Args:
+        data: the raw data from the YAMl file.
+    """
     reformatted_data = []
     deadline = None
-    i = 0
     data_values = len(data)
+
     if data_values >= 2:
         for i in range(data_values - 1):
             if "setup" in data[i]:
@@ -50,7 +54,8 @@ def reformat_yaml_data(data):
                 run_setup(setup_commands)
             elif "deadline" in data[i]:
                 deadline = data[i]["deadline"]
-    add_checks_to_list(None, data[data_values - 1], reformatted_data)
+
+    add_checks_to_list(None, data[-1], reformatted_data)
     return reformatted_data, deadline
 
 
