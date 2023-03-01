@@ -12,7 +12,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
     # Given a configuration file with a GatorGrader check within a file context
     config = Path("tests/input/yml_test_files/gatorgrade_one_gg_check_in_file.yml")
     # When parse_config is run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the file path should be in the GatorGrader arguments
     assert "file.py" in output[0].gg_args
 
@@ -22,7 +22,7 @@ def test_parse_config_check_gg_matchfilefragment():
     # Given a configuration file with a GatorGrader check
     config = Path("tests/input/yml_test_files/gatorgrade_matchfilefragment.yml")
     # When parse_config is run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the description, check name, and options appear in the GatorGrader arguments
     assert output[0].gg_args == [
         "--description",
@@ -47,7 +47,7 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
         "tests/input/yml_test_files/gatorgrade_one_gg_check_no_file_context.yml"
     )
     # When parse_config is run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the GatorGrader arguments do not contain a file path
     assert output[0].gg_args == [
         "--description",
@@ -63,7 +63,7 @@ def test_parse_config_parses_both_shell_and_gg_checks():
     # Given a configuration file that contains a shell check and GatorGrader check
     config = Path("tests/input/yml_test_files/gatorgrader_both_checks.yml")
     # When parse_config is run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the output should contain a shell check and GatorGrader check
     assert isinstance(output[0], GatorGraderCheck)
     assert isinstance(output[1], ShellCheck)
@@ -74,7 +74,7 @@ def test_parse_config_yml_file_runs_setup_shell_checks():
     # Given a configuration file without setup commands
     config = Path("tests/input/yml_test_files/gatorgrade_no_shell_setup_check.yml")
     # When parse_config run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the output should contain the GatorGrader check
     assert output[0].gg_args == [
         "--description",
@@ -90,6 +90,6 @@ def test_parse_config_shell_check_contains_command():
     # Given a configuration file with a shell check
     config = Path("tests/input/yml_test_files/gatorgrade_one_shell_command_check.yml")
     # When the parse_config is run
-    output = parse_config(config)
+    output, deadline = parse_config(config)
     # Then the command should be stored in the shell check
     assert output[0].command == "mdl ."
