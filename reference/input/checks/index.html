@@ -677,29 +677,25 @@
 
           <details class="quote">
             <summary>Source code in <code>gatorgrade/input/checks.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
 <span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">GatorGraderCheck</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">GatorGraderCheck</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
     <span class="sd">&quot;&quot;&quot;Represent a GatorGrader check.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gg_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">json_info</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gg_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Construct a GatorGraderCheck.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            gg_args: The list of arguments to pass to GatorGrader.</span>
-<span class="sd">            json_info: The all-encompassing check information to include in json output.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gg_args</span> <span class="o">=</span> <span class="n">gg_args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
 </code></pre></div></td></tr></table></div>
           </details>
 
@@ -715,13 +711,12 @@
 
 
 
-
   <div class="doc doc-object doc-function">
 
 
 
 <h3 id="gatorgrade.input.checks.GatorGraderCheck.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">gg_args</span><span class="p">,</span> <span class="n">json_info</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">gg_args</span><span class="p">)</span></code>
 
 
 </h3>
@@ -752,37 +747,24 @@
               <em>required</em>
           </td>
         </tr>
-        <tr>
-          <td><code>json_info</code></td>
-          <td>
-          </td>
-          <td><p>The all-encompassing check information to include in json output.</p></td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
     </tbody>
   </table>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/input/checks.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gg_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">json_info</span><span class="p">):</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gg_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
     <span class="sd">&quot;&quot;&quot;Construct a GatorGraderCheck.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        gg_args: The list of arguments to pass to GatorGrader.</span>
-<span class="sd">        json_info: The all-encompassing check information to include in json output.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gg_args</span> <span class="o">=</span> <span class="n">gg_args</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -833,25 +815,19 @@
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShellCheck</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">ShellCheck</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
     <span class="sd">&quot;&quot;&quot;Represent a shell check.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">json_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Construct a ShellCheck.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            command: The command to run in a shell.</span>
 <span class="sd">            description: The description to use in output.</span>
 <span class="sd">                If no description is given, the command is used as the description.</span>
-<span class="sd">            json_info: The all-encompassing check information to include in json output.</span>
-<span class="sd">                If none is given, command is used</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span> <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">command</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
 </code></pre></div></td></tr></table></div>
           </details>
 
@@ -868,13 +844,12 @@
 
 
 
-
   <div class="doc doc-object doc-function">
 
 
 
 <h3 id="gatorgrade.input.checks.ShellCheck.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">json_info</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 </h3>
@@ -916,16 +891,6 @@ If no description is given, the command is used as the description.</p></td>
                 <code>None</code>
           </td>
         </tr>
-        <tr>
-          <td><code>json_info</code></td>
-          <td>
-          </td>
-          <td><p>The all-encompassing check information to include in json output.
-If none is given, command is used</p></td>
-          <td>
-                <code>None</code>
-          </td>
-        </tr>
     </tbody>
   </table>
 
@@ -940,22 +905,16 @@ If none is given, command is used</p></td>
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">json_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a ShellCheck.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        command: The command to run in a shell.</span>
 <span class="sd">        description: The description to use in output.</span>
 <span class="sd">            If no description is given, the command is used as the description.</span>
-<span class="sd">        json_info: The all-encompassing check information to include in json output.</span>
-<span class="sd">            If none is given, command is used</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span> <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">command</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
