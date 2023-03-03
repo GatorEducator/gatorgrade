@@ -106,7 +106,7 @@ def update_issue(
             find_issue = True
     if find_issue:
         return True
-    rich.print(f"\n[red] WARNING: issue called {issue_name}, rewrite skipped")
+    rich.print(f"\n[red] WARNING: issue called {issue_name}, update skipped")
     return False
 
 
