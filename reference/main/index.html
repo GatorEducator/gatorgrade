@@ -633,7 +633,7 @@
 
 
 <h2 id="gatorgrade.main.gatorgrade" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">gatorgrade</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the YML file.&#39;</span><span class="p">))</span></code>
+<code class="highlight language-python"><span class="n">gatorgrade</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s1">&#39;--config&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the yml file.&#39;</span><span class="p">),</span> <span class="n">report</span><span class="o">=</span><span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">&#39;--report&#39;</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A tuple containing the following REQUIRED values:             1. The destination of the report (either file or env)             2. The format of the report (either json or md)             3. the name of the file or environment variable            4. use &#39;env md GITHUB_STEP_SUMMARY&#39; to create GitHub job summary in GitHub Action&quot;</span><span class="p">))</span></code>
 
 
 </h2>
@@ -645,8 +645,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/main.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">33</span>
-<span class="normal">34</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">34</span>
 <span class="normal">35</span>
 <span class="normal">36</span>
 <span class="normal">37</span>
@@ -674,10 +673,31 @@
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">invoke_without_command</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@app</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">invoke_without_command</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">gatorgrade</span><span class="p">(</span>
     <span class="n">ctx</span><span class="p">:</span> <span class="n">typer</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span>
-    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the YML file.&quot;</span><span class="p">),</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">FILE</span><span class="p">,</span> <span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the yml file.&quot;</span><span class="p">),</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span>
+        <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">&quot;--report&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-r&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A tuple containing the following REQUIRED values: </span><span class="se">\</span>
+<span class="s2">            1. The destination of the report (either file or env) </span><span class="se">\</span>
+<span class="s2">            2. The format of the report (either json or md) </span><span class="se">\</span>
+<span class="s2">            3. the name of the file or environment variable</span><span class="se">\</span>
+<span class="s2">            4. use &#39;env md GITHUB_STEP_SUMMARY&#39; to create GitHub job summary in GitHub Action&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Run the GatorGrader checks in the specified gatorgrade.yml file.&quot;&quot;&quot;</span>
     <span class="c1"># if ctx.subcommand is None then this means</span>
@@ -688,7 +708,7 @@
         <span class="c1"># there are valid checks and thus the</span>
         <span class="c1"># tool should run them with run_checks</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">checks_status</span> <span class="o">=</span> <span class="n">run_checks</span><span class="p">(</span><span class="n">checks</span><span class="p">)</span>
+            <span class="n">checks_status</span> <span class="o">=</span> <span class="n">run_checks</span><span class="p">(</span><span class="n">checks</span><span class="p">,</span> <span class="n">report</span><span class="p">)</span>
         <span class="c1"># no checks were created and this means</span>
         <span class="c1"># that, most likely, the file was not</span>
         <span class="c1"># valid and thus the tool cannot run checks</span>

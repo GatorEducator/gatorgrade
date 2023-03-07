@@ -737,13 +737,17 @@
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CheckResult</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CheckResult</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
     <span class="sd">&quot;&quot;&quot;Represent the result of running a check.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">json_info</span><span class="p">,</span>
         <span class="n">diagnostic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;No diagnostic message available&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Construct a CheckResult.</span>
@@ -752,10 +756,12 @@
 <span class="sd">            passed: The passed or failed status of the check result. If true, indicates that the</span>
 <span class="sd">                check has passed.</span>
 <span class="sd">            description: The description to use in output.</span>
+<span class="sd">            json_info: the overall information to be included in json output</span>
 <span class="sd">            diagnostic: The message to use in output if the check has failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="n">passed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span> <span class="o">=</span> <span class="n">diagnostic</span>
 
     <span class="k">def</span> <span class="nf">display_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -814,12 +820,13 @@
 
 
 
+
   <div class="doc doc-object doc-function">
 
 
 
 <h3 id="gatorgrade.output.check_result.CheckResult.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">passed</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">diagnostic</span><span class="o">=</span><span class="s1">&#39;No diagnostic message available&#39;</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">passed</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">json_info</span><span class="p">,</span> <span class="n">diagnostic</span><span class="o">=</span><span class="s1">&#39;No diagnostic message available&#39;</span><span class="p">)</span></code>
 
 
 </h3>
@@ -862,6 +869,15 @@ check has passed.</p></td>
           </td>
         </tr>
         <tr>
+          <td><code>json_info</code></td>
+          <td>
+          </td>
+          <td><p>the overall information to be included in json output</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
           <td><code>diagnostic</code></td>
           <td>
                 <code>str</code>
@@ -892,10 +908,14 @@ check has passed.</p></td>
 <span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
-<span class="normal">25</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">json_info</span><span class="p">,</span>
     <span class="n">diagnostic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;No diagnostic message available&quot;</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a CheckResult.</span>
@@ -904,10 +924,12 @@ check has passed.</p></td>
 <span class="sd">        passed: The passed or failed status of the check result. If true, indicates that the</span>
 <span class="sd">            check has passed.</span>
 <span class="sd">        description: The description to use in output.</span>
+<span class="sd">        json_info: the overall information to be included in json output</span>
 <span class="sd">        diagnostic: The message to use in output if the check has failed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">passed</span> <span class="o">=</span> <span class="n">passed</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">json_info</span> <span class="o">=</span> <span class="n">json_info</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic</span> <span class="o">=</span> <span class="n">diagnostic</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -960,17 +982,17 @@ Defaults to false.</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
-<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Print check&#39;s passed or failed status, description, and, optionally, diagnostic message.</span>
 
 <span class="sd">    If no diagnostic message is available, then the output will say so.</span>
@@ -1032,10 +1054,7 @@ Defaults to false.</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
@@ -1046,7 +1065,10 @@ Defaults to false.</p></td>
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
-<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">display_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">display_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Print check&#39;s passed or failed status, description, and, optionally, diagnostic message.</span>
 
 <span class="sd">    If no diagnostic message is available, then the output will say so.</span>
@@ -1112,17 +1134,17 @@ Defaults to false.</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/check_result.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_diagnostic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Print check&#39;s passed or failed status, description, and, optionally, diagnostic message.</span>
 
 <span class="sd">    If no diagnostic message is available, then the output will say so.</span>
