@@ -250,7 +250,9 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    deadline,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
