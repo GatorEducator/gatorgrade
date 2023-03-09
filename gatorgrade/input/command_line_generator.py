@@ -30,6 +30,7 @@ def generate_checks(
                 ShellCheck(
                     command=check_data.check.get("command"),
                     description=check_data.check.get("description"),
+                    json_info=check_data.check,
                 )
             )
         # Otherwise, it is a GatorGrader check
@@ -61,6 +62,6 @@ def generate_checks(
                 if dirname == "":
                     dirname = "."
                 gg_args.extend(["--directory", dirname, "--file", filename])
-            checks.append(GatorGraderCheck(gg_args=gg_args))
+            checks.append(GatorGraderCheck(gg_args=gg_args, json_info=check_data.check))
 
     return checks, deadline

@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Tuple
 
 import typer
 from rich.console import Console
@@ -33,7 +34,17 @@ FAILURE = 1
 @app.callback(invoke_without_command=True)
 def gatorgrade(
     ctx: typer.Context,
-    filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the YML file."),
+    filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
+    report: Tuple[str, str, str] = typer.Option(
+        (None, None, None),
+        "--report",
+        "-r",
+        help="A tuple containing the following REQUIRED values: \
+            1. The destination of the report (either file or env) \
+            2. The format of the report (either json or md) \
+            3. the name of the file or environment variable\
+            4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
+    ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
@@ -44,7 +55,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, deadline)
+            checks_status = run_checks(checks, report, deadline)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
