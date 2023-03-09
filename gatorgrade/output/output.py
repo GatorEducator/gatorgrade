@@ -189,11 +189,9 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-def configure_report(report_params: Tuple[str, str, str], report_output_data: dict):
-    """Put together the contents of the report depending on the inputs of the user.
-
 def calculate_deadline_time_dif(older_time: datetime, latest_time: datetime):
-    """Input two times and return the difference of the two in days, hours, minutes, and seconds.
+    """
+    Input two times and return the difference of the two in days, hours, minutes, and seconds.
 
     Args:
         older_time: The larger datetime object
@@ -207,8 +205,9 @@ def calculate_deadline_time_dif(older_time: datetime, latest_time: datetime):
     return days, hours, minutes, seconds
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], deadline) -> bool:
-    """Runs the generated checks.
+def configure_report(report_params: Tuple[str, str, str], report_output_data: dict):
+    """Put together the contents of the report depending on the inputs of the user.
+
     Args:
         report_params: The details of what the user wants the report to look like
             report_params[0]: file or env
