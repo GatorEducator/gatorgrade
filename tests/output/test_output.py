@@ -83,9 +83,10 @@ def test_future_date_shows_upcoming_deadline(capsys):
             "hello-world.py",
         ]
     )
-    deadline = "01/01/50 12:00:00\n"
     # When run_checks is called
-    output.run_checks([check], deadline)
+    report = (None, None, None)
+    deadline = "01/01/50 12:00:00\n"
+    output.run_checks([check], report, deadline)
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "Your assignment is due in" in out
@@ -109,7 +110,8 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
     )
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks([check], report, None)
+    deadline = None
+    output.run_checks([check], report, deadline)
     # Then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
@@ -159,7 +161,8 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     ]
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks(checks, report, None)
+    deadline = None
+    output.run_checks(checks, report, deadline)
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 2/3 (67%) of checks" in out
@@ -206,7 +209,8 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     ]
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks(checks, report, None)
+    deadline = None
+    output.run_checks(checks, report, deadline)
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
@@ -278,7 +282,8 @@ def test_json_report_file_created_correctly():
     ]
     # run them with the wanted report config
     report = ("file", "json", "insights.json")
-    output.run_checks(checks, report)
+    deadline = None
+    output.run_checks(checks, report, deadline)
     # check to make sure the created file matches the expected output
     expected_file_contents_dict = {
         "amount_correct": 1,
@@ -387,7 +392,7 @@ def test_md_report_file_created_correctly():
     ]
     # run them with the wanted report config
     report = ("file", "md", "insights.md")
-    output.run_checks(checks, report)
+    output.run_checks(checks, report, None)
     # check to make sure the created file matches the expected output
     expected_file_contents = """# Gatorgrade Insights\n\n**Project Name:** gatorgrade\n**Amount Correct:** 1/3 (33%)\n\n## Passing Checks"""
 
@@ -457,6 +462,6 @@ def test_print_error_with_invalid_report_path(capsys):
         ),
     ]
     report = ("file", "md", "invalid_path/insight.md")
-    output.run_checks(checks, report)
+    output.run_checks(checks, report, None)
     out, _ = capsys.readouterr()
     assert "Can't open or write" in out
