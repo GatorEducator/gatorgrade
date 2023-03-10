@@ -54,11 +54,13 @@ def test_past_date_displays_late_message(capsys):
             "tests/test_assignment/src",
             "--file",
             "hello-world.py",
-        ]
+        ],
+        json_info="test",
     )
+    report = (None, None, None)
     deadline = "01/01/23 12:00:00\n"
     # When run_checks is called
-    output.run_checks([check], deadline)
+    output.run_checks([check], report, deadline)
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "Your assignment is late. The deadline was" in out
@@ -81,7 +83,8 @@ def test_future_date_shows_upcoming_deadline(capsys):
             "tests/test_assignment/src",
             "--file",
             "hello-world.py",
-        ]
+        ],
+        json_info="test",
     )
     # When run_checks is called
     report = (None, None, None)
