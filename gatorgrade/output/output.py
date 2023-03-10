@@ -82,22 +82,19 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
 
 
 def create_report_json(
-    passed_count,
+    passed_count: int,
     checkResults: List[CheckResult],
-    percent_passed,
+    percent_passed: int,
+    deadline_info: str,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
     Args:
         passed_count: the number of checks that passed
-        check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
+        deadline_info: the time until/since the given deadline, if included
     """
-    # create list to hold the key values for the dictionary that
-    # will be converted into json
-    overall_key_list = ["amount_correct", "percentage_score", "checks"]
-
     checks_list = []
     overall_dict = {}
 
@@ -110,10 +107,20 @@ def create_report_json(
             results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
 
+    # create list to hold the key values for the dictionary that
+    # will be converted into json
+    # if there isn't a deadline
+    if deadline_info == "N/A":
+        overall_key_list = ["amount_correct", "percentage_score", "checks"]
+        overall_value_list = [passed_count, percent_passed, checks_list]
+    # if there is a deadline, include it in the key and value lists
+    else:
+        overall_key_list = ["amount_correct", "percentage_score", "deadline", "checks"]
+        overall_value_list = [passed_count, percent_passed, deadline_info, checks_list]
+
     # create the dictionary for all of the check information
-    overall_dict = dict(
-        zip(overall_key_list, [passed_count, percent_passed, checks_list])
-    )
+    overall_dict = dict(zip(overall_key_list, overall_value_list))
+
     return overall_dict
 
 
@@ -130,7 +137,14 @@ def create_markdown_report_file(json: dict) -> str:
     num_checks = len(json.get("checks"))
 
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)\n"
+    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)"
+
+    # if there is a deadline, include it
+    if "deadline" in json:
+        markdown_contents += f"**Deadline:** {json.get('deadline')}\n"
+    # else, add newline to prepare for checks
+    else:
+        markdown_contents += "\n"
 
     # split checks into passing and not passing
     for check in json.get("checks"):
@@ -297,6 +311,7 @@ def run_checks(
         percent = round(passed_count / len(results) * 100)
 
     # if a deadline is included:
+    deadline_difference = "N/A"
     if deadline != None:
         # turn the string into a datetime variable
         deadline = datetime.strptime(deadline[:-1], "%m/%d/%y %H:%M:%S")
@@ -304,19 +319,23 @@ def run_checks(
         now = datetime.now()
         if now > deadline:
             days, hours, minutes, seconds = calculate_deadline_time_dif(now, deadline)
+            deadline_difference = f"Late by {abs(days)} days, {hours} hours, {minutes} minutes, and {seconds} seconds."
             print(
                 f"\n-~- Your assignment is late. The deadline was {abs(days)} days, {hours} hours, {minutes} minutes, and {seconds} seconds ago. -~-"
             )
         # else, print out the remaining time until the assignment is due
         else:
             days, hours, minutes, seconds = calculate_deadline_time_dif(deadline, now)
+            deadline_difference = f"Due in {days * -1} days, {hours} hours, {minutes} minutes, and {seconds} seconds."
             print(
                 f"\n-~- Your assignment is due in {days * -1} days, {hours} hours, {minutes} minutes, and {seconds} seconds. -~-"
             )
 
     # if the report is wanted, create output in line with their specifications
     if all(report):
-        report_output_data = create_report_json(passed_count, results, percent)
+        report_output_data = create_report_json(
+            passed_count, results, percent, deadline_difference
+        )
         configure_report(report, report_output_data)
 
     # compute summary results and display them in the console
