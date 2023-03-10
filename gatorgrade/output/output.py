@@ -141,7 +141,7 @@ def create_markdown_report_file(json: dict) -> str:
 
     # if there is a deadline, include it
     if "deadline" in json:
-        markdown_contents += f"**Deadline:** {json.get('deadline')}\n"
+        markdown_contents += f"\n**Deadline:** {json.get('deadline')}\n"
     # else, add newline to prepare for checks
     else:
         markdown_contents += "\n"
