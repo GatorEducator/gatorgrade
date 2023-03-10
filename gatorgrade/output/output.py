@@ -116,8 +116,8 @@ def create_report_json(
     return overall_dict
 
 
-def create_markdown_report_file(json: dict) -> str:
-    """Create a markdown file using the created json to use in github actions summary, among other places.
+def create_markdown_report(json: dict) -> str:
+    """Create a markdown-formatted string using an inputted json.
 
     Args:
         json: a dictionary containing the json that should be converted to markdown
