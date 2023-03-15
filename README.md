@@ -106,7 +106,7 @@ where `<TARGET_PATH_LIST>` is a list of relative paths to files or folders you
 want to include in the `gatorgrade.yml` file. These paths must correspond to
 existing files or folders in the current directory. Any given folders will be
 expanded to the files they contain. Please note that files and folders that
-start with `__` or `.` and empty folders will be automatically ignored.
+start with `__` (double underscore) or `.` and empty folders will be automatically ignored.
 
 ## Contributing to GatorGrade
 
