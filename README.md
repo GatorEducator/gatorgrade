@@ -68,7 +68,7 @@ example of a GatorGrader check that should be run in the global context).
 To configure GatorGrader checks to run within a file context, specify the path
 to the file as a key (or nested keys) before specifying the GatorGrader checks.
 For each GatorGrader check, define a `description` to print in the
-output, the name of the `check`, and any [`options` specific to the GatorGrader check](https://www.gatorgrader.org/ember).
+output, the name of the `check`, and any `options` specific to the GatorGrader check.
 
 ```yml
 - src:
