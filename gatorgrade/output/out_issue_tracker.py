@@ -1,18 +1,18 @@
 """Create or rewrite a GitHub issue tracker message about json or markdown report."""
 
 import os
+from pathlib import Path
 from typing import List
 from typing import Tuple
 
-from pathlib import Path
-
 import rich
 from github import Github
+
 from gatorgrade.input.in_file_path import parse_yaml_file
 
 
-def authenticate() -> Tuple[Github,str]:
-    """Create GitHub objects"""
+def authenticate() -> Tuple[Github, str]:
+    """Create GitHub objects."""
     # Only write issue tracker message when running in GitHub Action
     if os.environ.get("GITHUB_ACTIONS") == "true":
         # Create an instance with GitHub Action Automatic Token to access to GitHub REST API
@@ -22,16 +22,21 @@ def authenticate() -> Tuple[Github,str]:
         repository_full_name = os.environ.get("GITHUB_REPOSITORY")
         return github_api, repository_full_name
     else:
-        raise PermissionError("WARNING: issue tracker report only works in GitHub Action, skipped creating issue.")
+        raise PermissionError(
+            "WARNING: issue tracker report only works in GitHub Action, skipped creating issue."
+        )
         # TODO: Provide ability to run locally
 
 
 def parse_config(config_file: Path):
-    """Find needed information from configuration file"""
+    """Find needed information from configuration file."""
     # TODO
     pass
 
+
 class issueExecute:
+    """Execute changes related to issue(s)."""
+
     @staticmethod
     def create_issue(
         github_object: Github,
@@ -40,7 +45,8 @@ class issueExecute:
         issue_body: str,
         labels: List[str] = [],
     ) -> bool:
-        """Create a new issue.
+        """
+        Create a new issue.
 
         Args:
             github_object(GitHub): An authenticated GitHub object allows to interact with GitHub REST API
@@ -49,11 +55,13 @@ class issueExecute:
             issue_body(str): content used to make issue body
             labels(list of str): labels that will be attached into the issue
         """
-
         repo = github_object.get_repo(repo_name)
-        repo.create_issue(title=issue_name, body=issue_body, labels=labels + ["Gatorgrade"])
+        repo.create_issue(
+            title=issue_name, body=issue_body, labels=labels + ["Gatorgrade"]
+        )
         print(f"\n[green] 🏖️ Successfully create an issue called {issue_name}")
         return True
+
     @staticmethod
     def rewrite_issue(
         github_object: Github,
@@ -78,7 +86,9 @@ class issueExecute:
                 # Allow rewrite all the issues which share the same issue name
                 find_issue = True
         if find_issue:
-            rich.print(f"\n[green] 🏖️ Successfully rewrite all the issues called{issue_name}")
+            rich.print(
+                f"\n[green] 🏖️ Successfully rewrite all the issues called{issue_name}"
+            )
             return True
         rich.print(f"\n[red] WARNING: issue called {issue_name}, rewrite skipped")
         return False
@@ -111,51 +121,77 @@ class issueExecute:
             return True
         rich.print(f"\n[red] WARNING: issue called {issue_name}, update skipped")
         return False
-    
+
+
 class issueMode:
+    """Determine steps to do to issue(s)."""
+
     def __init__(self) -> None:
+        """Get Github base information."""
+        # TODO: move authentication function out of this class for a better modularization
         self.api_object, self.repo_name = authenticate()
 
-    def stack_issue_list_mode(self,
-        issue_name: str = "Gatorgrade: Insight Report", issue_body: str = "", labels: List[str]= []
+    def stack_issue_list_mode(
+        self,
+        issue_name: str = "Gatorgrade: Insight Report",
+        issue_body: str = "",
+        labels: List[str] = [],
     ):
         """Create a new issue instead of editing the same issue."""
         if not self.__check_issue_existence(issue_name):
-            issueExecute.create_issue(self.api_object, self.repo_name, issue_name, issue_body,labels)
-            # TODO: decide return type 
-            return 
-        issueExecute.rewrite_issue(self.api_object, self.repo_name, issue_name, issue_body)
+            issueExecute.create_issue(
+                self.api_object, self.repo_name, issue_name, issue_body, labels
+            )
+            # TODO: decide return type
+            return
+        issueExecute.rewrite_issue(
+            self.api_object, self.repo_name, issue_name, issue_body
+        )
         return
-    
-    def rewrite_issue_mode(self,
-        issue_name: str = "Gatorgrade: Insight Report", issue_body: str = "", labels: List[str]= []
+
+    def rewrite_issue_mode(
+        self,
+        issue_name: str = "Gatorgrade: Insight Report",
+        issue_body: str = "",
+        labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise rewrite the new issue."""
         if not self.__check_issue_existence(issue_name):
-            issueExecute.create_issue(self.api_object, self.repo_name, issue_name, issue_body,labels)
-            # TODO: decide return type 
-            return 
-        issueExecute.rewrite_issue(self.api_object, self.repo_name, issue_name, issue_body)
+            issueExecute.create_issue(
+                self.api_object, self.repo_name, issue_name, issue_body, labels
+            )
+            # TODO: decide return type
+            return
+        issueExecute.rewrite_issue(
+            self.api_object, self.repo_name, issue_name, issue_body
+        )
         return
 
-
-    def stack_issue_mode(self,
-        issue_name: str = "Gatorgrade: Insight Report", issue_body: str = "", labels: List[str]= []
+    def stack_issue_mode(
+        self,
+        issue_name: str = "Gatorgrade: Insight Report",
+        issue_body: str = "",
+        labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise add new comments on the same issue."""
         if not self.__check_issue_existence(issue_name):
-            issueExecute.create_issue(self.api_object, self.repo_name, issue_name, issue_body,labels)
-            # TODO: decide return type 
-            return 
-        issueExecute.update_issue(self.api_object, self.repo_name, issue_name, issue_body)
-    
-    def __check_issue_existence(self,issue_name:str)->bool:
-        """check if an issue exist or not."""
+            issueExecute.create_issue(
+                self.api_object, self.repo_name, issue_name, issue_body, labels
+            )
+            # TODO: decide return type
+            return
+        issueExecute.update_issue(
+            self.api_object, self.repo_name, issue_name, issue_body
+        )
+
+    def __check_issue_existence(self, issue_name: str) -> bool:
+        """Check if an issue exist or not."""
         repo = self.api_object.get_repo(self.repo_name)
         for issue in repo.get_issues():
             if issue.title == issue_name:
                 return True
         return False
+
 
 if __name__ == "__main__":
     a_issue = issueMode()
