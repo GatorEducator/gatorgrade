@@ -1,14 +1,13 @@
 """Create or rewrite a GitHub issue tracker message about json or markdown report."""
 
 import os
-from pathlib import Path
 from typing import List
 from typing import Tuple
 
 import rich
 from github import Github
 
-from gatorgrade.input.in_file_path import parse_yaml_file
+from gatorgrade.input.parse_config import parse_yaml_file
 
 
 def authenticate() -> Tuple[Github, str]:
@@ -26,12 +25,6 @@ def authenticate() -> Tuple[Github, str]:
             "WARNING: issue tracker report only works in GitHub Action, skipped creating issue."
         )
         # TODO: Provide ability to run locally
-
-
-def parse_config(config_file: Path):
-    """Find needed information from configuration file."""
-    # TODO
-    pass
 
 
 class issueExecute:
@@ -126,18 +119,20 @@ class issueExecute:
 class issueMode:
     """Determine steps to do to issue(s)."""
 
-    def __init__(self) -> None:
+    def __init__(self, api_object, repo_name) -> None:
         """Get Github base information."""
         # TODO: move authentication function out of this class for a better modularization
-        self.api_object, self.repo_name = authenticate()
+        self.api_object, self.repo_name = api_object, repo_name
+        self.mode_list = ["rewrite", "multi", "comment"]
 
-    def stack_issue_list_mode(
+    def multi_issue_mode(
         self,
         issue_name: str = "Gatorgrade: Insight Report",
         issue_body: str = "",
         labels: List[str] = [],
     ):
         """Create a new issue instead of editing the same issue."""
+        # All the issue mode methods have to end with _issue_mode
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -156,6 +151,7 @@ class issueMode:
         labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise rewrite the new issue."""
+        # All the issue mode methods have to end with _issue_mode
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -167,13 +163,14 @@ class issueMode:
         )
         return
 
-    def stack_issue_mode(
+    def comment_issue_mode(
         self,
         issue_name: str = "Gatorgrade: Insight Report",
         issue_body: str = "",
         labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise add new comments on the same issue."""
+        # All the issue mode methods have to end with _issue_mode
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -191,6 +188,60 @@ class issueMode:
             if issue.title == issue_name:
                 return True
         return False
+
+
+class issueReport:
+    """Creeat an issue tracker report."""
+
+    def __init__(self, config_file, report_content) -> None:
+        """Get necessary inf."""
+        self.config = config_file
+        self.report_content = report_content
+        self.github_object, self.repo_name = authenticate()
+        self.user_data = self.__parse_config_data()
+    def report(self):
+
+        # user doesn't define any inf about issue report, skip issue report
+        if not self.user_data:
+            return
+            
+        gatorgrade_issue = issueMode(self.github_object, self.repo_name)
+        user_chosen_mode = self.user_data["mode"]
+        supported_modes = gatorgrade_issue.mode_list
+        # Make sure user chooses the supported mode
+        if user_chosen_mode not in supported_modes:
+            rich.print(
+                f"\n[red] {user_chosen_mode} is not in the supported mode list {supported_modes}"
+            )
+            return
+
+        # Transform user chosen mode name to the full mode method name
+        mode_method_name = user_chosen_mode + "_issue_mode"
+        # Get mode method in issueMode class by method name
+        mode_method = getattr(gatorgrade_issue, mode_method_name)
+
+        # Create default NONE arguments to unify function arguments
+        issue_name, labels = None, None
+        if "options" in self.user_data:
+            # If one option doesn't exist, method will be triggered with a method default value
+            options = self.user_data["options"]
+            issue_name = options["issue_name"] if "issue_name" in options else None
+            labels = options["labels"] if "labels" in options else None
+
+        # Run the mode method to execute issue report
+        mode_method(issue_name, self.report_content, labels)
+        return
+
+    def __parse_config_data(self):
+        """parse configuration file and output issue report related data."""
+        parsed_yaml_file = parse_yaml_file(self.config)
+        # the parsed YAML file contains some contents in a list and thus
+        if len(parsed_yaml_file) > 0:
+            # find 'issue_report' dictionary. It's in the first dict of data list
+            parse_con = parsed_yaml_file[0]
+            if "issue_report" in parse_con:
+                return parse_con["issue_report"]
+        return []
 
 
 if __name__ == "__main__":
