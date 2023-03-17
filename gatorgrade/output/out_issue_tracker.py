@@ -1,6 +1,7 @@
 """Create or rewrite a GitHub issue tracker message about json or markdown report."""
 
 import os
+import sys
 from typing import List
 from typing import Tuple
 
@@ -132,15 +133,9 @@ class issueMode:
         labels: List[str] = [],
     ):
         """Create a new issue instead of editing the same issue."""
-        # All the issue mode methods have to end with _issue_mode
-        if not self.__check_issue_existence(issue_name):
-            issueExecute.create_issue(
-                self.api_object, self.repo_name, issue_name, issue_body, labels
-            )
-            # TODO: decide return type
-            return
-        issueExecute.rewrite_issue(
-            self.api_object, self.repo_name, issue_name, issue_body
+        # All the issue mode methods have to end with _issue_mode and follow the same argument format
+        issueExecute.create_issue(
+            self.api_object, self.repo_name, issue_name, issue_body, labels
         )
         return
 
@@ -151,7 +146,7 @@ class issueMode:
         labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise rewrite the new issue."""
-        # All the issue mode methods have to end with _issue_mode
+        # All the issue mode methods have to end with _issue_mode and follow the same argument format
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -170,7 +165,7 @@ class issueMode:
         labels: List[str] = [],
     ):
         """Create a new issue if there is no issue, otherwise add new comments on the same issue."""
-        # All the issue mode methods have to end with _issue_mode
+        # All the issue mode methods have to end with _issue_mode and follow the same argument format
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -199,12 +194,13 @@ class issueReport:
         self.report_content = report_content
         self.github_object, self.repo_name = authenticate()
         self.user_data = self.__parse_config_data()
+
     def report(self):
 
         # user doesn't define any inf about issue report, skip issue report
         if not self.user_data:
             return
-            
+
         gatorgrade_issue = issueMode(self.github_object, self.repo_name)
         user_chosen_mode = self.user_data["mode"]
         supported_modes = gatorgrade_issue.mode_list
@@ -213,8 +209,9 @@ class issueReport:
             rich.print(
                 f"\n[red] {user_chosen_mode} is not in the supported mode list {supported_modes}"
             )
-            return
+            sys.exit(1)
 
+        rich.print("\n[green] 🔍 Creating issue report(s)")
         # Transform user chosen mode name to the full mode method name
         mode_method_name = user_chosen_mode + "_issue_mode"
         # Get mode method in issueMode class by method name
