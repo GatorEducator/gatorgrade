@@ -2,6 +2,8 @@
 
 import os
 import sys
+from pathlib import Path
+from typing import Dict
 from typing import List
 from typing import Tuple
 
@@ -77,7 +79,7 @@ class issueExecute:
         for issue in repo.get_issues():
             if issue.title == issue_name:
                 issue.edit(issue_name, new_issue_body)
-                # Allow rewrite all the issues which share the same issue name
+                # Rewrite all the issues which share the same issue name
                 find_issue = True
         if find_issue:
             rich.print(
@@ -120,8 +122,14 @@ class issueExecute:
 class issueMode:
     """Determine steps to do to issue(s)."""
 
-    def __init__(self, api_object, repo_name) -> None:
-        """Get Github base information."""
+    def __init__(self, api_object: Github, repo_name: str) -> None:
+        """
+        Get Github base information.
+
+        Args:
+        api_object(Github): An object of Github
+        repo_name(str): Name of the Github repository
+        """
         # TODO: move authentication function out of this class for a better modularization
         self.api_object, self.repo_name = api_object, repo_name
         self.mode_list = ["rewrite", "multi", "comment"]
@@ -132,7 +140,14 @@ class issueMode:
         issue_body: str = "",
         labels: List[str] = [],
     ):
-        """Create a new issue instead of editing the same issue."""
+        """
+        Create a new issue instead of editing the same issue.
+
+        Args:
+            issue_name(str): Name of the issue
+            issue_body(str): Body of the issue
+            labels(list): A list of the issue
+        """
         # All the issue mode methods have to end with _issue_mode and follow the same argument format
         issueExecute.create_issue(
             self.api_object, self.repo_name, issue_name, issue_body, labels
@@ -145,7 +160,14 @@ class issueMode:
         issue_body: str = "",
         labels: List[str] = [],
     ):
-        """Create a new issue if there is no issue, otherwise rewrite the new issue."""
+        """
+        Create a new issue if there is no issue, otherwise rewrite the new issue.
+
+        Args:
+            issue_name(str): Name of the issue
+            issue_body(str): Body of the issue
+            labels(list): A list of the issue
+        """
         # All the issue mode methods have to end with _issue_mode and follow the same argument format
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
@@ -164,7 +186,14 @@ class issueMode:
         issue_body: str = "",
         labels: List[str] = [],
     ):
-        """Create a new issue if there is no issue, otherwise add new comments on the same issue."""
+        """
+        Create a new issue if there is no issue, otherwise add new comments on the same issue.
+
+        Args:
+            issue_name(str): Name of the issue
+            issue_body(str): Body of the issue
+            labels(list): A list of the issue
+        """
         # All the issue mode methods have to end with _issue_mode and follow the same argument format
         if not self.__check_issue_existence(issue_name):
             issueExecute.create_issue(
@@ -177,7 +206,12 @@ class issueMode:
         )
 
     def __check_issue_existence(self, issue_name: str) -> bool:
-        """Check if an issue exist or not."""
+        """
+        Check if an issue exist or not.
+
+        Args:
+            issue_name(str): name of the issue
+        """
         repo = self.api_object.get_repo(self.repo_name)
         for issue in repo.get_issues():
             if issue.title == issue_name:
@@ -186,17 +220,23 @@ class issueMode:
 
 
 class issueReport:
-    """Creeat an issue tracker report."""
+    """Represents an issue tracker report."""
 
-    def __init__(self, config_file, report_content) -> None:
-        """Get necessary inf."""
+    def __init__(self, config_file: Path, report_content: str) -> None:
+        """
+        Get necessary inf.
+
+        Args:
+            config_file(Path): Path to the configuration file
+            report_content(str): Content of the Github Issue report
+        """
         self.config = config_file
         self.report_content = report_content
         self.github_object, self.repo_name = authenticate()
         self.user_data = self.__parse_config_data()
 
     def report(self):
-
+        """Create a report in Github Issue Tracker."""
         # user doesn't define any inf about issue report, skip issue report
         if not self.user_data:
             return
@@ -229,8 +269,8 @@ class issueReport:
         mode_method(issue_name, self.report_content, labels)
         return
 
-    def __parse_config_data(self):
-        """parse configuration file and output issue report related data."""
+    def __parse_config_data(self) -> Dict:
+        """Parse the configuration file specified in the `config_file` attribute and and return issue report related data."""
         parsed_yaml_file = parse_yaml_file(self.config)
         # the parsed YAML file contains some contents in a list and thus
         if len(parsed_yaml_file) > 0:
@@ -238,7 +278,7 @@ class issueReport:
             parse_con = parsed_yaml_file[0]
             if "issue_report" in parse_con:
                 return parse_con["issue_report"]
-        return []
+        return dict()
 
 
 if __name__ == "__main__":
