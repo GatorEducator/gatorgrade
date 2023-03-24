@@ -105,8 +105,9 @@ class MockIssue:
     def add_to_labels(self, label_name: str):
         self.labels.append(MockLabel(label_name))
 
-    def edit(self, state: str):
-        self.state = state
+    def edit(self, title: str, issue_body: str):
+        self.title = title
+        self.body = issue_body
 
 
 class MockLabel:
