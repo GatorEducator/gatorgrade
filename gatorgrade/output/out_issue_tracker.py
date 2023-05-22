@@ -11,23 +11,9 @@ import rich
 from github import Github
 
 from gatorgrade.input.parse_config import parse_yaml_file
+import pytest
 
 
-def authenticate() -> Tuple[Github, str]:
-    """Create GitHub objects."""
-    # Only write issue tracker message when running in GitHub Action
-    if os.environ.get("GITHUB_ACTIONS") == "true":
-        # Create an instance with GitHub Action Automatic Token to access to GitHub REST API
-        token = os.environ["GITHUB_TOKEN"]
-        github_api = Github(token)
-        # Get the full of Repo like repos/repo1/
-        repository_full_name = os.environ.get("GITHUB_REPOSITORY")
-        return github_api, repository_full_name
-    else:
-        raise PermissionError(
-            "WARNING: issue tracker report only works in GitHub Action, skipped creating issue."
-        )
-        # TODO: Provide ability to run locally
 
 
 class issueExecute:
@@ -119,7 +105,7 @@ class issueExecute:
         return False
 
 
-class issueMode:
+class issueMode: 
     """Determine steps to do to issue(s)."""
 
     def __init__(self, api_object: Github, repo_name: str) -> None:
@@ -130,7 +116,6 @@ class issueMode:
         api_object(Github): An object of Github
         repo_name(str): Name of the Github repository
         """
-        # TODO: move authentication function out of this class for a better modularization
         self.api_object, self.repo_name = api_object, repo_name
         self.mode_list = ["rewrite", "multi", "comment"]
 
@@ -169,16 +154,18 @@ class issueMode:
             labels(list): A list of the issue
         """
         # All the issue mode methods have to end with _issue_mode and follow the same argument format
+
+        first_operation = False
         if not self.__check_issue_existence(issue_name):
+            first_operation = True
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
             )
-            # TODO: decide return type
-            return
+            return first_operation
         issueExecute.rewrite_issue(
             self.api_object, self.repo_name, issue_name, issue_body
         )
-        return
+        return first_operation
 
     def comment_issue_mode(
         self,
@@ -195,16 +182,18 @@ class issueMode:
             labels(list): A list of the issue
         """
         # All the issue mode methods have to end with _issue_mode and follow the same argument format
+
+        first_operation = False
         if not self.__check_issue_existence(issue_name):
+            first_operation = True
             issueExecute.create_issue(
                 self.api_object, self.repo_name, issue_name, issue_body, labels
             )
-            # TODO: decide return type
-            return
+            return first_operation
         issueExecute.update_issue(
             self.api_object, self.repo_name, issue_name, issue_body
         )
-
+        return first_operation
     def __check_issue_existence(self, issue_name: str) -> bool:
         """
         Check if an issue exist or not.
@@ -215,8 +204,8 @@ class issueMode:
         repo = self.api_object.get_repo(self.repo_name)
         for issue in repo.get_issues():
             if issue.title == issue_name:
-                return True
-        return False
+                return True  # pragma: no cover
+        return False      # pragma: no cover
 
 
 class issueReport:
@@ -232,7 +221,7 @@ class issueReport:
         """
         self.config = config_file
         self.report_content = report_content
-        self.github_object, self.repo_name = authenticate()
+        self.github_object, self.repo_name = self._authenticate()
         self.user_data = self.__parse_config_data()
 
     def report(self):
@@ -269,6 +258,22 @@ class issueReport:
         mode_method(issue_name, self.report_content, labels)
         return
 
+    def _authenticate() -> Tuple[Github, str]:
+        """Create GitHub objects."""
+        # Only write issue tracker message when running in GitHub Action
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            # Create an instance with GitHub Action Automatic Token to access to GitHub REST API
+            token = os.environ["GITHUB_TOKEN"]
+            github_api = Github(token)
+            # Get the full of Repo like repos/repo1/
+            repository_full_name = os.environ.get("GITHUB_REPOSITORY")
+            return github_api, repository_full_name
+        else:
+            raise PermissionError(
+                "WARNING: issue tracker report only works in GitHub Action, skipped creating issue."
+            )
+            # TODO: Provide ability to run locally
+
     def __parse_config_data(self) -> Dict:
         """Parse the configuration file specified in the `config_file` attribute and and return issue report related data."""
         parsed_yaml_file = parse_yaml_file(self.config)
@@ -279,8 +284,3 @@ class issueReport:
             if "issue_report" in parse_con:
                 return parse_con["issue_report"]
         return dict()
-
-
-if __name__ == "__main__":
-    a_issue = issueMode()
-    a_issue.rewrite_issue_mode()
