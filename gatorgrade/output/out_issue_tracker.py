@@ -228,7 +228,7 @@ class issueReport:
         """Create a report in Github Issue Tracker."""
         # user doesn't define any inf about issue report, skip issue report
         if not self.user_data:
-            return
+            return False
 
         gatorgrade_issue = issueMode(self.github_object, self.repo_name)
         user_chosen_mode = self.user_data["mode"]
@@ -247,16 +247,16 @@ class issueReport:
         mode_method = getattr(gatorgrade_issue, mode_method_name)
 
         # Create default NONE arguments to unify function arguments
-        issue_name, labels = None, None
+        issue_name, labels = None, []
         if "options" in self.user_data:
             # If one option doesn't exist, method will be triggered with a method default value
             options = self.user_data["options"]
             issue_name = options["issue_name"] if "issue_name" in options else None
-            labels = options["labels"] if "labels" in options else None
+            labels = options["labels"] if "labels" in options else []
 
         # Run the mode method to execute issue report
         mode_method(issue_name, self.report_content, labels)
-        return
+        return True
 
     def _authenticate() -> Tuple[Github, str]:
         """Create GitHub objects."""
