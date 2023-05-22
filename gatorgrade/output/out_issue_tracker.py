@@ -7,13 +7,11 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
+import pytest
 import rich
 from github import Github
 
 from gatorgrade.input.parse_config import parse_yaml_file
-import pytest
-
-
 
 
 class issueExecute:
@@ -105,7 +103,7 @@ class issueExecute:
         return False
 
 
-class issueMode: 
+class issueMode:
     """Determine steps to do to issue(s)."""
 
     def __init__(self, api_object: Github, repo_name: str) -> None:
@@ -194,6 +192,7 @@ class issueMode:
             self.api_object, self.repo_name, issue_name, issue_body
         )
         return first_operation
+
     def __check_issue_existence(self, issue_name: str) -> bool:
         """
         Check if an issue exist or not.
@@ -205,7 +204,7 @@ class issueMode:
         for issue in repo.get_issues():
             if issue.title == issue_name:
                 return True  # pragma: no cover
-        return False      # pragma: no cover
+        return False  # pragma: no cover
 
 
 class issueReport:
