@@ -226,6 +226,23 @@ def configure_report(
     elif report_params[0] == "env":
         if report_params[2] == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
+            with open(env_file, "w") as env_file:
+                if report_params[1] == "json":
+                    env_file.write(json.dumps(report_output_data_json))
+                else:
+                    env_file.write(str(report_output_data_md))
+        else:
+            os.environ[report_params[2]] = (
+                str(report_output_data_md)
+                if report_params[1] == "md"
+                else json.dumps(report_output_data_json)
+            )
+
+        # Add json report into the GITHUB_ENV environment variable for data collection purpose
+        env_file = os.getenv("GITHUB_ENV")
+        with open(env_file, "a") as myfile:
+            myfile.write(f"JSON_REPORT={report_output_data_json}")
+        # Add env
     else:
         rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
 
