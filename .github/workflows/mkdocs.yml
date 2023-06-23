@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: 3.9
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v7
+        uses: Gr1N/setup-poetry@v8
       - name: Setup Poetry
         run: |
           poetry config virtualenvs.create true
