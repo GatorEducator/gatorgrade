@@ -188,7 +188,9 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-def configure_report(report_params: Tuple[str, str, str], report_output_data: dict):
+def configure_report(
+    report_params: Tuple[str, str, str], report_output_data_json: dict
+):
     """Put together the contents of the report depending on the inputs of the user.
 
     Args:
@@ -200,7 +202,7 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
     """
     # if the user wants markdown, convert the json into md
     if report_params[1] == "md":
-        report_output_data = create_markdown_report_file(report_output_data)
+        report_output_data_md = create_markdown_report_file(report_output_data_json)
 
     # if the user wants the data stored in a file:
     if report_params[0] == "file":
@@ -214,9 +216,9 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
             else:
                 with open(report_params[2], "w", encoding="utf-8") as file:
                     if report_params[1] == "json":
-                        file.write(json.dumps(report_output_data))
+                        file.write(json.dumps(report_output_data_json))
                     else:
-                        file.write(str(report_output_data))
+                        file.write(str(report_output_data_md))
         except:
             rich.print(
                 "\n[red]Can't open or write the target file, check if you provide a valid path"
@@ -224,10 +226,6 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
     elif report_params[0] == "env":
         if report_params[2] == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
-            with open(env_file, "a") as env_file:
-                env_file.write(str(report_output_data))
-        else:
-            os.environ[report_params[2]] = str(report_output_data)
     else:
         rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
 
