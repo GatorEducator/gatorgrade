@@ -249,6 +249,7 @@ def write_json_or_md_file(file_name, content_type, content):
                 json.dump(content, file, indent=4)
             else:
                 file.write(str(content))
+        return True
     except Exception as e:
         raise ValueError(
             "\n[red]Can't open or write the target file, check if you provide a valid path"
