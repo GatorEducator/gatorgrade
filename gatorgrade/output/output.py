@@ -203,7 +203,7 @@ def configure_report(
     report_format = report_params[0]
     report_type = report_params[1]
     report_name = report_params[2]
-    if report_type != "json" and report_type != "md":
+    if report_type not in ("json", "md"):
         raise ValueError(
             "\n[red]The second argument of report has to be 'md' or 'json' "
         )
@@ -246,13 +246,13 @@ def write_json_or_md_file(file_name, content_type, content):
 
         with open(file_name, "w", encoding="utf-8") as file:
             if content_type == "json":
-                file.write(json.dumps(content))
+                json.dump(content, file, indent=4)
             else:
                 file.write(str(content))
-    except:
+    except Exception as e:
         raise ValueError(
             "\n[red]Can't open or write the target file, check if you provide a valid path"
-        )
+        ) from e
 
 
 def run_checks(

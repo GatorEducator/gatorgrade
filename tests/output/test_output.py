@@ -263,13 +263,13 @@ def test_json_report_file_created_correctly():
             },
         ],
     }
-    expected_file_contents = json.dumps(expected_file_contents_dict)
+    expected_file_contents = expected_file_contents_dict
     file = open("insights.json", "r")
-    file_contents = file.read()
+    file_contents = json.load(file)
     file.close()
     os.remove("insights.json")
 
-    assert file_contents in expected_file_contents
+    assert file_contents == expected_file_contents
 
 
 def test_md_report_file_created_correctly():
