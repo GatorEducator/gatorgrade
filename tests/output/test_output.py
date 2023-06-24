@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 
+import pytest
+
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output import output
@@ -403,6 +405,5 @@ def test_print_error_with_invalid_report_path(capsys):
         ),
     ]
     report = ("file", "md", "invalid_path/insight.md")
-    output.run_checks(checks, report)
-    out, _ = capsys.readouterr()
-    assert "Can't open or write" in out
+    with pytest.raises(ValueError):
+        output.run_checks(checks, report)
