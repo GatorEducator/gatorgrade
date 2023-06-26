@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.7'
       - name: Install Poetry
-        uses: Gr1N/setup-poetry@v7
+        uses: Gr1N/setup-poetry@v8
       - name: Publish
         run: |
           poetry version ${GITHUB_REF##*/v}
