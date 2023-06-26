@@ -188,7 +188,9 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-def configure_report(report_params: Tuple[str, str, str], report_output_data: dict):
+def configure_report(
+    report_params: Tuple[str, str, str], report_output_data_json: dict
+):
     """Put together the contents of the report depending on the inputs of the user.
 
     Args:
@@ -198,38 +200,60 @@ def configure_report(report_params: Tuple[str, str, str], report_output_data: di
             report_params[2]: name of the file or env
         report_output_data: the json dictionary that will be used or converted to md
     """
-    # if the user wants markdown, convert the json into md
-    if report_params[1] == "md":
-        report_output_data = create_markdown_report_file(report_output_data)
+    report_format = report_params[0]
+    report_type = report_params[1]
+    report_name = report_params[2]
+    if report_type not in ("json", "md"):
+        raise ValueError(
+            "\n[red]The second argument of report has to be 'md' or 'json' "
+        )
+
+    # if the user wants markdown, get markdown content based on json
+    if report_type == "md":
+        report_output_data_md = create_markdown_report_file(report_output_data_json)
 
     # if the user wants the data stored in a file:
-    if report_params[0] == "file":
-        # try to store it in that file
-        try:
-            # Second argument has to be json or md
-            if report_params[1] != "json" and report_params[1] != "md":
-                rich.print(
-                    "\n[red]The second argument of report has to be 'md' or 'json' "
-                )
-            else:
-                with open(report_params[2], "w", encoding="utf-8") as file:
-                    if report_params[1] == "json":
-                        file.write(json.dumps(report_output_data))
-                    else:
-                        file.write(str(report_output_data))
-        except:
-            rich.print(
-                "\n[red]Can't open or write the target file, check if you provide a valid path"
-            )
-    elif report_params[0] == "env":
-        if report_params[2] == "GITHUB_STEP_SUMMARY":
-            env_file = os.getenv("GITHUB_STEP_SUMMARY")
-            with open(env_file, "a") as env_file:
-                env_file.write(str(report_output_data))
+    if report_format == "file":
+        if report_type == "md":
+            write_json_or_md_file(report_name, report_type, report_output_data_md)
         else:
-            os.environ[report_params[2]] = str(report_output_data)
+            write_json_or_md_file(report_name, report_type, report_output_data_json)
+
+    elif report_format == "env":
+        if report_name == "GITHUB_STEP_SUMMARY":
+            env_file = os.getenv("GITHUB_STEP_SUMMARY")
+            if report_type == "md":
+                write_json_or_md_file(env_file, report_type, report_output_data_md)
+            else:
+                write_json_or_md_file(env_file, report_type, report_output_data_json)
+
+        # Add json report into the GITHUB_ENV environment variable for data collection purpose
+        env_file = os.getenv("GITHUB_ENV")
+        with open(env_file, "a") as myfile:
+            myfile.write(f"JSON_REPORT={report_output_data_json}")
+        # Add env
     else:
-        rich.print("\n[red]The first argument of report has to be 'env' or 'file' ")
+        raise ValueError(
+            "\n[red]The first argument of report has to be 'env' or 'file' "
+        )
+
+
+def write_json_or_md_file(file_name, content_type, content):
+    """Write a markdown or json file."""
+    # try to store content in a file with user chosen format
+    try:
+        # Second argument has to be json or md
+
+        with open(file_name, "w", encoding="utf-8") as file:
+            if content_type == "json":
+                json.dump(content, file, indent=4)
+            else:
+                file.write(str(content))
+        return True
+    except Exception as e:
+        raise ValueError(
+            "\n[red]Can't open or write the target file, check if you provide a valid path"
+        ) from e
 
 
 def run_checks(

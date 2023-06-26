@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 
+import pytest
+
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output import output
@@ -261,13 +263,13 @@ def test_json_report_file_created_correctly():
             },
         ],
     }
-    expected_file_contents = json.dumps(expected_file_contents_dict)
+    expected_file_contents = expected_file_contents_dict
     file = open("insights.json", "r")
-    file_contents = file.read()
+    file_contents = json.load(file)
     file.close()
     os.remove("insights.json")
 
-    assert file_contents in expected_file_contents
+    assert file_contents == expected_file_contents
 
 
 def test_md_report_file_created_correctly():
@@ -403,6 +405,74 @@ def test_print_error_with_invalid_report_path(capsys):
         ),
     ]
     report = ("file", "md", "invalid_path/insight.md")
-    output.run_checks(checks, report)
-    out, _ = capsys.readouterr()
-    assert "Can't open or write" in out
+    with pytest.raises(ValueError):
+        output.run_checks(checks, report)
+
+
+def test_throw_errors_if_report_type_not_md_nor_json():
+    """Test the value error should be thrown if no md nor json is inputted."""
+    checks = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "Echo 'Hello!'", "command": 'echo "hello"'},
+        ),
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                "Complete all TODOs in hello-world.py",
+                "MatchFileFragment",
+                "--fragment",
+                "TODO",
+                "--count",
+                "1",
+                "--exact",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ],
+            json_info={
+                "description": "test",
+                "status": True,
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
+        ),
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                'Call the "greet" function in hello-world.py',
+                "MatchFileFragment",
+                "--fragment",
+                "greet(",
+                "--count",
+                "2",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ],
+            json_info={
+                "description": "test",
+                "status": True,
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
+        ),
+    ]
+    report = ("file", "not_md_nor_json", "invalid_path")
+    with pytest.raises(ValueError):
+        output.run_checks(checks, report)
+
+
+def test_write_md_and_json_correctly(tmp_path):
+    """Test process of writing is good for both json and md."""
+    tmp_md = tmp_path / "test.md"
+    tmp_json = tmp_path / "test.json"
+    assert output.write_json_or_md_file(tmp_md, "md", "hello-world")
+    assert output.write_json_or_md_file(tmp_json, "json", "hello-world")
