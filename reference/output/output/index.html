@@ -605,6 +605,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#gatorgrade.output.output.write_json_or_md_file" class="md-nav__link">
+    write_json_or_md_file()
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -920,7 +927,7 @@
 
 
 <h2 id="gatorgrade.output.output.configure_report" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">configure_report</span><span class="p">(</span><span class="n">report_params</span><span class="p">,</span> <span class="n">report_output_data</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">configure_report</span><span class="p">(</span><span class="n">report_params</span><span class="p">,</span> <span class="n">report_output_data_json</span><span class="p">)</span></code>
 
 
 </h2>
@@ -957,7 +964,6 @@ report_params[2]: name of the file or env</p></td>
         <tr>
           <td><code>report_output_data</code></td>
           <td>
-                <code>dict</code>
           </td>
           <td><p>the json dictionary that will be used or converted to md</p></td>
           <td>
@@ -1010,7 +1016,15 @@ report_params[2]: name of the file or env</p></td>
 <span class="normal">229</span>
 <span class="normal">230</span>
 <span class="normal">231</span>
-<span class="normal">232</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">configure_report</span><span class="p">(</span><span class="n">report_params</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">report_output_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">configure_report</span><span class="p">(</span>
+    <span class="n">report_params</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">report_output_data_json</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Put together the contents of the report depending on the inputs of the user.</span>
 
 <span class="sd">    Args:</span>
@@ -1020,38 +1034,42 @@ report_params[2]: name of the file or env</p></td>
 <span class="sd">            report_params[2]: name of the file or env</span>
 <span class="sd">        report_output_data: the json dictionary that will be used or converted to md</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># if the user wants markdown, convert the json into md</span>
-    <span class="k">if</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;md&quot;</span><span class="p">:</span>
-        <span class="n">report_output_data</span> <span class="o">=</span> <span class="n">create_markdown_report_file</span><span class="p">(</span><span class="n">report_output_data</span><span class="p">)</span>
+    <span class="n">report_format</span> <span class="o">=</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">report_type</span> <span class="o">=</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">report_name</span> <span class="o">=</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">report_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;md&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]The second argument of report has to be &#39;md&#39; or &#39;json&#39; &quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># if the user wants markdown, get markdown content based on json</span>
+    <span class="k">if</span> <span class="n">report_type</span> <span class="o">==</span> <span class="s2">&quot;md&quot;</span><span class="p">:</span>
+        <span class="n">report_output_data_md</span> <span class="o">=</span> <span class="n">create_markdown_report_file</span><span class="p">(</span><span class="n">report_output_data_json</span><span class="p">)</span>
 
     <span class="c1"># if the user wants the data stored in a file:</span>
-    <span class="k">if</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
-        <span class="c1"># try to store it in that file</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Second argument has to be json or md</span>
-            <span class="k">if</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;json&quot;</span> <span class="ow">and</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;md&quot;</span><span class="p">:</span>
-                <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
-                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]The second argument of report has to be &#39;md&#39; or &#39;json&#39; &quot;</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">report_params</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
-                        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">report_output_data</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">report_output_data</span><span class="p">))</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
-                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]Can&#39;t open or write the target file, check if you provide a valid path&quot;</span>
-            <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">report_params</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">:</span>
-            <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">env_file</span><span class="p">:</span>
-                <span class="n">env_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">report_output_data</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">report_format</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">report_type</span> <span class="o">==</span> <span class="s2">&quot;md&quot;</span><span class="p">:</span>
+            <span class="n">write_json_or_md_file</span><span class="p">(</span><span class="n">report_name</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">report_output_data_md</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">report_params</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">report_output_data</span><span class="p">)</span>
+            <span class="n">write_json_or_md_file</span><span class="p">(</span><span class="n">report_name</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">report_output_data_json</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">report_format</span> <span class="o">==</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">report_name</span> <span class="o">==</span> <span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">:</span>
+            <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_STEP_SUMMARY&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">report_type</span> <span class="o">==</span> <span class="s2">&quot;md&quot;</span><span class="p">:</span>
+                <span class="n">write_json_or_md_file</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">report_output_data_md</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">write_json_or_md_file</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="n">report_type</span><span class="p">,</span> <span class="n">report_output_data_json</span><span class="p">)</span>
+
+        <span class="c1"># Add json report into the GITHUB_ENV environment variable for data collection purpose</span>
+        <span class="n">env_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GITHUB_ENV&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">env_file</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">myfile</span><span class="p">:</span>
+            <span class="n">myfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON_REPORT=</span><span class="si">{</span><span class="n">report_output_data_json</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Add env</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">rich</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]The first argument of report has to be &#39;env&#39; or &#39;file&#39; &quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]The first argument of report has to be &#39;env&#39; or &#39;file&#39; &quot;</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
@@ -1442,30 +1460,30 @@ report_params[2]: name of the file or env</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_with_border</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rich_color</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_with_border</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rich_color</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Print text with a border.</span>
 
 <span class="sd">    Args:</span>
@@ -1541,31 +1559,7 @@ shows the overall fraction of passed checks.
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">259</span>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
@@ -1599,7 +1593,31 @@ shows the overall fraction of passed checks.
 <span class="normal">290</span>
 <span class="normal">291</span>
 <span class="normal">292</span>
-<span class="normal">293</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_checks</span><span class="p">(</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_checks</span><span class="p">(</span>
     <span class="n">checks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ShellCheck</span><span class="p">,</span> <span class="n">GatorGraderCheck</span><span class="p">]],</span> <span class="n">report</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Run shell and GatorGrader checks and display whether each has passed or failed.</span>
@@ -1658,6 +1676,62 @@ shows the overall fraction of passed checks.
     <span class="c1"># otherwise the function must return False</span>
     <span class="n">summary_status</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">passed_count</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="n">summary_status</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="gatorgrade.output.output.write_json_or_md_file" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">write_json_or_md_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span></code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Write a markdown or json file.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_json_or_md_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a markdown or json file.&quot;&quot;&quot;</span>
+    <span class="c1"># try to store content in a file with user chosen format</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Second argument has to be json or md</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">content_type</span> <span class="o">==</span> <span class="s2">&quot;json&quot;</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[red]Can&#39;t open or write the target file, check if you provide a valid path&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 </code></pre></div></td></tr></table></div>
         </details>
     </div>
