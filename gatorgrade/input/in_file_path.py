@@ -1,5 +1,6 @@
 """Generates a list of commands to be run through gatorgrader."""
 
+import datetime
 from collections import namedtuple
 from pathlib import Path
 from typing import Any
@@ -37,13 +38,25 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
 
 
 def reformat_yaml_data(data):
-    """Reformat the raw data from a YAML file into a list of tuples."""
+    """Reformat the raw data from a YAML file into a list of tuples.
+
+    Args:
+        data: the raw data from the YAMl file.
+    """
     reformatted_data = []
-    if len(data) == 2:
-        setup_commands = data.pop(0)  # Removes the setup commands
-        run_setup(setup_commands)
-    add_checks_to_list(None, data[0], reformatted_data)
-    return reformatted_data
+    deadline = None
+    data_values = len(data)
+
+    if data_values >= 2:
+        for i in range(data_values - 1):
+            if "setup" in data[i]:
+                setup_commands = data[i]
+                run_setup(setup_commands)
+            elif "deadline" in data[i]:
+                deadline = data[i]["deadline"]
+
+    add_checks_to_list(None, data[-1], reformatted_data)
+    return reformatted_data, deadline
 
 
 def add_checks_to_list(path, data_list, reformatted_data) -> List[CheckData]:

@@ -11,7 +11,7 @@ from .in_file_path import CheckData
 
 # pylint: disable=too-many-nested-blocks
 def generate_checks(
-    check_data_list: List[CheckData],
+    check_data_list: List[CheckData], deadline
 ) -> List[Union[ShellCheck, GatorGraderCheck]]:
     """Generate a list of checks based on check data from the configuration file.
 
@@ -64,4 +64,4 @@ def generate_checks(
                 gg_args.extend(["--directory", dirname, "--file", filename])
             checks.append(GatorGraderCheck(gg_args=gg_args, json_info=check_data.check))
 
-    return checks
+    return checks, deadline
