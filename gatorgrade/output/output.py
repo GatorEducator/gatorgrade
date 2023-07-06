@@ -118,7 +118,8 @@ def create_report_json(
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
         results_json["status"] = checkResults[i].passed
-        results_json["path"] = checkResults[i].path
+        if checkResults[i].path:
+            results_json["path"] = checkResults[i].path
         if not checkResults[i].passed:
             results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)

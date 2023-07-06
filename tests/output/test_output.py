@@ -240,7 +240,6 @@ def test_json_report_file_created_correctly():
                 "options": {
                     "command ": "echo 'hello'",
                 },
-                "path": None,
                 "status": True,
             },
             {
@@ -265,7 +264,6 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
-                "path": None,
                 "diagnostic": "\"<class 'gator.exceptions.InvalidSystemArgumentsError'>\" thrown by GatorGrader",
             },
         ],
