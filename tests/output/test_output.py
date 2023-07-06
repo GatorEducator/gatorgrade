@@ -237,6 +237,7 @@ def test_json_report_file_created_correctly():
                 "options": {
                     "command ": "echo 'hello'",
                 },
+                "path": None,
                 "status": True,
             },
             {
@@ -248,6 +249,9 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
+                "path": os.path.join(
+                    "tests", "test_assignment", "src", "hello-world.py"
+                ),
                 "diagnostic": "Found 0 fragment(s) in the hello-world.py or the output while expecting exactly 1",
             },
             {
@@ -259,6 +263,7 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
+                "path": None,
                 "diagnostic": "\"<class 'gator.exceptions.InvalidSystemArgumentsError'>\" thrown by GatorGrader",
             },
         ],
