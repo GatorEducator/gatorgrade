@@ -168,6 +168,7 @@ def test_json_report_file_created_correctly():
             description="Echo 'Hello!'",
             command="echo 'hello'",
             json_info={
+                "customized_key": "customized value",
                 "description": "Echo'Hello!'",
                 "options": {
                     "command ": "echo 'hello'",
@@ -191,6 +192,7 @@ def test_json_report_file_created_correctly():
             ],
             json_info={
                 "description ": "Complete all TODOs in hello - world.py ",
+                "objective": "TODO",
                 "options": {
                     "Fragment ": "TODO ",
                     "Count ": "1",
@@ -234,6 +236,7 @@ def test_json_report_file_created_correctly():
         "checks": [
             {
                 "description": "Echo'Hello!'",
+                "customized_key": "customized value",
                 "options": {
                     "command ": "echo 'hello'",
                 },
@@ -242,6 +245,7 @@ def test_json_report_file_created_correctly():
             },
             {
                 "description ": "Complete all TODOs in hello - world.py ",
+                "objective": "TODO",
                 "options": {
                     "Fragment ": "TODO ",
                     "Count ": "1",
