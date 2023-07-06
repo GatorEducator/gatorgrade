@@ -74,7 +74,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
             if check.gg_args[i] == "--directory":
                 dir_name = check.gg_args[i + 1]
                 file_name = check.gg_args[i + 3]
-                file_path = os.path.join(dir_name, file_name)
+                file_path = dir_name + "/" + file_name
                 break
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message

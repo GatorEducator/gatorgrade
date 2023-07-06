@@ -253,9 +253,7 @@ def test_json_report_file_created_correctly():
                     "File": "hello-world.py",
                 },
                 "status": False,
-                "path": os.path.join(
-                    "tests", "test_assignment", "src", "hello-world.py"
-                ),
+                "path": "tests/test_assignment/src/hello-world.py",
                 "diagnostic": "Found 0 fragment(s) in the hello-world.py or the output while expecting exactly 1",
             },
             {
