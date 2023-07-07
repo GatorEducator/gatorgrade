@@ -65,6 +65,17 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = result[1]
         description = result[0]
         diagnostic = result[2]
+
+        # Fetch the path from gatorgrade arguments
+        # the path pattern are 4 consistent string in the list
+        # --dir `dir_name` --file `file_name`
+        file_path = None
+        for i in range(len(check.gg_args)):
+            if check.gg_args[i] == "--directory":
+                dir_name = check.gg_args[i + 1]
+                file_name = check.gg_args[i + 3]
+                file_path = dir_name + "/" + file_name
+                break
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # Disable pylint to catch any type of exception thrown by GatorGrader
@@ -72,11 +83,13 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
         diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
+        file_path = None
     return CheckResult(
         passed=passed,
         description=description,
         json_info=check.json_info,
         diagnostic=diagnostic,
+        path=file_path,
     )
 
 
@@ -105,6 +118,8 @@ def create_report_json(
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
         results_json["status"] = checkResults[i].passed
+        if checkResults[i].path:
+            results_json["path"] = checkResults[i].path
         if not checkResults[i].passed:
             results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
