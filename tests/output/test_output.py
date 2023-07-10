@@ -1,5 +1,6 @@
 """Test suite for output_functions.py."""
 
+import datetime
 import json
 import os
 import subprocess
@@ -9,6 +10,18 @@ import pytest
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output import output
+
+FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
+
+
+@pytest.fixture
+def patch_datetime_now(monkeypatch):
+    class mydatetime:
+        @classmethod
+        def now(cls):
+            return FAKE_TIME
+
+    monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
 def test_run_checks_gg_check_should_show_passed(capsys):
@@ -160,7 +173,7 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     assert "Passed 3/3 (100%) of checks" in out
 
 
-def test_json_report_file_created_correctly():
+def test_json_report_file_created_correctly(patch_datetime_now):
     """Test that with the cli input '--report file json insights.json' the file is created correctly."""
     # given the following checks
     checks = [
@@ -233,6 +246,7 @@ def test_json_report_file_created_correctly():
     expected_file_contents_dict = {
         "amount_correct": 1,
         "percentage_score": 33,
+        "report_time": FAKE_TIME.strftime("%Y-%m-%d %H:%M:%S"),
         "checks": [
             {
                 "description": "Echo'Hello!'",

@@ -1,4 +1,5 @@
 """Run checks and display whether each has passed or failed."""
+import datetime
 import json
 import os
 import subprocess
@@ -108,11 +109,13 @@ def create_report_json(
     """
     # create list to hold the key values for the dictionary that
     # will be converted into json
-    overall_key_list = ["amount_correct", "percentage_score", "checks"]
+    overall_key_list = ["amount_correct", "percentage_score", "report_time", "checks"]
 
     checks_list = []
     overall_dict = {}
 
+    report_generation_time = datetime.datetime.now()
+    formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
     # for each check:
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
@@ -126,7 +129,10 @@ def create_report_json(
 
     # create the dictionary for all of the check information
     overall_dict = dict(
-        zip(overall_key_list, [passed_count, percent_passed, checks_list])
+        zip(
+            overall_key_list,
+            [passed_count, percent_passed, formatted_time, checks_list],
+        )
     )
     return overall_dict
 
