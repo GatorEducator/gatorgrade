@@ -733,8 +733,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">54</span>
-<span class="normal">55</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">55</span>
 <span class="normal">56</span>
 <span class="normal">57</span>
 <span class="normal">58</span>
@@ -772,7 +771,8 @@
 <span class="normal">90</span>
 <span class="normal">91</span>
 <span class="normal">92</span>
-<span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_run_gg_check</span><span class="p">(</span><span class="n">check</span><span class="p">:</span> <span class="n">GatorGraderCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
+<span class="normal">93</span>
+<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_run_gg_check</span><span class="p">(</span><span class="n">check</span><span class="p">:</span> <span class="n">GatorGraderCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Run a GatorGrader check.</span>
 
 <span class="sd">    Args:</span>
@@ -879,8 +879,7 @@
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">21</span>
-<span class="normal">22</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
@@ -909,7 +908,8 @@
 <span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_run_shell_check</span><span class="p">(</span><span class="n">check</span><span class="p">:</span> <span class="n">ShellCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
+<span class="normal">51</span>
+<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_run_shell_check</span><span class="p">(</span><span class="n">check</span><span class="p">:</span> <span class="n">ShellCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Run a shell check.</span>
 
 <span class="sd">    Args:</span>
@@ -1001,13 +1001,7 @@ report_params[2]: name of the file or env</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">212</span>
 <span class="normal">213</span>
 <span class="normal">214</span>
 <span class="normal">215</span>
@@ -1048,7 +1042,13 @@ report_params[2]: name of the file or env</p></td>
 <span class="normal">250</span>
 <span class="normal">251</span>
 <span class="normal">252</span>
-<span class="normal">253</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">configure_report</span><span class="p">(</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">configure_report</span><span class="p">(</span>
     <span class="n">report_params</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">report_output_data_json</span><span class="p">:</span> <span class="nb">dict</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Put together the contents of the report depending on the inputs of the user.</span>
@@ -1145,13 +1145,7 @@ report_params[2]: name of the file or env</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
 <span class="normal">143</span>
@@ -1214,7 +1208,13 @@ report_params[2]: name of the file or env</p></td>
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
-<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_markdown_report_file</span><span class="p">(</span><span class="n">json</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_markdown_report_file</span><span class="p">(</span><span class="n">json</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Create a markdown file using the created json to use in github actions summary, among other places.</span>
 
 <span class="sd">    Args:</span>
@@ -1360,8 +1360,7 @@ report_params[2]: name of the file or env</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
-<span class="normal"> 97</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
 <span class="normal">100</span>
@@ -1395,7 +1394,13 @@ report_params[2]: name of the file or env</p></td>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_report_json</span><span class="p">(</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">create_report_json</span><span class="p">(</span>
     <span class="n">passed_count</span><span class="p">,</span>
     <span class="n">checkResults</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">],</span>
     <span class="n">percent_passed</span><span class="p">,</span>
@@ -1410,11 +1415,13 @@ report_params[2]: name of the file or env</p></td>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># create list to hold the key values for the dictionary that</span>
     <span class="c1"># will be converted into json</span>
-    <span class="n">overall_key_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;amount_correct&quot;</span><span class="p">,</span> <span class="s2">&quot;percentage_score&quot;</span><span class="p">,</span> <span class="s2">&quot;checks&quot;</span><span class="p">]</span>
+    <span class="n">overall_key_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;amount_correct&quot;</span><span class="p">,</span> <span class="s2">&quot;percentage_score&quot;</span><span class="p">,</span> <span class="s2">&quot;report_time&quot;</span><span class="p">,</span> <span class="s2">&quot;checks&quot;</span><span class="p">]</span>
 
     <span class="n">checks_list</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">overall_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
+    <span class="n">report_generation_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">formatted_time</span> <span class="o">=</span> <span class="n">report_generation_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
     <span class="c1"># for each check:</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">checkResults</span><span class="p">)):</span>
         <span class="c1"># grab all of the information in it and add it to the checks list</span>
@@ -1428,7 +1435,10 @@ report_params[2]: name of the file or env</p></td>
 
     <span class="c1"># create the dictionary for all of the check information</span>
     <span class="n">overall_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">overall_key_list</span><span class="p">,</span> <span class="p">[</span><span class="n">passed_count</span><span class="p">,</span> <span class="n">percent_passed</span><span class="p">,</span> <span class="n">checks_list</span><span class="p">])</span>
+        <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">overall_key_list</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">passed_count</span><span class="p">,</span> <span class="n">percent_passed</span><span class="p">,</span> <span class="n">formatted_time</span><span class="p">,</span> <span class="n">checks_list</span><span class="p">],</span>
+        <span class="p">)</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">overall_dict</span>
 </code></pre></div></td></tr></table></div>
@@ -1490,13 +1500,7 @@ report_params[2]: name of the file or env</p></td>
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">341</span>
 <span class="normal">342</span>
 <span class="normal">343</span>
 <span class="normal">344</span>
@@ -1513,7 +1517,13 @@ report_params[2]: name of the file or env</p></td>
 <span class="normal">355</span>
 <span class="normal">356</span>
 <span class="normal">357</span>
-<span class="normal">358</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_with_border</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rich_color</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">print_with_border</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rich_color</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Print text with a border.</span>
 
 <span class="sd">    Args:</span>
@@ -1589,13 +1599,7 @@ shows the overall fraction of passed checks.
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
 <span class="normal">283</span>
@@ -1647,7 +1651,13 @@ shows the overall fraction of passed checks.
 <span class="normal">329</span>
 <span class="normal">330</span>
 <span class="normal">331</span>
-<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_checks</span><span class="p">(</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_checks</span><span class="p">(</span>
     <span class="n">checks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ShellCheck</span><span class="p">,</span> <span class="n">GatorGraderCheck</span><span class="p">]],</span> <span class="n">report</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Run shell and GatorGrader checks and display whether each has passed or failed.</span>
@@ -1731,13 +1741,7 @@ shows the overall fraction of passed checks.
 
         <details class="quote">
           <summary>Source code in <code>gatorgrade/output/output.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">262</span>
 <span class="normal">263</span>
 <span class="normal">264</span>
 <span class="normal">265</span>
@@ -1746,7 +1750,13 @@ shows the overall fraction of passed checks.
 <span class="normal">268</span>
 <span class="normal">269</span>
 <span class="normal">270</span>
-<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_json_or_md_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">write_json_or_md_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">content_type</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Write a markdown or json file.&quot;&quot;&quot;</span>
     <span class="c1"># try to store content in a file with user chosen format</span>
     <span class="k">try</span><span class="p">:</span>
