@@ -10,10 +10,15 @@ import builtins
 import io
 import os
 
+import subprocess
+import sys
+
 import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import main
+
+from unittest.mock import patch
 
 runner = CliRunner()
 
@@ -94,14 +99,33 @@ def cleanup_files(monkeypatch):
         )
     ],
 )
+
 def test_full_integration_creates_valid_output(
     assignment_path, expected_output_and_freqs, chdir
 ):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     chdir(assignment_path)
     result = runner.invoke(main.app)
-    print(result.stdout)
 
     assert result.exit_code == 0
     for output, freq in expected_output_and_freqs:
         assert result.stdout.count(output) == freq
+
+
+def test_no_invoked_subcommand_invalid_checks():
+    """Test with a valid configuration file that produces invalid checks."""
+    result = runner.invoke(main.app)
+    assert result.exit_code == 1
+
+        
+# def test_entry_point(chdir):
+#     """Test the entry point of the script to ensure it runs as expected."""
+#     chdir(os.path.join(os.path.dirname(__file__), '../gatorgrade/'))
+#     result = subprocess.run([sys.executable, "main.py"], capture_output=True, text=True)
+    
+#     assert result.returncode == 1
+   
+
+if __name__ == "__main__":
+    pytest.main()
+
