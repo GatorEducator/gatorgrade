@@ -9,16 +9,14 @@ capturing.
 import builtins
 import io
 import os
-
 import subprocess
 import sys
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import main
-
-from unittest.mock import patch
 
 runner = CliRunner()
 
@@ -99,7 +97,6 @@ def cleanup_files(monkeypatch):
         )
     ],
 )
-
 def test_full_integration_creates_valid_output(
     assignment_path, expected_output_and_freqs, chdir
 ):
@@ -117,15 +114,14 @@ def test_no_invoked_subcommand_invalid_checks():
     result = runner.invoke(main.app)
     assert result.exit_code == 1
 
-        
+
 # def test_entry_point(chdir):
 #     """Test the entry point of the script to ensure it runs as expected."""
 #     chdir(os.path.join(os.path.dirname(__file__), '../gatorgrade/'))
 #     result = subprocess.run([sys.executable, "main.py"], capture_output=True, text=True)
-    
+
 #     assert result.returncode == 1
-   
+
 
 if __name__ == "__main__":
     pytest.main()
-

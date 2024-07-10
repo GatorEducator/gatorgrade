@@ -208,31 +208,38 @@ def create_markdown_report_file(json: dict) -> str:
 
     return markdown_contents
 
-def truncate_report(report_output_data_json: dict, max_chars: int = None) -> str:
+
+def truncate_report(report_output_data_json: dict, output_limit: int = None) -> str:
     """Truncate the json report to the maximum number of characters allowed.
 
     Args:
         report_output_data_json: the json dictionary that will be used or converted to md
-        max_chars: the maximum number of characters to display in the output
+        output_limit: the maximum number of characters to display in the output
     """
+    if len(report_output_data_json) < output_limit:
+        return json.dumps(report_output_data_json)
+
     for check in report_output_data_json["checks"]:
-        check['description'] = check['description'][:50]
-        check['path'] = check['path'][:50]
-        if 'diagnostic' in check:
-            check['diagnostic'] = check['diagnostic'][:100]
-    
+        check["description"] = check["description"][:50]
+        check["path"] = check["path"][:50]
+        if "diagnostic" in check:
+            check["diagnostic"] = check["diagnostic"][:100]
+
     # Convert the truncated report back to JSON string
     truncated_report = json.dumps(report_output_data_json)
 
     # Ensure the length does not exceed the maximum allowed length
-    if max_chars is not None:
-        if len(truncated_report) > max_chars:
-            truncated_report = truncated_report[:max_chars - 3] + '...'
+    if output_limit is not None:
+        if len(truncated_report) > output_limit:
+            truncated_report = truncated_report[: output_limit - 3] + "..."
 
     return truncated_report
 
+
 def configure_report(
-    report_params: Tuple[str, str, str], report_output_data_json: dict, max_chars: int = None
+    report_params: Tuple[str, str, str],
+    report_output_data_json: dict,
+    output_limit: int = None,
 ):
     """Put together the contents of the report depending on the inputs of the user.
 
@@ -242,7 +249,7 @@ def configure_report(
             report_params[1]: json or md
             report_params[2]: name of the file or env
         report_output_data: the json dictionary that will be used or converted to md
-        max_chars: the maximum number of characters to display in the output
+        output_limit: the maximum number of characters to display in the output
     """
     report_format = report_params[0]
     report_type = report_params[1]
@@ -270,15 +277,21 @@ def configure_report(
                 if report_type == "md":
                     write_json_or_md_file(env_file, report_type, report_output_data_md)
                 else:
-                    write_json_or_md_file(env_file, report_type, report_output_data_json)
+                    write_json_or_md_file(
+                        env_file, report_type, report_output_data_json
+                    )
             else:
-                print("Environment variable 'GITHUB_STEP_SUMMARY' is not set or is empty.")
+                print(
+                    "Environment variable 'GITHUB_STEP_SUMMARY' is not set or is empty."
+                )
 
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
-        env_file = os.getenv("GITHUB_ENV")        
+        env_file = os.getenv("GITHUB_ENV")
         if env_file:  # Check if env_file is not None
-            truncated_json_report = truncate_report(report_output_data_json, max_chars)
-            with open(env_file, "a") as myfile:
+            truncated_json_report = truncate_report(
+                report_output_data_json, output_limit
+            )
+            with open(env_file, "a", encoding="utf-8") as myfile:
                 myfile.write(f"JSON_REPORT={truncated_json_report}")
         else:
             print("Environment variable 'GITHUB_ENV' is not set or is empty.")
@@ -308,7 +321,9 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], max_chars: int = None
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    output_limit: int = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -317,7 +332,7 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
-        max_chars: The maximum number of characters to display in the output.
+        output_limit: The maximum number of characters to display in the output.
         report: The details of what the user wants the report to look like.
     """
     results = []
@@ -357,7 +372,7 @@ def run_checks(
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
-        configure_report(report, report_output_data, max_chars)
+        configure_report(report, report_output_data, output_limit)
 
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"

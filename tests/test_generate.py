@@ -1,10 +1,13 @@
 """This module tests the generate.py functionality"""
 
-import pytest
-import typer
 import os
 
-from gatorgrade.generate.generate import generate_config, input_correct
+import pytest
+import typer
+
+from gatorgrade.generate.generate import generate_config
+from gatorgrade.generate.generate import input_correct
+
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path):
     """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run"""
@@ -171,6 +174,7 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     assert "'gatorgrade.yml' is NOT generated" in err
     assert exc_info.value.exit_code == 1
 
+
 def test_run_path_unify(tmp_path):
     """Check if the function correctly appends a separator to run_path if it doesn't end with one"""
 
@@ -270,6 +274,7 @@ def test_ignore_folder_starting_with_double_underscore(tmp_path):
     assert "src/input/__input.txt" not in file_text
     assert "src/__output" not in file_text
 
+
 def test_ignore_folder_starting_with_single_dot(tmp_path):
     """Ignore folder starting with a single dot and not with double dot"""
 
@@ -309,7 +314,9 @@ def test_ignore_folder_starting_with_single_dot(tmp_path):
     readme_file.write_text("# Practical 01")
 
     # When we call the modularized version of "generate.py" with two arguments
-    generate_config(["src", "task", "Practical-01", "README.md", ".."], str(root_directory))
+    generate_config(
+        ["src", "task", "Practical-01", "README.md", ".."], str(root_directory)
+    )
 
     # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
@@ -317,6 +324,7 @@ def test_ignore_folder_starting_with_single_dot(tmp_path):
 
     assert ".task" not in file_text
     assert "src" in file_text
-    assert "src/input/.input.txt" not in file_text    
+    assert "src/input/.input.txt" not in file_text
+
 
 # pytest.main()
