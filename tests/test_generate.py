@@ -1,12 +1,10 @@
 """This module tests the generate.py functionality"""
 
-import os
 
 import pytest
 import typer
 
 from gatorgrade.generate.generate import generate_config
-from gatorgrade.generate.generate import input_correct
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path):

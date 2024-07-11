@@ -155,7 +155,7 @@ def create_markdown_report_file(json: dict) -> str:
     # split checks into passing and not passing
     for check in json.get("checks"):
         # if the check is passing
-        if check["status"] == True:
+        if check["status"]:
             passing_checks.append(check)
         # if the check is failing
         else:

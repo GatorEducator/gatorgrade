@@ -9,9 +9,6 @@ capturing.
 import builtins
 import io
 import os
-import subprocess
-import sys
-from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
