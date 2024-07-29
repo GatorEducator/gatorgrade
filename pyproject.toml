@@ -6,7 +6,7 @@ authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.7.2,<4.0"
+python = ">=3.8,<4.0"
 PyYAML = "^6.0"
 gatorgrader = "^1.1.1"
 rich = "^12.5.1"
@@ -31,6 +31,8 @@ pytest-clarity = "^1.0.1"
 isort = "^5.10.1"
 mkdocs-material = "^8.4.2"
 ruff = "^0.4.9"
+pytest-mock = "^3.14.0"
+thefuzz = "^0.22.1"
 
 [tool.taskipy.tasks]
 ruff = { cmd = "ruff check gatorgrade tests", help = "Run the ruff checks for source code format and linting" }

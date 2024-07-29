@@ -2,7 +2,6 @@
 
 import sys
 from pathlib import Path
-from typing import Optional
 from typing import Tuple
 
 import typer
@@ -50,21 +49,31 @@ def gatorgrade(
         None,
         "--output-limit",
         "-l",
-        help="The maximum number of characters to store in an environment variable. Example: '--output-limit 1000'",
+        help="The maximum number of lines to store in an environment variable. Example: '--output-limit 1000'",
     ),
-    specified_checks: Optional[str] = typer.Option(
+    check_include: str = typer.Option(
         None,
-        "--checks",
-        "-k",
-        help="List of specific checks to run, separated by commas. Example: '--checks 1,2,3'",
+        "--check-include",
+        "-i",
+        help="Description of the checks to include. Example: '--check-include \"Complete all TODOs\"'",
+    ),
+    check_exclude: str = typer.Option(
+        None,
+        "--check-exclude",
+        "-e",
+        help="Description of the checks to exclude. Example: '--check-exclude \"Complete all TODOs\"'",
     ),
 ):
+    if check_include:
+        typer.echo(f"Included checks: {check_include}")
+    if check_exclude:
+        typer.echo(f"Excluded checks: {check_exclude}")
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks = parse_config(filename, specified_checks)
+        checks = parse_config(filename, check_include, check_exclude)
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:

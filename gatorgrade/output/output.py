@@ -210,30 +210,32 @@ def create_markdown_report_file(json: dict) -> str:
 
 
 def truncate_report(report_output_data_json: dict, output_limit: int = None) -> str:
-    """Truncate the json report to the maximum number of characters allowed.
+    """Truncate the json report to the maximum number of lines allowed.
 
     Args:
         report_output_data_json: the json dictionary that will be used or converted to md
-        output_limit: the maximum number of characters to display in the output
+        output_limit: the maximum number of lines to display in the output
     """
-    if len(report_output_data_json) < output_limit:
-        return json.dumps(report_output_data_json)
+    # Convert the JSON dictionary to a formatted string
+    report_str = json.dumps(report_output_data_json, indent=4)
 
-    for check in report_output_data_json["checks"]:
-        check["description"] = check["description"][:50]
-        check["path"] = check["path"][:50]
-        if "diagnostic" in check:
-            check["diagnostic"] = check["diagnostic"][:100]
+    # Split the string into lines
+    report_lines = report_str.split('\n')
 
-    # Convert the truncated report back to JSON string
-    truncated_report = json.dumps(report_output_data_json)
+    # If the number of lines is within the limit, return the full report
+    if output_limit is None or len(report_lines) <= output_limit:
+        return report_str
 
-    # Ensure the length does not exceed the maximum allowed length
-    if output_limit is not None:
-        if len(truncated_report) > output_limit:
-            truncated_report = truncated_report[: output_limit - 3] + "..."
+    # Otherwise, truncate the report to the maximum number of lines
+    truncated_report_lines = report_lines[:output_limit]
 
-    return truncated_report
+    # Convert the truncated report back to a JSON string
+    truncated_report_str = "\n".join(truncated_report_lines)
+
+    # Add a trailing ellipsis to indicate the report was truncated
+    truncated_report_str += "\n..."
+
+    return truncated_report_str
 
 
 def configure_report(
@@ -332,7 +334,7 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
-        output_limit: The maximum number of characters to display in the output.
+        output_limit: The maximum number of lines to display in the output.
         report: The details of what the user wants the report to look like.
     """
     results = []

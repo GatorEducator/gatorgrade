@@ -1,20 +1,21 @@
 """Returns the list of commands to be run through gatorgrader."""
 
 from pathlib import Path
+from thefuzz import fuzz
 
-import typer
 
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
 
 
-def parse_config(file: Path, specified_checks: list = None):
+def parse_config(file: Path, check_include: str = None, check_exclude: str = None):
     """Parse the input yaml file and generate specified checks.
 
     Args:
         file: Yaml file containing gatorgrade and shell command checks
-        specified_checks: List of specific checks to run
+        check_include: Description of checks to include
+        check_exclude: Description of checks to exclude
     Returns:
         Returns a dictionary that specifies shell commands and gatorgrade commands
     """
@@ -29,28 +30,21 @@ def parse_config(file: Path, specified_checks: list = None):
         # ready for execution with this tool
         reformatted_yaml_data = reformat_yaml_data(parsed_yaml_file)
         # Filter the reformat_yaml_data to only include specified checks
-        # Check if specified_checks is provided and not empty
-        if specified_checks:
-            try:
-                specified_checks_list = [
-                    int(check.strip()) for check in specified_checks.split(",")
-                ]
-            except ValueError as exc:
-                raise typer.BadParameter(
-                    "Checks must be a comma-separated list of integers."
-                ) from exc
-            # Adjust for 1-based indices by subtracting 1 from each
-            specified_checks_list = [i - 1 for i in specified_checks_list]
-            # Validate if any specified check is out of range
-            if any(
-                i >= len(reformatted_yaml_data) or i < 0 for i in specified_checks_list
-            ):
-                raise ValueError("One or more specified checks are out of range.")
-            reformatted_yaml_data = [
-                reformatted_yaml_data[i]
-                for i in specified_checks_list
-                if i < len(reformatted_yaml_data)
-            ]
+        if check_include:
+            # Generate the checks that are included
+            check_list = []
+            for check_data in reformatted_yaml_data:
+                if fuzz.partial_ratio(check_include, check_data[1]['description']) >= 80:
+                    check_list.append(check_data)        
+            parse_con = generate_checks(check_list)
+            return parse_con         
+
+        if check_exclude:
+            # Generate the checks that are excluded
+            check_list = [check for check in reformatted_yaml_data if fuzz.partial_ratio(check_exclude, check[1]['description']) < 80]
+            parse_con = generate_checks(check_list)
+            return parse_con
+
         parse_con = generate_checks(reformatted_yaml_data)
         return parse_con
     # return an empty list because of the fact that the
