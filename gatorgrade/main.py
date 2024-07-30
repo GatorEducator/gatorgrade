@@ -52,19 +52,13 @@ def gatorgrade(
         "-l",
         help="The maximum number of characters to store in an environment variable. Example: '--output-limit 1000'",
     ),
-    specified_checks: Optional[str] = typer.Option(
-        None,
-        "--checks",
-        "-k",
-        help="List of specific checks to run, separated by commas. Example: '--checks 1,2,3'",
-    ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks = parse_config(filename, specified_checks)
+        checks = parse_config(filename)
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:

@@ -9,7 +9,7 @@ from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
 
 
-def parse_config(file: Path, specified_checks: list = None):
+def parse_config(file: Path):
     """Parse the input yaml file and generate specified checks.
 
     Args:
@@ -29,28 +29,6 @@ def parse_config(file: Path, specified_checks: list = None):
         # ready for execution with this tool
         reformatted_yaml_data = reformat_yaml_data(parsed_yaml_file)
         # Filter the reformat_yaml_data to only include specified checks
-        # Check if specified_checks is provided and not empty
-        if specified_checks:
-            try:
-                specified_checks_list = [
-                    int(check.strip()) for check in specified_checks.split(",")
-                ]
-            except ValueError as exc:
-                raise typer.BadParameter(
-                    "Checks must be a comma-separated list of integers."
-                ) from exc
-            # Adjust for 1-based indices by subtracting 1 from each
-            specified_checks_list = [i - 1 for i in specified_checks_list]
-            # Validate if any specified check is out of range
-            if any(
-                i >= len(reformatted_yaml_data) or i < 0 for i in specified_checks_list
-            ):
-                raise ValueError("One or more specified checks are out of range.")
-            reformatted_yaml_data = [
-                reformatted_yaml_data[i]
-                for i in specified_checks_list
-                if i < len(reformatted_yaml_data)
-            ]
         parse_con = generate_checks(reformatted_yaml_data)
         return parse_con
     # return an empty list because of the fact that the
