@@ -63,11 +63,19 @@ def gatorgrade(
         "-e",
         help="Description of the checks to exclude. Example: '--check-exclude \"Complete all TODOs\"'",
     ),
+    check_status: str = typer.Option(
+        None,
+        "--check-status",
+        "-s",
+        help="Filter checks by their status (pass or fail). Example: '--check-status pass'",
+    )
 ):
     if check_include:
         typer.echo(f"Included checks: {check_include}")
     if check_exclude:
         typer.echo(f"Excluded checks: {check_exclude}")
+    if check_status:
+        typer.echo(f"Filter checks by status: {check_status}")
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
@@ -77,7 +85,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report, output_limit)
+            checks_status = run_checks(checks, report, output_limit, check_status)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks

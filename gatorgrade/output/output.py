@@ -326,6 +326,7 @@ def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
     output_limit: int = None,
+    check_status: str = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -352,9 +353,17 @@ def run_checks(
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            result.print()
-            results.append(result)
-
+            if check_status:
+                if check_status == "pass" and result.passed:
+                    result.print()
+                    results.append(result)
+                elif check_status == "fail" and not result.passed:
+                    result.print()
+                    results.append(result)             
+            else:
+                result.print()
+                results.append(result)
+        
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # only print failures list if there are failures to print
