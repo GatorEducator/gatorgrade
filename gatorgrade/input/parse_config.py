@@ -17,7 +17,9 @@ def parse_config(file: Path, check_include: str = None, check_exclude: str = Non
         check_include: Description of checks to include
         check_exclude: Description of checks to exclude
     Returns:
-        Returns a dictionary that specifies shell commands and gatorgrade commands
+        Returns a tuple that contains:
+        - A dictionary specifying shell commands and gatorgrade commands
+        - A boolean variable indicating if there is a match for the specified checks
     """
     # parse the YAML file using parse_yaml_file provided by gatorgrade
     parsed_yaml_file = parse_yaml_file(file)
@@ -29,24 +31,24 @@ def parse_config(file: Path, check_include: str = None, check_exclude: str = Non
         # these will be valid checks that are now
         # ready for execution with this tool
         reformatted_yaml_data = reformat_yaml_data(parsed_yaml_file)
+        match = True
         # Filter the reformat_yaml_data to only include specified checks
         if check_include:
             # Generate the checks that are included
-            check_list = []
-            for check_data in reformatted_yaml_data:
-                if fuzz.partial_ratio(check_include, check_data[1]['description']) >= 80:
-                    check_list.append(check_data)        
+            check_list = [check for check in reformatted_yaml_data if fuzz.partial_ratio(check_include, check[1]['description']) >= 80]
+            match = True if len(check_list) > 0 else False       
             parse_con = generate_checks(check_list)
-            return parse_con         
+            return (parse_con, match)       
 
         if check_exclude:
             # Generate the checks that are excluded
             check_list = [check for check in reformatted_yaml_data if fuzz.partial_ratio(check_exclude, check[1]['description']) < 80]
+            match = True if len(check_list) > 0 else False
             parse_con = generate_checks(check_list)
-            return parse_con
+            return (parse_con, match)
 
         parse_con = generate_checks(reformatted_yaml_data)
-        return parse_con
+        return (parse_con, match)
     # return an empty list because of the fact that the
     # parsing process did not return a list with content;
     # allow the calling function to handle the empty list

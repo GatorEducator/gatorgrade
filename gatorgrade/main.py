@@ -81,7 +81,7 @@ def gatorgrade(
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks = parse_config(filename, check_include, check_exclude)
+        (checks, match) = parse_config(filename, check_include, check_exclude)
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
@@ -91,8 +91,14 @@ def gatorgrade(
         # valid and thus the tool cannot run checks
         else:
             checks_status = False
-            console.print()
-            console.print(f"The file {filename} either does not exist or is not valid.")
+            console.print()         
+            if match is False:   
+                if check_include:
+                    console.print(f"The check {check_include} does not exist in the file {filename}.")
+                if check_exclude:
+                    console.print(f"The check {check_exclude} does not exist in the file {filename}.")
+            else:
+                console.print(f"The file {filename} either does not exist or is not valid.")
             console.print("Exiting now!")
             console.print()
         # at least one of the checks did not pass or
