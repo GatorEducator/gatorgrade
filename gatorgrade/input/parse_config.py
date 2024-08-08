@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import typer
+
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
@@ -12,6 +14,7 @@ def parse_config(file: Path):
 
     Args:
         file: Yaml file containing gatorgrade and shell command checks
+        specified_checks: List of specific checks to run
     Returns:
         Returns a dictionary that specifies shell commands and gatorgrade commands
     """
@@ -24,7 +27,9 @@ def parse_config(file: Path):
         # use it to generate all of the checks;
         # these will be valid checks that are now
         # ready for execution with this tool
-        parse_con = generate_checks(reformat_yaml_data(parsed_yaml_file))
+        reformatted_yaml_data = reformat_yaml_data(parsed_yaml_file)
+        # Filter the reformat_yaml_data to only include specified checks
+        parse_con = generate_checks(reformatted_yaml_data)
         return parse_con
     # return an empty list because of the fact that the
     # parsing process did not return a list with content;

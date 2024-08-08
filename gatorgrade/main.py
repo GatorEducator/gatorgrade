@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Optional
 from typing import Tuple
 
 import typer
@@ -45,6 +46,12 @@ def gatorgrade(
             3. the name of the file or environment variable\
             4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
     ),
+    output_limit: int = typer.Option(
+        None,
+        "--output-limit",
+        "-l",
+        help="The maximum number of characters to store in an environment variable. Example: '--output-limit 1000'",
+    ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
@@ -55,7 +62,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report)
+            checks_status = run_checks(checks, report, output_limit)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
