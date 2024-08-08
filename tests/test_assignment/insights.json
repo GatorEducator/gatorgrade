@@ -1,1 +1,40 @@
-{"amount correct": 3, "percentage score": 100, "checks": {"0": {"description": "Complete all TODOs", "status": true, "Fragment": "TODO", "Count": "0", "Directory": "src", "File": "hello-world.py"}, "1": {"description": "Use an if statement", "status": true, "Count": "1", "Directory": "src", "File": "hello-world.py"}, "2": {"description": "Complete all TODOs", "status": true, "Fragment": "TODO", "Count": "0", "Directory": "src", "File": "reflection.md"}}}
+{
+    "amount_correct": 3,
+    "percentage_score": 100,
+    "report_time": "2024-07-09 22:05:47",
+    "checks": [
+        {
+            "description": "Complete all TODOs",
+            "check": "MatchFileFragment",
+            "options": {
+                "fragment": "TODO",
+                "count": 0,
+                "exact": true
+            },
+            "status": true,
+            "path": "src/hello-world.py"
+        },
+        {
+            "description": "Use an if statement",
+            "check": "MatchFileRegex",
+            "options": {
+                "regex": "if .*?:",
+                "count": 1,
+                "exact": false
+            },
+            "status": true,
+            "path": "src/hello-world.py"
+        },
+        {
+            "description": "Complete all TODOs",
+            "check": "MatchFileFragment",
+            "options": {
+                "fragment": "TODO",
+                "count": 0,
+                "exact": true
+            },
+            "status": true,
+            "path": "src/reflection.md"
+        }
+    ]
+}
