@@ -295,24 +295,32 @@ def run_checks(
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check
+        # store the command that ran
+        command_output = None
+
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
+            command_output = check.command
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
-            result = _run_gg_check(check)
+            result = _run_gg_check(check)        
+
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
             result.print()
-            results.append(result)
+            results.append((result, command_output))
 
     # determine if there are failures and then display them
-    failed_results = list(filter(lambda result: not result.passed, results))
-    # only print failures list if there are failures to print
+    failed_results = list(filter(lambda result: not result[0].passed, results))
+    # print failures list if there are failures to print 
+    # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
-            result.print(show_diagnostic=True)
+            result[0].print(show_diagnostic=True)
+            if result[1] is not None:
+                rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
