@@ -320,7 +320,7 @@ def run_checks(
         for result in failed_results:
             result[0].print(show_diagnostic=True)
             if result[1] is not None:
-                rich.print(f"[blue]   → Here is the command that ran: [green]{result[1]}")
+                rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
