@@ -289,27 +289,47 @@ def run_checks(
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
+    command_output = []
     # run each of the checks
     for check in checks:
         result = None
+        command_ran = None
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check
         # store the command that ran
-        command_output = None
 
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
-            command_output = check.command
+            command_ran = check.command
+
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)        
+
+            # this code checks to see if there was a command in the 
+            # GatorGraderCheck. This code finds the index of the 
+            # word "--command" in the check.gg_args list and then appending 
+            # that index plus +1 to get the actual command. Another way to 
+            # implement this would be to use check.json_info which has the information
+            # stored in key value pairs, so you would just call the command
+            # differently something like the commented out code bellow:
+            # (though the commented code doesn't work it is just an idea)
+            # if check.json_info["check"] == "MatchCommandFragment":
+            #     command_ran = check.json_info["options"]["command"]
+            if "--command" in check.gg_args:
+                index_of_command = check.gg_args.index("--command")
+                index_of_new_command = int(index_of_command) + 1
+                command_output.append(check.gg_args[index_of_new_command])
 
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
             result.print()
-            results.append((result, command_output))
+            results.append(result)
+            # store the result and the command that ran in a tuple
+            # and add that tuple to the command_output list
+            command_output.append((result, command_ran))
 
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result[0].passed, results))
@@ -318,9 +338,14 @@ def run_checks(
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
-            result[0].print(show_diagnostic=True)
-            if result[1] is not None:
-                rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
+            result.print(show_diagnostic=True)
+            # iterate through the list of command output 
+            # check if the result stored in the command output tuple
+            # is equal to the result in failed results and if it is
+            # and the command was not None than the command that ran will be printed
+            for command in command_output:
+                if command[0] == result and command[1] is not None:
+                    rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
