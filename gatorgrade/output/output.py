@@ -305,12 +305,12 @@ def run_checks(
 
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
-            result = _run_gg_check(check)        
+            result = _run_gg_check(check)
 
-            # this code checks to see if there was a command in the 
-            # GatorGraderCheck. This code finds the index of the 
-            # word "--command" in the check.gg_args list and then appending 
-            # that index plus +1 to get the actual command. Another way to 
+            # this code checks to see if there was a command in the
+            # GatorGraderCheck. This code finds the index of the
+            # word "--command" in the check.gg_args list and then appending
+            # that index plus +1 to get the actual command. Another way to
             # implement this would be to use check.json_info which has the information
             # stored in key value pairs, so you would just call the command
             # differently something like the commented out code bellow:
@@ -333,19 +333,19 @@ def run_checks(
 
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result[0].passed, results))
-    # print failures list if there are failures to print 
+    # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             result.print(show_diagnostic=True)
-            # iterate through the list of command output 
+            # iterate through the list of command output
             # check if the result stored in the command output tuple
             # is equal to the result in failed results and if it is
             # and the command was not None than the command that ran will be printed
             for command in command_output:
                 if command[0] == result and command[1] is not None:
-                    rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
+                    rich.print(f"[blue]   → Here is the command that ran: [green]{command[1]}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
