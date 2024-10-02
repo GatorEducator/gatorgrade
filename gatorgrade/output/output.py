@@ -9,7 +9,10 @@ from typing import Tuple
 from typing import Union
 
 import gator
+import random
 import rich
+from rich.progress import Progress
+
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
@@ -282,68 +285,73 @@ def run_checks(
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
-        Also, print a list of all failed checks with their diagnostics and a summary message that
+        Also, display a progress bar and a list of all failed checks with their diagnostics and a summary message that
         shows the overall fraction of passed checks.
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
-    # run each of the checks
-    for check in checks:
-        result = None
-        # run a shell check; this means
-        # that it is going to run a command
-        # in the shell as a part of a check
-        # store the command that ran
-        command_output = None
+    # check how many tests are being ran
+    total_checks = len(checks)
+    # initialize to track how many checks pass
+    passed_count = 0
+    # create progress bar using rich's Progress
+    with Progress() as progress:
+        # add a progress task for tracking
+        task = progress.add_task("[green]Running checks...", total=total_checks)
+        # run each of the checks
+        for i, check in enumerate(checks):
+            result = None
+            command_output = None
+            # run a shell check; this means
+            # that it is going to run a command
+            # in the shell as a part of a check
+            # store the command that ran
+            if isinstance(check, ShellCheck):
+                result = _run_shell_check(check)
+                command_output = check.command
+            elif isinstance(check, GatorGraderCheck):
+                result = _run_gg_check(check)
+            # there were results from running checks
+            # and thus they must be displayed
+            if result is not None:
+                result.print()
+                results.append((result, command_output))
 
-        if isinstance(check, ShellCheck):
-            result = _run_shell_check(check)
-            command_output = check.command
-        # run a check that GatorGrader implements
-        elif isinstance(check, GatorGraderCheck):
-            result = _run_gg_check(check)        
-
-        # there were results from running checks
-        # and thus they must be displayed
-        if result is not None:
-            result.print()
-            results.append((result, command_output))
-
+                # increment passed count if the check passed
+                if result.passed:
+                    passed_count += 1
+            # Update progress bar to reflect % of checks that passed
+            progress.update(task, completed=passed_count)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result[0].passed, results))
     # print failures list if there are failures to print 
     # and print what ShellCheck command that Gatorgrade ran
+    # print motivational mesage if between 25% and 75% passed checks
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             result[0].print(show_diagnostic=True)
             if result[1] is not None:
                 rich.print(f"[blue]   → Command that failed: [green]{result[1]}")
-    # determine how many of the checks passed and then
-    # compute the total percentage of checks passed
-    passed_count = len(results) - len(failed_results)
+            print_motivation(passed_count, total_checks)
     # prevent division by zero if no results
     if len(results) == 0:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
-
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-
-    # compute summary results and display them in the console
+    # compute summary results and display them
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
-    summary_color = "green" if passed_count == len(results) else "bright white"
+    summary_color = "green" if passed_count == len(results) else "bright_red"
     print_with_border(summary, summary_color)
-    # determine whether or not the run was a success or not:
-    # if all of the tests pass then the function returns True;
-    # otherwise the function must return False
-    summary_status = True if passed_count == len(results) else False
-    return summary_status
+
+    # return True if all tests pass, False otherwise
+    return passed_count == len(results)
 
 
 def print_with_border(text: str, rich_color: str):
@@ -370,3 +378,40 @@ def print_with_border(text: str, rich_color: str):
     rich.print(f"[{rich_color}]\n\t{upleft}{line}{upright}")
     rich.print(f"[{rich_color}]\t{vert} {text} {vert}")
     rich.print(f"[{rich_color}]\t{downleft}{line}{downright}\n")
+
+
+quotes = [
+    "DON'T GIVE UP, YOU GOT THIS!!!",
+    "KEEP GOING, YOUR SO CLOSE!!!",
+    "IT'S NOT SO BAD, KEEP YOUR HEAD UP",
+    "KEEP YOUR HEAD UP, FAILURE IS THE FIRST STEP TO SUCCESS"
+]
+def motivation(quotes: List[str]) -> str :
+    """Returns a random motivational quote from the quotes list."""
+    # gets a motivational quote
+    return random.choice(quotes)
+
+
+def print_motivation(passed: int, total: int):
+    """Prints a motivational message when checks passed is between 25% and 75%."""
+    total *= 1.0
+    # creates the value percentage to use for comparison
+    percentage = passed / total
+    # evaluates whether percentage fits into 25% to 75% range
+    if percentage >= 0.25:
+        if percentage < 0.75:
+            # prints out a panel container to the console
+            rich.print(rich.Panel(
+                        motivation(quotes),
+                        expand=False,
+                        title="Motivation",
+                        border_style="bright_cyan",
+                        ))
+        elif percentage <= 0.99:
+            # prints out a panel container to the console
+            rich.print(rich.Panel(
+                        "[magenta]Almost [magenta]There!",
+                        expand=False,
+                        title="Motivation",
+                        border_style="bright_cyan",
+                        ))
