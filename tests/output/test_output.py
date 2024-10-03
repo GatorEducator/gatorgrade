@@ -4,8 +4,6 @@ import datetime
 import json
 import os
 
-# import subprocess
-
 import pytest
 
 from gatorgrade.input.checks import GatorGraderCheck
