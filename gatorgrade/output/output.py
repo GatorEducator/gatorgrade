@@ -250,7 +250,9 @@ def configure_report(
                 write_json_or_md_file(env_file, report_type, report_output_data_md)
                 main.console.print("After writing to GitHub Action Job Summary for MD")
             else:
-                main.console.print("[yellow]Creating GitHub Action Job Summary for JSON")
+                main.console.print(
+                    "[yellow]Creating GitHub Action Job Summary for JSON"
+                )
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
                 main.console.print("After writing to GitHub Action Job Summary for MD")
 
