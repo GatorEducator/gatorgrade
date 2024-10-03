@@ -346,7 +346,7 @@ def run_checks(
             for command in command_output:
                 if command[0] == result and command[1] is not None:
                     rich.print(
-                        f"[blue]   → Here is the command that ran: [green]{command[1]}"
+                        f"[blue]   → Here is the command that ran: [green]{command[1]}\n"
                     )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
