@@ -255,9 +255,9 @@ def configure_report(
                 main.console.print("After writing to GitHub Action Job Summary for MD")
 
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
-        # env_file = os.getenv("GITHUB_ENV")
-        # with open(env_file, "a", encoding="utf-8") as myfile:
-        #     myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
+        env_file = os.getenv("GITHUB_ENV")
+        with open(env_file, "a", encoding="utf-8") as myfile:
+            myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
         # Add env
     else:
         raise ValueError(
