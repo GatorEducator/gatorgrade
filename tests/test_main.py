@@ -109,11 +109,8 @@ def test_full_integration_creates_valid_output(
     # ✓  Complete all TODOs
 
     result = runner.invoke(main.app)
-    # print(result)
 
     print(result.stdout)
-
-    # print(result.exit_code)
 
     # why is this failing and why is it zero?
     assert result.exit_code == 0
