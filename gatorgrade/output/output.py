@@ -1,4 +1,5 @@
 """Run checks and display whether each has passed or failed."""
+
 import datetime
 import json
 import os
@@ -11,6 +12,7 @@ from typing import Union
 import gator
 import rich
 
+from gatorgrade import main
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
@@ -244,14 +246,18 @@ def configure_report(
         if report_name == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
             if report_type == "md":
+                main.console.print("[yellow]Creating GitHub Action Job Summary for MD")
                 write_json_or_md_file(env_file, report_type, report_output_data_md)
+                main.console.print("After writing to GitHub Action Job Summary for MD")
             else:
+                main.console.print("[yellow]Creating GitHub Action Job Summary for JSON")
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
+                main.console.print("After writing to GitHub Action Job Summary for MD")
 
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
-        env_file = os.getenv("GITHUB_ENV")
-        with open(env_file, "a", encoding="utf-8") as myfile:
-            myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
+        # env_file = os.getenv("GITHUB_ENV")
+        # with open(env_file, "a", encoding="utf-8") as myfile:
+        #     myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
         # Add env
     else:
         raise ValueError(
@@ -386,7 +392,7 @@ def print_with_border(text: str, rich_color: str):
     # Upper right corner
     downleft = "\u2517"
     # Lower left corner
-    downright = "\u251B"
+    downright = "\u251b"
     # Lower right corner
     vert = "\u2503"
     # Vertical line
