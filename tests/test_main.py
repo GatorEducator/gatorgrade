@@ -98,7 +98,7 @@ def test_full_integration_creates_valid_output(
     assignment_path, expected_output_and_freqs, chdir
 ):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
-    # the assignment path is: 
+    # the assignment path is:
     # tests/test_assignment
     chdir(assignment_path)
     # print(assignment_path)

@@ -345,7 +345,9 @@ def run_checks(
             # and the command was not None than the command that ran will be printed
             for command in command_output:
                 if command[0] == result and command[1] is not None:
-                    rich.print(f"[blue]   → Here is the command that ran: [green]{command[1]}")
+                    rich.print(
+                        f"[blue]   → Here is the command that ran: [green]{command[1]}"
+                    )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
