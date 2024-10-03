@@ -332,7 +332,7 @@ def run_checks(
             command_output.append((result, command_ran))
 
     # determine if there are failures and then display them
-    failed_results = list(filter(lambda result: not result[0].passed, results))
+    failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:

@@ -3,7 +3,7 @@
 import datetime
 import json
 import os
-import subprocess
+# import subprocess
 
 import pytest
 
@@ -123,6 +123,7 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     output.run_checks(checks, report)
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
+    print(out)
     assert "Passed 2/3 (67%) of checks" in out
 
 
