@@ -12,7 +12,6 @@ from typing import Union
 import gator
 import rich
 
-from gatorgrade import main
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
@@ -155,7 +154,7 @@ def create_markdown_report_file(json: dict) -> str:
     # split checks into passing and not passing
     for check in json.get("checks"):
         # if the check is passing
-        if check["status"] == True:
+        if check["status"]:
             passing_checks.append(check)
         # if the check is failing
         else:
@@ -260,7 +259,6 @@ def write_json_or_md_file(file_name, content_type, content):
     # try to store content in a file with user chosen format
     try:
         # Second argument has to be json or md
-
         with open(file_name, "w", encoding="utf-8") as file:
             if content_type == "json":
                 json.dump(content, file, indent=4)
@@ -286,15 +284,17 @@ def run_checks(
     """
     results = []
     command_output = []
-    command_output_dictionary = {}
     # run each of the checks
     for check in checks:
         result = None
         command_ran = None
         # run a shell check; this means
         # that it is going to run a command
-        # in the shell as a part of a check
-        # store the command that ran
+        # in the shell as a part of a check;
+        # store the command that ran in the
+        # field called run_command that is
+        # inside of a CheckResult object but
+        # not initialized in the constructor
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
             command_ran = check.command
@@ -312,14 +312,10 @@ def run_checks(
             # (though the commented code doesn't work it is just an idea)
             # if check.json_info["check"] == "MatchCommandFragment":
             #     command_ran = check.json_info["options"]["command"]
-            # main.console.print("***Check arguments***")
-            # main.console.print(check.gg_args)
             if "--command" in check.gg_args:
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
-                command_output.append(check.gg_args[index_of_new_command])
-                # main.console.print("***New Command Output List***")
-                # main.console.print(command_output)
+                # command_output.append(check.gg_args[index_of_new_command])
                 result.run_command = check.gg_args[index_of_new_command]
         # there were results from running checks
         # and thus they must be displayed
@@ -328,7 +324,7 @@ def run_checks(
             results.append(result)
             # store the result and the command that ran in a tuple
             # and add that tuple to the command_output list
-            command_output.append((result, command_ran))
+            # command_output.append((result, command_ran))
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
