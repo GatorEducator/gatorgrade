@@ -5,12 +5,15 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List
+from typing import Tuple
+from typing import Union
 
 import gator
 import rich
 
-from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.checks import GatorGraderCheck
+from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
 
 # Disable rich's default highlight to stop number coloring
