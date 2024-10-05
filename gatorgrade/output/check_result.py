@@ -1,5 +1,6 @@
 """Define check result class."""
 
+from typing import Union
 import rich
 
 
@@ -11,7 +12,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         passed: bool,
         description: str,
         json_info,
-        path: str = None,
+        path: Union[str, None] = None,
         diagnostic: str = "No diagnostic message available",
     ):
         """Construct a CheckResult.
