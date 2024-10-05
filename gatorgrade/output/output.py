@@ -230,18 +230,15 @@ def configure_report(
         raise ValueError(
             "\n[red]The second argument of report has to be 'md' or 'json' "
         )
-
     # if the user wants markdown, get markdown content based on json
     if report_type == "md":
         report_output_data_md = create_markdown_report_file(report_output_data_json)
-
     # if the user wants the data stored in a file:
     if report_format == "file":
         if report_type == "md":
             write_json_or_md_file(report_name, report_type, report_output_data_md)
         else:
             write_json_or_md_file(report_name, report_type, report_output_data_json)
-
     elif report_format == "env":
         if report_name == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
@@ -299,15 +296,12 @@ def run_checks(
         # that it is going to run a command
         # in the shell as a part of a check
         # store the command that ran
-
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
             command_ran = check.command
-
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
-
             # this code checks to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list and then appending
@@ -322,7 +316,6 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 command_output.append(check.gg_args[index_of_new_command])
-
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
@@ -331,7 +324,6 @@ def run_checks(
             # store the result and the command that ran in a tuple
             # and add that tuple to the command_output list
             command_output.append((result, command_ran))
-
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
@@ -357,12 +349,10 @@ def run_checks(
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
-
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
