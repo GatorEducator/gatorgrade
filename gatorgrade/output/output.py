@@ -226,14 +226,16 @@ def configure_report(
             write_json_or_md_file(report_name, report_type, report_output_data_md)  # type: ignore
         else:
             write_json_or_md_file(report_name, report_type, report_output_data_json)
-    # the user wants the data stored in an environment variable
+    # the user wants the data stored in an environment variable; do not attempt
+    # to save to the environment variable if it does not exist in the environment
     elif report_format == "env":
         if report_name == "GITHUB_STEP_SUMMARY":
-            env_file = os.getenv("GITHUB_STEP_SUMMARY")
-            if report_type == "md":
-                write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
-            else:
-                write_json_or_md_file(env_file, report_type, report_output_data_json)
+            env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
+            if env_file is not None:
+                if report_type == "md":
+                    write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
+                else:
+                    write_json_or_md_file(env_file, report_type, report_output_data_json)
         # Add json report into the GITHUB_ENV environment variable for data collection purpose;
         # note that this is an undocumented side-effect of running gatorgrade with command-line
         # arguments that save data to the GITHUB_STEP_SUMMARY environment variable. The current
