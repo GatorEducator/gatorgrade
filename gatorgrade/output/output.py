@@ -220,12 +220,13 @@ def configure_report(
     # if the user wants markdown, get markdown content based on json
     if report_type == "md":
         report_output_data_md = create_markdown_report_file(report_output_data_json)
-    # if the user wants the data stored in a file:
+    # if the user wants the data stored in a file
     if report_format == "file":
         if report_type == "md":
             write_json_or_md_file(report_name, report_type, report_output_data_md)  # type: ignore
         else:
             write_json_or_md_file(report_name, report_type, report_output_data_json)
+    # the user wants the data stored in an environment variable
     elif report_format == "env":
         if report_name == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
@@ -233,11 +234,23 @@ def configure_report(
                 write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
             else:
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
-        # Add json report into the GITHUB_ENV environment variable for data collection purpose
-        env_file = os.getenv("GITHUB_ENV")
-        with open(env_file, "a", encoding="utf-8") as myfile:  # type: ignore
-            myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
-        # Add env
+        # Add json report into the GITHUB_ENV environment variable for data collection purpose;
+        # note that this is an undocumented side-effect of running gatorgrade with command-line
+        # arguments that save data to the GITHUB_STEP_SUMMARY environment variable. The current
+        # implementation of this approach should not cause the setting to fail when GatorGrade
+        # is run with the same command-line for which it is normally run in a GitHub Actions
+        # convert the data to a JSON string so that it can potentially be saved
+        json_string = json.dumps(report_output_data_json)
+        # check to see if the GITHUB_ENV environment variable is set
+        env_file = os.getenv("GITHUB_ENV", None)
+        if env_file is not None:
+            # if it is, append the JSON string to the GITHUB_ENV file;
+            # note that this step is specifically helpful when running
+            # GatorGrade inside of a GitHub Actions workflow because
+            # this variable called GITHUB_ENV is used to store environment
+            # variables that are available to all of the subsequent steps
+            with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
+                env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
     else:
         raise ValueError(
             "\n[red]The first argument of report has to be 'env' or 'file' "
