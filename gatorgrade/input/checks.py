@@ -6,7 +6,7 @@ from typing import List
 class ShellCheck:  # pylint: disable=too-few-public-methods
     """Represent a shell check."""
 
-    def __init__(self, command: str, description: str = None, json_info=None):
+    def __init__(self, command: str, description: str = None, json_info=None):  # type: ignore
         """Construct a ShellCheck.
 
         Args:
