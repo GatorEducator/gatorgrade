@@ -142,11 +142,11 @@ def create_markdown_report_file(json: dict) -> str:
     markdown_contents = ""
     passing_checks = []
     failing_checks = []
-    num_checks = len(json.get("checks"))
+    num_checks = len(json.get("checks"))  # type: ignore
     # write the total, amt correct and percentage score to md file
     markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)\n"
     # split checks into passing and not passing
-    for check in json.get("checks"):
+    for check in json.get("checks"):  # type: ignore
         # if the check is passing
         if check["status"]:
             passing_checks.append(check)
@@ -223,19 +223,19 @@ def configure_report(
     # if the user wants the data stored in a file:
     if report_format == "file":
         if report_type == "md":
-            write_json_or_md_file(report_name, report_type, report_output_data_md)
+            write_json_or_md_file(report_name, report_type, report_output_data_md)  # type: ignore
         else:
             write_json_or_md_file(report_name, report_type, report_output_data_json)
     elif report_format == "env":
         if report_name == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
             if report_type == "md":
-                write_json_or_md_file(env_file, report_type, report_output_data_md)
+                write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
             else:
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
         env_file = os.getenv("GITHUB_ENV")
-        with open(env_file, "a", encoding="utf-8") as myfile:
+        with open(env_file, "a", encoding="utf-8") as myfile:  # type: ignore
             myfile.write(f"JSON_REPORT={json.dumps(report_output_data_json)}")
         # Add env
     else:
