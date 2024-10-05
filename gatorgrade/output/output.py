@@ -5,16 +5,12 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import List
-from typing import Tuple
-from typing import Union
+from typing import List, Tuple, Union
 
 import gator
 import rich
 
-from gatorgrade import main
-from gatorgrade.input.checks import GatorGraderCheck
-from gatorgrade.input.checks import ShellCheck
+from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
 
 # Disable rich's default highlight to stop number coloring
@@ -383,7 +379,6 @@ def print_with_border(text: str, rich_color: str):
     # Vertical line
     horz = "\u2501"
     # Horizontal line
-
     line = horz * (len(text) + 2)
     rich.print(f"[{rich_color}]\n\t{upleft}{line}{upright}")
     rich.print(f"[{rich_color}]\t{vert} {text} {vert}")
