@@ -1,4 +1,5 @@
 """Define check classes."""
+
 from typing import List
 
 
