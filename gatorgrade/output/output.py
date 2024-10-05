@@ -246,13 +246,9 @@ def configure_report(
         if report_name == "GITHUB_STEP_SUMMARY":
             env_file = os.getenv("GITHUB_STEP_SUMMARY")
             if report_type == "md":
-                main.console.print("[yellow]Creating GitHub Action Job Summary for MD")
                 write_json_or_md_file(env_file, report_type, report_output_data_md)
-                main.console.print("After writing to GitHub Action Job Summary for MD")
             else:
-                main.console.print("[yellow]Creating GitHub Action Job Summary for JSON")
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
-                main.console.print("After writing to GitHub Action Job Summary for MD")
 
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
         env_file = os.getenv("GITHUB_ENV")
