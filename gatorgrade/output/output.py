@@ -109,10 +109,8 @@ def create_report_json(
     # create list to hold the key values for the dictionary that
     # will be converted into json
     overall_key_list = ["amount_correct", "percentage_score", "report_time", "checks"]
-
     checks_list = []
     overall_dict = {}
-
     report_generation_time = datetime.datetime.now()
     formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
     # for each check:
@@ -125,7 +123,6 @@ def create_report_json(
         if not checkResults[i].passed:
             results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
-
     # create the dictionary for all of the check information
     overall_dict = dict(
         zip(
@@ -145,12 +142,9 @@ def create_markdown_report_file(json: dict) -> str:
     markdown_contents = ""
     passing_checks = []
     failing_checks = []
-
     num_checks = len(json.get("checks"))
-
     # write the total, amt correct and percentage score to md file
     markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)\n"
-
     # split checks into passing and not passing
     for check in json.get("checks"):
         # if the check is passing
@@ -159,7 +153,6 @@ def create_markdown_report_file(json: dict) -> str:
         # if the check is failing
         else:
             failing_checks.append(check)
-
     # give short info about passing checks
     markdown_contents += "\n## Passing Checks\n"
     for check in passing_checks:
@@ -167,7 +160,6 @@ def create_markdown_report_file(json: dict) -> str:
             markdown_contents += f"\n- [x] {check['description']}"
         else:
             markdown_contents += f"\n- [x] {check['check']}"
-
     # give extended information about failing checks
     markdown_contents += "\n\n## Failing Checks\n"
     # for each failing check, print out all related information
@@ -177,7 +169,6 @@ def create_markdown_report_file(json: dict) -> str:
             markdown_contents += f"\n- [ ] {check['description']}"
         else:
             markdown_contents += f"\n- [ ] {check['check']}"
-
         if "options" in check:
             for i in check.get("options"):
                 if "command" == i:
@@ -204,7 +195,6 @@ def create_markdown_report_file(json: dict) -> str:
         if "diagnostic" in check:
             markdown_contents += f"\n\t- **diagnostic:** {check['diagnostic']}"
         markdown_contents += "\n"
-
     return markdown_contents
 
 
