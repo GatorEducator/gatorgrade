@@ -273,7 +273,6 @@ def run_checks(
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
-    command_output = []
     # run each of the checks
     for check in checks:
         result = None
