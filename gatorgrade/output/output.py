@@ -249,7 +249,6 @@ def configure_report(
                 write_json_or_md_file(env_file, report_type, report_output_data_md)
             else:
                 write_json_or_md_file(env_file, report_type, report_output_data_json)
-
         # Add json report into the GITHUB_ENV environment variable for data collection purpose
         env_file = os.getenv("GITHUB_ENV")
         with open(env_file, "a", encoding="utf-8") as myfile:
