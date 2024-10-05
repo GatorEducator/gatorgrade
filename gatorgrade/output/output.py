@@ -12,6 +12,7 @@ from typing import Union
 import gator
 import rich
 
+from gatorgrade import main
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
@@ -285,6 +286,7 @@ def run_checks(
     """
     results = []
     command_output = []
+    command_output_dictionary = {}
     # run each of the checks
     for check in checks:
         result = None
@@ -296,6 +298,7 @@ def run_checks(
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
             command_ran = check.command
+            result.run_command = command_ran
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
@@ -309,10 +312,15 @@ def run_checks(
             # (though the commented code doesn't work it is just an idea)
             # if check.json_info["check"] == "MatchCommandFragment":
             #     command_ran = check.json_info["options"]["command"]
+            # main.console.print("***Check arguments***")
+            # main.console.print(check.gg_args)
             if "--command" in check.gg_args:
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 command_output.append(check.gg_args[index_of_new_command])
+                # main.console.print("***New Command Output List***")
+                # main.console.print(command_output)
+                result.run_command = check.gg_args[index_of_new_command]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
@@ -328,16 +336,24 @@ def run_checks(
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
+            # main.console.print("This is a result")
+            # main.console.print(result)
             result.print(show_diagnostic=True)
             # iterate through the list of command output
             # check if the result stored in the command output tuple
             # is equal to the result in failed results and if it is
             # and the command was not None than the command that ran will be printed
-            for command in command_output:
-                if command[0] == result and command[1] is not None:
-                    rich.print(
-                        f"[blue]   → Here is the command that ran: [green]{command[1]}\n"
-                    )
+            # for command in command_output:
+            #     main.console.print("This is the current command")
+            #     main.console.print(command)
+            if result.run_command != "":
+                rich.print(
+                    f"[blue]   → Run this command: [green]{result.run_command}\n"
+                )
+                # if command[0] is result and command[1] is not None:
+                #     rich.print(
+                #         f"[blue]   → Run this command: [green]{command[1]}\n"
+                #     )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
