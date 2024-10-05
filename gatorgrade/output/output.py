@@ -243,6 +243,12 @@ def configure_report(
         json_string = json.dumps(report_output_data_json)
         # check to see if the GITHUB_ENV environment variable is set
         env_file = os.getenv("GITHUB_ENV", None)
+        # the environment variable is defined and thus it is acceptable
+        # to write a key-value pair to the GITHUB_ENV environment file
+        # (note that the comment on the previous line is correct; this
+        # environment variable is a pointer to a file that allows for
+        # key-value pairs in one step to be passed to the next step
+        # inside of GitHub Actions and it is done through a file)
         if env_file is not None:
             # if it is, append the JSON string to the GITHUB_ENV file;
             # note that this step is specifically helpful when running
