@@ -220,7 +220,7 @@ def test_md_report_file_created_correctly():
     assert expected_file_contents in file_contents
 
 
-def test_print_error_with_invalid_report_path(capsys):
+def test_print_error_with_invalid_report_path():
     """Test the terminal should provide a decent error message if target path of report doesn't exist"""
     checks = [
         ShellCheck(
