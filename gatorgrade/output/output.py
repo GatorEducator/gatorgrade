@@ -37,7 +37,6 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
-
     # Add spaces after each newline to indent all lines of diagnostic
     diagnostic = (
         "" if passed else result.stdout.decode().strip().replace("\n", "\n     ")
@@ -64,7 +63,6 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = result[1]
         description = result[0]
         diagnostic = result[2]
-
         # Fetch the path from gatorgrade arguments
         # the path pattern are 4 consistent string in the list
         # --dir `dir_name` --file `file_name`
