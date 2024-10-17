@@ -328,7 +328,7 @@ def run_checks(
     report: Tuple[str, str, str],
     output_limit: int = None,
     check_status: str = None,
-    show_failures: bool = False,
+    show_failures: bool = False,  # Add this parameter
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -336,15 +336,18 @@ def run_checks(
         checks: The list of shell and GatorGrader checks to run.
         output_limit: The maximum number of lines to display in the output.
         report: The details of what the user wants the report to look like.
-        show_failures: If True, only show failing checks.
+        show_failures: Only show failing checks if True.
     """
     results = []
+
+    # run each of the checks
     for check in checks:
         result = None
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
+
         if result is not None:
             if check_status:
                 if check_status == "pass" and result.passed:
@@ -357,20 +360,21 @@ def run_checks(
                 result.print()
                 results.append(result)
 
-    # Handle results based on the show_failures flag
-    if len(results) > 0:
-        if show_failures:
-            failed_results = list(filter(lambda result: not result.passed, results))
-            if len(failed_results) > 0:
-                print("\n-~-  FAILURES  -~-\n")
-                for result in failed_results:
-                    result.print(show_diagnostic=True)
-        else:
-            # Print all results if show_failures is False
-            for result in results:
-                result.print()
+    # Filter based on show_failures
+    if show_failures:
+        failed_results = list(filter(lambda result: not result.passed, results))
+        if len(failed_results) > 0:
+            print("\n-~-  FAILURES  -~-\n")
+            for result in failed_results:
+                result.print(show_diagnostic=True)  # Show diagnostics if needed
+    else:
+        for result in results:  # Print all results if show_failures is False
+            result.print()
 
+    # Summary logic
+    failed_results = list(filter(lambda result: not result.passed, results))
     passed_count = len(results) - len(failed_results)
+
     if len(results) == 0:
         percent = 0
     else:
@@ -383,6 +387,7 @@ def run_checks(
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
+
     rich.print(f"[{summary_color}]{summary}[/{summary_color}]")
 
     return len(failed_results) == 0
