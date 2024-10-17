@@ -1,4 +1,5 @@
 """Run checks and display whether each has passed or failed."""
+
 import datetime
 import json
 import os
@@ -220,7 +221,7 @@ def truncate_report(report_output_data_json: dict, output_limit: int = None) -> 
     report_str = json.dumps(report_output_data_json, indent=4)
 
     # Split the string into lines
-    report_lines = report_str.split('\n')
+    report_lines = report_str.split("\n")
 
     # If the number of lines is within the limit, return the full report
     if output_limit is None or len(report_lines) <= output_limit:
@@ -359,11 +360,11 @@ def run_checks(
                     results.append(result)
                 elif check_status == "fail" and not result.passed:
                     result.print()
-                    results.append(result)             
+                    results.append(result)
             else:
                 result.print()
                 results.append(result)
-        
+
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # only print failures list if there are failures to print
@@ -392,8 +393,10 @@ def run_checks(
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
-    summary_status = True if passed_count == len(results) else False
-    return summary_status
+    summary_color = "green" if passed_count == len(results) else "red"
+    rich.print(f"[{summary_color}]{summary}[/{summary_color}]")
+
+    return len(failed_results) == 0
 
 
 def print_with_border(text: str, rich_color: str):
@@ -409,7 +412,7 @@ def print_with_border(text: str, rich_color: str):
     # Upper right corner
     downleft = "\u2517"
     # Lower left corner
-    downright = "\u251B"
+    downright = "\u251b"
     # Lower right corner
     vert = "\u2503"
     # Vertical line
