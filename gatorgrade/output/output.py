@@ -328,7 +328,7 @@ def run_checks(
     report: Tuple[str, str, str],
     output_limit: int = None,
     check_status: str = None,
-    show_failures: bool = False,  # Add this parameter
+    show_failures: bool = False,  # Added this parameter
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -357,8 +357,7 @@ def run_checks(
                     result.print()
                     results.append(result)
             else:
-                result.print()
-                results.append(result)
+                results.append(result)  # Only append results but don't print here
 
     # Filter based on show_failures
     if show_failures:
@@ -386,9 +385,11 @@ def run_checks(
 
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
-    print_with_border(summary, summary_color)
 
-    rich.print(f"[{summary_color}]{summary}[/{summary_color}]")
+    # Print summary only if not showing failures
+    if not show_failures:
+        print_with_border(summary, summary_color)
+        rich.print(f"[{summary_color}]{summary}[/{summary_color}]")
 
     return len(failed_results) == 0
 
