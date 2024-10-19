@@ -11,6 +11,7 @@ from typing import Union
 
 import gator
 import rich
+from rich.panel import Panel
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
@@ -365,37 +366,18 @@ def run_checks(
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-    # compute summary results and display them in the console
+    # compute summary results and display them in the console using panel
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
-    summary_color = "green" if passed_count == len(results) else "bright white"
-    print_with_border(summary, summary_color)
+    summary_color = "green" if passed_count == len(results) else "bright_red"
+    rich.print(Panel(
+                summary,
+                expand=False,
+                title=None,
+                style=summary_color
+                ))
+
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
     return summary_status
-
-
-def print_with_border(text: str, rich_color: str):
-    """Print text with a border.
-
-    Args:
-        text: Text to print
-        rich_color: Color of text to print
-    """
-    upleft = "\u250f"
-    # Upper left corner
-    upright = "\u2513"
-    # Upper right corner
-    downleft = "\u2517"
-    # Lower left corner
-    downright = "\u251b"
-    # Lower right corner
-    vert = "\u2503"
-    # Vertical line
-    horz = "\u2501"
-    # Horizontal line
-    line = horz * (len(text) + 2)
-    rich.print(f"[{rich_color}]\n\t{upleft}{line}{upright}")
-    rich.print(f"[{rich_color}]\t{vert} {text} {vert}")
-    rich.print(f"[{rich_color}]\t{downleft}{line}{downright}\n")
