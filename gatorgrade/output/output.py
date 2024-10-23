@@ -378,9 +378,9 @@ def run_checks(
         percent = round(passed_count / len(results) * 100)
     # if the report is wanted, create output in line with their specifications
     
-    # if all(report):
-    report_output_data = create_report_json(passed_count, results, percent)
-    configure_report(report_location, report_storing_type, storing_location_name, report_output_data)
+    if report_location and report_storing_type and storing_location_name:
+        report_output_data = create_report_json(passed_count, results, percent)
+        configure_report(report_location, report_storing_type, storing_location_name, report_output_data)
     
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
