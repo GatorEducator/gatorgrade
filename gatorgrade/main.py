@@ -67,15 +67,6 @@ def gatorgrade(
         help="Only show the failed checks.",
     ),
 ):
-    if check_include:
-        typer.echo(f"Included checks: {check_include}")
-    if check_exclude:
-        typer.echo(f"Excluded checks: {check_exclude}")
-    if check_status:
-        typer.echo(f"Filter checks by status: {check_status}")
-    if show_failures:
-        typer.echo("Only showing failures.")
-
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     if ctx.invoked_subcommand is None:
         (checks, match) = parse_config(filename, check_include, check_exclude)

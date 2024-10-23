@@ -329,6 +329,8 @@ def run_checks(
     output_limit: int = None,
     check_status: str = None,
     show_failures: bool = False,  # Added this parameter
+    check_include: str = None,  # Added this parameter
+    check_exclude: str = None,  # Added this parameter
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -337,6 +339,8 @@ def run_checks(
         output_limit: The maximum number of lines to display in the output.
         report: The details of what the user wants the report to look like.
         show_failures: Only show failing checks if True.
+        check_include: Description of the checks to include.
+        check_exclude: Description of the checks to exclude.
     """
     results = []
 
@@ -365,10 +369,34 @@ def run_checks(
         if len(failed_results) > 0:
             print("\n-~-  FAILURES  -~-\n")
             for result in failed_results:
-                result.print(show_diagnostic=True)  # Show diagnostics if needed
+                result.print(show_diagnostic=True)  # Show diagnostics for failures
     else:
         for result in results:  # Print all results if show_failures is False
             result.print()
+
+    # Check for included and excluded checks
+    if check_include or check_exclude:
+        filtered_results = results
+
+        if check_include:
+            filtered_results = [
+                r for r in results if check_include in r.description
+            ]  # Adjust to match the filtering logic you need
+
+        if check_exclude:
+            filtered_results = [
+                r for r in filtered_results if check_exclude not in r.description
+            ]  # Adjust to match the filtering logic you need
+
+        if len(filtered_results) > 0:
+            print("\n-~-  INCLUDED / EXCLUDED CHECKS  -~-\n")
+            for result in filtered_results:
+                if not result.passed:
+                    result.print(
+                        show_diagnostic=True
+                    )  # Show diagnostics for failing included/excluded checks
+                else:
+                    result.print()  # Print normally for passing checks
 
     # Summary logic
     failed_results = list(filter(lambda result: not result.passed, results))
