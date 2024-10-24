@@ -237,6 +237,12 @@ def test_md_report_file_created_correctly():
 
     os.remove("insights.md")
 
+    # print("expected")
+    # print(expected_file_contents)
+    # print("\n")
+    # print("file_contents")
+    # print(file_contents)
+
     assert expected_file_contents in file_contents
 
 
@@ -304,6 +310,7 @@ def test_print_error_with_invalid_report_path():
         output.run_checks(
             checks, report_location, report_storing_type, storing_location_name
         )
+    # assert value == False
 
 
 def test_throw_errors_if_report_type_not_md_nor_json():
@@ -366,10 +373,12 @@ def test_throw_errors_if_report_type_not_md_nor_json():
     report_location = "file"
     report_storing_type = "not_md_nor_json"
     storing_location_name = "invalid_path"
+
     with pytest.raises(ValueError):
         output.run_checks(
-            checks, report_location, report_storing_type, storing_location_name
-        )
+        checks, report_location, report_storing_type, storing_location_name
+    )
+    # assert value == False
 
 
 def test_write_md_and_json_correctly(tmp_path):
