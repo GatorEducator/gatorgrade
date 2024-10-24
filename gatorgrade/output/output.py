@@ -379,14 +379,12 @@ def run_checks(
         filtered_results = results
 
         if check_include:
-            filtered_results = [
-                r for r in results if check_include in r.description
-            ]  # Adjust to match the filtering logic you need
+            filtered_results = [r for r in results if check_include in r.description]
 
         if check_exclude:
             filtered_results = [
                 r for r in filtered_results if check_exclude not in r.description
-            ]  # Adjust to match the filtering logic you need
+            ]
 
         if len(filtered_results) > 0:
             print("\n-~-  INCLUDED / EXCLUDED CHECKS  -~-\n")
