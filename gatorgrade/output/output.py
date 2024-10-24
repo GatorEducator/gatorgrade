@@ -285,7 +285,13 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    output_limit: int = None,
+    check_status: str = None,
+    show_failures: bool = False,  # Added this parameter
+    check_include: str = None,  # Added this parameter
+    check_exclude: str = None,  # Added this parameter
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -330,29 +336,69 @@ def run_checks(
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            result.print()
-            results.append(result)
+            if check_status:
+                if check_status == "pass" and result.passed:
+                    result.print()
+                    results.append(result)
+                elif check_status == "fail" and not result.passed:
+                    result.print()
+                    results.append(result)
+            else:
+                results.append(result)
     # determine if there are failures and then display them
-    failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
-    if len(failed_results) > 0:
-        print("\n-~-  FAILURES  -~-\n")
-        for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
-            result.print(show_diagnostic=True)
-            # this result is an instance of CheckResult
-            # that has a run_command field that is some
-            # value that is not the default of an empty
-            # string and thus it should be displayed;
-            # the idea is that displaying this run_command
-            # will give the person using Gatorgrade a way
-            # to quickly run the command that failed
-            if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}\n"
-                )
+    if show_failures:
+        failed_results = list(filter(lambda result: not result.passed, results))
+        if len(failed_results) > 0:
+            print("\n-~-  FAILURES  -~-\n")
+            for result in failed_results:
+                # main.console.print("This is a result")
+                # main.console.print(result)
+                result.print(show_diagnostic=True)
+                # this result is an instance of CheckResult
+                # that has a run_command field that is some
+                # value that is not the default of an empty
+                # string and thus it should be displayed;
+                # the idea is that displaying this run_command
+                # will give the person using Gatorgrade a way
+                # to quickly run the command that failed
+                if result.run_command != "":
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
+        else:
+            for result in results:  # Print all results if show_failures is False
+                result.print()
+        # Check for included and excluded checks
+        if check_include or check_exclude:
+            filtered_results = results
+
+            if check_include:
+                filtered_results = [
+                    r for r in results if check_include in r.description
+                ]
+
+            if check_exclude:
+                filtered_results = [
+                    r for r in filtered_results if check_exclude not in r.description
+                ]
+
+            if len(filtered_results) > 0:
+                print("\n-~-  INCLUDED / EXCLUDED CHECKS  -~-\n")
+                for result in filtered_results:
+                    if not result.passed:
+                        result.print(
+                            show_diagnostic=True
+                        )  # Show diagnostics for failing included/excluded checks
+                    else:
+                        result.print()  # Print normally for passing checks
+    # Append results (from the other branch)
+    results.append(result)
+
+    # Determine if there are failures and then display them
+    failed_results = list(filter(lambda result: not result.passed, results))
+
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
