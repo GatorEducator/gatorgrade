@@ -376,8 +376,8 @@ def test_throw_errors_if_report_type_not_md_nor_json():
 
     # with pytest.raises(ValueError):
     value = output.run_checks(
-            checks, report_location, report_storing_type, storing_location_name
-        )
+        checks, report_location, report_storing_type, storing_location_name
+    )
     assert value == False
 
 
