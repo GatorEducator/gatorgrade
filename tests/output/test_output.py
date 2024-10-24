@@ -378,7 +378,7 @@ def test_throw_errors_if_report_type_not_md_nor_json():
     value = output.run_checks(
         checks, report_location, report_storing_type, storing_location_name
     )
-    assert value == False
+    assert value is False
 
 
 def test_write_md_and_json_correctly(tmp_path):
