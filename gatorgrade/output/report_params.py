@@ -8,10 +8,18 @@ class ReportParamsLocation(str, Enum):
 
     file = "file"
     env = "env"
+    # none = validate_location()
 
-    def __str__(self):
-        """Define a default string representation."""
-        return self.value
+
+def validate_location(location):
+    """todo."""
+    if location not in ReportParamsLocation:
+        raise ValueError("Invalid location for --report-location: {}".format(location))
+
+
+# how to call it
+# validate_location(ReportParamsLocation.report_location)
+
 
 class ReportParamsType(str, Enum):
     """Define the type of type to store the data in."""
@@ -19,9 +27,14 @@ class ReportParamsType(str, Enum):
     json = "json"
     md = "md"
 
-    def __str__(self):
-        """Define a default string representation."""
-        return self.value
+
+def validate_storing_type(storing_type):
+    """todo."""
+    if storing_type not in ReportParamsLocation:
+        raise ValueError(
+            "Invalid type for --report-storing-type: {}".format(storing_type)
+        )
+
 
 class ReportParamsStoringName(str, Enum):
     """Define the type of type to store the data in."""
@@ -29,33 +42,10 @@ class ReportParamsStoringName(str, Enum):
     file: str
     github = "github"
 
-    def __str__(self):
-        """Define a default string representation."""
-        return self.value
 
-# example to references for the form
-# class ShellCheck:  # pylint: disable=too-few-public-methods
-#     """Represent a shell check."""
-
-#     def __init__(self, command: str, description: str = None, json_info=None):  # type: ignore
-#         """Construct a ShellCheck.
-
-#         Args:
-#             command: The command to run in a shell.
-#             description: The description to use in output.
-#                 If no description is given, the command is used as the description.
-#             json_info: The all-encompassing check information to include in json output.
-#                 If none is given, command is used
-#         """
-#         self.command = command
-#         self.description = description if description is not None else command
-#         self.json_info = json_info
-
-
-# another idea/example
-# class Triangle:
-#     """Define the Triangle dataclass for constant(s)."""
-
-#     Equilateral: str
-#     Isosceles: str
-#     Scalene: str
+def validate_storing_location_name(storing_location_name):
+    """todo."""
+    if storing_location_name not in ReportParamsLocation:
+        raise ValueError(
+            "Invalid type for --report-storing-type: {}".format(storing_location_name)
+        )
