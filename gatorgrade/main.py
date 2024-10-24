@@ -48,19 +48,10 @@ def gatorgrade(
     report_location: ReportParamsLocation = typer.Option(None),
     report_storing_type: ReportParamsType = typer.Option(None),
     storing_location_name: ReportParamsStoringName = typer.Option(None),
-    # report: Tuple[str, str, str] = typer.Option(
-    #     (None, None, None),
-    #     "--report",
-    #     "-r",
-    #     help="A tuple containing the following REQUIRED values: \
-    #         1. The destination of the report (either file or env) \
-    #         2. The format of the report (either json or md) \
-    #         3. the name of the file or environment variable\
-    #         4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
-    # ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
-    # first check the report params
+    # check the report params to make sure they are not None
+    # and have the correct inputs
     validate_location(report_location)
     validate_storing_type(report_storing_type)
     validate_storing_location_name(storing_location_name)
