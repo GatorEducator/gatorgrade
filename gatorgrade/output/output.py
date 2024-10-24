@@ -238,35 +238,35 @@ def configure_report(
     #     )
 
     # if the user wants markdown, get markdown content based on json
-    if report_storing_type.md:
+    if report_storing_type == "md":
         report_output_data_md = create_markdown_report_file(report_output_data_json)
 
     # if the user wants the data stored in a file
-    if report_location.file and report_storing_type.md:
+    if report_location == "file" and report_storing_type == "md":
         write_json_or_md_file(
-            storing_location_name, report_storing_type.md, report_output_data_md
+            storing_location_name, report_storing_type, report_output_data_md
         )  # type: ignore
 
-    if report_location.file and report_storing_type.json:
+    if report_location == "file" and report_storing_type == "json":
         write_json_or_md_file(
-            storing_location_name, report_storing_type.json, report_output_data_json
+            storing_location_name, report_storing_type, report_output_data_json
         )
 
     # the user wants the data stored in an environment variable; do not attempt
     # to save to the environment variable if it does not exist in the environment
-    elif report_location.env:
-        if storing_location_name.github:
+    elif report_location == "env":
+        if storing_location_name == "github":
             env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
 
             if env_file is not None:
-                if report_storing_type.md:
+                if report_storing_type == "md":
                     write_json_or_md_file(
-                        env_file, report_storing_type.md, report_output_data_md
+                        env_file, report_storing_type, report_output_data_md
                     )  # type: ignore
 
-                if report_storing_type.json:
+                if report_storing_type == "json":
                     write_json_or_md_file(
-                        env_file, report_storing_type.json, report_output_data_json
+                        env_file, report_storing_type, report_output_data_json
                     )
         # Add json report into the GITHUB_ENV environment variable for data collection purpose;
         # note that this is an undocumented side-effect of running gatorgrade with command-line
@@ -291,21 +291,22 @@ def configure_report(
             # variables that are available to all of the subsequent steps
             with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
                 env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
-    else:
-        raise ValueError(
-            "\n[red]The first argument of report has to be 'env' or 'file' "
-        )
+    # else:
+    #     raise ValueError(
+    #         "\n[red]The first argument of report has to be 'env' or 'file' "
+    #     )
 
 
 def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, content):
     """Write a markdown or json file."""
     # try to store content in a file with user chosen format
+    print(type(report_storing_type))
     try:
         # Second argument has to be json or md
         with open(file_name, "w", encoding="utf-8") as file:
-            if report_storing_type.json:
+            if report_storing_type == "json":
                 json.dump(content, file, indent=4)
-            if report_storing_type.md:
+            if report_storing_type == "md":
                 file.write(str(content))
         return True
     except Exception as e:
