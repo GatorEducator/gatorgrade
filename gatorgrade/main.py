@@ -45,11 +45,9 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    report_location: ReportParamsLocation = typer.Option(ReportParamsLocation.none),
-    report_storing_type: ReportParamsType = typer.Option(ReportParamsType.none),
-    storing_location_name: ReportParamsStoringName = typer.Option(
-        ReportParamsStoringName.none
-    ),
+    report_location: ReportParamsLocation = typer.Option(None),
+    report_storing_type: ReportParamsType = typer.Option(None),
+    storing_location_name: ReportParamsStoringName = typer.Option(None),
     # report: Tuple[str, str, str] = typer.Option(
     #     (None, None, None),
     #     "--report",
