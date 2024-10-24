@@ -266,7 +266,7 @@ def configure_report(
             # variables that are available to all of the subsequent steps
             with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
                 env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
-                
+
 
 def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, content):
     """Write a markdown or json file."""
