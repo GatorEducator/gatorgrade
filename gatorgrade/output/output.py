@@ -204,38 +204,13 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-# name is either an env or a file name
-# bug that could happen is one defined and not another --> throw error mayebe but
-# I also set default values so it should be fine.
 def configure_report(
     report_location: ReportParamsLocation,
     report_storing_type: ReportParamsType,
     storing_location_name: ReportParamsStoringName,
     report_output_data_json: dict,
-    # report_params: Tuple[str, str, str], report_output_data_json: dict
 ):
-    """Put together the contents of the report depending on the inputs of the user.
-
-    Args:
-        report_params: The details of what the user wants the report to look like
-            report_params[0]: file or env
-            report_params[1]: json or md
-            report_params[2]: name of the file or env
-        report_output_data: the json dictionary that will be used or converted to md
-    """
-    # report_format = report_params[0]
-    # report_location
-
-    # report_type = report_params[1]
-    # report_storing_type
-
-    # report_name = report_params[2]
-    # storing_location_name
-
-    # if report_type not in ("json", "md"):
-    #     raise ValueError(
-    #         "\n[red]The second argument of report has to be 'md' or 'json' "
-    #     )
+    """Put together the contents of the report depending on the inputs of the user."""
 
     # if the user wants markdown, get markdown content based on json
     if report_storing_type == "md":
@@ -291,11 +266,7 @@ def configure_report(
             # variables that are available to all of the subsequent steps
             with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
                 env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
-    # else:
-    #     raise ValueError(
-    #         "\n[red]The first argument of report has to be 'env' or 'file' "
-    #     )
-
+                
 
 def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, content):
     """Write a markdown or json file."""
