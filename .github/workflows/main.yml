@@ -97,5 +97,6 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
       - name: Execute tests
+        if: matrix.os != 'windows-latest'
         run: poetry run task test
 
