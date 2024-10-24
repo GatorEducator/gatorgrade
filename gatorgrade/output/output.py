@@ -369,12 +369,7 @@ def run_checks(
     # compute summary results and display them in the console using panel
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright_red"
-    rich.print(Panel(
-                summary,
-                expand=False,
-                title=None,
-                style=summary_color
-                ))
+    rich.print(Panel(summary, expand=False, title=None, style=summary_color))
 
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
