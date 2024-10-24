@@ -6,6 +6,7 @@ from enum import Enum
 class ReportParamsLocation(str, Enum):
     """Define the location for the parameters of reporting and storing gatorgrade checks."""
 
+    report_location: str
     file = "file"
     env = "env"
     # none = validate_location()
@@ -24,6 +25,7 @@ def validate_location(location):
 class ReportParamsType(str, Enum):
     """Define the type of type to store the data in."""
 
+    report_storing_type: str
     json = "json"
     md = "md"
 
@@ -39,6 +41,7 @@ def validate_storing_type(storing_type):
 class ReportParamsStoringName(str, Enum):
     """Define the type of type to store the data in."""
 
+    storing_location_name: str
     file: str
     github = "github"
 
