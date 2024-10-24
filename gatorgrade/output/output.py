@@ -15,7 +15,11 @@ import rich
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
-from gatorgrade.output.report_params import ReportParamsLocation, ReportParamsType, ReportParamsStoringName
+from gatorgrade.output.report_params import (
+    ReportParamsLocation,
+    ReportParamsType,
+    ReportParamsStoringName,
+)
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -200,9 +204,13 @@ def create_markdown_report_file(json: dict) -> str:
 
 
 # name is either an env or a file name
-# bug that could happen is one defined and not another --> throw error mayebe but 
+# bug that could happen is one defined and not another --> throw error mayebe but
 # I also set default values so it should be fine.
-def configure_report(report_location: ReportParamsLocation, report_storing_type: ReportParamsType, storing_location_name: ReportParamsStoringName, report_output_data_json: dict
+def configure_report(
+    report_location: ReportParamsLocation,
+    report_storing_type: ReportParamsType,
+    storing_location_name: ReportParamsStoringName,
+    report_output_data_json: dict,
     # report_params: Tuple[str, str, str], report_output_data_json: dict
 ):
     """Put together the contents of the report depending on the inputs of the user.
@@ -231,24 +239,30 @@ def configure_report(report_location: ReportParamsLocation, report_storing_type:
     # if the user wants markdown, get markdown content based on json
     if report_storing_type.md:
         report_output_data_md = create_markdown_report_file(report_output_data_json)
-    
+
     # if the user wants the data stored in a file
     if report_location.file and report_storing_type.md:
-        write_json_or_md_file(storing_location_name, report_storing_type.md, report_output_data_md)  # type: ignore
-    
+        write_json_or_md_file(
+            storing_location_name, report_storing_type.md, report_output_data_md
+        )  # type: ignore
+
     if report_location.file and report_storing_type.json:
-        write_json_or_md_file(storing_location_name, report_storing_type.json, report_output_data_json)
-    
+        write_json_or_md_file(
+            storing_location_name, report_storing_type.json, report_output_data_json
+        )
+
     # the user wants the data stored in an environment variable; do not attempt
     # to save to the environment variable if it does not exist in the environment
     elif report_location.env:
         if storing_location_name.github:
             env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
-            
+
             if env_file is not None:
                 if report_storing_type.md:
-                    write_json_or_md_file(env_file, report_storing_type.md, report_output_data_md)  # type: ignore
-                
+                    write_json_or_md_file(
+                        env_file, report_storing_type.md, report_output_data_md
+                    )  # type: ignore
+
                 if report_storing_type.json:
                     write_json_or_md_file(
                         env_file, report_storing_type.json, report_output_data_json
@@ -290,7 +304,7 @@ def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, cont
         with open(file_name, "w", encoding="utf-8") as file:
             if report_storing_type.json:
                 json.dump(content, file, indent=4)
-            if report_storing_type.md :
+            if report_storing_type.md:
                 file.write(str(content))
         return True
     except Exception as e:
@@ -300,7 +314,10 @@ def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, cont
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report_location: ReportParamsLocation, report_storing_type: ReportParamsType, storing_location_name: ReportParamsStoringName
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report_location: ReportParamsLocation,
+    report_storing_type: ReportParamsType,
+    storing_location_name: ReportParamsStoringName,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -377,11 +394,16 @@ def run_checks(
     else:
         percent = round(passed_count / len(results) * 100)
     # if the report is wanted, create output in line with their specifications
-    
+
     if report_location and report_storing_type and storing_location_name:
         report_output_data = create_report_json(passed_count, results, percent)
-        configure_report(report_location, report_storing_type, storing_location_name, report_output_data)
-    
+        configure_report(
+            report_location,
+            report_storing_type,
+            storing_location_name,
+            report_output_data,
+        )
+
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
