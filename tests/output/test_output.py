@@ -38,7 +38,6 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
         ],
         json_info="test",
     )
-    # report = (None, None, None)
     report_location = None
     report_storing_type = None
     storing_location_name = None
@@ -93,7 +92,6 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
             json_info="test",
         ),
     ]
-    # report = (None, None, None)
     report_location = None
     report_storing_type = None
     storing_location_name = None
@@ -146,7 +144,6 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
             json_info="test",
         ),
     ]
-    # report = (None, None, None)
     report_location = None
     report_storing_type = None
     storing_location_name = None
@@ -221,7 +218,6 @@ def test_md_report_file_created_correctly():
         ),
     ]
     # run them with the wanted report config
-    # report = ("file", "md", "insights.md")
     report_location = "file"
     report_storing_type = "md"
     storing_location_name = "insights.md"
@@ -236,12 +232,6 @@ def test_md_report_file_created_correctly():
     file.close()
 
     os.remove("insights.md")
-
-    # print("expected")
-    # print(expected_file_contents)
-    # print("\n")
-    # print("file_contents")
-    # print(file_contents)
 
     assert expected_file_contents in file_contents
 
@@ -302,7 +292,6 @@ def test_print_error_with_invalid_report_path():
             },
         ),
     ]
-    # report = ("file", "md", "invalid_path/insight.md")
     report_location = "file"
     report_storing_type = "md"
     storing_location_name = "invalid_path/insight.md"
@@ -310,7 +299,6 @@ def test_print_error_with_invalid_report_path():
         output.run_checks(
             checks, report_location, report_storing_type, storing_location_name
         )
-    # assert value == False
 
 
 def test_throw_errors_if_report_type_not_md_nor_json():
@@ -369,7 +357,6 @@ def test_throw_errors_if_report_type_not_md_nor_json():
             },
         ),
     ]
-    # report = ("file", "not_md_nor_json", "invalid_path")
     report_location = "file"
     report_storing_type = "not_md_nor_json"
     storing_location_name = "invalid_path"
