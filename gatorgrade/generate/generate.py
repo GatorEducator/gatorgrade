@@ -80,7 +80,7 @@ def create_targeted_paths_list(
     for key in target_path_list:
         if key not in targeted_paths_string:
             typer.secho(
-                f"WARNING \u26A0: '{key}' file path is not FOUND!"
+                f"WARNING \u26a0: '{key}' file path is not FOUND!"
                 f"\nAll file paths except '{key}' are successfully"
                 " generated in the 'gatorgrade.yml' file",
                 fg=typer.colors.YELLOW,
@@ -90,7 +90,7 @@ def create_targeted_paths_list(
     # If all the files exist in the root directory, print out a success message
     if targeted_paths:
         typer.secho(
-            "SUCCESS \U0001F525: All the file paths were"
+            "SUCCESS \U0001f525: All the file paths were"
             " successfully generated in the 'gatorgrade.yml' file!",
             fg=typer.colors.GREEN,
         )

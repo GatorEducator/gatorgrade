@@ -130,3 +130,6 @@ dmypy.json
 
 # gatograde.yml files
 gatorgrade.yml
+
+# poetry.toml files
+poetry.toml
