@@ -62,8 +62,8 @@ def gatorgrade(
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # first check the report params
     validate_location(ReportParamsLocation.report_location)
-    validate_storing_type(ReportParamsLocation.report_storing_type)
-    validate_storing_location_name(ReportParamsLocation.storing_location_name)
+    validate_storing_type(ReportParamsType.report_storing_type)
+    validate_storing_location_name(ReportParamsStoringName.storing_location_name)
 
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
