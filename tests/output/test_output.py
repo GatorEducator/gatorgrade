@@ -38,9 +38,14 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
         ],
         json_info="test",
     )
-    report = (None, None, None)
+    # report = (None, None, None)
+    report_location = None
+    report_storing_type = None
+    storing_location_name = None
     # When run_checks is called
-    output.run_checks([check], report)  # type: ignore
+    output.run_checks(
+        [check], report_location, report_storing_type, storing_location_name
+    )  # type: ignore
     # Then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
@@ -88,9 +93,14 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
             json_info="test",
         ),
     ]
-    report = (None, None, None)
+    # report = (None, None, None)
+    report_location = None
+    report_storing_type = None
+    storing_location_name = None
     # When run_checks is called
-    output.run_checks(checks, report)  # type: ignore
+    output.run_checks(
+        checks, report_location, report_storing_type, storing_location_name
+    )  # type: ignore
     # the output shows the correct fraction
     # and percentage of passed checks
     out, _ = capsys.readouterr()
@@ -136,9 +146,14 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
             json_info="test",
         ),
     ]
-    report = (None, None, None)
+    # report = (None, None, None)
+    report_location = None
+    report_storing_type = None
+    storing_location_name = None
     # When run_checks is called
-    output.run_checks(checks, report)  # type: ignore
+    output.run_checks(
+        checks, report_location, report_storing_type, storing_location_name
+    )  # type: ignore
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
@@ -206,8 +221,13 @@ def test_md_report_file_created_correctly():
         ),
     ]
     # run them with the wanted report config
-    report = ("file", "md", "insights.md")
-    output.run_checks(checks, report)
+    # report = ("file", "md", "insights.md")
+    report_location = "file"
+    report_storing_type = "md"
+    storing_location_name = "insights.md"
+    output.run_checks(
+        checks, report_location, report_storing_type, storing_location_name
+    )
     # check to make sure the created file matches the expected output
     expected_file_contents = """# Gatorgrade Insights\n\n**Project Name:** gatorgrade\n**Amount Correct:** 1/3 (33%)\n\n## Passing Checks"""
 
@@ -276,9 +296,14 @@ def test_print_error_with_invalid_report_path():
             },
         ),
     ]
-    report = ("file", "md", "invalid_path/insight.md")
+    # report = ("file", "md", "invalid_path/insight.md")
+    report_location = "file"
+    report_storing_type = "md"
+    storing_location_name = "invalid_path/insight.md"
     with pytest.raises(ValueError):
-        output.run_checks(checks, report)
+        output.run_checks(
+            checks, report_location, report_storing_type, storing_location_name
+        )
 
 
 def test_throw_errors_if_report_type_not_md_nor_json():
@@ -337,9 +362,14 @@ def test_throw_errors_if_report_type_not_md_nor_json():
             },
         ),
     ]
-    report = ("file", "not_md_nor_json", "invalid_path")
+    # report = ("file", "not_md_nor_json", "invalid_path")
+    report_location = "file"
+    report_storing_type = "not_md_nor_json"
+    storing_location_name = "invalid_path"
     with pytest.raises(ValueError):
-        output.run_checks(checks, report)
+        output.run_checks(
+            checks, report_location, report_storing_type, storing_location_name
+        )
 
 
 def test_write_md_and_json_correctly(tmp_path):
