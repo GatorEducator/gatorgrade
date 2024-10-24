@@ -30,7 +30,7 @@ class ReportParamsType(str, Enum):
 
 def validate_storing_type(storing_type):
     """todo."""
-    if storing_type not in ReportParamsLocation:
+    if storing_type not in ReportParamsType:
         raise ValueError(
             "Invalid type for --report-storing-type: {}".format(storing_type)
         )
@@ -45,7 +45,7 @@ class ReportParamsStoringName(str, Enum):
 
 def validate_storing_location_name(storing_location_name):
     """todo."""
-    if storing_location_name not in ReportParamsLocation:
+    if storing_location_name not in ReportParamsStoringName:
         raise ValueError(
             "Invalid type for --report-storing-type: {}".format(storing_location_name)
         )
