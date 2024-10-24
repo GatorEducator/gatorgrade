@@ -342,7 +342,7 @@ def run_checks(
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
-        print("\n-~-  FAILURES  -~- This is the Rebekah test\n")
+        print("\n-~-  FAILURES  -~- This is the new update of gatorgrade \n")
         for result in failed_results:
             # main.console.print("This is a result")
             # main.console.print(result)
