@@ -1,6 +1,6 @@
 # Publishing workflow
 
-name: Publish
+name: Tag Publish
 
 # Use more columns for terminal output
 env:
