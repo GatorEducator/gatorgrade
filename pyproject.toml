@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gatorgrade"
-version = "0.7.0"
+version = "0.7.1"
 description = "GatorGrade executes GatorGrader checks!"
 authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Gregory M. Kapfhammer", "Peyton Kelly", "Luke Lacaria", "Lauren Nevill", "Rebekah Rudd", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
 readme = "README.md"
