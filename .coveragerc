@@ -1,0 +1,5 @@
+[coverage:report]
+skip_empty = true
+[json]
+show_contexts=True
+pretty_print=True
