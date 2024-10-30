@@ -81,7 +81,7 @@ def gatorgrade(
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        (checks, match) = parse_config(filename, check_include, check_exclude)
+        (checks, match) = parse_config(filename, check_include=None, check_exclude=None)
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
