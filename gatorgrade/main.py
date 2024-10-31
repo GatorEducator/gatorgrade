@@ -46,11 +46,13 @@ def gatorgrade(
             4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
     ),
     run_status_bar: bool = typer.Option(
-        False, "--run_status_bar", help="Enable a progress bar for checks running/not running."
+        False,
+        "--run_status_bar",
+        help="Enable a progress bar for checks running/not running.",
     ),
     no_status_bar: bool = typer.Option(
         False, "--no_status_bar", help="Disable the progress bar entirely."
-    )
+    ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
