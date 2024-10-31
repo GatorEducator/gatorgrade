@@ -117,21 +117,32 @@ def test_full_integration_creates_valid_output(
     for output, freq in expected_output_and_freqs:
         assert result.stdout.count(output) == freq
 
+
 def test_default_run_invalid_output():
-    '''Test the default run with the assumption that the default configuration file is invalid.'''
+    """Test the default run with the assumption that the default configuration file is invalid."""
     result = runner.invoke(main.app)
     assert result.exit_code == main.FAILURE
-    assert f"The file {main.FILE} either does not exist or is not valid." in result.output
+    assert (
+        f"The file {main.FILE} either does not exist or is not valid." in result.output
+    )
+
 
 def test_specified_filename_invalid_output():
-    '''Test the run with a specified filename that is invalid.'''
+    """Test the run with a specified filename that is invalid."""
     result = runner.invoke(main.app, ["--config", "nonexistent.yml"])
     assert result.exit_code == main.FAILURE
-    assert "The file nonexistent.yml either does not exist or is not valid." in result.output
+    assert (
+        "The file nonexistent.yml either does not exist or is not valid."
+        in result.output
+    )
+
 
 def test_entry_point():
     """Test the entry point of the script to ensure it runs as expected."""
-    result = subprocess.run([sys.executable, "gatorgrade/main.py"], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "gatorgrade/main.py"], capture_output=True, text=True
+    )
     assert result.returncode == main.FAILURE
-    assert f"The file {main.FILE} either does not exist or is not valid." in result.stdout
-
+    assert (
+        f"The file {main.FILE} either does not exist or is not valid." in result.stdout
+    )

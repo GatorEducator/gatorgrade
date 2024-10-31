@@ -35,14 +35,22 @@ def parse_config(file: Path, check_include: str = None, check_exclude: str = Non
         # Filter the reformat_yaml_data to only include specified checks
         if check_include:
             # Generate the checks that are included
-            check_list = [check for check in reformatted_yaml_data if fuzz.partial_ratio(check_include, check[1]['description']) >= 80]
-            match = True if len(check_list) > 0 else False       
+            check_list = [
+                check
+                for check in reformatted_yaml_data
+                if fuzz.partial_ratio(check_include, check[1]["description"]) >= 80
+            ]
+            match = True if len(check_list) > 0 else False
             parse_con = generate_checks(check_list)
-            return (parse_con, match)       
+            return (parse_con, match)
 
         if check_exclude:
             # Generate the checks that are excluded
-            check_list = [check for check in reformatted_yaml_data if fuzz.partial_ratio(check_exclude, check[1]['description']) < 80]
+            check_list = [
+                check
+                for check in reformatted_yaml_data
+                if fuzz.partial_ratio(check_exclude, check[1]["description"]) < 80
+            ]
             match = True if len(check_list) > 0 else False
             parse_con = generate_checks(check_list)
             return (parse_con, match)
