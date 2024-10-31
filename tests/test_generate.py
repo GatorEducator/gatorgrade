@@ -1,6 +1,5 @@
 """This module tests the generate.py functionality"""
 
-
 import pytest
 import typer
 
