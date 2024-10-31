@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from typing import Tuple
 from typing import Union
 
@@ -198,7 +198,9 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
-def truncate_report(report_output_data_json: dict, output_limit: int = None) -> str:
+def truncate_report(
+    report_output_data_json: dict, output_limit: Optional[int] = None
+) -> str:
     """Truncate the json report to the maximum number of lines allowed.
 
     Args:
@@ -230,7 +232,7 @@ def truncate_report(report_output_data_json: dict, output_limit: int = None) -> 
 def configure_report(
     report_params: Tuple[str, str, str],
     report_output_data_json: dict,
-    output_limit: int = None,
+    output_limit: Optional[int] = None,
 ):
     """Put together the contents of the report depending on the inputs of the user.
 
@@ -319,11 +321,11 @@ def write_json_or_md_file(file_name, content_type, content):
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
-    output_limit: int = None,
-    check_status: str = None,
+    output_limit: Optional[int] = None,
+    check_status: Optional[str] = None,
     show_failures: bool = False,
-    check_include: str = None,
-    check_exclude: str = None,
+    check_include: Optional[str] = None,
+    check_exclude: Optional[str] = None,
 ) -> bool:
     results = []
 

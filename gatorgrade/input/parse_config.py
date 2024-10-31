@@ -1,6 +1,7 @@
 """Returns the list of commands to be run through gatorgrader."""
 
 from pathlib import Path
+from typing import Optional
 from thefuzz import fuzz
 
 
@@ -9,7 +10,9 @@ from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
 
 
-def parse_config(file: Path, check_include: str = None, check_exclude: str = None):
+def parse_config(
+    file: Path, check_include: Optional[str] = None, check_exclude: Optional[str] = None
+):
     """Parse the input yaml file and generate specified checks.
 
     Args:
