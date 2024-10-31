@@ -356,10 +356,24 @@ def run_checks(
     filtered_results = results
     if check_include:
         filtered_results = [r for r in results if check_include in r.description]
+        for result in filtered_results:
+            if not result.passed:
+                result.print(show_diagnostic=True)
+                if result.run_command != "":
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
     if check_exclude:
         filtered_results = [
             r for r in filtered_results if check_exclude not in r.description
         ]
+        for result in filtered_results:
+            if not result.passed:
+                result.print(show_diagnostic=True)
+                if result.run_command != "":
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
 
     # Print results based on show_failures and status
     if show_failures:
@@ -367,8 +381,10 @@ def run_checks(
         for result in filtered_results:
             if not result.passed:
                 result.print(show_diagnostic=True)
-                if result.run_command:
-                    print(f"   → Run this command: {result.run_command}\n")
+                if result.run_command != "":
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
     else:
         # Print all results
         for result in filtered_results:
