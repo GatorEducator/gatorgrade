@@ -327,6 +327,7 @@ def run_checks(
 ) -> bool:
     results = []
 
+    # Run checks and gather results
     for check in checks:
         result = None
         command_ran = None
@@ -355,40 +356,36 @@ def run_checks(
     # Filter by include/exclude criteria
     filtered_results = results
     if check_include:
-        filtered_results = [r for r in results if check_include in r.description]
-        for result in filtered_results:
-            if not result.passed:
-                result.print(show_diagnostic=True)
-                if result.run_command != "":
-                    rich.print(
-                        f"[blue]   → Run this command: [green]{result.run_command}\n"
-                    )
+        filtered_results = [
+            r for r in filtered_results if check_include in r.description
+        ]
+
     if check_exclude:
         filtered_results = [
             r for r in filtered_results if check_exclude not in r.description
         ]
-        for result in filtered_results:
-            if not result.passed:
-                result.print(show_diagnostic=True)
-                if result.run_command != "":
-                    rich.print(
-                        f"[blue]   → Run this command: [green]{result.run_command}\n"
-                    )
 
-    # Print results based on show_failures and status
+    # Print results based on the filtered results
     if show_failures:
         # Print only failures
         for result in filtered_results:
             if not result.passed:
                 result.print(show_diagnostic=True)
-                if result.run_command != "":
+                if result.run_command:
                     rich.print(
                         f"[blue]   → Run this command: [green]{result.run_command}\n"
                     )
     else:
         # Print all results
         for result in filtered_results:
-            result.print()
+            if not result.passed:
+                result.print(show_diagnostic=True)
+                if result.run_command:
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
+            else:
+                result.print()  # Print normally for passing checks
 
     # Generate summary
     failed_results = [r for r in results if not r.passed]
