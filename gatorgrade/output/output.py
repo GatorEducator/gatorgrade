@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
-from rich.progress import Progress, BarColumn, TextColumn
 
 import gator
 import rich
+from rich.progress import BarColumn
+from rich.progress import Progress
+from rich.progress import TextColumn
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
@@ -286,7 +288,10 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], running_mode=False, no_status_bar=False
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    running_mode=False,
+    no_status_bar=False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -342,12 +347,17 @@ def run_checks(
     else:
         with Progress(
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(bar_width=40, style="red", complete_style="green", finished_style="green"),
+            BarColumn(
+                bar_width=40,
+                style="red",
+                complete_style="green",
+                finished_style="green",
+            ),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
             # add a progress task for tracking
             task = progress.add_task("[green]Running checks...", total=total_checks)
-            
+
             # run each of the checks
             for check in checks:
                 result = None
@@ -378,8 +388,8 @@ def run_checks(
                 if result is not None:
                     result.print()
                     results.append(result)
-                
-                #update progress based on running_mode
+
+                # update progress based on running_mode
                 if running_mode:
                     progress.update(task, advance=1)
                 else:
