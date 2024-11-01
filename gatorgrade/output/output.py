@@ -327,6 +327,12 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+            # set the hint here
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                index_of_new_hint = int(index_of_hint) + 1
+                result.hint = check.gg_args[index_of_new_hint]
+
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
@@ -352,6 +358,11 @@ def run_checks(
             if result.run_command != "":
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
+                )
+            # this will display a hint for all failed checks if the option is selected by an instructor
+            if result.hint != "":
+                rich.print(
+                    f"[blue]   → Hint: [green]{result.hint}\n"
                 )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
