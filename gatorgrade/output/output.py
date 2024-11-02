@@ -347,9 +347,10 @@ def run_checks(
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
+        print("Rebakah test")
         for result in failed_results:
-            rich.print("This is a result")
-            rich.print(result)
+            print("This is a result")
+            print(result)
             result.print(show_diagnostic=True)
             # this result is an instance of CheckResult
             # that has a run_command field that is some
