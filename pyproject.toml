@@ -55,6 +55,8 @@ mypy-command = {var = "mypy {project}", recursive = true}
 all = "task lint && task test"
 lint = "task format && task check && task mypy"
 check = { cmd = "{check-command}", help = "Run the ruff linting checks", use_vars = true }
+coverage = { cmd = "{coverage-test-command}", help = "Run test coverage monitoring", use_vars = true }
+coverage-silent = { cmd = "{coverage-test-command-silent}", help = "Run test coverage monitoring", use_vars = true }
 format = { cmd = "{format-command}", help = "Run the ruff formatter on source code", use_vars = true }
 format-fix = { cmd = "{fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 mypy = { cmd = "{mypy-command}", help = "Run the mypy type checker for potential type errors", use_vars = true }

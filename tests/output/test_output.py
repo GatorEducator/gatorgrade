@@ -13,7 +13,7 @@ FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
 
 
 @pytest.fixture
-def patch_datetime_now(monkeypatch):
+def patch_datetime_now(monkeypatch: pytest.MonkeyPatch):
     class mydatetime:
         @classmethod
         def now(cls):
@@ -22,7 +22,7 @@ def patch_datetime_now(monkeypatch):
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
-def test_run_checks_invalid_gg_args_prints_exception(capsys):
+def test_run_checks_invalid_gg_args_prints_exception(capsys: pytest.CaptureFixture[str]):
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
     # Given a GatorGrader check with invalid arguments
     check = GatorGraderCheck(
@@ -49,7 +49,7 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
     assert "Invalid GatorGrader check:" in out
 
 
-def test_run_checks_some_failed_prints_correct_summary(capsys):
+def test_run_checks_some_failed_prints_correct_summary(capsys: pytest.CaptureFixture[str]):
     """Test that run_checks, when given some checks that should fail, prints the correct summary."""
     # Given three checks with one check that should fail
     checks = [
@@ -97,7 +97,7 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     assert "Passed 2/3 (67%) of checks" in out
 
 
-def test_run_checks_all_passed_prints_correct_summary(capsys):
+def test_run_checks_all_passed_prints_correct_summary(capsys: pytest.CaptureFixture[str]):
     """Test that run_checks, when given checks that should all pass, prints the correct summary."""
     # Given three checks that should all pass
     checks = [
@@ -342,7 +342,7 @@ def test_throw_errors_if_report_type_not_md_nor_json():
         output.run_checks(checks, report)
 
 
-def test_write_md_and_json_correctly(tmp_path):
+def test_write_md_and_json_correctly(tmp_path: output.Path):
     """Test process of writing is good for both json and md."""
     tmp_md = tmp_path / "test.md"
     tmp_json = tmp_path / "test.json"
