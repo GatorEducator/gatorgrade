@@ -330,6 +330,12 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+            # grabs the hint from the gatorgrade.yml file
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                index_of_new_hint = int(index_of_hint) + 1
+                result.hint = check.gg_args[index_of_new_hint]
+
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
