@@ -76,11 +76,6 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
                 file_name = check.gg_args[i + 3]
                 file_path = dir_name + "/" + file_name
                 break
-        # Extract the hint from gg_args if present
-        hint = ""
-        if "--hint" in check.gg_args:
-            index_of_hint = check.gg_args.index("--hint")
-            hint = check.gg_args[index_of_hint + 1]
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # Disable pylint to catch any type of exception thrown by GatorGrader
@@ -89,14 +84,12 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
         diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
         file_path = None
-        hint = ""
     return CheckResult(
         passed=passed,
         description=description,
         json_info=check.json_info,
         diagnostic=diagnostic,
         path=file_path,
-        hint=hint  # Include the hint in the CheckResult
     )
 
 
@@ -337,6 +330,10 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                index_of_new_hint = int(index_of_hint) + 1
+                result.hint = check.gg_args[index_of_new_hint]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:

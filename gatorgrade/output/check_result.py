@@ -14,7 +14,6 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         json_info,
         path: Union[str, None] = None,
         diagnostic: str = "No diagnostic message available",
-        hint: str = "",  # Add the hint parameter with a default empty string
     ):
         """Construct a CheckResult.
 
@@ -31,7 +30,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
-        self.hint = hint  # Store the hint as an instance attribute
+        self.hint = "" # Store the hint as an instance attribute
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
