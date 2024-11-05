@@ -322,7 +322,9 @@ def run_checks(
                 index_of_hint = check.gg_args.index("--hint")
                 hint = check.gg_args[index_of_hint + 1]
                 # Remove the hint from gg_args before passing to GatorGrader
-                check.gg_args = check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2:]
+                check.gg_args = (
+                    check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2 :]
+                )
             result = _run_gg_check(check)
             result.hint = hint  # Store the hint in the CheckResult object
             # check to see if there was a command in the
@@ -364,9 +366,7 @@ def run_checks(
                 )
             # display a hint set by the instructor for specific failed checks
             if result.hint != "":
-                rich.print(
-                f"[blue]   → Hint: [green]{result.hint}\n"
-            )
+                rich.print(f"[blue]   → Hint: [green]{result.hint}\n")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)

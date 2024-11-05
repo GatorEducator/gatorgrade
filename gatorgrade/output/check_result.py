@@ -30,7 +30,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
-        self.hint = "" # Store the hint as an instance attribute
+        self.hint = ""  # Store the hint as an instance attribute
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
