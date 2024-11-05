@@ -303,6 +303,7 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        hint = ""
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -316,7 +317,14 @@ def run_checks(
             result.run_command = command_ran
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
+            # Extract the hint from gg_args if present
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                hint = check.gg_args[index_of_hint + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2:]
             result = _run_gg_check(check)
+            result.hint = hint  # Store the hint in the CheckResult object
             # check to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list if it
@@ -330,10 +338,6 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
-            if "--hint" in check.gg_args:
-                index_of_hint = check.gg_args.index("--hint")
-                index_of_new_hint = int(index_of_hint) + 1
-                result.hint = check.gg_args[index_of_new_hint]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
