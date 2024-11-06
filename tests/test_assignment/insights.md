@@ -1,12 +1,14 @@
 # Gatorgrade Insights
 
-**Project Name:** test_assignment
-**Amount Correct:** 3/3 (100%)
+**Amount Correct:** 3
+**Percentage Correct:** 100
 
 ## Passing Checks
 
-- [x] Complete all TODOs
-- [x] Use an if statement
-- [x] Complete all TODOs
+### ✓ Complete all TODOs
+
+### ✓ Use an if statement
+
+### ✓ Complete all TODOs
 
 ## Failing Checks
