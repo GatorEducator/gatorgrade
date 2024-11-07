@@ -113,7 +113,7 @@ def test_full_integration_creates_valid_output(
     print("this is the result stdout")
     print(result.stdout)
 
-    assert result.exit_code == 1
+    assert result.exit_code == 0
     # for output, freq in expected_output_and_freqs:
     #     print(output, freq)
     #     assert result.stdout.count(output) == freq
