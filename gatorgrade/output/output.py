@@ -375,7 +375,7 @@ def run_checks(
 
     # Provide a link for users to leave a review
     print(
-        "\nWe'd love to hear your feedback! Please take a moment to leave a [review](https://forms.gle/jABEjXyw3q6HXn5W7)"
+        "\nWe'd love to hear your feedback! Please take a moment to leave a review: https://forms.gle/jABEjXyw3q6HXn5W7"
     )
 
     return summary_status
