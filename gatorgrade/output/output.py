@@ -370,13 +370,12 @@ def run_checks(
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
 
+    # Determine whether or not the run was a success or not:
+    summary_status = True if passed_count == len(results) else False
     # Provide a link for users to leave a review
     print(
         "\nWe'd love to hear your feedback! Please take a moment to leave a review: [https://forms.gle/jABEjXyw3q6HXn5W7]"
     )
-
-    # Determine whether or not the run was a success or not:
-    summary_status = True if passed_count == len(results) else False
     return summary_status
 
 
