@@ -300,55 +300,84 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        # run a shell check; this means
+        # that it is going to run a command
+        # in the shell as a part of a check;
+        # store the command that ran in the
+        # field called run_command that is
+        # inside of a CheckResult object but
+        # not initialized in the constructor
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
+        # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
+            # check to see if there was a command in the
+            # GatorGraderCheck. This code finds the index of the
+            # word "--command" in the check.gg_args list if it
+            # is available (it is not available for all of
+            # the various types of GatorGraderCheck instances),
+            # and then it adds 1 to that index to get the actual
+            # command run and then stores that command in the
+            # result.run_command field that is initialized to
+            # an empty string in the constructor for CheckResult
             if "--command" in check.gg_args:
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+        # there were results from running checks
+        # and thus they must be displayed
         if result is not None:
             result.print()
             results.append(result)
-
-    # Determine failed checks
+    # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
+    # print failures list if there are failures to print
+    # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
+            # main.console.print("This is a result")
+            # main.console.print(result)
             result.print(show_diagnostic=True)
+            # this result is an instance of CheckResult
+            # that has a run_command field that is some
+            # value that is not the default of an empty
+            # string and thus it should be displayed;
+            # the idea is that displaying this run_command
+            # will give the person using Gatorgrade a way
+            # to quickly run the command that failed
             if result.run_command != "":
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
-
-    # Calculate the percentage of passed checks
+    # determine how many of the checks passed and then
+    # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
+    # prevent division by zero if no results
     if len(results) == 0:
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
-
-    # Generate and save the report if needed
+    # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-
-    # Print summary status
+    # Compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
 
-    # Add feedback request after the summary
+    # Determine whether or not the run was a success or not:
+    summary_status = True if passed_count == len(results) else False
+
+    # Provide a link for users to leave a review
     print(
-        "\nWe'd love to hear your feedback! Please take a moment to leave a review: [Google Form Link]"
+        "\nWe'd love to hear your feedback! Please take a moment to leave a review: [https://forms.gle/jABEjXyw3q6HXn5W7]"
     )
 
-    # Return success status
-    summary_status = True if passed_count == len(results) else False
     return summary_status
 
 
