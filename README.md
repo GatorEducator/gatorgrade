@@ -1,4 +1,4 @@
-# GatorGrade: A Python Tool to Implement GatorGrader 
+# GatorGrade: A Python Tool to Implement GatorGrader
 
 GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool
 that can be used to check assignments through user-created checks. GatorGrade is
