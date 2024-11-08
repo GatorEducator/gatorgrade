@@ -365,13 +365,17 @@ def run_checks(
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-    # compute summary results and display them in the console
+    # Compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
-    # determine whether or not the run was a success or not:
-    # if all of the tests pass then the function returns True;
-    # otherwise the function must return False
+
+    # Provide a link for users to leave a review
+    print(
+        "\nWe'd love to hear your feedback! Please take a moment to leave a review: [https://forms.gle/jABEjXyw3q6HXn5W7]"
+    )
+
+    # Determine whether or not the run was a success or not:
     summary_status = True if passed_count == len(results) else False
     return summary_status
 
