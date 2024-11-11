@@ -1,6 +1,7 @@
 """Run checks and display whether each has passed or failed."""
 
 import datetime
+import time
 import json
 import os
 import subprocess
@@ -16,6 +17,8 @@ from rich.progress import BarColumn
 from rich.progress import Progress
 from rich.progress import TextColumn
 from rich.panel import Panel
+from rich.live import Live
+from rich import print as rprint
 import yaml
 
 from gatorgrade.input.checks import GatorGraderCheck
@@ -294,11 +297,22 @@ def load_quotes(file_path: str) -> Dict[str, str]:
     with open(file_path, "r", encoding="utf-8") as file: 
         data = yaml.safe_load(file) 
         return data['quotes']
+    
+def animated_message(quote: str, title: str = "Motivational Message", animation_time: float = 2.0):
+    """Display a motivational message with a brief animated effect."""
+    with Live(refresh_per_second=10) as live:
+        for i in range(10): 
+            panel = Panel(f"[white]{quote[:i * len(quote) // 10]}_", 
+                          expand=False, border_style="bright_cyan")
+            live.update(panel)
+            time.sleep(animation_time / 10)
+        # Final display without the underscore
+        live.update(Panel(f"[white]{quote}", expand=False, border_style="bright_cyan"))
 
-def motivation(quotes_list, message_title="Motivational Message"):
-    """Display a single motivational message with a title."""
-    quote = random.choice(quotes_list)  # Pick one quote from the list
-    return f"{quote}"
+def motivation(quotes_list: List[str], message_title="Motivational Message"):
+    """Display a single motivational message with animation."""
+    quote = random.choice(quotes_list)
+    animated_message(quote, message_title)
 
 file_path = "quotes.yml" 
 quotes = load_quotes(file_path)
