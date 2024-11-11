@@ -1,5 +1,8 @@
 [coverage:report]
 skip_empty = true
+[run]
+relative_files=true
+source=./gatorgrade
 [json]
 show_contexts=True
 pretty_print=True

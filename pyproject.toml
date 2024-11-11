@@ -41,8 +41,8 @@ types-pyyaml = "^6.0.12.20240917"
 project = "gatorgrade"
 tests = "tests"
 check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov=tests --cov-context=test --cov-fail-under=50 --cov-report term-missing --cov-report json --cov-branch"
-coverage-test-command-silent = "pytest -x --show-capture=no --cov=tests --cov-report term-missing --cov-report json --cov-branch"
+coverage-test-command = "pytest -s --cov-context=test --cov-fail-under=50 --cov-config .coveragerc --cov-report term-missing --cov --cov-branch"
+coverage-test-command-silent = "pytest -x --show-capture=no --cov-config .coveragerc --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
 fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
