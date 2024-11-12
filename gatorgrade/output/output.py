@@ -174,6 +174,9 @@ def create_markdown_report_file(json: dict) -> str:
                 if "command" == i:
                     val = check["options"]["command"]
                     markdown_contents += f"\n\t- **command** {val}"
+                if "weight" == i:
+                    val = check["options"]["weight"]
+                    markdown_contents += f"\n\t- **weight:** {val}"
                 if "fragment" == i:
                     val = check["options"]["fragment"]
                     markdown_contents += f"\n\t- **fragment:** {val}"
@@ -300,6 +303,7 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        weight = 1
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -308,12 +312,30 @@ def run_checks(
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
+            # Weighted Checks
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = check.gg_args[index_of_weight + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
+                )
             result = _run_shell_check(check)
+            result.weight = int(weight)
             command_ran = check.command
             result.run_command = command_ran
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
+                        # Weighted Checks
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = check.gg_args[index_of_weight + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
+                )
             result = _run_gg_check(check)
+            result.weight = int(weight)
             # check to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list if it
@@ -356,11 +378,20 @@ def run_checks(
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
-    # prevent division by zero if no results
+    # Math to calculate the % score
     if len(results) == 0:
+        total_weight = 0
+        passed_weight = 0
         percent = 0
     else:
-        percent = round(passed_count / len(results) * 100)
+        total_weight = sum(getattr(result, 'weight', 1) for result in results)
+        passed_weight = sum(getattr(result, 'weight', 1) for result in results if result.passed)
+        # prevent division by zero if no results
+        if total_weight == 0:
+            percent = 0
+        else:
+            percent = round(passed_weight / total_weight * 100)
+
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
