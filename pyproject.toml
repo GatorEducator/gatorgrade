@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "gatorgrade"
 version = "0.7.0"
+
 description = "GatorGrade executes GatorGrader checks!"
 authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Gregory M. Kapfhammer", "Peyton Kelly", "Luke Lacaria", "Lauren Nevill", "Rebekah Rudd", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
 readme = "README.md"
@@ -24,6 +25,7 @@ mkdocstrings = {extras = ["python"], version = "^0.18.1"}
 mkdocs-gen-files = "^0.3.4"
 mkdocs-typer = "^0.0.2"
 mkdocs-literate-nav = "^0.4.1"
+thefuzz = "^0.22.1"
 toml = "^0.10.2"
 pytest-sugar = "^0.9.5"
 pytest-randomly = "^3.12.0"
