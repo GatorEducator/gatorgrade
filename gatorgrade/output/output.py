@@ -298,7 +298,6 @@ def run_checks(
     Args:
         checks: The list of shell and GatorGrader checks to run.
     """
-    print(check_dict)
     results = []
     # run each of the checks
     for check in checks:
@@ -313,9 +312,14 @@ def run_checks(
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
+            if "--weight" in check.command:
+                command_parts = check.command.split()
+                index_of_weight = command_parts.index("--weight")
+                weight = int(command_parts[index_of_weight + 1])
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
+            result.weight = weight
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             # Weighted Checks

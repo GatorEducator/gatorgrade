@@ -31,6 +31,7 @@ def generate_checks(
                     command=check_data.check.get("command"),
                     description=check_data.check.get("description"),
                     json_info=check_data.check,
+                    options=check_data.check.get("options")
                 )
             )
         # Otherwise, it is a GatorGrader check

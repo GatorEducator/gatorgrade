@@ -1,12 +1,12 @@
 """Define check classes."""
 
-from typing import List
+from typing import List, Dict, Any
 
 
 class ShellCheck:  # pylint: disable=too-few-public-methods
     """Represent a shell check."""
 
-    def __init__(self, command: str, description: str = None, json_info=None):  # type: ignore
+    def __init__(self, command: str, description: str = None, json_info=None, options: Dict[str, Any] = None):  # type: ignore
         """Construct a ShellCheck.
 
         Args:
@@ -19,6 +19,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         self.command = command
         self.description = description if description is not None else command
         self.json_info = json_info
+        self.options = options if options is not None else {}
 
 
 class GatorGraderCheck:  # pylint: disable=too-few-public-methods
