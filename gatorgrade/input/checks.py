@@ -1,12 +1,12 @@
 """Define check classes."""
 
-from typing import List
+from typing import List, Tuple
 
 
 class ShellCheck:  # pylint: disable=too-few-public-methods
     """Represent a shell check."""
 
-    def __init__(self, command: str, description: str = None, json_info=None, options: List[List[str, str]] = None):  # type: ignore
+    def __init__(self, command: str, description: str = None, json_info=None, options: Optional[List[Tuple[str, str]]] = None):  # type: ignore
         """Construct a ShellCheck.
 
         Args:
