@@ -287,9 +287,7 @@ def write_json_or_md_file(file_name, content_type, content):
         ) from e
 
 
-def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], check_dict
-) -> bool:
+def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
