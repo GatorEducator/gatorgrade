@@ -311,13 +311,16 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
             print(check)
-            weight = 1
-            if "weight" in check.options:
-                weight = int(check.options["weight"])
-            result = _run_shell_check(check)
-            command_ran = check.command
-            result.run_command = command_ran
-            result.weight = weight
+            # Weighted Checks
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = check.gg_args[index_of_weight + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
+                )
+            result = _run_gg_check(check)
+            result.weight = int(weight)
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             # Weighted Checks
