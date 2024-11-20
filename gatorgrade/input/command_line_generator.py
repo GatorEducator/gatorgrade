@@ -29,9 +29,10 @@ def generate_checks(
         description = check_data.check.get("description")
         if description is not None:
             gg_args.extend(["--description", str(description)])
-        # Add name of check if it is a GatorGrader check
-        if "check" in check_data.check:
-            gg_args.append(str(check_data.check.get("check")))
+        # Add name of check if it exists in data
+        check_name = check_data.check.get("check")
+        if check_name is not None:
+            gg_args.append(str(check_name))
         # Add any additional options
         options = check_data.check.get("options")
         if options is not None:
