@@ -1,0 +1,17 @@
+{
+  "low_motivation": [
+    "The journey of 1000 miles begins with a single step",
+    "Keep pushing, you're just getting started!",
+    "Hang in there; the best is yet to come!"
+  ],
+  "mid_motivation": [
+    "50% there",
+    "Halfway there, keep going strong!",
+    "You're making great progress!"
+  ],
+  "high_motivation": [
+    "Congrats, you're done!",
+    "Almost there, don't give up now!",
+    "Finish line is in sight!"
+  ]
+}

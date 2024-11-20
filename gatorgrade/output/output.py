@@ -292,31 +292,33 @@ def write_json_or_md_file(file_name, content_type, content):
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
 
-def load_quotes(file_path: str) -> Dict[str, str]:
-    """Loads the yml file and reads the quotes in the file"""
+def load_quotes(file_path: str) -> Dict[str, List[str]]: 
+    """Loads the JSON file and reads the quotes in the file.""" 
     with open(file_path, "r", encoding="utf-8") as file: 
-        data = yaml.safe_load(file) 
-        return data['quotes']
+        data = json.load(file) 
+        return data
     
-def animated_message(quote: str, title: str = "Motivational Message", animation_time: float = 2.0):
-    """Display a motivational message with a brief animated effect."""
-    with Live(refresh_per_second=10) as live:
-        for i in range(10): 
-            panel = Panel(f"[white]{quote[:i * len(quote) // 10]}_", 
-                          expand=False, border_style="bright_cyan")
-            live.update(panel)
-            time.sleep(animation_time / 10)
-        # Final display without the underscore
-        live.update(Panel(f"[white]{quote}", expand=False, border_style="bright_cyan"))
-
-def motivation(quotes_list: List[str], message_title="Motivational Message"):
-    """Display a single motivational message with animation."""
+def motivation(quotes_list: List[str], message_title="Motivational Message") -> str:
+    """Display a single motivational message."""
+    if not quotes_list:
+        return "No motivational messages available."
     quote = random.choice(quotes_list)
-    animated_message(quote, message_title)
+    return f"{message_title}: {quote}"
 
-file_path = "quotes.yml" 
+file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'quotes.json')) 
 quotes = load_quotes(file_path)
 assert isinstance(quotes, dict)
+
+def error_fix():
+    try: 
+        quotes = load_quotes(file_path) 
+        assert isinstance(quotes, dict) 
+    except FileNotFoundError: 
+        print(f"Error: The file {file_path} was not found.") 
+        quotes = {} 
+    except json.JSONDecodeError as exc: 
+        print(f"Error parsing JSON file: {exc}")
+        quotes = {}
 
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]],
@@ -389,12 +391,10 @@ def run_checks(
         ) as progress:
             # add a progress task for tracking
             task = progress.add_task("[green]Running checks...", total=total_checks)
-
             # run each of the checks
             for check in checks:
                 result = None
                 command_ran = None
-
                 if isinstance(check, ShellCheck):
                     result = _run_shell_check(check)
                     command_ran = check.command
@@ -466,9 +466,23 @@ def run_checks(
     print_with_border(summary, summary_color)
     if run_motivation:
         if 0.25 <= percent < 0.75:
-            rich.print(Panel(motivation(quotes["low_motivation"], "You're just getting warmed up!"), expand=False, title="Motivation", border_style="bright_cyan"))
+            print(
+                Panel(
+                    motivation(quotes["low_motivation"], "You're just getting warmed up!"),
+                    expand=False,
+                    title="Motivation",
+                    border_style="bright_cyan"
+                )
+            )
         elif percent >= 0.75:
-            rich.print(Panel(motivation(quotes["high_motivation"], "Finish Line Insight"), expand=False, title="Motivation", border_style="bright_cyan"))
+            print(
+                Panel(
+                    motivation(quotes["high_motivation"], "Finish Line Insight"),
+                    expand=False,
+                    title="Motivation",
+                    border_style="bright_cyan"
+                )
+            )
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
