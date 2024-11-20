@@ -310,7 +310,6 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
-            print(check)
             # Weighted Checks
             if "--weight" in check.gg_args:
                 index_of_weight = check.gg_args.index("--weight")
