@@ -311,10 +311,9 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
             print(check)
-            for option in check.options:
-                if option[0] == "--weight":
-                    weight = int(option[1])
-                    break
+            weight = 1
+            if "weight" in check.options:
+                weight = int(check.options["weight"])
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
