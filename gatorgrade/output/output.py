@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
-from rich import strip
 
+import re
 import gator
 import rich
 
@@ -349,7 +349,10 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # and thus they must be displayed
         if result is not None:
             # result.print()
-            print(f"{strip(result.description)} test")
+            # Remove any rich text formatting (e.g., [green], [/], etc.)
+            clean_description = re.sub(r'\[[^\]]*\]', '', result.description)
+            # Print the cleaned description with "test" appended
+            print(f"{clean_description} test")
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
