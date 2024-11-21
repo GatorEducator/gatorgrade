@@ -321,6 +321,8 @@ def run_checks(
                     check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2 :]
                 )
             result = _run_shell_check(check)
+            command_ran = check.command
+            result.run_command = command_ran
             result.hint = hint
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
