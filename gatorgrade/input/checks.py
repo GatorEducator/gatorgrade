@@ -1,6 +1,6 @@
 """Define check classes."""
 
-from typing import List
+from typing import Optional, List
 
 
 class ShellCheck:  # pylint: disable=too-few-public-methods
@@ -9,10 +9,10 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
     def __init__(
         self,
         command: str,
-        description: str = None,
+        description: Optional[str] = None,
         json_info=None,
-        gg_args: List[str] = None,
-    ):  # type: ignore
+        gg_args: Optional[List[str]] = None,
+    ):
         """Construct a ShellCheck.
 
         Args:
