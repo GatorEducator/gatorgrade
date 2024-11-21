@@ -25,10 +25,6 @@ def generate_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
         gg_args = []
-        # Add description option if in data
-        description = check_data.check.get("description")
-        if description is not None:
-            gg_args.extend(["--description", str(description)])
         # Add name of check if it exists in data, otherwise use default_check
         check_name = check_data.check.get("check", "ConfirmFileExists")
         gg_args.append(str(check_name))
@@ -55,16 +51,22 @@ def generate_checks(
 
         # If the check has a `command` key, then it is a shell check
         if "command" in check_data.check:
+            # Do not add GatorGrader-specific arguments to gg_args for shell checks
+            shell_gg_args = gg_args.copy()
             checks.append(
                 ShellCheck(
                     command=check_data.check.get("command"),
                     description=check_data.check.get("description"),
                     json_info=check_data.check,
-                    gg_args=gg_args
+                    gg_args=shell_gg_args
                 )
             )
         # Otherwise, it is a GatorGrader check
         else:
+            # Add the description to gg_args for GatorGrader checks
+            description = check_data.check.get("description")
+            if description:
+                gg_args.extend(["--description", description])
             checks.append(
                 GatorGraderCheck(
                     gg_args=gg_args,
