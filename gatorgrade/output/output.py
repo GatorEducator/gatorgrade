@@ -9,13 +9,15 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
-import re
 import gator
 import rich
 
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from rich.console import Console
+
+console = Console()
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -364,7 +366,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
             result.print()
             check_weight = (int(weight) / total_weight)
             check_percent = round(check_weight * 100, 2)
-            print(f"({check_percent}%)")
+            console.print(f"({check_percent}%)", style="dim", end="\n")
+            # print(f"({check_percent}%)")
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
