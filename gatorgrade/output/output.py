@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
+from rich import strip
 
 import gator
 import rich
@@ -348,7 +349,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # and thus they must be displayed
         if result is not None:
             # result.print()
-            print(f"{result} test")
+            print(f"{strip(result.description)} test")
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
