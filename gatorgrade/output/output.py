@@ -349,7 +349,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # and thus they must be displayed
         if result is not None:
             # testing printed weights
-            print(f"{check}: Weight = {weight}")
+            print(f"Weight = {weight}")
             result.print()
             results.append(result)
     # determine if there are failures and then display them
