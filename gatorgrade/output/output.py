@@ -312,12 +312,19 @@ def run_checks(
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
+            # Hint Feature
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                hint = check.gg_args[index_of_hint + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2 :]
+                )
             result = _run_shell_check(check)
-            command_ran = check.command
-            result.run_command = command_ran
+            result.hint = hint
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
-            # Extract the hint from gg_args if present
+            # Hint Feature
             if "--hint" in check.gg_args:
                 index_of_hint = check.gg_args.index("--hint")
                 hint = check.gg_args[index_of_hint + 1]
@@ -360,7 +367,11 @@ def run_checks(
             # the idea is that displaying this run_command
             # will give the person using Gatorgrade a way
             # to quickly run the command that failed
-            if result.run_command != "":
+            if result.run_command != "" and result.hint != "":
+                rich.print(
+                    f"[blue]   → Run this command: [green]{result.run_command}"
+                )
+            elif result.run_command != "":
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
