@@ -370,9 +370,7 @@ def run_checks(
             # will give the person using Gatorgrade a way
             # to quickly run the command that failed
             if result.run_command != "" and result.hint != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}"
-                )
+                rich.print(f"[blue]   → Run this command: [green]{result.run_command}")
             elif result.run_command != "":
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
