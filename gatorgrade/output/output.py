@@ -389,6 +389,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
             percent = 0
         else:
             percent = round(passed_weight / total_weight * 100)
+        check_percentage = (int(weight) / int(total_weight)) * 100
+        print(check_percentage)
 
     # if the report is wanted, create output in line with their specifications
     if all(report):
