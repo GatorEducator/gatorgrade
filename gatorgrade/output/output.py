@@ -318,7 +318,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
                 check.gg_args = (
                     check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
                 )
-            result = _run_gg_check(check)
+            result = _run_shell_check(check)
             result.weight = int(weight)
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
