@@ -1,8 +1,7 @@
+"""Test suite for check_result.py."""
+
 import unittest
-from typing import Union
-from io import StringIO
 from unittest.mock import patch
-import rich
 
 # from your_module import CheckResult  # Replace 'your_module' with the actual module name where CheckResult is defined.
 from gatorgrade.output.check_result import CheckResult
