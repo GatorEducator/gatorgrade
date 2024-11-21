@@ -370,7 +370,7 @@ def run_checks(
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright_red"
     rich.print(Panel(summary, expand=False, title=None, style=summary_color))
-
+    
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
