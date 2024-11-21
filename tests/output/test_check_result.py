@@ -3,12 +3,12 @@ from typing import Union
 from io import StringIO
 from unittest.mock import patch
 import rich
+
 # from your_module import CheckResult  # Replace 'your_module' with the actual module name where CheckResult is defined.
 from gatorgrade.output.check_result import CheckResult
 
 
 class TestCheckResult(unittest.TestCase):
-
     def test_initialization(self):
         """Test if the CheckResult object is correctly initialized."""
         check = CheckResult(
@@ -16,7 +16,7 @@ class TestCheckResult(unittest.TestCase):
             description="Check passed successfully",
             json_info={"key": "value"},
             path="test/path",
-            diagnostic="All tests passed"
+            diagnostic="All tests passed",
         )
 
         self.assertEqual(check.passed, True)
@@ -28,9 +28,7 @@ class TestCheckResult(unittest.TestCase):
     def test_default_diagnostic_message(self):
         """Test if default diagnostic message is used when not provided."""
         check = CheckResult(
-            passed=False,
-            description="Check failed",
-            json_info={"key": "value"}
+            passed=False, description="Check failed", json_info={"key": "value"}
         )
 
         self.assertEqual(check.diagnostic, "No diagnostic message available")
@@ -40,7 +38,7 @@ class TestCheckResult(unittest.TestCase):
         check = CheckResult(
             passed=True,
             description="Check passed successfully",
-            json_info={"key": "value"}
+            json_info={"key": "value"},
         )
 
         expected_output = "[green]✓[/]  Check passed successfully"
@@ -49,9 +47,7 @@ class TestCheckResult(unittest.TestCase):
     def test_display_result_failed_no_diagnostic(self):
         """Test the display_result method when the check has failed and no diagnostic is shown."""
         check = CheckResult(
-            passed=False,
-            description="Check failed",
-            json_info={"key": "value"}
+            passed=False, description="Check failed", json_info={"key": "value"}
         )
 
         expected_output = "[red]✕[/]  Check failed"
@@ -63,7 +59,7 @@ class TestCheckResult(unittest.TestCase):
             passed=False,
             description="Check failed",
             json_info={"key": "value"},
-            diagnostic="Test failed due to XYZ"
+            diagnostic="Test failed due to XYZ",
         )
 
         expected_output = "[red]✕[/]  Check failed\n[yellow]   → Test failed due to XYZ"
@@ -76,12 +72,14 @@ class TestCheckResult(unittest.TestCase):
             description="Check passed successfully",
             json_info={"key": "value"},
             path="test/path",
-            diagnostic="All tests passed"
+            diagnostic="All tests passed",
         )
 
-        expected_repr = ("CheckResult(passed=True, description='Check passed successfully', "
-                         "json_info={'key': 'value'}, path='test/path', "
-                         "diagnostic='All tests passed', run_command='')")
+        expected_repr = (
+            "CheckResult(passed=True, description='Check passed successfully', "
+            "json_info={'key': 'value'}, path='test/path', "
+            "diagnostic='All tests passed', run_command='')"
+        )
         self.assertEqual(repr(check), expected_repr)
 
     @patch("rich.print")
@@ -91,16 +89,18 @@ class TestCheckResult(unittest.TestCase):
             passed=False,
             description="Check failed",
             json_info={"key": "value"},
-            diagnostic="Test failed due to XYZ"
+            diagnostic="Test failed due to XYZ",
         )
 
         # Call the print method, which internally calls rich.print
         check.print(show_diagnostic=True)
 
         # Verify if rich.print was called with the expected message
-        expected_message = "[red]✕[/]  Check failed\n[yellow]   → Test failed due to XYZ"
+        expected_message = (
+            "[red]✕[/]  Check failed\n[yellow]   → Test failed due to XYZ"
+        )
         mock_print.assert_called_once_with(expected_message)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
