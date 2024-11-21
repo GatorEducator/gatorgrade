@@ -297,17 +297,6 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         checks: The list of shell and GatorGrader checks to run.
     """
     results = []
-    total_weight = 0
-    # run each of the checks
-    for check in checks:
-        if isinstance(check, ShellCheck) or isinstance(check, GatorGraderCheck):
-            if "--weight" in check.gg_args:
-                index_of_weight = check.gg_args.index("--weight")
-                weight = int(check.gg_args[index_of_weight + 1])
-                check.gg_args = check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2:]
-            else:
-                weight = 1  # Default weight
-            total_weight += weight
     for check in checks:
         result = None
         command_ran = None
@@ -362,8 +351,10 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
-            check_percentage = (int(weight) / int(total_weight)) * 100
-            print(check_percentage)
+            total_weight = sum(getattr(result, 'weight', 1) for result in results)
+            check_weight = (int(weight) / total_weight)
+            print(check_weight)
+
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
