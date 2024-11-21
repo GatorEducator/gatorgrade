@@ -363,7 +363,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         if result is not None:
             result.print()
             check_weight = (int(weight) / total_weight)
-            print(check_weight * 100)
+            check_percent = round(check_weight * 100, 2)
+            print(f"({check_percent}%)")
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
@@ -411,7 +412,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # Print check percentages for each check
         for result in results:
             check_weight_percentage = (result.weight / total_weight) * 100
-            print(f"{check} weight percentage: {check_weight_percentage:.2f}%")
+            print(f"Check weight percentage: {check_weight_percentage:.2f}%")
 
     # if the report is wanted, create output in line with their specifications
     if all(report):
