@@ -287,6 +287,18 @@ def write_json_or_md_file(file_name, content_type, content):
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
 
+def calculate_total_weight(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> int:
+    """Calculate the total weight of all the checks."""
+    total_weight = 0
+    for check in checks:
+        weight = 1  # Default weight
+        if isinstance(check, (ShellCheck, GatorGraderCheck)):
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = int(check.gg_args[index_of_weight + 1])
+        total_weight += weight
+    return total_weight
+
 
 def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
@@ -297,6 +309,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
     Args:
         checks: The list of shell and GatorGrader checks to run.
     """
+    total_weight = calculate_total_weight(checks)
     results = []
     for check in checks:
         result = None
@@ -348,11 +361,9 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            # result.print()
-            # Remove any rich text formatting (e.g., [green], [/], etc.)
-            clean_description = re.sub(r'\[[^\]]*\]', '', result.description)
-            # Print the cleaned description with "test" appended
-            print(f"{clean_description} test")
+            result.print()
+            check_weight = (int(weight) / total_weight)
+            print(check_weight * 100)
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
