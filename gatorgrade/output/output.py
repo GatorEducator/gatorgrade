@@ -353,7 +353,7 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
             # print(f"Weight = {weight}")
             total_weight = sum(getattr(result, 'weight', 1) for result in results)
             check_weight = (int(weight) / total_weight)
-            print(check_weight)
+            print(check_weight * 100)
 
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
