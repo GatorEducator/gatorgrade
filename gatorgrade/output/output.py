@@ -330,27 +330,27 @@ def run_checks(
             # Weighted Checks
             if "--weight" in check.gg_args:
                 index_of_weight = check.gg_args.index("--weight")
-                weight = check.gg_args[index_of_weight + 1]
+                weight = int(check.gg_args[index_of_weight + 1])  # Updated line
                 # Remove the hint from gg_args before passing to GatorGrader
                 check.gg_args = (
                     check.gg_args[:index_of_weight]
                     + check.gg_args[index_of_weight + 2 :]
                 )
             result = _run_shell_check(check)
-            result.weight = int(weight)
+            result.weight = weight
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             # Weighted Checks
             if "--weight" in check.gg_args:
                 index_of_weight = check.gg_args.index("--weight")
-                weight = check.gg_args[index_of_weight + 1]
+                weight = int(check.gg_args[index_of_weight + 1])  # Updated line
                 # Remove the hint from gg_args before passing to GatorGrader
                 check.gg_args = (
                     check.gg_args[:index_of_weight]
                     + check.gg_args[index_of_weight + 2 :]
                 )
             result = _run_gg_check(check)
-            result.weight = int(weight)
+            result.weight = weight
             # check to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list if it
