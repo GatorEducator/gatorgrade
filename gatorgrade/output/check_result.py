@@ -31,7 +31,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.path = path
         self.run_command = ""
 
-    def display_result(self, show_diagnostic: bool = False, percentage: float = None) -> str:
+    def display_result(
+        self, show_diagnostic: bool = False, percentage: float = None
+    ) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will say so.
@@ -47,7 +49,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         message = f"[{icon_color}]{icon}[/]"
         if percentage is not None:
             message += f" [{percentage_color}]({percentage:.2f}%)[/]"
-        message += f"  {self.description}"
+        message += f" {self.description}"
         if not self.passed and show_diagnostic:
             message += f"\n[yellow]   → {self.diagnostic}"
         return message

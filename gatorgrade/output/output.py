@@ -289,6 +289,7 @@ def write_json_or_md_file(file_name, content_type, content):
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
 
+
 def calculate_total_weight(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> int:
     """Calculate the total weight of all the checks."""
     total_weight = 0
@@ -302,7 +303,9 @@ def calculate_total_weight(checks: List[Union[ShellCheck, GatorGraderCheck]]) ->
     return total_weight
 
 
-def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]) -> bool:
+def run_checks(
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
         Also, print a list of all failed checks with their diagnostics and a summary message that
@@ -315,7 +318,6 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
     results = []
     for check in checks:
         result = None
-        command_ran = None
         weight = 1
         # run a shell check; this means
         # that it is going to run a command
@@ -331,7 +333,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
                 weight = check.gg_args[index_of_weight + 1]
                 # Remove the hint from gg_args before passing to GatorGrader
                 check.gg_args = (
-                    check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
+                    check.gg_args[:index_of_weight]
+                    + check.gg_args[index_of_weight + 2 :]
                 )
             result = _run_shell_check(check)
             result.weight = int(weight)
@@ -343,7 +346,8 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
                 weight = check.gg_args[index_of_weight + 1]
                 # Remove the hint from gg_args before passing to GatorGrader
                 check.gg_args = (
-                    check.gg_args[:index_of_weight] + check.gg_args[index_of_weight + 2 :]
+                    check.gg_args[:index_of_weight]
+                    + check.gg_args[index_of_weight + 2 :]
                 )
             result = _run_gg_check(check)
             result.weight = int(weight)
@@ -363,15 +367,15 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            check_weight = (int(weight) / total_weight)
+            check_weight = int(weight) / total_weight
             check_percent = round(check_weight * 100, 2)
             result.print(percentage=check_percent)
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")
-            #total_weight = sum(getattr(result, 'weight', 1) for result in results)
-            #check_weight = (int(weight) / total_weight)
-            #print(check_weight * 100)
+            # total_weight = sum(getattr(result, 'weight', 1) for result in results)
+            # check_weight = (int(weight) / total_weight)
+            # print(check_weight * 100)
 
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
@@ -403,16 +407,15 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         passed_weight = 0
         percent = 0
     else:
-        total_weight = sum(getattr(result, 'weight', 1) for result in results)
-        passed_weight = sum(getattr(result, 'weight', 1) for result in results if result.passed)
+        total_weight = sum(getattr(result, "weight", 1) for result in results)
+        passed_weight = sum(
+            getattr(result, "weight", 1) for result in results if result.passed
+        )
         # prevent division by zero if no results
         if total_weight == 0:
             percent = 0
         else:
             percent = round(passed_weight / total_weight * 100)
-        # Print check percentages for each check
-        for result in results:
-            check_weight_percentage = (result.weight / total_weight) * 100
 
     # if the report is wanted, create output in line with their specifications
     if all(report):

@@ -58,7 +58,7 @@ def generate_checks(
                     command=check_data.check.get("command"),
                     description=check_data.check.get("description"),
                     json_info=check_data.check,
-                    gg_args=shell_gg_args
+                    gg_args=shell_gg_args,
                 )
             )
         # Otherwise, it is a GatorGrader check
@@ -67,11 +67,6 @@ def generate_checks(
             description = check_data.check.get("description")
             if description:
                 gg_args.extend(["--description", description])
-            checks.append(
-                GatorGraderCheck(
-                    gg_args=gg_args,
-                    json_info=check_data.check
-                )
-            )
+            checks.append(GatorGraderCheck(gg_args=gg_args, json_info=check_data.check))
 
     return checks
