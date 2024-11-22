@@ -14,6 +14,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         json_info,
         path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
+        weight: int = 1,
     ):
         """Construct a CheckResult.
 
@@ -23,6 +24,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             description: The description to use in output.
             json_info: the overall information to be included in json output
             diagnostic: The message to use in output if the check has failed.
+            weight: The weight of the check.
         """
         self.passed = passed
         self.description = description
@@ -30,9 +32,10 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
+        self.weight = weight
 
     def display_result(
-        self, show_diagnostic: bool = False, percentage: float = None
+        self, show_diagnostic: bool = False, percentage: Optional[float] = None
     ) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
@@ -69,7 +72,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         message = self.display_result(show_diagnostic)
         return message
 
-    def print(self, show_diagnostic: bool = False, percentage: float = None) -> None:
+    def print(
+        self, show_diagnostic: bool = False, percentage: Optional[float] = None
+    ) -> None:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will say so.
