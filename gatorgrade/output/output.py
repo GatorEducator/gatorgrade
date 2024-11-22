@@ -363,11 +363,9 @@ def run_checks(checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            result.print()
             check_weight = (int(weight) / total_weight)
             check_percent = round(check_weight * 100, 2)
-            console.print(f"({check_percent}%)", style="dim", end="\n")
-            # print(f"({check_percent}%)")
+            result.print(percentage=check_percent)
             results.append(result)
             # testing printed weights
             # print(f"Weight = {weight}")

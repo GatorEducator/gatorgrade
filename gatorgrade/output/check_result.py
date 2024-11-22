@@ -62,7 +62,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         message = self.display_result(show_diagnostic)
         return message
 
-    def print(self, show_diagnostic: bool = False) -> None:
+    def print(self, show_diagnostic: bool = False, percentage: float = None) -> None:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will say so.
@@ -70,6 +70,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         Args:
             show_diagnostic: If true, show the diagnostic message if the check has failed.
                 Defaults to false.
+            percentage: The percentage weight of the check.
         """
         message = self.display_result(show_diagnostic)
+        if percentage is not None:
+            message = f"{message} [dim]({percentage:.2f}%)[/dim]"
         rich.print(message)
