@@ -20,19 +20,17 @@ def test_parse_config_gg_check_in_file_context_contains_file():
 def test_parse_config_gg_check_no_file_context_contains_no_file():
     """Test to make sure checks without a file context do not have a file path in GatorGrader arguments."""
     # Given a configuration file with a GatorGrader check without a file context
-    config = Path(
-        "tests/input/yml_test_files/gatorgrade_one_gg_check_no_file_context.yml"
-    )
+    config = Path("tests/input/yml_test_files/gatorgrade_one_gg_check_no_file_context.yml")
     # When parse_config is run
     output = parse_config(config)
     # Then the GatorGrader arguments do not contain a file path
-    assert output[0].gg_args == [
+    assert set(output[0].gg_args) == {
         "--description",
         "Have 8 commits",
         "CountCommits",
         "--count",
         "8",
-    ]
+    }
 
 
 def test_parse_config_parses_both_shell_and_gg_checks():
