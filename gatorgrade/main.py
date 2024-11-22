@@ -72,7 +72,7 @@ def gatorgrade(
         # # valid and thus the tool cannot run checks
         # # requesting version information overrides all other commands;
         # # if the version details are requested, print them and exit
-        # else: 
+        # else:
         #     check_status = False
         if version:
             # define the version label with suitable emoji
