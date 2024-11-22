@@ -32,7 +32,6 @@ help_message_markdown = f"""
 app = typer.Typer(
     add_completion=False,
     help=help_message_markdown,
-    rich_markup_mode=RICH_MARKUP_MODE_DEFAULT,
 )
 
 # create a default console for printing with rich
