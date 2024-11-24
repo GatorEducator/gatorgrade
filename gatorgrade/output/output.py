@@ -13,6 +13,7 @@ from typing import Union
 import gator
 import random
 import rich
+from rich.console import Console
 from rich.progress import BarColumn
 from rich.progress import Progress
 from rich.progress import TextColumn
@@ -307,6 +308,7 @@ def motivation(quotes_list: List[str], message_title="Motivational Message") -> 
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'quotes.json')) 
 quotes = load_quotes(file_path)
 assert isinstance(quotes, dict)
+console = Console()
 
 def error_fix():
     try: 
@@ -387,41 +389,6 @@ def run_checks(
                     if result and result.passed:
                         progress.update(task, advance=1)
 
-    """for check in checks:
-        result = None
-        command_ran = None
-        # run a shell check; this means
-        # that it is going to run a command
-        # in the shell as a part of a check;
-        # store the command that ran in the
-        # field called run_command that is
-        # inside of a CheckResult object but
-        # not initialized in the constructor
-        if isinstance(check, ShellCheck):
-            result = _run_shell_check(check)
-            command_ran = check.command
-            result.run_command = command_ran
-        # run a check that GatorGrader implements
-        elif isinstance(check, GatorGraderCheck):
-            result = _run_gg_check(check)
-            # check to see if there was a command in the
-            # GatorGraderCheck. This code finds the index of the
-            # word "--command" in the check.gg_args list if it
-            # is available (it is not available for all of
-            # the various types of GatorGraderCheck instances),
-            # and then it adds 1 to that index to get the actual
-            # command run and then stores that command in the
-            # result.run_command field that is initialized to
-            # an empty string in the constructor for CheckResult
-            if "--command" in check.gg_args:
-                index_of_command = check.gg_args.index("--command")
-                index_of_new_command = int(index_of_command) + 1
-                result.run_command = check.gg_args[index_of_new_command]
-        # there were results from running checks
-        # and thus they must be displayed
-        if result is not None:
-            result.print()
-            results.append(result)"""
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
@@ -461,7 +428,7 @@ def run_checks(
     print_with_border(summary, summary_color)
     if run_motivation:
         if 0.25 <= percent < 0.75:
-            print(
+            console.print(
                 Panel(
                     motivation(quotes["low_motivation"], "You're just getting warmed up!"),
                     expand=False,
@@ -470,7 +437,7 @@ def run_checks(
                 )
             )
         elif percent >= 0.75:
-            print(
+            console.print(
                 Panel(
                     motivation(quotes["high_motivation"], "Finish Line Insight"),
                     expand=False,
