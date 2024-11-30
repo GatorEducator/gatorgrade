@@ -1,4 +1,5 @@
 """Generates a list of commands to be run through gatorgrader."""
+
 import datetime
 from collections import namedtuple
 from pathlib import Path
