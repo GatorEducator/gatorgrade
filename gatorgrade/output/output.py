@@ -1,10 +1,9 @@
 """Run checks and display whether each has passed or failed."""
 
-import datetime
 import json
 import os
-from datetime import datetime
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import List
 from typing import Tuple
