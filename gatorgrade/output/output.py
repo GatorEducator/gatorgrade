@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+from datetime import datetime
 import subprocess
 from pathlib import Path
 from typing import List
@@ -285,7 +286,7 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], deadline
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -365,6 +366,36 @@ def run_checks(
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
+    # if a deadline is included:
+    if deadline is not None:
+        # turn the string into a datetime variable
+
+        deadline = datetime.strptime(deadline[:-1], "%m/%d/%y %H:%M:%S")
+        # if the deadline has passed, print out late
+        now = datetime.now()
+        if now > deadline:
+            time_after_deadline = now - deadline
+            # days
+            days = time_after_deadline.days
+            # hours
+            hours, remainder = divmod(time_after_deadline.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            print(
+                f"\n-~- Your assignment is late. The deadline was {abs(days)} days, {hours} hours, {minutes} minutes, and {seconds} seconds ago. -~-"
+            )
+        # else, print out the remaining time until the assignment is due
+        else:
+            time_until_deadline = deadline - now
+            # days
+            days = time_until_deadline.days
+            # hours
+            hours, remainder = divmod(time_until_deadline.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            print(
+                f"\n-~- Your assignment is due in {days * -1} days, {hours} hours, {minutes} minutes, and {seconds} seconds. -~-"
+            )
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
