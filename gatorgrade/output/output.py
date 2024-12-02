@@ -284,6 +284,20 @@ def write_json_or_md_file(file_name, content_type, content):
         ) from e
 
 
+def calculate_deadline_time_dif(older_time: datetime, latest_time: datetime):
+    """Input two times and return the difference of the two in days, hours, minutes, and seconds.
+    Args:
+        older_time: The larger datetime object
+        latest_time: The smaller datetime object
+    """
+    time_difference = older_time - latest_time
+    days = time_difference.days
+    hours, remainder = divmod(time_difference.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    return days, hours, minutes, seconds
+
+
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], deadline
 ) -> bool:
@@ -368,30 +382,17 @@ def run_checks(
     # if a deadline is included:
     if deadline is not None:
         # turn the string into a datetime variable
-
         deadline = datetime.strptime(deadline[:-1], "%m/%d/%y %H:%M:%S")
         # if the deadline has passed, print out late
         now = datetime.now()
         if now > deadline:
-            time_after_deadline = now - deadline
-            # days
-            days = time_after_deadline.days
-            # hours
-            hours, remainder = divmod(time_after_deadline.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-
+            days, hours, minutes, seconds = calculate_deadline_time_dif(now, deadline)
             print(
                 f"\n-~- Your assignment is late. The deadline was {abs(days)} days, {hours} hours, {minutes} minutes, and {seconds} seconds ago. -~-"
             )
         # else, print out the remaining time until the assignment is due
         else:
-            time_until_deadline = deadline - now
-            # days
-            days = time_until_deadline.days
-            # hours
-            hours, remainder = divmod(time_until_deadline.seconds, 3600)
-            minutes, seconds = divmod(remainder, 60)
-
+            days, hours, minutes, seconds = calculate_deadline_time_dif(deadline, now)
             print(
                 f"\n-~- Your assignment is due in {days * -1} days, {hours} hours, {minutes} minutes, and {seconds} seconds. -~-"
             )
