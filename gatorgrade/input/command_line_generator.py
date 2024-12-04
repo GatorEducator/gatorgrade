@@ -46,10 +46,11 @@ def generate_checks(
 
             # removed_emojis = str(check_data.check.get("check")).remove('emojis')
             string_check = str(check_data.check.get("check"))
-            for i in string_check:
-                if ord(i) == "/u2728":
-                    removed_emojis += string_check.replace(i, "")
-
+            # for i in string_check:
+            #     if ord(i) == "/u2728":
+            #         removed_emojis += string_check.replace(i, "")
+            removed_emojis += string_check
+            
             gg_args.append(removed_emojis)
             # Add any additional options
             options = check_data.check.get("options")
