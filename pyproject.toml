@@ -8,14 +8,15 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 PyYAML = "^6.0"
+pytest = "^8.1.1"
+pytest-cov = "^4.1.0"
+pytest-json-report = "^1.5.0"
 gatorgrader = "^1.1.1"
 typer = {extras = ["all"], version = "^0.12.5"}
 rich = "^13.8.1"
 
 [tool.poetry.dev-dependencies]
-taskipy = "^1.10.1"
-pytest = "^7.1.1"
-pytest-cov = "^3.0.0"
+taskipy = "^1.13.0"
 pylint = "^2.13.4"
 black = "^22.3.0"
 pydocstyle = "^6.1.1"
@@ -44,7 +45,7 @@ test-silent-command = { var = "pytest -x --show-capture=no" }
 test-silent-not-randomly-command = { var = "pytest -x --show-capture=no -p no:randomly" }
 test-command = { var = "pytest -x -s -vv"}
 check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov-context=test --cov-fail-under=50 --cov-config .coveragerc --cov-report term-missing --cov --cov-branch"
+coverage-test-command = "pytest -s --cov-context=test --cov-fail-under=50 --cov-config .coveragerc --cov-report term-missing --cov-report json --cov --cov-branch"
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-config .coveragerc --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"

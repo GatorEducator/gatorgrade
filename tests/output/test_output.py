@@ -22,7 +22,9 @@ def patch_datetime_now(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
-def test_run_checks_invalid_gg_args_prints_exception(capsys: pytest.CaptureFixture[str]):
+def test_run_checks_invalid_gg_args_prints_exception(
+    capsys: pytest.CaptureFixture[str],
+):
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
     # Given a GatorGrader check with invalid arguments
     check = GatorGraderCheck(
@@ -49,7 +51,9 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys: pytest.CaptureFixtu
     assert "Invalid GatorGrader check:" in out
 
 
-def test_run_checks_some_failed_prints_correct_summary(capsys: pytest.CaptureFixture[str]):
+def test_run_checks_some_failed_prints_correct_summary(
+    capsys: pytest.CaptureFixture[str],
+):
     """Test that run_checks, when given some checks that should fail, prints the correct summary."""
     # Given three checks with one check that should fail
     checks = [
@@ -97,7 +101,9 @@ def test_run_checks_some_failed_prints_correct_summary(capsys: pytest.CaptureFix
     assert "Passed 2/3 (67%) of checks" in out
 
 
-def test_run_checks_all_passed_prints_correct_summary(capsys: pytest.CaptureFixture[str]):
+def test_run_checks_all_passed_prints_correct_summary(
+    capsys: pytest.CaptureFixture[str],
+):
     """Test that run_checks, when given checks that should all pass, prints the correct summary."""
     # Given three checks that should all pass
     checks = [
