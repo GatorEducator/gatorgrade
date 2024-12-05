@@ -1,26 +1,17 @@
 """Run checks and display whether each has passed or failed."""
 
 import datetime
-import time
 import json
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 from typing import Tuple
 from typing import Union
 
 import gator
-import random
 import rich
-from rich.console import Console
-from rich.progress import BarColumn
-from rich.progress import Progress
-from rich.progress import TextColumn
-from rich.panel import Panel
-from rich.live import Live
-from rich import print as rprint
-import yaml
+
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
@@ -198,9 +189,6 @@ def create_markdown_report_file(json: dict) -> str:
                 if "file" == i:
                     val = check["options"]["file"]
                     markdown_contents += f"\n\t- **file:** {val}"
-                if "motivation" == i:
-                    val = check["options"]["motivation"]
-                    markdown_contents += f"\n\t- **motivation:** {val}"
         elif "command" in check:
             val = check["command"]
             markdown_contents += f"\n\t- **command:** {val}"
@@ -294,65 +282,10 @@ def write_json_or_md_file(file_name, content_type, content):
         raise ValueError(
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
-"""
-def load_quotes(file_path: str) -> Dict[str, List[str]]: 
-    Loads the JSON file and reads the quotes in the file.
-    with open(file_path, "r", encoding="utf-8") as file: 
-        data = json.load(file) 
-        return data
-    
-def motivation(quotes_list: List[str], message_title="Motivational Message") -> str:
-    Display a single motivational message.
-    if not quotes_list:
-        return "No motivational messages available."
-    quote = random.choice(quotes_list)
-    return f"{message_title}: {quote}"
 
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'quotes.json')) 
-quotes = load_quotes(file_path)
-assert isinstance(quotes, dict)
-
-
-def error_fix():
-    try: 
-        quotes = load_quotes(file_path) 
-        assert isinstance(quotes, dict) 
-    except FileNotFoundError: 
-        print(f"Error: The file {file_path} was not found.") 
-        quotes = {} 
-    except json.JSONDecodeError as exc: 
-        print(f"Error parsing JSON file: {exc}")
-        quotes = {}
-"""
-console = Console()
-def run_check(check):
-    """Runs the given check, returning the result and the command run (if any)."""
-    result = None
-    command_ran = None
-
-    if isinstance(check, ShellCheck):
-        result = _run_shell_check(check)
-        command_ran = check.command
-        result.run_command = command_ran
-
-    elif isinstance(check, GatorGraderCheck):
-        result = _run_gg_check(check)
-        if "--command" in check.gg_args:
-            index_of_command = check.gg_args.index("--command") + 1
-            result.run_command = check.gg_args[index_of_command]
-
-        if "--motivation" in check.gg_args:
-                index_of_motivation = check.gg_args.index("--motivation") + 1
-                result.motivation = check.gg_args[index_of_motivation]
-                
-    return result
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]],
-    report: Tuple[str, str, str],
-    running_mode=False,
-    no_status_bar=False,
-    run_motivation=False,
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -361,42 +294,50 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
-        running_mode: Convert the Progress Bar to update based on checks ran/not ran.
-        no_status_bar: Option to completely disable all Progress Bar options.
     """
     results = []
-    # run each of the checks  
-    total_checks = len(checks)
-    if no_status_bar:
-        for check in checks:
-            result = run_check(check)
-            if result is not None:
-                result.print()
-                results.append(result)
-    else:
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(
-                bar_width=40,
-                style="red",
-                complete_style="green",
-                finished_style="green",
-            ),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        ) as progress:
-            task = progress.add_task("[green]Running checks...", total=total_checks)
-            for check in checks:
-                result = run_check(check)
-                if result is not None:
-                    result.print()
-                    results.append(result)
-
-                if running_mode:
-                    progress.update(task, advance=1)
-                else:
-                    if result and result.passed:
-                        progress.update(task, advance=1)
-
+    # run each of the checks
+    for check in checks:
+        result = None
+        command_ran = None
+        motivation = ""
+        # run a shell check; this means
+        # that it is going to run a command
+        # in the shell as a part of a check;
+        # store the command that ran in the
+        # field called run_command that is
+        # inside of a CheckResult object but
+        # not initialized in the constructor
+        if isinstance(check, ShellCheck):
+            result = _run_shell_check(check)
+            command_ran = check.command
+            result.run_command = command_ran
+            result.motivation = motivation
+        # run a check that GatorGrader implements
+        elif isinstance(check, GatorGraderCheck):
+            result = _run_gg_check(check)
+            # check to see if there was a command in the
+            # GatorGraderCheck. This code finds the index of the
+            # word "--command" in the check.gg_args list if it
+            # is available (it is not available for all of
+            # the various types of GatorGraderCheck instances),
+            # and then it adds 1 to that index to get the actual
+            # command run and then stores that command in the
+            # result.run_command field that is initialized to
+            # an empty string in the constructor for CheckResult
+            if "--command" in check.gg_args:
+                index_of_command = check.gg_args.index("--command")
+                index_of_new_command = int(index_of_command) + 1
+                result.run_command = check.gg_args[index_of_new_command]
+            if "--motivation" in check.gg_args:
+                index_of_hint = check.gg_args.index("--motivation")
+                index_of_new_hint = int(index_of_hint) + 1
+                result.hint = check.gg_args[index_of_new_hint]
+        # there were results from running checks
+        # and thus they must be displayed
+        if result is not None:
+            result.print()
+            results.append(result)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
@@ -434,30 +375,12 @@ def run_checks(
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
-    """if run_motivation:
-        if 0.25 <= percent < 0.75:
-            console.print(
-                Panel(
-                    motivation(quotes["low_motivation"], "You're just getting warmed up!"),
-                    expand=False,
-                    title="Motivation",
-                    border_style="bright_cyan"
-                )
-            )
-        elif percent >= 0.75:
-            console.print(
-                Panel(
-                    motivation(quotes["high_motivation"], "Finish Line Insight"),
-                    expand=False,
-                    title="Motivation",
-                    border_style="bright_cyan"
-                )
-            )"""
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
     summary_status = True if passed_count == len(results) else False
     return summary_status
+
 
 def print_with_border(text: str, rich_color: str):
     """Print text with a border.
