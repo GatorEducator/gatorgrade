@@ -43,14 +43,16 @@ def generate_checks(
             # Always add name of check, which should be in data
 
             removed_emojis = ""
-
+            print_statement = ""
             # removed_emojis = str(check_data.check.get("check")).remove('emojis')
             string_check = str(check_data.check.get("check"))
-            # for i in string_check:
-            #     if ord(i) == "/u2728":
-            #         removed_emojis += string_check.replace(i, "")
-            removed_emojis += string_check
-            
+            for i in string_check:
+                # if ord(i) == "/u2728":
+                print_statement += "this is the ord(i) =" + ord(i)
+                # if ord(i) == "/u0064"
+                #     removed_emojis += string_check.replace(i, "")
+            removed_emojis += string_check + print_statement
+
             gg_args.append(removed_emojis)
             # Add any additional options
             options = check_data.check.get("options")
