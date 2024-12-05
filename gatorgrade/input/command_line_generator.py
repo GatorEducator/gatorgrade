@@ -48,7 +48,7 @@ def generate_checks(
             string_check = str(check_data.check.get("check"))
             for i in string_check:
                 # if ord(i) == "/u2728":
-                print_statement += "this is the ord(i) =" + ord(i)
+                print_statement += "this is the ord(i) =" + str(ord(i))
                 # if ord(i) == "/u0064"
                 #     removed_emojis += string_check.replace(i, "")
             removed_emojis += string_check + print_statement
