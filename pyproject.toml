@@ -69,6 +69,7 @@ symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex fo
 test = { cmd = "{test-command}", help = "Run the pytest test suite using order randomization and test distribution", use_vars = true }
 test-silent = { cmd = "{test-silent-command}", help = "Run the pytest test suite without showing output", use_vars = true }
 test-silent-not-randomly = { cmd = "{test-silent-no-command}", help = "Run the pytest test suite without showing output and order randomization", use_vars = true }
+
 [tool.isort]
 include_trailing_comma = true
 force_single_line = true
