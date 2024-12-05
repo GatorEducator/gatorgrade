@@ -15,9 +15,6 @@ import rich
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
-from rich.console import Console
-
-console = Console()
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -384,8 +381,6 @@ def run_checks(
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
             result.print(show_diagnostic=True)
             # this result is an instance of CheckResult
             # that has a run_command field that is some
