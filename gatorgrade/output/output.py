@@ -198,6 +198,9 @@ def create_markdown_report_file(json: dict) -> str:
                 if "file" == i:
                     val = check["options"]["file"]
                     markdown_contents += f"\n\t- **file:** {val}"
+                if "motivation" == i:
+                    val = check["options"]["motivation"]
+                    markdown_contents += f"\n\t- **motivation:** {val}"
         elif "command" in check:
             val = check["command"]
             markdown_contents += f"\n\t- **command:** {val}"
@@ -291,15 +294,15 @@ def write_json_or_md_file(file_name, content_type, content):
         raise ValueError(
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
-
+"""
 def load_quotes(file_path: str) -> Dict[str, List[str]]: 
-    """Loads the JSON file and reads the quotes in the file.""" 
+    Loads the JSON file and reads the quotes in the file.
     with open(file_path, "r", encoding="utf-8") as file: 
         data = json.load(file) 
         return data
     
 def motivation(quotes_list: List[str], message_title="Motivational Message") -> str:
-    """Display a single motivational message."""
+    Display a single motivational message.
     if not quotes_list:
         return "No motivational messages available."
     quote = random.choice(quotes_list)
@@ -308,7 +311,7 @@ def motivation(quotes_list: List[str], message_title="Motivational Message") -> 
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'quotes.json')) 
 quotes = load_quotes(file_path)
 assert isinstance(quotes, dict)
-console = Console()
+
 
 def error_fix():
     try: 
@@ -320,7 +323,8 @@ def error_fix():
     except json.JSONDecodeError as exc: 
         print(f"Error parsing JSON file: {exc}")
         quotes = {}
-
+"""
+console = Console()
 def run_check(check):
     """Runs the given check, returning the result and the command run (if any)."""
     result = None
@@ -337,6 +341,10 @@ def run_check(check):
             index_of_command = check.gg_args.index("--command") + 1
             result.run_command = check.gg_args[index_of_command]
 
+        if "--motivation" in check.gg_args:
+                index_of_motivation = check.gg_args.index("--motivation") + 1
+                result.motivation = check.gg_args[index_of_motivation]
+                
     return result
 
 def run_checks(
@@ -426,7 +434,7 @@ def run_checks(
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
-    if run_motivation:
+    """if run_motivation:
         if 0.25 <= percent < 0.75:
             console.print(
                 Panel(
@@ -444,7 +452,7 @@ def run_checks(
                     title="Motivation",
                     border_style="bright_cyan"
                 )
-            )
+            )"""
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
