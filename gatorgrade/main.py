@@ -45,6 +45,15 @@ def gatorgrade(
             3. the name of the file or environment variable\
             4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
     ),
+    run_status_bar: bool = typer.Option(
+        False,
+        "--run_status_bar",
+        help="Enable a progress bar for checks running/not running.",
+    ),
+    no_status_bar: bool = typer.Option(
+        False, "--no_status_bar", help="Disable the progress bar entirely."
+    ),
+    run_motivation: bool = typer.Option( False, "--motivation", help="Enable a motivational message" ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
@@ -55,7 +64,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report)
+            checks_status = run_checks(checks, report, run_status_bar, no_status_bar, run_motivation)
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks

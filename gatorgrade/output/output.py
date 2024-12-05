@@ -300,6 +300,7 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        motivation = ""
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -311,6 +312,7 @@ def run_checks(
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
+            result.motivation = motivation
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
@@ -327,6 +329,10 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+            if "--motivation" in check.gg_args:
+                index_of_hint = check.gg_args.index("--motivation")
+                index_of_new_hint = int(index_of_hint) + 1
+                result.hint = check.gg_args[index_of_new_hint]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
