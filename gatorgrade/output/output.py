@@ -6,7 +6,8 @@ import os
 import subprocess
 from pathlib import Path
 from typing import List
-from typing import Tuple
+
+# from typing import Tuple
 from typing import Union
 
 import gator
@@ -15,6 +16,11 @@ import rich
 from gatorgrade.input.checks import GatorGraderCheck
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.output.report_params import (
+    ReportParamsLocation,
+    ReportParamsType,
+    ReportParamsStoringName,
+)
 
 # Disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -199,44 +205,43 @@ def create_markdown_report_file(json: dict) -> str:
 
 
 def configure_report(
-    report_params: Tuple[str, str, str], report_output_data_json: dict
+    report_location: ReportParamsLocation,
+    report_storing_type: ReportParamsType,
+    storing_location_name: ReportParamsStoringName,
+    report_output_data_json: dict,
 ):
-    """Put together the contents of the report depending on the inputs of the user.
+    """Put together the contents of the report depending on the inputs of the user."""
 
-    Args:
-        report_params: The details of what the user wants the report to look like
-            report_params[0]: file or env
-            report_params[1]: json or md
-            report_params[2]: name of the file or env
-        report_output_data: the json dictionary that will be used or converted to md
-    """
-    report_format = report_params[0]
-    report_type = report_params[1]
-    report_name = report_params[2]
-    if report_type not in ("json", "md"):
-        raise ValueError(
-            "\n[red]The second argument of report has to be 'md' or 'json' "
-        )
     # if the user wants markdown, get markdown content based on json
-    if report_type == "md":
+    if report_storing_type == "md":
         report_output_data_md = create_markdown_report_file(report_output_data_json)
+
     # if the user wants the data stored in a file
-    if report_format == "file":
-        if report_type == "md":
-            write_json_or_md_file(report_name, report_type, report_output_data_md)  # type: ignore
-        else:
-            write_json_or_md_file(report_name, report_type, report_output_data_json)
+    if report_location == "file" and report_storing_type == "md":
+        write_json_or_md_file(
+            storing_location_name, report_storing_type, report_output_data_md
+        )  # type: ignore
+
+    if report_location == "file" and report_storing_type == "json":
+        write_json_or_md_file(
+            storing_location_name, report_storing_type, report_output_data_json
+        )
+
     # the user wants the data stored in an environment variable; do not attempt
     # to save to the environment variable if it does not exist in the environment
-    elif report_format == "env":
-        if report_name == "GITHUB_STEP_SUMMARY":
+    elif report_location == "env":
+        if storing_location_name == "github":
             env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
+
             if env_file is not None:
-                if report_type == "md":
-                    write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
-                else:
+                if report_storing_type == "md":
                     write_json_or_md_file(
-                        env_file, report_type, report_output_data_json
+                        env_file, report_storing_type, report_output_data_md
+                    )  # type: ignore
+
+                if report_storing_type == "json":
+                    write_json_or_md_file(
+                        env_file, report_storing_type, report_output_data_json
                     )
         # Add json report into the GITHUB_ENV environment variable for data collection purpose;
         # note that this is an undocumented side-effect of running gatorgrade with command-line
@@ -261,21 +266,18 @@ def configure_report(
             # variables that are available to all of the subsequent steps
             with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
                 env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
-    else:
-        raise ValueError(
-            "\n[red]The first argument of report has to be 'env' or 'file' "
-        )
 
 
-def write_json_or_md_file(file_name, content_type, content):
+def write_json_or_md_file(file_name, report_storing_type: ReportParamsType, content):
     """Write a markdown or json file."""
     # try to store content in a file with user chosen format
+    print(type(report_storing_type))
     try:
         # Second argument has to be json or md
         with open(file_name, "w", encoding="utf-8") as file:
-            if content_type == "json":
+            if report_storing_type == "json":
                 json.dump(content, file, indent=4)
-            else:
+            if report_storing_type == "md":
                 file.write(str(content))
         return True
     except Exception as e:
@@ -285,7 +287,10 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report_location: ReportParamsLocation,
+    report_storing_type: ReportParamsType,
+    storing_location_name: ReportParamsStoringName,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -337,7 +342,7 @@ def run_checks(
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
-        print("\n-~-  FAILURES  -~-\n")
+        print("\n-~-  FAILURES  -~- \n")
         for result in failed_results:
             # main.console.print("This is a result")
             # main.console.print(result)
@@ -362,9 +367,16 @@ def run_checks(
     else:
         percent = round(passed_count / len(results) * 100)
     # if the report is wanted, create output in line with their specifications
-    if all(report):
+
+    if report_location and report_storing_type and storing_location_name:
         report_output_data = create_report_json(passed_count, results, percent)
-        configure_report(report, report_output_data)
+        configure_report(
+            report_location,
+            report_storing_type,
+            storing_location_name,
+            report_output_data,
+        )
+
     # compute summary results and display them in the console
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"

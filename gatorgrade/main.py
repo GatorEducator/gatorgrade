@@ -2,13 +2,23 @@
 
 import sys
 from pathlib import Path
-from typing import Tuple
+# from typing import Tuple
 
 import typer
 from rich.console import Console
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
+from gatorgrade.output.report_params import (
+    ReportParamsLocation,
+    ReportParamsType,
+    ReportParamsStoringName,
+)
+from gatorgrade.output.report_params import (
+    validate_location,
+    validate_storing_type,
+    validate_storing_location_name,
+)
 
 # create an app for the Typer-based CLI
 
@@ -35,18 +45,20 @@ FAILURE = 1
 def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
-    report: Tuple[str, str, str] = typer.Option(
-        (None, None, None),
-        "--report",
-        "-r",
-        help="A tuple containing the following REQUIRED values: \
-            1. The destination of the report (either file or env) \
-            2. The format of the report (either json or md) \
-            3. the name of the file or environment variable\
-            4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
-    ),
+    report_location: ReportParamsLocation = typer.Option(None),
+    report_storing_type: ReportParamsType = typer.Option(None),
+    storing_location_name: ReportParamsStoringName = typer.Option(None),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
+    # check the report params to make sure they are not None
+    # and have the correct inputs
+    if report_location:
+        validate_location(report_location)
+    if report_storing_type:
+        validate_storing_type(report_storing_type)
+    if storing_location_name:
+        validate_storing_location_name(storing_location_name)
+
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
     if ctx.invoked_subcommand is None:
@@ -55,7 +67,9 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report)
+            checks_status = run_checks(
+                checks, report_location, report_storing_type, storing_location_name
+            )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
