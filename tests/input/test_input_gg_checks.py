@@ -17,6 +17,29 @@ def test_parse_config_gg_check_in_file_context_contains_file():
     assert "file.py" in output[0].gg_args
 
 
+def test_parse_config_check_gg_matchfilefragment():
+    """Test to make sure the description, check name, and options appear in the GatorGrader arguments."""
+    # Given a configuration file with a GatorGrader check
+    config = Path("tests/input/yml_test_files/gatorgrade_matchfilefragment.yml")
+    # When parse_config is run
+    output = parse_config(config)
+    # Then the description, check name, and options appear in the GatorGrader arguments
+    assert set(output[0].gg_args) == {
+        "--description",
+        "Complete all TODOs",
+        "MatchFileFragment",
+        "--fragment",
+        "TODO",
+        "--count",
+        "0",
+        "--exact",
+        "--directory",
+        "path/to",
+        "--file",
+        "file.py",
+    }
+
+
 def test_parse_config_gg_check_no_file_context_contains_no_file():
     """Test to make sure checks without a file context do not have a file path in GatorGrader arguments."""
     # Given a configuration file with a GatorGrader check without a file context
