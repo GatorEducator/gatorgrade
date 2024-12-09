@@ -66,16 +66,6 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = result[1]
         description = result[0]
         diagnostic = result[2]
-        # Fetch the path from gatorgrade arguments
-        # the path pattern are 4 consistent string in the list
-        # --dir `dir_name` --file `file_name`
-        file_path = None
-        for i in range(len(check.gg_args)):
-            if check.gg_args[i] == "--directory":
-                dir_name = check.gg_args[i + 1]
-                file_name = check.gg_args[i + 3]
-                file_path = dir_name + "/" + file_name
-                break
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # Disable pylint to catch any type of exception thrown by GatorGrader
@@ -83,52 +73,47 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
         diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
-        file_path = None
     return CheckResult(
         passed=passed,
         description=description,
         json_info=check.json_info,
         diagnostic=diagnostic,
-        path=file_path,
     )
 
 
 def create_report_json(
-    passed_count,
+    passed_count: int,
     checkResults: List[CheckResult],
-    percent_passed,
+    percent_passed: int,
+    deadline_info: str,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
     Args:
         passed_count: the number of checks that passed
-        check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
+        deadline_info: the time until/since the given deadline, if included
     """
-    # create list to hold the key values for the dictionary that
-    # will be converted into json
-    overall_key_list = ["amount_correct", "percentage_score", "report_time", "checks"]
+    # create list to hold the key values for the dictionary
+    # that will be converted into json
+    overall_key_list = ["amount_correct", "percentage_score", "checks"]
+
     checks_list = []
     overall_dict = {}
-    report_generation_time = datetime.datetime.now()
-    formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
+
     # for each check:
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
         results_json["status"] = checkResults[i].passed
-        if checkResults[i].path:
-            results_json["path"] = checkResults[i].path
         if not checkResults[i].passed:
             results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
+
     # create the dictionary for all of the check information
     overall_dict = dict(
-        zip(
-            overall_key_list,
-            [passed_count, percent_passed, formatted_time, checks_list],
-        )
+        zip(overall_key_list, [passed_count, percent_passed, checks_list])
     )
     return overall_dict
 
@@ -196,6 +181,22 @@ def create_markdown_report_file(json: dict) -> str:
             markdown_contents += f"\n\t- **diagnostic:** {check['diagnostic']}"
         markdown_contents += "\n"
     return markdown_contents
+
+
+def calculate_deadline_time_dif(older_time: datetime, latest_time: datetime):
+    """
+    Input two times and return the difference of the two in days, hours, minutes, and seconds.
+
+    Args:
+        older_time: The larger datetime object
+        latest_time: The smaller datetime object
+    """
+    time_difference = older_time - latest_time
+    days = time_difference.days
+    hours, remainder = divmod(time_difference.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    return days, hours, minutes, seconds
 
 
 def configure_report(
@@ -284,20 +285,6 @@ def write_json_or_md_file(file_name, content_type, content):
         ) from e
 
 
-def calculate_deadline_time_dif(older_time: datetime, latest_time: datetime):
-    """Input two times and return the difference of the two in days, hours, minutes, and seconds.
-    Args:
-        older_time: The larger datetime object
-        latest_time: The smaller datetime object
-    """
-    time_difference = older_time - latest_time
-    days = time_difference.days
-    hours, remainder = divmod(time_difference.seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-
-    return days, hours, minutes, seconds
-
-
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], deadline
 ) -> bool:
@@ -379,6 +366,7 @@ def run_checks(
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
+    
     # if a deadline is included:
     if deadline is not None:
         # turn the string into a datetime variable

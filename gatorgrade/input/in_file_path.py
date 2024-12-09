@@ -45,6 +45,7 @@ def reformat_yaml_data(data):
     reformatted_data = []
     deadline = None
     data_values = len(data)
+
     if data_values >= 2:
         for i in range(data_values - 1):
             if "setup" in data[i]:

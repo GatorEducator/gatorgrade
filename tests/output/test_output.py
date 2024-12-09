@@ -22,6 +22,60 @@ def patch_datetime_now(monkeypatch):
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
+def test_past_date_displays_late_message(capsys):
+    """Test that run_checks runs a GatorGrader check and prints that the check has passed."""
+    # Given a GatorGrader check that should pass
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Check TODOs",
+            "MatchFileFragment",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+            "--directory",
+            "tests/test_assignment/src",
+            "--file",
+            "hello-world.py",
+        ]
+    )
+    deadline = "01/01/23 12:00:00\n"
+    # When run_checks is called
+    output.run_checks([check], deadline)
+    # Then the output shows that the check has passed
+    out, _ = capsys.readouterr()
+    assert "Your assignment is late. The deadline was" in out
+
+
+def test_future_date_shows_upcoming_deadline(capsys):
+    """Test that run_checks runs a GatorGrader check and prints that the check has passed."""
+    # Given a GatorGrader check that should pass
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Check TODOs",
+            "MatchFileFragment",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+            "--directory",
+            "tests/test_assignment/src",
+            "--file",
+            "hello-world.py",
+        ]
+    )
+    deadline = "01/01/50 12:00:00\n"
+    # When run_checks is called
+    output.run_checks([check], deadline)
+    # Then the output shows that the check has passed
+    out, _ = capsys.readouterr()
+    assert "Your assignment is due in" in out
+
+
 def test_run_checks_invalid_gg_args_prints_exception(capsys):
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
     # Given a GatorGrader check with invalid arguments
@@ -348,3 +402,5 @@ def test_write_md_and_json_correctly(tmp_path):
     tmp_json = tmp_path / "test.json"
     assert output.write_json_or_md_file(tmp_md, "md", "hello-world")
     assert output.write_json_or_md_file(tmp_json, "json", "hello-world")
+
+
