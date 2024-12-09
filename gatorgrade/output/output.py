@@ -76,6 +76,10 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
                 file_name = check.gg_args[i + 3]
                 file_path = dir_name + "/" + file_name
                 break
+        motivation = ""
+        if "--motivation" in check.gg_args:
+            index_of_motivation = check.gg_args.index("--hint")
+            motivation = check.gg_args[index_of_motivation + 1]
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # Disable pylint to catch any type of exception thrown by GatorGrader
@@ -90,6 +94,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         json_info=check.json_info,
         diagnostic=diagnostic,
         path=file_path,
+        motivation=motivation
     )
 
 
@@ -188,6 +193,9 @@ def create_markdown_report_file(json: dict) -> str:
                     markdown_contents += f"\n\t- **directory:** {val}"
                 if "file" == i:
                     val = check["options"]["file"]
+                    markdown_contents += f"\n\t- **file:** {val}"
+                if "motivation" == i:
+                    val = check["options"]["motivation"]
                     markdown_contents += f"\n\t- **file:** {val}"
         elif "command" in check:
             val = check["command"]
@@ -344,6 +352,7 @@ def run_checks(
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
+        print("Rebekah Test")
         for result in failed_results:
             # main.console.print("This is a result")
             # main.console.print(result)
@@ -359,6 +368,8 @@ def run_checks(
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
+            #if result.motivation != "":
+                
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
