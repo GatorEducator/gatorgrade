@@ -97,8 +97,6 @@ def create_report_json(
     """
     # create list to hold the key values for the dictionary
     # that will be converted into json
-    overall_key_list = ["amount_correct", "percentage_score", "checks"]
-
     checks_list = []
     overall_dict = {}
 
@@ -138,7 +136,10 @@ def create_markdown_report_file(json: dict) -> str:
     failing_checks = []
     num_checks = len(json.get("checks"))  # type: ignore
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)\n"
+    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:**
+    {Path.cwd().name}\n**Amount Correct:**
+    {(json.get('amount_correct'))}/{num_checks}
+    ({(json.get('percentage_score'))}%)"   
     # if there is a deadline, include it
     if "deadline" in json:
         markdown_contents += f"\n**Deadline:** {json.get('deadline')}\n"
@@ -301,7 +302,9 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str], deadline
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    deadline,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
