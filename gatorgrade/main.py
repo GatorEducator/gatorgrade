@@ -56,7 +56,7 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report, )#run_status_bar, #no_status_bar, run_motivation)
+            checks_status = run_checks(checks, report, run_motivation)#run_status_bar, #no_status_bar, )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks

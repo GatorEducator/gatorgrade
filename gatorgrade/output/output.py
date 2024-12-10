@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
+from rich.console import Console
+from rich.panel import Panel
 
 import gator
 import rich
@@ -291,9 +293,28 @@ def write_json_or_md_file(file_name, content_type, content):
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
 
+console = Console()
+
+class Motivation:
+    def __init__(self, quotes: dict, context: str = None):  # type: ignore
+        """Construct a Motivation.
+
+        Args:
+            quotes: A dictionary of motivational quotes with keys like "low_motivation", "high_motivation".
+            context: Additional context or description about the quote. Optional.
+        """
+        self.quotes = quotes
+        self.context = context
+
+    def get_motivation(self, motivation_level: str):
+        """Retrieve a motivational quote based on the motivation level."""
+        quote = self.quotes.get(motivation_level, "Keep going, you're doing great!")
+        return f"{quote}\nContext: {self.context if self.context else 'Keep pushing forward!'}"
+
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str],
+    run_motivation=False
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -337,10 +358,8 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
-            if "--motivation" in check.gg_args:
-                index_of_hint = check.gg_args.index("--motivation")
-                index_of_new_hint = int(index_of_hint) + 1
-                result.hint = check.gg_args[index_of_new_hint]
+            if "motivation" in check.gg_args: 
+                result.motivation = check["motivation"]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
@@ -368,7 +387,10 @@ def run_checks(
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
-            #if result.motivation != "":
+            """if result.motivation != "":
+                rich.print(
+                    f"[bright cyan] {result.motivation}\n"
+                )"""
                 
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
@@ -389,6 +411,25 @@ def run_checks(
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
+    motivation_quotes = {"low_motivation": "You're just getting warmed up!", "high_motivation": "Finish Line Insight"} 
+    motivation = Motivation(motivation_quotes)
+    if run_motivation: 
+        if 0.25 <= percent < 0.75: 
+            console.print( 
+                          Panel( 
+                                motivation.get_motivation("low_motivation"), 
+                                expand=False, title="Motivation", 
+                                border_style="bright_cyan" 
+                                ) 
+                          ) 
+        elif percent >= 0.75: 
+            console.print( 
+                          Panel( 
+                                motivation.get_motivation("high_motivation"), 
+                                expand=False, title="Motivation", 
+                                border_style="bright_cyan" 
+                                ) 
+                          )
     summary_status = True if passed_count == len(results) else False
     return summary_status
 
