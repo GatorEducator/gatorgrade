@@ -136,10 +136,10 @@ def create_markdown_report_file(json: dict) -> str:
     failing_checks = []
     num_checks = len(json.get("checks"))  # type: ignore
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:**
+    markdown_contents += f"""# Gatorgrade Insights\n\n**Project Name:**
     {Path.cwd().name}\n**Amount Correct:**
     {(json.get('amount_correct'))}/{num_checks}
-    ({(json.get('percentage_score'))}%)"   
+    ({(json.get('percentage_score'))}%)"""
     # if there is a deadline, include it
     if "deadline" in json:
         markdown_contents += f"\n**Deadline:** {json.get('deadline')}\n"
