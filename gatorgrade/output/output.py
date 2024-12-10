@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from typing import Tuple
 from typing import Union
 
@@ -198,8 +198,41 @@ def create_markdown_report_file(json: dict) -> str:
     return markdown_contents
 
 
+def truncate_report(
+    report_output_data_json: dict, output_limit: Optional[int] = None
+) -> str:
+    """Truncate the json report to the maximum number of lines allowed.
+
+    Args:
+        report_output_data_json: the json dictionary that will be used or converted to md
+        output_limit: the maximum number of lines to display in the output
+    """
+    # Convert the JSON dictionary to a formatted string
+    report_str = json.dumps(report_output_data_json, indent=4)
+
+    # Split the string into lines
+    report_lines = report_str.split("\n")
+
+    # If the number of lines is within the limit, return the full report
+    if output_limit is None or len(report_lines) <= output_limit:
+        return report_str
+
+    # Otherwise, truncate the report to the maximum number of lines
+    truncated_report_lines = report_lines[:output_limit]
+
+    # Convert the truncated report back to a JSON string
+    truncated_report_str = "\n".join(truncated_report_lines)
+
+    # Add a trailing ellipsis to indicate the report was truncated
+    truncated_report_str += "\n..."
+
+    return truncated_report_str
+
+
 def configure_report(
-    report_params: Tuple[str, str, str], report_output_data_json: dict
+    report_params: Tuple[str, str, str],
+    report_output_data_json: dict,
+    output_limit: Optional[int] = None,
 ):
     """Put together the contents of the report depending on the inputs of the user.
 
@@ -209,6 +242,7 @@ def configure_report(
             report_params[1]: json or md
             report_params[2]: name of the file or env
         report_output_data: the json dictionary that will be used or converted to md
+        output_limit: the maximum number of characters to display in the output
     """
     report_format = report_params[0]
     report_type = report_params[1]
@@ -285,95 +319,90 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    output_limit: Optional[int] = None,
+    check_status: Optional[str] = None,
+    show_failures: bool = False,
+    check_include: Optional[str] = None,
+    check_exclude: Optional[str] = None,
 ) -> bool:
-    """Run shell and GatorGrader checks and display whether each has passed or failed.
-
-        Also, print a list of all failed checks with their diagnostics and a summary message that
-        shows the overall fraction of passed checks.
-
-    Args:
-        checks: The list of shell and GatorGrader checks to run.
-    """
     results = []
-    # run each of the checks
+
+    # Run checks and gather results
     for check in checks:
         result = None
         command_ran = None
-        # run a shell check; this means
-        # that it is going to run a command
-        # in the shell as a part of a check;
-        # store the command that ran in the
-        # field called run_command that is
-        # inside of a CheckResult object but
-        # not initialized in the constructor
+
+        # Run shell or GatorGrader checks
         if isinstance(check, ShellCheck):
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
-        # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
-            # check to see if there was a command in the
-            # GatorGraderCheck. This code finds the index of the
-            # word "--command" in the check.gg_args list if it
-            # is available (it is not available for all of
-            # the various types of GatorGraderCheck instances),
-            # and then it adds 1 to that index to get the actual
-            # command run and then stores that command in the
-            # result.run_command field that is initialized to
-            # an empty string in the constructor for CheckResult
             if "--command" in check.gg_args:
                 index_of_command = check.gg_args.index("--command")
-                index_of_new_command = int(index_of_command) + 1
+                index_of_new_command = index_of_command + 1
                 result.run_command = check.gg_args[index_of_new_command]
-        # there were results from running checks
-        # and thus they must be displayed
-        if result is not None:
-            result.print()
-            results.append(result)
-    # determine if there are failures and then display them
-    failed_results = list(filter(lambda result: not result.passed, results))
-    # print failures list if there are failures to print
-    # and print what ShellCheck command that Gatorgrade ran
-    if len(failed_results) > 0:
-        print("\n-~-  FAILURES  -~-\n")
-        for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
-            result.print(show_diagnostic=True)
-            # this result is an instance of CheckResult
-            # that has a run_command field that is some
-            # value that is not the default of an empty
-            # string and thus it should be displayed;
-            # the idea is that displaying this run_command
-            # will give the person using Gatorgrade a way
-            # to quickly run the command that failed
-            if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}\n"
-                )
-    # determine how many of the checks passed and then
-    # compute the total percentage of checks passed
-    passed_count = len(results) - len(failed_results)
-    # prevent division by zero if no results
-    if len(results) == 0:
-        percent = 0
+
+        if result:
+            # Filter checks by status if specified
+            if check_status == "pass" and result.passed:
+                results.append(result)
+            elif check_status == "fail" and not result.passed:
+                results.append(result)
+            elif not check_status:  # No specific status filter
+                results.append(result)
+
+    # Filter by include/exclude criteria
+    filtered_results = results
+    if check_include:
+        filtered_results = [
+            r for r in filtered_results if check_include in r.description
+        ]
+
+    if check_exclude:
+        filtered_results = [
+            r for r in filtered_results if check_exclude not in r.description
+        ]
+
+    # Print results based on the filtered results
+    if show_failures:
+        # Print only failures
+        for result in filtered_results:
+            if not result.passed:
+                result.print(show_diagnostic=True)
+                if result.run_command:
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
     else:
-        percent = round(passed_count / len(results) * 100)
-    # if the report is wanted, create output in line with their specifications
+        # Print all results
+        for result in filtered_results:
+            if not result.passed:
+                result.print(show_diagnostic=True)
+                if result.run_command:
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    )
+            else:
+                result.print()  # Print normally for passing checks
+
+    # Generate summary
+    failed_results = [r for r in results if not r.passed]
+    passed_count = len(results) - len(failed_results)
+    percent = round(passed_count / len(results) * 100) if results else 0
+
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-    # compute summary results and display them in the console
+
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright white"
     print_with_border(summary, summary_color)
-    # determine whether or not the run was a success or not:
-    # if all of the tests pass then the function returns True;
-    # otherwise the function must return False
-    summary_status = True if passed_count == len(results) else False
-    return summary_status
+
+    return passed_count == len(results)
 
 
 def print_with_border(text: str, rich_color: str):
