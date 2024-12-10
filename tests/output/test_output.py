@@ -39,11 +39,13 @@ def test_past_date_displays_late_message(capsys):
             "tests/test_assignment/src",
             "--file",
             "hello-world.py",
-        ]
+        ],
+        json_info="test",
     )
+    report = (None, None, None)
     deadline = "01/01/23 12:00:00\n"
     # When run_checks is called
-    output.run_checks([check], deadline)
+    output.run_checks([check], report, deadline)
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "Your assignment is late. The deadline was" in out
@@ -66,11 +68,13 @@ def test_future_date_shows_upcoming_deadline(capsys):
             "tests/test_assignment/src",
             "--file",
             "hello-world.py",
-        ]
+        ],
+        json_info="test",
     )
-    deadline = "01/01/50 12:00:00\n"
     # When run_checks is called
-    output.run_checks([check], deadline)
+    report = (None, None, None)
+    deadline = "01/01/50 12:00:00\n"
+    output.run_checks([check], report, deadline)
     # Then the output shows that the check has passed
     out, _ = capsys.readouterr()
     assert "Your assignment is due in" in out
@@ -94,7 +98,8 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
     )
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks([check], report, None)  # type: ignore
+    deadline = None
+    output.run_checks([check], report, None, deadline)  # type: ignore
     # Then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
@@ -144,7 +149,8 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     ]
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks(checks, report, None)  # type: ignore
+    deadline = None
+    output.run_checks(checks, report, None, deadline)  # type: ignore
     # the output shows the correct fraction
     # and percentage of passed checks
     out, _ = capsys.readouterr()
@@ -192,7 +198,8 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     ]
     report = (None, None, None)
     # When run_checks is called
-    output.run_checks(checks, report, None)  # type: ignore
+    deadline = None
+    output.run_checks(checks, report, None, deadline)  # type: ignore
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
