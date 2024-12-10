@@ -1,5 +1,6 @@
 """Generates a list of commands to be run through gatorgrader."""
 
+import random
 from collections import namedtuple
 from pathlib import Path
 from typing import Any
@@ -35,7 +36,6 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
     # return a blank list that calling function handles
     return []
 
-
 def reformat_yaml_data(data):
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data = []
@@ -65,3 +65,47 @@ def add_checks_to_list(path, data_list, reformatted_data):
             else:  # Adds the current check to the reformatted data list
                 reformatted_data.append(CheckData(file_context=path, check=ddict))
                 break
+
+
+def add_quotes_to_yaml(file_path: Path, new_quotes: List[str]):
+    """Add motivational quotes to the YAML file under the key 'motivational_quotes'."""
+    if not file_path.exists():
+        print(f"Error: File not found at {file_path}")
+        return
+    
+    try:
+        with open(file_path, encoding=DEFAULT_ENCODING) as file:
+            data = yaml.safe_load(file) or {}  # Load existing data or start fresh
+        
+        # Ensure 'motivational_quotes' exists in the YAML structure
+        if "motivational_quotes" not in data:
+            data["motivational_quotes"] = []
+
+        # Append new quotes, avoiding duplicates
+        existing_quotes = set(data["motivational_quotes"])
+        for quote in new_quotes:
+            if quote not in existing_quotes:
+                data["motivational_quotes"].append(quote)
+        
+        # Write the updated data back to the file
+        with open(file_path, 'w', encoding=DEFAULT_ENCODING) as file:
+            yaml.safe_dump(data, file)
+        
+        print("Motivational quotes added successfully!")
+    
+    except yaml.YAMLError as e:
+        print(f"Error processing YAML file: {e}")
+
+
+def get_random_quote(file_path: Path) -> str:
+    """Retrieve a random motivational quote from the YAML file."""
+    if not file_path.exists():
+        return "No motivational quotes available. Add some to the YAML file!"
+
+    try:
+        with open(file_path, encoding=DEFAULT_ENCODING) as file:
+            data = yaml.safe_load(file)
+            quotes = data.get("motivational", [])
+            return random.choice(quotes) if quotes else "No motivational quotes available."
+    except Exception as e:
+        return f"Error retrieving quotes: {e}"

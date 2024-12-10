@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
+from rich.console import Console
+from rich.panel import Panel
 
 import gator
 import rich
@@ -76,6 +78,10 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
                 file_name = check.gg_args[i + 3]
                 file_path = dir_name + "/" + file_name
                 break
+        motivation = ""
+        if "--motivation" in check.gg_args:
+            index_of_motivation = check.gg_args.index("--hint")
+            motivation = check.gg_args[index_of_motivation + 1]
     # If arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # Disable pylint to catch any type of exception thrown by GatorGrader
@@ -90,6 +96,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         json_info=check.json_info,
         diagnostic=diagnostic,
         path=file_path,
+        motivation=motivation
     )
 
 
@@ -189,6 +196,9 @@ def create_markdown_report_file(json: dict) -> str:
                 if "file" == i:
                     val = check["options"]["file"]
                     markdown_contents += f"\n\t- **file:** {val}"
+                if "motivation" == i:
+                    val = check["options"]["motivation"]
+                    markdown_contents += f"\n\t- **file:** {val}"
         elif "command" in check:
             val = check["command"]
             markdown_contents += f"\n\t- **command:** {val}"
@@ -283,9 +293,28 @@ def write_json_or_md_file(file_name, content_type, content):
             "\n[red]Can't open or write the target file, check if you provide a valid path"
         ) from e
 
+console = Console()
+
+class Motivation:
+    def __init__(self, quotes: dict, context: str = None):  # type: ignore
+        """Construct a Motivation.
+
+        Args:
+            quotes: A dictionary of motivational quotes with keys like "low_motivation", "high_motivation".
+            context: Additional context or description about the quote. Optional.
+        """
+        self.quotes = quotes
+        self.context = context
+
+    def get_motivation(self, motivation_level: str):
+        """Retrieve a motivational quote based on the motivation level."""
+        quote = self.quotes.get(motivation_level, "Keep going, you're doing great!")
+        return f"{quote}\nContext: {self.context if self.context else 'Keep pushing forward!'}"
+
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str],
+    run_motivation=False
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -300,6 +329,7 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        motivation = ""
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -311,6 +341,7 @@ def run_checks(
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
+            result.motivation = motivation
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
             result = _run_gg_check(check)
@@ -327,6 +358,8 @@ def run_checks(
                 index_of_command = check.gg_args.index("--command")
                 index_of_new_command = int(index_of_command) + 1
                 result.run_command = check.gg_args[index_of_new_command]
+            if "motivation" in check.gg_args: 
+                result.motivation = check["motivation"]
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
@@ -338,6 +371,7 @@ def run_checks(
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
+        print("Rebekah Test")
         for result in failed_results:
             # main.console.print("This is a result")
             # main.console.print(result)
@@ -353,6 +387,11 @@ def run_checks(
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
+            """if result.motivation != "":
+                rich.print(
+                    f"[bright cyan] {result.motivation}\n"
+                )"""
+                
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
@@ -372,6 +411,25 @@ def run_checks(
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
+    motivation_quotes = {"low_motivation": "You're just getting warmed up!", "high_motivation": "Finish Line Insight"} 
+    motivation = Motivation(motivation_quotes)
+    if run_motivation: 
+        if 0.25 <= percent < 0.75: 
+            console.print( 
+                          Panel( 
+                                motivation.get_motivation("low_motivation"), 
+                                expand=False, title="Motivation", 
+                                border_style="bright_cyan" 
+                                ) 
+                          ) 
+        elif percent >= 0.75: 
+            console.print( 
+                          Panel( 
+                                motivation.get_motivation("high_motivation"), 
+                                expand=False, title="Motivation", 
+                                border_style="bright_cyan" 
+                                ) 
+                          )
     summary_status = True if passed_count == len(results) else False
     return summary_status
 

@@ -119,6 +119,7 @@ def write_yaml_of_paths_list(
                     "description": f"Complete all TODOs in {file_path_fixed}",
                     "check": "MatchFileFragment",
                     "options": {"fragment": "TODO", "count": 0, "exact": True},
+                    "motivation": "You're doint Great"
                 }
             ]
         }
