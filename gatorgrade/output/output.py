@@ -296,7 +296,7 @@ def write_json_or_md_file(file_name, content_type, content):
 console = Console()
 
 class Motivation:
-    def __init__(self, quotes: dict, context: str = None):  # type: ignore
+    def __init__(self, quotes: dict):  # type: ignore
         """Construct a Motivation.
 
         Args:
@@ -304,12 +304,12 @@ class Motivation:
             context: Additional context or description about the quote. Optional.
         """
         self.quotes = quotes
-        self.context = context
+        
 
     def get_motivation(self, motivation_level: str):
         """Retrieve a motivational quote based on the motivation level."""
         quote = self.quotes.get(motivation_level, "Keep going, you're doing great!")
-        return f"{quote}\nContext: {self.context if self.context else 'Keep pushing forward!'}"
+        return f"{quote}"
 
 
 def run_checks(
