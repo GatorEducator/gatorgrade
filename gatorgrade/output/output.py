@@ -357,7 +357,7 @@ def run_checks(
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
             # add a progress task for tracking
-            task = progress.add_task("[green]Running checks...", total=total_checks)
+            task = progress.add_task("[green]Running checks", total=total_checks)
 
             # run each of the checks
             for check in checks:
