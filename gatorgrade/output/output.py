@@ -366,11 +366,13 @@ def run_checks(
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
         configure_report(report, report_output_data)
-    # compute summary results and display them in the console using panel
+    # compute summary results and display them in the console using the Panel
+    # provided by Rich; this enables a border that resizes with the terminal;
+    # note that there is one blank line between the prior output and the Panel
     summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
     summary_color = "green" if passed_count == len(results) else "bright_red"
+    rich.print("")
     rich.print(Panel(summary, expand=False, title=None, style=summary_color))
-
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False
