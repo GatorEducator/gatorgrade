@@ -358,12 +358,10 @@ def run_checks(
         ) as progress:
             # add a progress task for tracking
             task = progress.add_task("[green]Running checks", total=total_checks)
-
             # run each of the checks
             for check in checks:
                 result = None
                 command_ran = None
-
                 if isinstance(check, ShellCheck):
                     result = _run_shell_check(check)
                     command_ran = check.command
@@ -389,7 +387,6 @@ def run_checks(
                 if result is not None:
                     result.print()
                     results.append(result)
-
                 # update progress based on running_mode
                 if running_mode:
                     progress.update(task, advance=1)
