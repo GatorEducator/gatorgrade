@@ -175,6 +175,9 @@ def create_markdown_report_file(json: dict) -> str:
                 if "command" == i:
                     val = check["options"]["command"]
                     markdown_contents += f"\n\t- **command** {val}"
+                if "weight" == i:
+                    val = check["options"]["weight"]
+                    markdown_contents += f"\n\t- **weight:** {val}"
                 if "fragment" == i:
                     val = check["options"]["fragment"]
                     markdown_contents += f"\n\t- **fragment:** {val}"
@@ -285,6 +288,19 @@ def write_json_or_md_file(file_name, content_type, content):
         ) from e
 
 
+def calculate_total_weight(checks: List[Union[ShellCheck, GatorGraderCheck]]) -> int:
+    """Calculate the total weight of all the checks."""
+    total_weight = 0
+    for check in checks:
+        weight = 1  # Default weight
+        if isinstance(check, (ShellCheck, GatorGraderCheck)):
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = int(check.gg_args[index_of_weight + 1])
+        total_weight += weight
+    return total_weight
+
+
 def run_checks(
     checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
 ) -> bool:
@@ -296,11 +312,11 @@ def run_checks(
     Args:
         checks: The list of shell and GatorGrader checks to run.
     """
+    total_weight = calculate_total_weight(checks)
     results = []
-    # run each of the checks
     for check in checks:
         result = None
-        command_ran = None
+        weight = 1
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -309,12 +325,30 @@ def run_checks(
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
+            # Weighted Checks
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = int(check.gg_args[index_of_weight + 1])  # Updated line
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_weight]
+                    + check.gg_args[index_of_weight + 2 :]
+                )
             result = _run_shell_check(check)
-            command_ran = check.command
-            result.run_command = command_ran
+            result.weight = weight
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
+            # Weighted Checks
+            if "--weight" in check.gg_args:
+                index_of_weight = check.gg_args.index("--weight")
+                weight = int(check.gg_args[index_of_weight + 1])  # Updated line
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_weight]
+                    + check.gg_args[index_of_weight + 2 :]
+                )
             result = _run_gg_check(check)
+            result.weight = weight
             # check to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list if it
@@ -331,8 +365,16 @@ def run_checks(
         # there were results from running checks
         # and thus they must be displayed
         if result is not None:
-            result.print()
+            check_weight = int(weight) / total_weight
+            check_percent = round(check_weight * 100, 2)
+            result.print(percentage=check_percent)
             results.append(result)
+            # testing printed weights
+            # print(f"Weight = {weight}")
+            # total_weight = sum(getattr(result, 'weight', 1) for result in results)
+            # check_weight = (int(weight) / total_weight)
+            # print(check_weight * 100)
+
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
@@ -340,8 +382,6 @@ def run_checks(
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
             result.print(show_diagnostic=True)
             # this result is an instance of CheckResult
             # that has a run_command field that is some
@@ -357,11 +397,22 @@ def run_checks(
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
-    # prevent division by zero if no results
+    # Math to calculate the % score
     if len(results) == 0:
+        total_weight = 0
+        passed_weight = 0
         percent = 0
     else:
-        percent = round(passed_count / len(results) * 100)
+        total_weight = sum(getattr(result, "weight", 1) for result in results)
+        passed_weight = sum(
+            getattr(result, "weight", 1) for result in results if result.passed
+        )
+        # prevent division by zero if no results
+        if total_weight == 0:
+            percent = 0
+        else:
+            percent = round(passed_weight / total_weight * 100)
+
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(passed_count, results, percent)
