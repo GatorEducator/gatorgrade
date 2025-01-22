@@ -175,6 +175,9 @@ def create_markdown_report_file(json: dict) -> str:
                 if "command" == i:
                     val = check["options"]["command"]
                     markdown_contents += f"\n\t- **command** {val}"
+                if "hint" == i:
+                    val = check["options"]["hint"]
+                    markdown_contents += f"\n\t- **hint:** {val}"
                 if "fragment" == i:
                     val = check["options"]["fragment"]
                     markdown_contents += f"\n\t- **fragment:** {val}"
@@ -301,6 +304,7 @@ def run_checks(
     for check in checks:
         result = None
         command_ran = None
+        hint = ""
         # run a shell check; this means
         # that it is going to run a command
         # in the shell as a part of a check;
@@ -309,12 +313,30 @@ def run_checks(
         # inside of a CheckResult object but
         # not initialized in the constructor
         if isinstance(check, ShellCheck):
+            # Hint Feature
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                hint = check.gg_args[index_of_hint + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2 :]
+                )
             result = _run_shell_check(check)
             command_ran = check.command
             result.run_command = command_ran
+            result.hint = hint
         # run a check that GatorGrader implements
         elif isinstance(check, GatorGraderCheck):
+            # Hint Feature
+            if "--hint" in check.gg_args:
+                index_of_hint = check.gg_args.index("--hint")
+                hint = check.gg_args[index_of_hint + 1]
+                # Remove the hint from gg_args before passing to GatorGrader
+                check.gg_args = (
+                    check.gg_args[:index_of_hint] + check.gg_args[index_of_hint + 2 :]
+                )
             result = _run_gg_check(check)
+            result.hint = hint  # Store the hint in the CheckResult object
             # check to see if there was a command in the
             # GatorGraderCheck. This code finds the index of the
             # word "--command" in the check.gg_args list if it
@@ -340,8 +362,6 @@ def run_checks(
     if len(failed_results) > 0:
         print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
             result.print(show_diagnostic=True)
             # this result is an instance of CheckResult
             # that has a run_command field that is some
@@ -350,10 +370,15 @@ def run_checks(
             # the idea is that displaying this run_command
             # will give the person using Gatorgrade a way
             # to quickly run the command that failed
-            if result.run_command != "":
+            if result.run_command != "" and result.hint != "":
+                rich.print(f"[blue]   → Run this command: [green]{result.run_command}")
+            elif result.run_command != "":
                 rich.print(
                     f"[blue]   → Run this command: [green]{result.run_command}\n"
                 )
+            # display a hint set by the instructor for specific failed checks
+            if result.hint != "":
+                rich.print(f"[blue]   → Hint: [green]{result.hint}\n")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)

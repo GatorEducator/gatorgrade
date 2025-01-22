@@ -30,6 +30,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
+        self.hint = ""  # Store the hint as an instance attribute
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
@@ -48,7 +49,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         return message
 
     def __repr__(self):
-        return f"CheckResult(passed={self.passed}, description='{self.description}', json_info={self.json_info}, path='{self.path}', diagnostic='{self.diagnostic}', run_command='{self.run_command}')"
+        return f"CheckResult(passed={self.passed}, description='{self.description}', json_info={self.json_info}, path='{self.path}', diagnostic='{self.diagnostic}', run_command='{self.run_command}', hint='{self.hint}')"
 
     def __str__(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
