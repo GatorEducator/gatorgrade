@@ -411,9 +411,7 @@ def run_checks(
             # will give the person using Gatorgrade a way
             # to quickly run the command that failed
             if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}"
-                )
+                rich.print(f"[blue]   → Run this command: [green]{result.run_command}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
