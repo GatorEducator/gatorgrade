@@ -11,6 +11,9 @@ from typing import Union
 
 import gator
 import rich
+from rich.progress import BarColumn
+from rich.progress import Progress
+from rich.progress import TextColumn
 from rich.panel import Panel
 
 from gatorgrade.input.checks import GatorGraderCheck
@@ -286,7 +289,10 @@ def write_json_or_md_file(file_name, content_type, content):
 
 
 def run_checks(
-    checks: List[Union[ShellCheck, GatorGraderCheck]], report: Tuple[str, str, str]
+    checks: List[Union[ShellCheck, GatorGraderCheck]],
+    report: Tuple[str, str, str],
+    running_mode=False,
+    no_status_bar=False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -295,44 +301,98 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
+        running_mode: Convert the Progress Bar to update based on checks ran/not ran.
+        no_status_bar: Option to completely disable all Progress Bar options.
     """
     results = []
     # run each of the checks
-    for check in checks:
-        result = None
-        command_ran = None
-        # run a shell check; this means
-        # that it is going to run a command
-        # in the shell as a part of a check;
-        # store the command that ran in the
-        # field called run_command that is
-        # inside of a CheckResult object but
-        # not initialized in the constructor
-        if isinstance(check, ShellCheck):
-            result = _run_shell_check(check)
-            command_ran = check.command
-            result.run_command = command_ran
-        # run a check that GatorGrader implements
-        elif isinstance(check, GatorGraderCheck):
-            result = _run_gg_check(check)
-            # check to see if there was a command in the
-            # GatorGraderCheck. This code finds the index of the
-            # word "--command" in the check.gg_args list if it
-            # is available (it is not available for all of
-            # the various types of GatorGraderCheck instances),
-            # and then it adds 1 to that index to get the actual
-            # command run and then stores that command in the
-            # result.run_command field that is initialized to
-            # an empty string in the constructor for CheckResult
-            if "--command" in check.gg_args:
-                index_of_command = check.gg_args.index("--command")
-                index_of_new_command = int(index_of_command) + 1
-                result.run_command = check.gg_args[index_of_new_command]
-        # there were results from running checks
-        # and thus they must be displayed
-        if result is not None:
-            result.print()
-            results.append(result)
+    # check how many tests are being ran
+    total_checks = len(checks)
+    # run checks with no progress bar
+    if no_status_bar:
+        for check in checks:
+            result = None
+            command_ran = None
+            # run a shell check; this means
+            # that it is going to run a command
+            # in the shell as a part of a check;
+            # store the command that ran in the
+            # field called run_command that is
+            # inside of a CheckResult object but
+            # not initialized in the constructor
+            if isinstance(check, ShellCheck):
+                result = _run_shell_check(check)
+                command_ran = check.command
+                result.run_command = command_ran
+            # run a check that GatorGrader implements
+            elif isinstance(check, GatorGraderCheck):
+                result = _run_gg_check(check)
+                # check to see if there was a command in the
+                # GatorGraderCheck. This code finds the index of the
+                # word "--command" in the check.gg_args list if it
+                # is available (it is not available for all of
+                # the various types of GatorGraderCheck instances),
+                # and then it adds 1 to that index to get the actual
+                # command run and then stores that command in the
+                # result.run_command field that is initialized to
+                # an empty string in the constructor for CheckResult
+                if "--command" in check.gg_args:
+                    index_of_command = check.gg_args.index("--command")
+                    index_of_new_command = int(index_of_command) + 1
+                    result.run_command = check.gg_args[index_of_new_command]
+            # there were results from running checks
+            # and thus they must be displayed
+            if result is not None:
+                result.print()
+                results.append(result)
+    else:
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(
+                bar_width=40,
+                style="red",
+                complete_style="green",
+                finished_style="green",
+            ),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        ) as progress:
+            # add a progress task for tracking
+            task = progress.add_task("[green]Running checks", total=total_checks)
+            # run each of the checks
+            for check in checks:
+                result = None
+                command_ran = None
+                if isinstance(check, ShellCheck):
+                    result = _run_shell_check(check)
+                    command_ran = check.command
+                    result.run_command = command_ran
+                # run a check that GatorGrader implements
+                elif isinstance(check, GatorGraderCheck):
+                    result = _run_gg_check(check)
+                    # check to see if there was a command in the
+                    # GatorGraderCheck. This code finds the index of the
+                    # word "--command" in the check.gg_args list if it
+                    # is available (it is not available for all of
+                    # the various types of GatorGraderCheck instances),
+                    # and then it adds 1 to that index to get the actual
+                    # command run and then stores that command in the
+                    # result.run_command field that is initialized to
+                    # an empty string in the constructor for CheckResult
+                    if "--command" in check.gg_args:
+                        index_of_command = check.gg_args.index("--command")
+                        index_of_new_command = int(index_of_command) + 1
+                        result.run_command = check.gg_args[index_of_new_command]
+                # there were results from running checks
+                # and thus they must be displayed
+                if result is not None:
+                    result.print()
+                    results.append(result)
+                # update progress based on running_mode
+                if running_mode:
+                    progress.update(task, advance=1)
+                else:
+                    if result and result.passed:
+                        progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # print failures list if there are failures to print
@@ -351,9 +411,7 @@ def run_checks(
             # will give the person using Gatorgrade a way
             # to quickly run the command that failed
             if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}\n"
-                )
+                rich.print(f"[blue]   → Run this command: [green]{result.run_command}")
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
