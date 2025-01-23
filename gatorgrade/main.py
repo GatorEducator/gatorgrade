@@ -47,11 +47,11 @@ def gatorgrade(
     ),
     run_status_bar: bool = typer.Option(
         False,
-        "--run_status_bar",
+        "--status-bar",
         help="Enable a progress bar for checks running/not running.",
     ),
     no_status_bar: bool = typer.Option(
-        False, "--no_status_bar", help="Disable the progress bar entirely."
+        False, "--no-status-bar", help="Disable the progress bar entirely."
     ),
 ):
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
