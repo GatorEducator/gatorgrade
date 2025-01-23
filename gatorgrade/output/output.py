@@ -412,7 +412,7 @@ def run_checks(
             # to quickly run the command that failed
             if result.run_command != "":
                 rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}\n"
+                    f"[blue]   → Run this command: [green]{result.run_command}"
                 )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
