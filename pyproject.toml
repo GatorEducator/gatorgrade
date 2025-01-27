@@ -8,9 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 PyYAML = "^6.0"
-gatorgrader = "^1.1.1"
 typer = {extras = ["all"], version = "^0.12.5"}
 rich = "^13.8.1"
+gatorgrader = {git = "https://github.com/GatorEducator/gatorgrader.git", rev = "fix/unicode-defect"}
 
 [tool.poetry.dev-dependencies]
 taskipy = "^1.10.1"
