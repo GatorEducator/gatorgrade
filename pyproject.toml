@@ -32,10 +32,10 @@ isort = "^5.10.1"
 mkdocs-material = "^8.4.2"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.6.8"
 symbex = "^1.4"
 mypy = "^1.11.2"
 types-pyyaml = "^6.0.12.20240917"
+ruff = "^0.9.3"
 
 [tool.taskipy.variables]
 project = "gatorgrade"
