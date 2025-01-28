@@ -351,22 +351,18 @@ name = "gatorgrader"
 version = "1.1.2"
 description = "Automated Grading Tool that Checks the Work of Writers and Programmers"
 optional = false
-python-versions = ">=3.7.2,<4.0"
-files = []
-develop = false
+python-versions = "<4.0,>=3.7.2"
+files = [
+    {file = "gatorgrader-1.1.2-py3-none-any.whl", hash = "sha256:697b9a0c3573d41ec9a79979cba45dec8f508486a5f6a7fa70d3bf32a26baf3f"},
+    {file = "gatorgrader-1.1.2.tar.gz", hash = "sha256:a74abc691adc889aae078d38506cdd336622a7584eb227b03bb92405cba92f33"},
+]
 
 [package.dependencies]
-commonmark = "^0.9.1"
-GitPython = "^3.1.27"
-num2words = "^0.5.10"
-pluginbase = "^1.0.1"
-requests = "^2.28.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/GatorEducator/gatorgrader.git"
-reference = "fix/unicode-defect"
-resolved_reference = "a254e7ebd68d417e03d2844b12d8930291178c9f"
+commonmark = ">=0.9.1,<0.10.0"
+GitPython = ">=3.1.27,<4.0.0"
+num2words = ">=0.5.10,<0.6.0"
+pluginbase = ">=1.0.1,<2.0.0"
+requests = ">=2.28.1,<3.0.0"
 
 [[package]]
 name = "ghp-import"
@@ -1817,4 +1813,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "40cd8d4ebc3e179ea3eb2b8b66f47d6d9fdb958697ec61292d26e2ffc7243800"
+content-hash = "da0e3fde43bd4dd69bffc8ee378f9efc744ee5e36ce622bf1227ba26aa2b9281"
