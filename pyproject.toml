@@ -12,7 +12,7 @@ typer = {extras = ["all"], version = "^0.12.5"}
 rich = "^13.8.1"
 gatorgrader = "^1.1.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 taskipy = "^1.10.1"
 pytest = "^7.1.1"
 pytest-cov = "^3.0.0"
@@ -30,8 +30,6 @@ pytest-randomly = "^3.12.0"
 pytest-clarity = "^1.0.1"
 isort = "^5.10.1"
 mkdocs-material = "^8.4.2"
-
-[tool.poetry.group.dev.dependencies]
 symbex = "^1.4"
 mypy = "^1.11.2"
 types-pyyaml = "^6.0.12.20240917"
