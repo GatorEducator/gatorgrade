@@ -6,11 +6,12 @@ authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.10,<4.0"
 PyYAML = "^6.0"
-typer = {extras = ["all"], version = "^0.12.5"}
+typer = "^0.20.0"
 rich = "^13.8.1"
 gatorgrader = "^1.1.2"
+click = "^8.3.0"
 
 [tool.poetry.group.dev.dependencies]
 taskipy = "^1.10.1"
