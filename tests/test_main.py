@@ -95,23 +95,20 @@ def cleanup_files(monkeypatch):
     ],
 )
 def test_full_integration_creates_valid_output(
-    assignment_path, expected_output_and_freqs, chdir
+    assignment_path, expected_output_and_freqs, chdir, capsys
 ):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     # the assignment path is:
     # tests/test_assignment
     chdir(assignment_path)
     # print(assignment_path)
-
     # result is the following information:
     # ✓  Complete all TODOs
     # ✓  Use an if statement
     # ✓  Complete all TODOs
-
     result = runner.invoke(main.app)
-
+    capsys.readouterr()
     print(result.stdout)
-
     assert result.exit_code == 0
     for output, freq in expected_output_and_freqs:
         assert result.stdout.count(output) == freq
