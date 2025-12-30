@@ -101,7 +101,6 @@ def test_full_integration_creates_valid_output(
     # the assignment path is:
     # tests/test_assignment
     chdir(assignment_path)
-    # print(assignment_path)
     # result is the following information:
     # ✓  Complete all TODOs
     # ✓  Use an if statement
@@ -112,3 +111,55 @@ def test_full_integration_creates_valid_output(
     assert result.exit_code == 0
     for output, freq in expected_output_and_freqs:
         assert result.stdout.count(output) == freq
+
+
+def test_gatorgrade_with_nonexistent_file(chdir, capsys):
+    """Test that gatorgrade exits with error when config file doesn't exist."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "nonexistent.yml"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 1
+    assert "either does not exist or is not valid" in result.stdout
+    assert "Exiting now!" in result.stdout
+
+
+def test_gatorgrade_with_custom_config_name(chdir, capsys):
+    """Test that gatorgrade works with custom config file name."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout
+
+
+def test_gatorgrade_with_report_option(chdir, tmp_path, capsys):
+    """Test that gatorgrade works with report option."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(main.app, ["--report", "file", "json", str(report_file)])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_status_bar(chdir, capsys):
+    """Test that gatorgrade works with status bar enabled."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--status-bar"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout
+
+
+def test_gatorgrade_with_no_status_bar(chdir, capsys):
+    """Test that gatorgrade works with no status bar."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-status-bar"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout
