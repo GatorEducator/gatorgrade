@@ -2,8 +2,7 @@
 
 from collections import namedtuple
 from pathlib import Path
-from typing import Any
-from typing import List
+from typing import Any, List
 
 import yaml
 
@@ -36,9 +35,9 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
     return []
 
 
-def reformat_yaml_data(data):
+def reformat_yaml_data(data: List[Any]) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
-    reformatted_data = []
+    reformatted_data: List[CheckData] = []
     if len(data) == 2:
         setup_commands = data.pop(0)  # Removes the setup commands
         run_setup(setup_commands)
