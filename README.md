@@ -108,6 +108,150 @@ existing files or folders in the current directory. Any given folders will be
 expanded to the files they contain. Please note that files and folders that
 start with `__` or `.` and empty folders will be automatically ignored.
 
+## Development Commands
+
+### Testing Commands
+
+Run all tests with verbose output:
+
+```bash
+uv run task test
+```
+
+Run tests without output:
+
+```bash
+uv run task test-silent
+```
+
+Run tests with coverage tracking:
+
+```bash
+uv run task test-coverage
+```
+
+Run tests without property-based tests:
+
+```bash
+uv run task test-not-property
+```
+
+Run tests without order randomization:
+
+```bash
+uv run task test-not-random
+```
+
+### Linting and Formatting Commands
+
+Run all linting checks:
+
+```bash
+uv run task lint
+```
+
+Check code formatting:
+
+```bash
+uv run task format
+```
+
+Fix code formatting:
+
+```bash
+uv run task format-fix
+```
+
+Run ruff linting checks:
+
+```bash
+uv run task ruff-check
+```
+
+### Type Checking Commands
+
+Run all type checkers:
+
+```bash
+uv run task typecheck
+```
+
+Run the `mypy` type checker:
+
+```bash
+uv run task mypy
+```
+
+Run the `ty` type checker:
+
+```bash
+uv run task ty
+```
+
+Run the `pyrefly` type checker:
+
+```bash
+uv run task pyrefly
+```
+
+Run `symbex` checks for typed and documented functions:
+
+```bash
+uv run task symbex
+```
+
+### Complete Check
+
+Run all linting and testing commands:
+
+```bash
+uv run task all
+```
+
+### Mutation Testing Commands
+
+Initialize cosmic-ray mutation testing session:
+
+```bash
+uv run task cosmic-ray-init
+```
+
+Run baseline tests to verify tests pass without mutations:
+
+```bash
+uv run task cosmic-ray-baseline
+```
+
+Execute mutation testing:
+
+```bash
+uv run task cosmic-ray-exec
+```
+
+Generate JSON report of mutation testing results:
+
+```bash
+uv run task cosmic-ray-report
+```
+
+Count killed vs survived mutants:
+
+```bash
+uv run cosmic-ray dump cosmic-ray.sqlite | jq -r '.[] | select(.test_outcome) | .test_outcome' | sort | uniq -c
+```
+
+Show mutations by file with outcome:
+
+```bash
+uv run cosmic-ray dump cosmic-ray.sqlite | jq -r '.[] | select(.test_outcome) | "\(.mutations[0].module_path): \(.test_outcome)"' | sort | uniq -c | sort -rn
+```
+
+Show only survived mutants (areas needing more tests):
+
+```bash
+uv run cosmic-ray dump cosmic-ray.sqlite | jq '.[] | select(.test_outcome == "survived")'
+```
+
 ## Contributing to GatorGrade
 
 If you would like to contribute to GatorGrade, please refer to the [GatorGrade
