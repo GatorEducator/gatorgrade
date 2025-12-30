@@ -94,9 +94,15 @@ pyrefly = { cmd = "{pyrefly-command}", help = "Run the pyrefly type checker for 
 symbex = "task symbex-typed && task symbex-documented"
 symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully typed functions", use_vars = true }
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
+format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
+format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
+test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test suite with coverage tracking", use_vars = true }
+test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
+test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
+markdownlint = { cmd = "markdownlint-cli2 '**.md' '#node_modules'", help = "Run the Markdown linter" }
 
 [tool.isort]
 include_trailing_comma = true
