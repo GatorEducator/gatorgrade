@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List
 from typing import Tuple
 from typing import Union
+from typing import Any
 
 import gator
 import rich
@@ -271,7 +272,9 @@ def configure_report(
         )
 
 
-def write_json_or_md_file(file_name, content_type, content):
+def write_json_or_md_file(
+    file_name: Union[str, Path], content_type: str, content: Any
+) -> bool:
     """Write a markdown or json file."""
     # try to store content in a file with user chosen format
     try:
@@ -304,7 +307,7 @@ def run_checks(
         running_mode: Convert the Progress Bar to update based on checks ran/not ran.
         no_status_bar: Option to completely disable all Progress Bar options.
     """
-    results = []
+    results: List[CheckResult] = []
     # run each of the checks
     # check how many tests are being ran
     total_checks = len(checks)
