@@ -81,7 +81,7 @@ ty-command = {var = "ty check {project}", recursive = true}
 pyrefly-command = {var = "pyrefly check {project}", recursive = true}
 
 [tool.taskipy.tasks]
-all = "task lint && task test"
+all = "task check && task test"
 check = "task lint && task typecheck"
 lint = "task ruff-format && task ruff-check"
 typecheck = "task mypy && task ty && task pyrefly && task symbex"
