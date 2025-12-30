@@ -210,6 +210,8 @@ uv run task all
 
 ### Mutation Testing Commands
 
+#### Initial Setup and Full Run
+
 Initialize cosmic-ray mutation testing session:
 
 ```bash
@@ -222,35 +224,144 @@ Run baseline tests to verify tests pass without mutations:
 uv run task cosmic-ray-baseline
 ```
 
-Execute mutation testing:
+Execute mutation testing on entire codebase:
 
 ```bash
 uv run task cosmic-ray-exec
 ```
 
-Generate JSON report of mutation testing results:
+#### Viewing Results
+
+Generate formatted report of all mutation testing results:
 
 ```bash
-uv run task cosmic-ray-report
+uv run cr-report cosmic-ray.sqlite
 ```
 
-Count killed vs survived mutants:
+Count killed vs survived mutants (summary):
 
 ```bash
-uv run cosmic-ray dump cosmic-ray.sqlite | jq -r '.[] | select(.test_outcome) | .test_outcome' | sort | uniq -c
+uv run cr-report cosmic-ray.sqlite | grep -c "KILLED"
+uv run cr-report cosmic-ray.sqlite | grep -c "SURVIVED"
 ```
 
-Show mutations by file with outcome:
+Show only survived mutants with file and line information:
 
 ```bash
-uv run cosmic-ray dump cosmic-ray.sqlite | jq -r '.[] | select(.test_outcome) | "\(.mutations[0].module_path): \(.test_outcome)"' | sort | uniq -c | sort -rn
+uv run cr-report cosmic-ray.sqlite | grep -B2 "SURVIVED"
 ```
 
-Show only survived mutants (areas needing more tests):
+Query survived mutants from database (detailed):
 
 ```bash
-uv run cosmic-ray dump cosmic-ray.sqlite | jq '.[] | select(.test_outcome == "survived")'
+sqlite3 cosmic-ray.sqlite "SELECT m.job_id, m.module_path, m.operator_name,
+m.occurrence, m.start_pos_row FROM mutation_specs m JOIN work_results r ON
+m.job_id = r.job_id WHERE r.test_outcome = 'SURVIVED';"
 ```
+
+Use helper script to list survivors in readable format:
+
+```bash
+scripts/list_survivors.sh 10
+```
+
+Show diff for a specific mutant (replace JOB_ID with actual ID):
+
+```bash
+scripts/show_mutant_diff.sh <job_id>
+```
+
+#### Understanding Mutation Output
+
+When querying the database, each line contains:
+
+```
+job_id|module_path|operator_name|occurrence|start_pos_row
+```
+
+For example:
+```
+33a053b45f654126811817a256780083|gatorgrade/output/output.py|core/AddNot|13|194
+```
+
+This means:
+- **job_id**: `33a053b45f654126811817a256780083` (unique identifier)
+- **module_path**: `gatorgrade/output/output.py` (file that was mutated)
+- **operator_name**: `core/AddNot` (type of mutation - adds `not` operator)
+- **occurrence**: `13` (13th occurrence of this operator type in the file)
+- **start_pos_row**: `194` (line number where mutation occurs)
+
+To see the actual code change (diff) for any mutant:
+
+```bash
+sqlite3 cosmic-ray.sqlite "SELECT diff FROM work_results WHERE job_id = '<job_id>';"
+```
+
+#### Incremental Workflow for Killing Survived Mutants
+
+This workflow allows you to focus on one surviving mutant at a time, test it
+immediately, and write tests to kill it without rerunning the full mutation
+suite.
+
+Step 1: List surviving mutants:
+
+```bash
+scripts/list_survivors.sh 10
+```
+
+Step 2: View the diff for a specific mutant (copy job_id from step 1):
+
+```bash
+scripts/show_mutant_diff.sh <job_id>
+```
+
+Step 3: Test the specific mutant to verify it survives:
+
+```bash
+scripts/test_mutant.sh <job_id>
+```
+
+This will show you the diff and run tests with the mutation applied.
+
+Step 4: Analyze the code and write or enhance tests to cover the mutated code
+path.
+
+Step 5: Test the mutant again to see if your new tests kill it:
+
+```bash
+scripts/test_mutant.sh <job_id>
+```
+
+If it now shows "KILLED", your tests are working!
+
+Step 6: Run all tests to ensure nothing broke:
+
+```bash
+uv run task test
+```
+
+Step 7 (Optional): Periodically rerun the full mutation suite to update
+statistics:
+
+```bash
+rm cosmic-ray.sqlite
+uv run task cosmic-ray-init
+uv run task cosmic-ray-exec
+```
+
+**Note**: The helper scripts (`test_mutant.sh`, `show_mutant_diff.sh`,
+`list_survivors.sh`) are available in the `scripts/` directory and work by
+querying the cosmic-ray.sqlite database and using the `cosmic-ray apply`
+command to apply individual mutations. They automatically change to the project
+root directory when executed.
+
+#### Tips for Writing Tests to Kill Mutants
+
+- Focus on edge cases and boundary conditions
+- Add assertions for intermediate values, not just final results
+- Test error conditions and exception handling
+- Verify state changes and side effects
+- Use parametrized tests to cover multiple scenarios
 
 ## Contributing to GatorGrade
 
