@@ -5,20 +5,20 @@ This document provides guidelines for AI agents contributing to this repository.
 ## Overview of Instructions
 
 - **Always use `uv`:** This project uses `uv` for all dependency management,
-  virtual environments, and task running. Do not use `pip` or `venv` directly.
+virtual environments, and task running. Do not use `pip` or `venv` directly.
 - **Follow all guidelines:** This document contains the complete set of
-  guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
+guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
 - **Verify your changes:** Before committing any changes, you must run all
-  linters and tests to ensure your changes are correct and follow the project's
-  style. Use `uv run task all`.
-- **Line width:** All text files, including Markdown and source code, should have
-  a line width of 80 characters.
-- **Permission to run commands:** You have permission to run all commands in this
-  file to verify their functionality.
+linters and tests to ensure your changes are correct and follow the project's
+style. Use `uv run task all`.
+- **Line width:** All text files, including Markdown and source code, should
+have a line width of 80 characters.
+- **Permission to run commands:** You have permission to run all commands in
+this file to verify their functionality.
 - **Incremental changes:** Make small, incremental changes. This makes it easier
-  to review your work and catch errors early.
+to review your work and catch errors early.
 - **Communicate clearly:** When you propose changes, explain what you've done
-  and why.
+and why.
 
 ## Notification Instructions
 
@@ -29,8 +29,8 @@ Coding Agent" "Please clarify how to complete the testing task."`.
 - Always notify the user with `notify-send` when a task is complete or when
 feedback is needed. I have standing permission to use the notification tool.
 - You should also use the following command to notify the user when you are
-finished with a task or need further help:
-`timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
+finished with a task or need further help: `timeout 2 zellij pipe --
+"zjstatus::notify::󰵰 Agent finished. This is really fun. "`
 - Note that this command will only display in the current Zellij session. Please
 also note that you need to add a space at the end of the notification.
 - You should use both notification methods as appropriate, making sure that the
@@ -80,33 +80,13 @@ imports into the middle of a file or even at the start of a function or class.
 
 ## Project Structure Requirements
 
-- Source code in `src/pytest_brightest/` directory.
+- Source code in `gatorgrade/` directory.
 - Tests in `tests/` directory with matching structure to source.
 - Use `uv` for dependency management, virtual environments, and task running.
-- Support Python 3.11, 3.12, and 3.13 on MacOS, Linux, and Windows.
+- Support Python 3.12, 3.12, 3.13, and 3.14 on MacOS, Linux, and Windows.
 - Use Pydantic models for data validation and JSON serialization.
 
-## Project Behavior Requirements
-
-- The `pytest-brightest` plugin works in the follow general way when it
-  comes to revising the execution of a Pytest test suite:
-  - Step 1: If the plugin is enabled, but there is no data,
-    then run the test suite as normal.
-  - Step 2: If the plugin is enabled and there is data, then run the
-    test suite based on the data from the prior run of the plugin.
-  - Step 3: Use the data collected by pytest-json-report to compute
-    the values for the cost and failure data for each test case and
-    for the test modules.
-  - Step 4: While keeping all prior data that was recorded by the tool,
-    the plugin will then update the data with the new cost and failure
-    data for each test case and for the test modules.
-  - Step 5: The plugin will then write the updated data to the
-    `pytest-brightest.json` file in the configured directory.
-- Critically, the `pytest-brightest` plugin should not, for instance,
-  delete data from a prior run unless the tool is beyond the maximum
-  amount of test runs that it is configured to persist.
-
-## Test Requirements
+## Testing Requirements
 
 All test cases should follow these standards:
 
