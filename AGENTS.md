@@ -129,8 +129,7 @@ All test cases should follow these standards:
 3. **Implement:** Make small, incremental changes.
 4. **Verify:** Run `uv run task all` to ensure your changes are correct and
    follow the project's style.
-5. **Commit:** Write a clear and concise commit message explaining the "why" of
-   your changes.
+5. **Commit:** The software developer will always commit the changes.
 6. **Rules**: Always follow the rules in this file and in the `docs/plan.md`
    file.
 7. **Completion**: When you are finished with tasks, please summarize what tasks
