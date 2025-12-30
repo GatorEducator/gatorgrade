@@ -146,7 +146,7 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     capsys.readouterr()
 
 
-def test_md_report_file_created_correctly():
+def test_md_report_file_created_correctly(capsys):
     """Test that with the cli input '--report file md insights.md' the file is created correctly."""
     # given the following checks
     checks = [
@@ -210,19 +210,17 @@ def test_md_report_file_created_correctly():
     # run them with the wanted report config
     report = ("file", "md", "insights.md")
     output.run_checks(checks, report)
+    capsys.readouterr()
     # check to make sure the created file matches the expected output
     expected_file_contents = """# Gatorgrade Insights\n\n**Project Name:** gatorgrade\n**Amount Correct:** 1/3 (33%)\n\n## Passing Checks"""
-
     file = open("insights.md", "r")
     file_contents = file.read()
     file.close()
-
     os.remove("insights.md")
-
     assert expected_file_contents in file_contents
 
 
-def test_print_error_with_invalid_report_path():
+def test_print_error_with_invalid_report_path(capsys):
     """Test the terminal should provide a decent error message if target path of report doesn't exist"""
     checks = [
         ShellCheck(
@@ -281,9 +279,10 @@ def test_print_error_with_invalid_report_path():
     report = ("file", "md", "invalid_path/insight.md")
     with pytest.raises(ValueError):
         output.run_checks(checks, report)
+    capsys.readouterr()
 
 
-def test_throw_errors_if_report_type_not_md_nor_json():
+def test_throw_errors_if_report_type_not_md_nor_json(capsys):
     """Test the value error should be thrown if no md nor json is inputted."""
     checks = [
         ShellCheck(
@@ -342,6 +341,7 @@ def test_throw_errors_if_report_type_not_md_nor_json():
     report = ("file", "not_md_nor_json", "invalid_path")
     with pytest.raises(ValueError):
         output.run_checks(checks, report)
+    capsys.readouterr()
 
 
 def test_write_md_and_json_correctly(tmp_path):
