@@ -1,12 +1,12 @@
 # This GitHub Actions workflow contains four jobs:
 # -- First, Lint Code uses the latest Ubuntu image and Python 3.10 to check
-# the code for defects, using the Poetry lint task.
+# the code for defects, using the uv lint task.
 # -- Second, Lint Markdown uses the latest Ubuntu image and markdownlint to
 # check markdown files for defects.
 # -- Third, Check Spelling uses the latest Ubuntu image and cspell to check for spelling
 # defects in the markdown.
 # -- Fourth, Test uses a strategy matrix to test the code with different operating
-# systems and Python versions and determine code coverage, using the Poetry test task.
+# systems and Python versions and determine code coverage, using the uv test task.
 
 name: Lint and Test
 
@@ -24,20 +24,14 @@ jobs:
         id: setup-python
         with:
           python-version: 3.12
-      - name: Install Poetry
-        uses: Gr1N/setup-poetry@v8
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.0
-      - name: Setup Poetry
-        run: |
-          poetry --version
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-          poetry env info
+          enable-cache: true
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
+        run: uv sync --dev
       - name: Lint code
-        run: poetry run task lint
+        run: uv run task lint
   markdown:
     name: Lint Markdown
     runs-on: ubuntu-latest
@@ -84,19 +78,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install Poetry
-        uses: Gr1N/setup-poetry@v8
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.0
-      - name: Setup Poetry
-        run: |
-          poetry --version
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-          poetry env info
+          enable-cache: true
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
+        run: uv sync --dev
       - name: Execute tests
         if: matrix.os != 'windows-latest'
-        run: poetry run task test
-
+        run: uv run task test
