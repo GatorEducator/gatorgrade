@@ -1,40 +1,72 @@
-[tool.poetry]
+[project]
 name = "gatorgrade"
 version = "0.8.2"
 description = "GatorGrade executes GatorGrader checks!"
-authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Pallas-Athena Cain", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Gregory M. Kapfhammer", "Peyton Kelly", "Luke Lacaria", "Douglas Luman", "Lauren Nevill", "Rebekah Rudd", "Titus Smith", "Molly Suppo", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
+authors = [
+    { name = "Michael Abraham" },
+    { name = "Jacob Allebach" },
+    { name = "Liam Black" },
+    { name = "Katherine Burgess" },
+    { name = "Pallas-Athena Cain" },
+    { name = "Yanqiao Chen" },
+    { name = "Ochirsaikhan Davaajambal" },
+    { name = "Tuguldurnemekh Gantulga" },
+    { name = "Anthony Grant-Cook" },
+    { name = "Dylan Holland" },
+    { name = "Gregory M. Kapfhammer" },
+    { name = "Peyton Kelly" },
+    { name = "Luke Lacaria" },
+    { name = "Douglas Luman" },
+    { name = "Lauren Nevill" },
+    { name = "Rebekah Rudd" },
+    { name = "Titus Smith" },
+    { name = "Molly Suppo" },
+    { name = "Jack Turner" },
+    { name = "Daniel Ullrich" },
+    { name = "Garrison Vanzin" },
+    { name = "Rian Watson" },
+]
+requires-python = ">=3.10,<4.0"
 readme = "README.md"
+dependencies = [
+    "PyYAML>=6.0,<7",
+    "typer>=0.20.0,<0.21",
+    "rich>=13.8.1,<14",
+    "gatorgrader>=1.1.2,<2",
+    "click>=8.3.0,<9",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-PyYAML = "^6.0"
-typer = "^0.20.0"
-rich = "^13.8.1"
-gatorgrader = "^1.1.2"
-click = "^8.3.0"
+[project.scripts]
+gatorgrade = "gatorgrade.main:app"
 
-[tool.poetry.group.dev.dependencies]
-taskipy = "^1.10.1"
-pytest = "^7.1.1"
-pytest-cov = "^3.0.0"
-pylint = "^2.13.4"
-black = "^22.3.0"
-pydocstyle = "^6.1.1"
-mkdocs = "^1.3.0"
-mkdocstrings = {extras = ["python"], version = "^0.18.1"}
-mkdocs-gen-files = "^0.3.4"
-mkdocs-typer = "^0.0.2"
-mkdocs-literate-nav = "^0.4.1"
-toml = "^0.10.2"
-pytest-sugar = "^0.9.5"
-pytest-randomly = "^3.12.0"
-pytest-clarity = "^1.0.1"
-isort = "^5.10.1"
-mkdocs-material = "^8.4.2"
-symbex = "^1.4"
-mypy = "^1.11.2"
-types-pyyaml = "^6.0.12.20240917"
-ruff = "^0.9.3"
+[dependency-groups]
+dev = [
+    "taskipy>=1.10.1,<2",
+    "pytest>=7.1.1,<8",
+    "pytest-cov>=3.0.0,<4",
+    "pylint>=2.13.4,<3",
+    "black>=22.3.0,<23",
+    "pydocstyle>=6.1.1,<7",
+    "mkdocs>=1.3.0,<2",
+    "mkdocstrings[python]>=0.18.1,<0.19",
+    "mkdocs-gen-files>=0.3.4,<0.4",
+    "mkdocs-typer>=0.0.2,<0.0.3",
+    "mkdocs-literate-nav>=0.4.1,<0.5",
+    "toml>=0.10.2,<0.11",
+    "pytest-sugar>=0.9.5,<0.10",
+    "pytest-randomly>=3.12.0,<4",
+    "pytest-clarity>=1.0.1,<2",
+    "isort>=5.10.1,<6",
+    "mkdocs-material>=8.4.2,<9",
+    "symbex>=1.4,<2",
+    "mypy>=1.11.2,<2",
+    "types-pyyaml>=6.0.12.20240917,<7",
+    "ruff>=0.9.3,<0.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.taskipy.variables]
 project = "gatorgrade"
@@ -74,10 +106,3 @@ line_length = 88
 
 [tool.mypy]
 ignore_missing_imports = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-gatorgrade = 'gatorgrade.main:app'

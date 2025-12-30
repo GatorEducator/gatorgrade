@@ -95,6 +95,7 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     # and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 2/3 (67%) of checks" in out
+    capsys.readouterr()
 
 
 def test_run_checks_all_passed_prints_correct_summary(capsys):
@@ -142,6 +143,7 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     # Then the output shows the correct fraction and percentage of passed checks
     out, _ = capsys.readouterr()
     assert "Passed 3/3 (100%) of checks" in out
+    capsys.readouterr()
 
 
 def test_md_report_file_created_correctly():
