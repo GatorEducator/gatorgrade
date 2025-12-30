@@ -58,6 +58,7 @@ dev = [
     "ruff>=0.9.3,<0.10",
     "ty>=0.0.8",
     "pyrefly>=0.46.2",
+    "cosmic-ray>=8.4.3",
 ]
 
 [build-system]
@@ -79,6 +80,10 @@ symbex-documented-command = {var = "symbex -s --undocumented -d {project} --chec
 mypy-command = {var = "mypy {project}", recursive = true}
 ty-command = {var = "ty check {project}", recursive = true}
 pyrefly-command = {var = "pyrefly check {project}", recursive = true}
+cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
+cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
+cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
+cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 
 [tool.taskipy.tasks]
 all = "task check && task test"
@@ -103,6 +108,10 @@ test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test s
 test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
 markdownlint = { cmd = "markdownlint-cli2 '**.md' '#node_modules'", help = "Run the Markdown linter" }
+cosmic-ray-init = { cmd = "{cosmic-ray-init-command}", help = "Initialize cosmic-ray mutation testing session", use_vars = true }
+cosmic-ray-baseline = { cmd = "{cosmic-ray-baseline-command}", help = "Run cosmic-ray baseline tests", use_vars = true }
+cosmic-ray-exec = { cmd = "{cosmic-ray-exec-command}", help = "Execute cosmic-ray mutation testing", use_vars = true }
+cosmic-ray-report = { cmd = "{cosmic-ray-report-command}", help = "Generate cosmic-ray mutation testing report (JSON)", use_vars = true }
 
 [tool.isort]
 include_trailing_comma = true
