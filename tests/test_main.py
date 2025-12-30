@@ -1,10 +1,4 @@
-"""Tests for the main file of the project.
-
-In the tests below, print statements that print Typer's captured stdout will
-only display output when tests fail. These print statements are required
-because disabling output capture through pytest does not disable Typer's output
-capturing.
-"""
+"""Tests for the main file of the project."""
 
 import builtins
 import io
