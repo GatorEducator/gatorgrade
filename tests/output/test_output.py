@@ -358,6 +358,8 @@ def test_create_report_json_with_passing_checks(patch_datetime_now):
     """Test that create_report_json correctly formats passing checks."""
     from gatorgrade.output.check_result import CheckResult
 
+    _ = patch_datetime_now
+
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
@@ -376,6 +378,8 @@ def test_create_report_json_with_passing_checks(patch_datetime_now):
 def test_create_report_json_with_failing_checks(patch_datetime_now):
     """Test that create_report_json correctly formats failing checks with diagnostics."""
     from gatorgrade.output.check_result import CheckResult
+
+    _ = patch_datetime_now
 
     check_result = CheckResult(
         passed=False,
