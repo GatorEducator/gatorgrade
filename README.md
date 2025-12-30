@@ -86,7 +86,7 @@ output, the name of the `check`, and any `options` specific to the GatorGrader c
 ```
 
 To configure GatorGrader checks to run in the global context, specify the
-GatorGrader checks at the top level of the `gatorgrade.yml` file (i.e. not
+GatorGrader checks at the top level of the `gatorgrade.yml` file (i.e., not
 nested within any path).
 
 ```yml
@@ -95,18 +95,6 @@ nested within any path).
   options:
     count: 8
 ```
-
-### Using GatorGrade to Generate A Boilerplate `gatorgrade.yml` File
-
-For convenience, instructors can use GatorGrade to generate a boilerplate
-`gatorgrade.yml` file that contains files or folders given to the GatorGrade command.
-
-To generate a `gatorgrade.yml` file, run `gatorgrade generate <TARGET_PATH_LIST>`,
-where `<TARGET_PATH_LIST>` is a list of relative paths to files or folders you
-want to include in the `gatorgrade.yml` file. These paths must correspond to
-existing files or folders in the current directory. Any given folders will be
-expanded to the files they contain. Please note that files and folders that
-start with `__` or `.` and empty folders will be automatically ignored.
 
 ## Development Commands
 
@@ -208,160 +196,11 @@ Run all linting and testing commands:
 uv run task all
 ```
 
-### Mutation Testing Commands
+### Mutation Testing
 
-#### Initial Setup and Full Run
-
-Initialize cosmic-ray mutation testing session:
-
-```bash
-uv run task cosmic-ray-init
-```
-
-Run baseline tests to verify tests pass without mutations:
-
-```bash
-uv run task cosmic-ray-baseline
-```
-
-Execute mutation testing on entire codebase:
-
-```bash
-uv run task cosmic-ray-exec
-```
-
-#### Viewing Results
-
-Generate formatted report of all mutation testing results:
-
-```bash
-uv run cr-report cosmic-ray.sqlite
-```
-
-Count killed vs survived mutants (summary):
-
-```bash
-uv run cr-report cosmic-ray.sqlite | grep -c "KILLED"
-uv run cr-report cosmic-ray.sqlite | grep -c "SURVIVED"
-```
-
-Show only survived mutants with file and line information:
-
-```bash
-uv run cr-report cosmic-ray.sqlite | grep -B2 "SURVIVED"
-```
-
-Query survived mutants from database (detailed):
-
-```bash
-sqlite3 cosmic-ray.sqlite "SELECT m.job_id, m.module_path, m.operator_name,
-m.occurrence, m.start_pos_row FROM mutation_specs m JOIN work_results r ON
-m.job_id = r.job_id WHERE r.test_outcome = 'SURVIVED';"
-```
-
-Use helper script to list survivors in readable format:
-
-```bash
-scripts/list_survivors.sh 10
-```
-
-Show diff for a specific mutant (replace JOB_ID with actual ID):
-
-```bash
-scripts/show_mutant_diff.sh <job_id>
-```
-
-#### Understanding Mutation Output
-
-When querying the database, each line contains:
-
-```
-job_id|module_path|operator_name|occurrence|start_pos_row
-```
-
-For example:
-```
-33a053b45f654126811817a256780083|gatorgrade/output/output.py|core/AddNot|13|194
-```
-
-This means:
-- **job_id**: `33a053b45f654126811817a256780083` (unique identifier)
-- **module_path**: `gatorgrade/output/output.py` (file that was mutated)
-- **operator_name**: `core/AddNot` (type of mutation - adds `not` operator)
-- **occurrence**: `13` (13th occurrence of this operator type in the file)
-- **start_pos_row**: `194` (line number where mutation occurs)
-
-To see the actual code change (diff) for any mutant:
-
-```bash
-sqlite3 cosmic-ray.sqlite "SELECT diff FROM work_results WHERE job_id = '<job_id>';"
-```
-
-#### Incremental Workflow for Killing Survived Mutants
-
-This workflow allows you to focus on one surviving mutant at a time, test it
-immediately, and write tests to kill it without rerunning the full mutation
-suite.
-
-Step 1: List surviving mutants:
-
-```bash
-scripts/list_survivors.sh 10
-```
-
-Step 2: View the diff for a specific mutant (copy job_id from step 1):
-
-```bash
-scripts/show_mutant_diff.sh <job_id>
-```
-
-Step 3: Test the specific mutant to verify it survives:
-
-```bash
-scripts/test_mutant.sh <job_id>
-```
-
-This will show you the diff and run tests with the mutation applied.
-
-Step 4: Analyze the code and write or enhance tests to cover the mutated code
-path.
-
-Step 5: Test the mutant again to see if your new tests kill it:
-
-```bash
-scripts/test_mutant.sh <job_id>
-```
-
-If it now shows "KILLED", your tests are working!
-
-Step 6: Run all tests to ensure nothing broke:
-
-```bash
-uv run task test
-```
-
-Step 7 (Optional): Periodically rerun the full mutation suite to update
-statistics:
-
-```bash
-rm cosmic-ray.sqlite
-uv run task cosmic-ray-init
-uv run task cosmic-ray-exec
-```
-
-**Note**: The helper scripts (`test_mutant.sh`, `show_mutant_diff.sh`,
-`list_survivors.sh`) are available in the `scripts/` directory and work by
-querying the cosmic-ray.sqlite database and using the `cosmic-ray apply`
-command to apply individual mutations. They automatically change to the project
-root directory when executed.
-
-#### Tips for Writing Tests to Kill Mutants
-
-- Focus on edge cases and boundary conditions
-- Add assertions for intermediate values, not just final results
-- Test error conditions and exception handling
-- Verify state changes and side effects
-- Use parametrized tests to cover multiple scenarios
+For comprehensive information about mutation testing with GatorGrade, including
+manual workflows, helper scripts, and specifications for automated mutation
+testing agents, please see [MUTATION.md](MUTATION.md).
 
 ## Contributing to GatorGrade
 
