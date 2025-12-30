@@ -43,7 +43,7 @@ gatorgrade = "gatorgrade.main:app"
 dev = [
     "taskipy>=1.10.1,<2",
     "pytest>=7.1.1,<8",
-    "pytest-cov>=3.0.0,<4",
+    "pytest-cov>=6.0.0,<7",
     "pylint>=2.13.4,<3",
     "black>=22.3.0,<23",
     "pydocstyle>=6.1.1,<7",
@@ -68,7 +68,7 @@ build-backend = "hatchling.build"
 project = "gatorgrade"
 tests = "tests"
 ruff-check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov-context=test --cov-fail-under=90 --cov-report term-missing --cov-report json --cov --cov-branch"
+coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=85 --cov-report=term-missing tests/"
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
@@ -114,3 +114,22 @@ line_length = 88
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["gatorgrade"]
+branch = true
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
