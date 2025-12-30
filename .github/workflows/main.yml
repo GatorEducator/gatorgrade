@@ -1,29 +1,38 @@
-# This GitHub Actions workflow contains four jobs:
-# -- First, Lint Code uses the latest Ubuntu image and Python 3.10 to check
-# the code for defects, using the uv lint task.
-# -- Second, Lint Markdown uses the latest Ubuntu image and markdownlint to
+# This GitHub Actions workflow contains six jobs:
+# -- First, Lint Code runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
+# check the code for formatting and linting defects using the uv lint task.
+# -- Second, Type Check runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
+# check for type errors using the uv typecheck task (mypy, ty, pyrefly,
+# symbex).
+# -- Third, Test uses a strategy matrix to test the code with different
+# operating systems (Ubuntu, macOS, Windows) and Python versions (3.12, 3.13,
+# 3.14), using the uv test task.
+# -- Fourth, Test Coverage runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
+# check that test coverage meets the minimum threshold of 85%.
+# -- Fifth, Lint Markdown uses the latest Ubuntu image and markdownlint to
 # check markdown files for defects.
-# -- Third, Check Spelling uses the latest Ubuntu image and cspell to check for spelling
-# defects in the markdown.
-# -- Fourth, Test uses a strategy matrix to test the code with different operating
-# systems and Python versions and determine code coverage, using the uv test task.
+# -- Sixth, Check Spelling uses the latest Ubuntu image and cspell to check
+# for spelling defects in the markdown.
 
 name: Lint and Test
 
 on: [push, pull_request]
 
 jobs:
-  code:
-    name: Lint Code
+  lint:
+    name: Lint Code (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Setup Python 3.12
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
-        id: setup-python
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -32,42 +41,51 @@ jobs:
         run: uv sync --dev
       - name: Lint code
         run: uv run task lint
-  markdown:
-    name: Lint Markdown
+
+  typecheck:
+    name: Type Check (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          fetch-depth: 0
-      - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v4
-  spelling:
-      name: Check Spelling
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v2
-          with:
-            fetch-depth: 0
-        - name: Run cspell
-          uses: zwaldowski/cspell-action@v1
-          with:
-            paths: "**/*.md"
-            config: .github/cspell.json
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Type check code
+        run: uv run task typecheck
+
   test:
-    name: Test
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.12", "3.10"]
+        python-version: ["3.12", "3.13", "3.14"]
         include:
           - os: macos-latest
-            python-version: "3.10"
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
           - os: windows-latest
-            python-version: "3.11"
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.14"
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
@@ -85,5 +103,52 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev
       - name: Execute tests
-        if: matrix.os != 'windows-latest'
         run: uv run task test
+
+  coverage:
+    name: Test Coverage (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Run tests with coverage
+        run: uv run task test-coverage
+
+  markdown:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v4
+
+  spelling:
+    name: Check Spelling
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Run cspell
+        uses: zwaldowski/cspell-action@v1
+        with:
+          paths: "**/*.md"
+          config: .github/cspell.json
