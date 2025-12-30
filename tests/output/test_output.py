@@ -628,3 +628,91 @@ def test_run_checks_with_report_file_json(tmp_path, capsys):
         data = json.load(f)
     assert data["amount_correct"] == 1
     assert data["percentage_score"] == 100
+
+
+def test_run_gg_check_extracts_correct_file_path():
+    """Test that _run_gg_check correctly extracts file path from GatorGrader arguments."""
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Test check with file path",
+            "MatchFileFragment",
+            "--fragment",
+            "print(",
+            "--count",
+            "1",
+            "--directory",
+            "tests/test_assignment/src",
+            "--file",
+            "hello-world.py",
+        ],
+        json_info={"check": "test"},
+    )
+    result = output._run_gg_check(check)
+    assert result.path == "tests/test_assignment/src/hello-world.py"
+
+
+def test_run_gg_check_path_extraction_with_different_order():
+    """Test that _run_gg_check extracts path correctly with directory flag earlier."""
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Check imports exist",
+            "MatchFileFragment",
+            "--directory",
+            "gatorgrade/input",
+            "--file",
+            "checks.py",
+            "--fragment",
+            "import",
+            "--count",
+            "2",
+        ],
+        json_info={"check": "test"},
+    )
+    result = output._run_gg_check(check)
+    assert result.path == "gatorgrade/input/checks.py"
+
+
+def test_create_markdown_report_file_includes_file_option_only_when_present():
+    """Test that file option appears only for checks that have it, not for others."""
+    json_data = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [
+            {
+                "status": False,
+                "description": "Check with file",
+                "options": {
+                    "directory": "src",
+                    "file": "main.py",
+                },
+            },
+            {
+                "status": False,
+                "description": "Check without file",
+                "options": {
+                    "directory": "tests",
+                },
+            },
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    lines = markdown.split("\n")
+    check_with_file_index = -1
+    check_without_file_index = -1
+    for idx, line in enumerate(lines):
+        if "Check with file" in line:
+            check_with_file_index = idx
+        if "Check without file" in line:
+            check_without_file_index = idx
+    assert check_with_file_index != -1
+    assert check_without_file_index != -1
+    check_with_file_section = "\n".join(
+        lines[check_with_file_index : check_with_file_index + 5]
+    )
+    check_without_file_section = "\n".join(
+        lines[check_without_file_index : check_without_file_index + 5]
+    )
+    assert "**file:** main.py" in check_with_file_section
+    assert "**file:**" not in check_without_file_section

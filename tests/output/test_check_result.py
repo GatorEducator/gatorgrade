@@ -85,3 +85,18 @@ def test_check_result_display_result_failing_without_diagnostic():
     assert "✕" in result
     assert "Test failed" in result
     assert "Error occurred" not in result
+
+
+def test_check_result_display_result_default_hides_diagnostic():
+    """Test that display_result defaults to NOT showing diagnostic when called without arguments."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test failed",
+        json_info={"check": "test"},
+        diagnostic="This should be hidden by default",
+    )
+    result = check_result.display_result()
+    assert "✕" in result
+    assert "Test failed" in result
+    assert "This should be hidden by default" not in result
+    assert "→" not in result

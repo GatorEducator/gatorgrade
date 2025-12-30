@@ -1,9 +1,12 @@
 """This module tests the deprecated generate.py functionality."""
 
+import os
+
 import pytest
 import typer
 
 from gatorgrade.generate.generate import generate_config
+from gatorgrade.generate.generate import input_correct
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
@@ -208,3 +211,45 @@ def test_generate_with_nested_directories(tmp_path, capsys):
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
     assert "level1/level2/level3/deep.py" in file_text
+
+
+def test_input_correct_adds_separator_when_run_path_missing_separator():
+    """Check that input_correct adds path separator when run_path doesn't end with it."""
+    paths = ["src", "tests"]
+    run_path = "/home/user/project"
+    result = input_correct(paths, run_path)
+    expected_sep = os.path.sep
+    assert f"/home/user/project{expected_sep}src{expected_sep}" in result
+    assert f"/home/user/project{expected_sep}tests{expected_sep}" in result
+
+
+def test_input_correct_adds_separator_to_individual_paths():
+    """Check that input_correct adds separator to each individual path that doesn't have one."""
+    paths = ["src", "tests"]
+    run_path = "/home/user/project"
+    result = input_correct(paths, run_path)
+    expected_sep = os.path.sep
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(expected_sep)
+    assert f"/home/user/project{expected_sep}src{expected_sep}" in all_keys
+    assert f"/home/user/project{expected_sep}tests{expected_sep}" in all_keys
+
+
+def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
+    """Check that generate.py preserves key insertion order not alphabetical order."""
+    root_directory = tmp_path / "Lab-07"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    test_file = src_directory / "test.py"
+    test_file.write_text("# test file")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    description_pos = file_text.find("description:")
+    check_pos = file_text.find("check:")
+    options_pos = file_text.find("options:")
+    assert description_pos != -1 and check_pos != -1 and options_pos != -1
+    assert description_pos < check_pos < options_pos
