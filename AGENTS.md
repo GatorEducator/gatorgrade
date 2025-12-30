@@ -43,7 +43,9 @@ Zellij command is always prefaced with a timeout of 2 seconds.
 - **Run all linters:** `uv run task lint`
 - **Format code:** `uv run task format` (check), `uv run task format-fix` (fix)
 - **Lint code:** `uv run task check`
-- **Type check:** `uv run task mypy`, `uv run task ty`, `uv run task symbex`
+- **Type check:** `uv run task typecheck` (runs mypy, ty, pyrefly), or
+  individual checkers: `uv run task mypy`, `uv run task ty`, `uv run task
+  pyrefly`, `uv run task symbex`
 - **Test all:** `uv run task test`
 - **Test with coverage:** `uv run task test-coverage`
 - **Test variants:** `uv run task test-not-property`, `uv run task test-not-random`,
