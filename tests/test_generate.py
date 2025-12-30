@@ -120,37 +120,91 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
 ):
     """Check if generate.py throws an error and produce a failure message
     when none of user provided file paths exist in the root directory"""
-
     # Given an assignment directory
     root_directory = tmp_path / "Lab-01"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     input_directory = src_directory / "input"
     input_directory.mkdir()
     input_file = input_directory / "input.txt"
     input_file.write_text("Test input")
-
     main_py = src_directory / "main.py"
     main_py.write_text("import sys")
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 01")
-
     # When we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
-
     with pytest.raises(typer.Exit) as exc_info:
         generate_config(["tests", "README.md"], str(root_directory))
-
     _, err = capsys.readouterr()
-
     # Then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
     file = root_directory / "gatorgrade.yml"
     assert not file.is_file()
     assert "'gatorgrade.yml' is NOT generated" in err
     assert exc_info.value.exit_code == 1
+
+
+def test_generate_ignores_hidden_files(tmp_path, capsys):
+    """Check if generate.py ignores hidden files and directories."""
+    root_directory = tmp_path / "Lab-04"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    normal_file = src_directory / "main.py"
+    normal_file.write_text("import sys")
+    hidden_file = src_directory / ".hidden.py"
+    hidden_file.write_text("# hidden")
+    hidden_directory = root_directory / ".git"
+    hidden_directory.mkdir()
+    hidden_subfile = hidden_directory / "config"
+    hidden_subfile.write_text("git config")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "src/main.py" in file_text
+    assert ".hidden.py" not in file_text
+    assert ".git" not in file_text
+
+
+def test_generate_ignores_double_underscore_files(tmp_path, capsys):
+    """Check if generate.py ignores files starting with double underscore."""
+    root_directory = tmp_path / "Lab-05"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    normal_file = src_directory / "main.py"
+    normal_file.write_text("import sys")
+    dunder_file = src_directory / "__pycache__"
+    dunder_file.mkdir()
+    cached_file = dunder_file / "main.cpython-39.pyc"
+    cached_file.write_text("cached")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "src/main.py" in file_text
+    assert "__pycache__" not in file_text
+    assert ".pyc" not in file_text
+
+
+def test_generate_with_nested_directories(tmp_path, capsys):
+    """Check if generate.py handles deeply nested directory structures."""
+    root_directory = tmp_path / "Lab-06"
+    root_directory.mkdir()
+    level1 = root_directory / "level1"
+    level1.mkdir()
+    level2 = level1 / "level2"
+    level2.mkdir()
+    level3 = level2 / "level3"
+    level3.mkdir()
+    deep_file = level3 / "deep.py"
+    deep_file.write_text("# deep file")
+    generate_config(["level1"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "level1/level2/level3/deep.py" in file_text
