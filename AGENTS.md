@@ -33,7 +33,8 @@ finished with a task or need further help:
 `timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
 - Note that this command will only display in the current Zellij session. Please
 also note that you need to add a space at the end of the notification.
-- You 
+- You should use both notification methods as appropriate, making sure that the
+Zellij command is always prefaced with a timeout of 2 seconds.
 
 ## Build, Lint, and Test Commands
 
