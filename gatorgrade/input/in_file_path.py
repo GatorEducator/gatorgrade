@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 import yaml
 
@@ -45,7 +45,9 @@ def reformat_yaml_data(data: List[Any]) -> List[CheckData]:
     return reformatted_data
 
 
-def add_checks_to_list(path, data_list, reformatted_data):
+def add_checks_to_list(
+    path: Optional[str], data_list: List[Any], reformatted_data: List[CheckData]
+) -> None:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
     current_path = path  # Saves the current path to keep track of the location
     for ddict in data_list:
