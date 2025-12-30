@@ -1,4 +1,4 @@
-"""This module tests the generate.py functionality"""
+"""This module tests the deprecated generate.py functionality."""
 
 import pytest
 import typer
