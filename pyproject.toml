@@ -68,7 +68,7 @@ build-backend = "hatchling.build"
 project = "gatorgrade"
 tests = "tests"
 ruff-check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=85 --cov-report=term-missing tests/"
+coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=95 --cov-report=term-missing tests/"
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
@@ -121,7 +121,7 @@ branch = true
 omit = ["tests/*", "**/__init__.py"]
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 95
 show_missing = true
 precision = 2
 exclude_lines = [
