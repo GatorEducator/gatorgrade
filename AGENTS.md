@@ -91,16 +91,17 @@ imports into the middle of a file or even at the start of a function or class.
 All test cases should follow these standards:
 
 - Since a test case is a Python function, it should always follow the code
-  requirements above.
+requirements above.
 - Test cases should have a descriptive name that starts with `test_`.
 - Test cases should be grouped by the function they are testing.
 - Test cases should be ordered in a way that makes sense to the reader.
 - Test cases should be independent of each other so that they can be run in a
-  random order without affecting the results or each other.
+random order without affecting the results or each other.
 - Test cases must work both on a local machine and in a CI environment.
 - Test cases should aim to achieve full function, statement, and branch
-  coverage.
-- Property-based tests must be marked with `@pytest.mark.property`.
+coverage.
+- Property-based tests, such as those that use the `hypothesis` package, must be
+marked with `@pytest.mark.property`.
 - Test cases should not produce any console output.
 
 ## Making Changes
