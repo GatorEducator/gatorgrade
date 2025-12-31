@@ -1,16 +1,174 @@
-# GatorGrade: A Python Tool to Implement GatorGrader
+# GatorGrade: Automated Assignment Assessment Tool
 
-GatorGrade is a Python tool that executes GatorGrader, an automatic grading tool
-that can be used to check assignments through user-created checks. GatorGrade is
-the newer Python-based version of
-[GatorGradle](https://github.com/GatorEducator/gatorgradle/blob/master/README.md).
+GatorGrade is a Python tool that automates the assessment of student
+assignments by running configurable checks. It supports both GatorGrader
+checks (an automatic grading tool) and custom shell commands. GatorGrade
+produces rich output showing pass/fail status and can generate reports in
+JSON or Markdown format, including integration with GitHub Actions. This
+tool is the newer Python-based version of
+[GatorGradle](https://github.com/GatorEducator/gatorgradle/blob/master/
+README.md).
 
 ## Installing GatorGrade
 
-GatorGrade requires Python 3.7 or later. To install GatorGrade, we recommend
-using the [`pipx`](https://pypa.github.io/pipx/) Python application installer.
-Once you have `pipx` installed, you can install GatorGrade by running
-`pipx install gatorgrade`.
+GatorGrade requires Python 3.10 or later. You can install GatorGrade using
+any of the following methods:
+
+### Using uvx (Recommended for One-Time Use)
+
+To run GatorGrade without installing it globally, use `uvx`:
+
+```bash
+uvx gatorgrade
+```
+
+This will download and run the latest version of GatorGrade from PyPI.
+
+### Using pipx
+
+Alternatively, you can use `pipx` to install GatorGrade globally:
+
+```bash
+pipx install gatorgrade
+```
+
+### Installing from Source for Development
+
+To install GatorGrade from source in editable mode:
+
+```bash
+uv pip install -e .
+```
+
+This links the `gatorgrade` command to your local source code, allowing
+you to test changes immediately.
+
+### Installing from Source with uv sync
+
+If the repository contains a `uv.lock` file, you can install all
+dependencies and the package:
+
+```bash
+uv sync
+```
+
+Then activate the virtual environment to use `gatorgrade`.
+
+## Using GatorGrade
+
+To use GatorGrade to run checks for an assignment, the assignment must
+contain a `gatorgrade.yml` file that defines the checks to run. For more
+information on configuring this file, see the [Configuring
+Checks](#configuring-checks) section below.
+
+To run GatorGrade checks, execute the `gatorgrade` command within the
+assignment directory:
+
+```bash
+gatorgrade
+```
+
+This will display the passing (✓) or failing (✕) status of each check
+along with the overall percentage of passing checks.
+
+### Command-Line Options
+
+- `--config`, `-c`: Specify a custom configuration file (default:
+  `gatorgrade.yml`)
+- `--report`, `-r`: Generate a report in the format `destination:format:name`
+  (e.g., `file:json:report.json` or `env:md:GITHUB_STEP_SUMMARY`)
+- `--status-bar`, `--no-status-bar`: Enable or disable the progress bar
+
+### Example Output
+
+```console
+Running set up commands...
+Finished!
+
+✔  Complete all TODOs
+✔  Call the say_hello function
+✘  Write at least 25 words in writing/reflection.md
+
+-~-  FAILURES  -~-
+
+✘  Write at least 25 words in writing/reflection.md
+   → Found 3 word(s) in total of file reflection.md
+
+         ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         ┃ Passed 5/7 (71%) of checks for assignment-name!       ┃
+         ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
+
+## Configuring Checks
+
+Checks are defined in a `gatorgrade.yml` file. Each check can be either a
+GatorGrader check or a shell command check. Checks can run within a file
+context (specific file) or in the global context (entire assignment).
+
+### GatorGrader Checks
+
+GatorGrader checks verify specific aspects of student work:
+
+```yml
+- description: Complete all TODOs
+  check: MatchFileFragment
+  options:
+    fragment: TODO
+    count: 0
+```
+
+### Shell Command Checks
+
+Shell command checks run arbitrary shell commands:
+
+```yml
+- description: Run pylint
+  command: pylint src/*.py --disable=all --enable=E
+```
+
+### File Context Checks
+
+Checks can target specific files by nesting them under a file path:
+
+```yml
+- src:
+    - hello_world.py:
+        - description: Complete all TODOs
+          check: MatchFileFragment
+          options:
+            fragment: TODO
+            count: 0
+```
+
+### Setup Commands
+
+You can include setup commands that run before checks:
+
+```yml
+setup: |
+  pip install -r requirements.txt
+  echo "Setup complete"
+
+- description: Run tests
+  command: pytest
+```
+
+### Report Configuration
+
+Generate reports in JSON or Markdown format:
+
+```bash
+# Save JSON report to a file
+gatorgrade --report "file:json:report.json"
+
+# Save Markdown report to a file
+gatorgrade --report "file:md:report.md"
+
+# Output to GitHub Actions job summary
+gatorgrade --report "env:md:GITHUB_STEP_SUMMARY"
+```
+
+This generates checks that verify TODO comments in the specified files.
 
 ## Using GatorGrade
 
@@ -20,20 +178,12 @@ Instructors, for more information on configuring the `gatorgrade.yml` file, see
 the [Configuring GatorGrader Checks](#configuring-gatorgrader-checks) section
 below.
 
-To use GatorGrade to run GatorGrader checks, run the `gatorgrade` command within
-the assignment. This command will produce output that shows the passing
-(:heavy_check_mark:) or failing status (:x:) of each GatorGrader check as well
-as the overall percentage of passing checks. The following is the output of
-running GatorGrade on the [GatorGrade Hello
+The following is the output of running GatorGrade on the [GatorGrade Hello
 World](https://github.com/GatorEducator/gatorgrade-hello-world/tree/main)
 assignment.
 
 ```console
 Running set up commands...
-Installing dependencies from lock file
-
-No dependencies to install or update
-Setup complete!
 Finished!
 
 ✔  Complete all TODOs
@@ -51,24 +201,21 @@ Finished!
 ✘  Write at least 25 words in writing/reflection.md
    → Found 3 word(s) in total of file reflection.md
 
-        ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-        ┃ Passed 5/7 (71%) of checks for gatorgrade-hello-world! ┃
-        ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+         ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+         ┃ Passed 5/7 (71%) of checks for gatorgrade-hello-world! ┃
+         ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-## Configuring GatorGrader Checks
+## Configuring Checks
 
-Instructors can configure GatorGrader checks for an assignment by creating a
-`gatorgrade.yml` file. In this file, you can configure GatorGrader checks to run
-within a file context (i.e., for a specific file; `MatchFileFragment` is an
-example of a GatorGrader check that should be run within a file context) _or_ in
-the global context (i.e., for the assignment in general; `CountCommits` is an
-example of a GatorGrader check that should be run in the global context).
+Instructors can configure checks for an assignment by creating a
+`gatorgrade.yml` file. The file supports two types of checks:
+GatorGrader checks (e.g., `MatchFileFragment`, `CountCommits`) and shell
+command checks.
 
-To configure GatorGrader checks to run within a file context, specify the path
-to the file as a key (or nested keys) before specifying the GatorGrader checks.
-For each GatorGrader check, define a `description` to print in the
-output, the name of the `check`, and any `options` specific to the GatorGrader check.
+To configure checks that run within a file context (i.e., for a specific
+file), specify the path to the file as a key (or nested keys) before
+specifying the checks:
 
 ```yml
 - src:
@@ -85,15 +232,23 @@ output, the name of the `check`, and any `options` specific to the GatorGrader c
             count: 1
 ```
 
-To configure GatorGrader checks to run in the global context, specify the
-GatorGrader checks at the top level of the `gatorgrade.yml` file (i.e., not
-nested within any path).
+To configure checks that run in the global context (i.e., for the
+assignment in general), specify the checks at the top level of the
+`gatorgrade.yml` file:
 
 ```yml
 - description: Have a total of 8 commits, 5 of which were created by you
   check: CountCommits
   options:
     count: 8
+```
+
+To configure a shell command check, use the `command` key instead of
+`check`:
+
+```yml
+- description: Run pylint
+  command: pylint src/*.py --disable=all --enable=E
 ```
 
 ## Development Commands
