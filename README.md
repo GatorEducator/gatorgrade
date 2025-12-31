@@ -60,9 +60,9 @@ Finished!
 
 Instructors can configure GatorGrader checks for an assignment by creating a
 `gatorgrade.yml` file. In this file, you can configure GatorGrader checks to run
-within a file context (i.e. for a specific file; `MatchFileFragment` is an
+within a file context (i.e., for a specific file; `MatchFileFragment` is an
 example of a GatorGrader check that should be run within a file context) _or_ in
-the global context (i.e. for the assignment in general; `CountCommits` is an
+the global context (i.e., for the assignment in general; `CountCommits` is an
 example of a GatorGrader check that should be run in the global context).
 
 To configure GatorGrader checks to run within a file context, specify the path
