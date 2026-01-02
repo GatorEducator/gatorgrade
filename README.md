@@ -6,8 +6,7 @@ checks (an automatic grading tool) and custom shell commands. GatorGrade
 produces rich output showing pass/fail status and can generate reports in
 JSON or Markdown format, including integration with GitHub Actions. This
 tool is the newer Python-based version of
-[GatorGradle](https://github.com/GatorEducator/gatorgradle/blob/master/
-README.md).
+[GatorGradle](https://github.com/GatorEducator/gatorgradle).
 
 ## Installing GatorGrade
 
