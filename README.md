@@ -1,11 +1,11 @@
 # GatorGrade: Automated Assignment Assessment Tool
 
-GatorGrade is a Python tool that automates the assessment of student
-assignments by running configurable checks. It supports both GatorGrader
-checks (an automatic grading tool) and custom shell commands. GatorGrade
-produces rich output showing pass/fail status and can generate reports in
-JSON or Markdown format, including integration with GitHub Actions. This
-tool is the newer Python-based version of
+GatorGrade is a Python tool that automates the assessment of student assignments
+by running configurable checks. It supports both
+[GatorGrader](https://github.com/GatorEducator/gatorgrader) checks and custom
+shell commands. GatorGrade produces rich output showing pass/fail status and can
+generate reports in JSON or Markdown format, including integration with GitHub
+Actions. This tool is the newer Python-based version of
 [GatorGradle](https://github.com/GatorEducator/gatorgradle).
 
 ## Installing GatorGrade
