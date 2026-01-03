@@ -13,7 +13,7 @@ tool is the newer Python-based version of
 GatorGrade requires Python 3.10 or later. You can install GatorGrade using
 any of the following methods:
 
-### Using uvx (Recommended for One-Time Use)
+### Using uvx
 
 To run GatorGrade without installing it globally, use `uvx`:
 
@@ -30,6 +30,8 @@ Alternatively, you can use `pipx` to install GatorGrade globally:
 ```bash
 pipx install gatorgrade
 ```
+
+This will then allow you to run the `gatorgrade` command from anywhere.
 
 ### Installing from Source for Development
 
