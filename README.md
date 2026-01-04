@@ -345,9 +345,9 @@ uv run task all
 
 ### Mutation Testing
 
-For comprehensive information about mutation testing with GatorGrade, including
+For preliminary information about mutation testing with GatorGrade, including
 manual workflows, helper scripts, and specifications for automated mutation
-testing agents, please see [MUTATION.md](MUTATION.md).
+testing agents, please see the [MUTATION.md](scripts/MUTATION.md) file.
 
 ## Contributing to GatorGrade
 
