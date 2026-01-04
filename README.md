@@ -55,7 +55,7 @@ uv sync
 
 Then activate the virtual environment to use `gatorgrade`.
 
-## Using GatorGrade
+## Introduction to Using GatorGrade
 
 To use GatorGrade to run checks for an assignment, the assignment must
 contain a `gatorgrade.yml` file that defines the checks to run. For more
@@ -100,7 +100,7 @@ Finished!
          ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-## Configuring Checks
+## Introduction to Configuring Checks
 
 Checks are defined in a `gatorgrade.yml` file. Each check can be either a
 GatorGrader check or a shell command check. Checks can run within a file
@@ -164,7 +164,7 @@ illustrates a command to output a Markdown report to GitHub Actions job summary:
 gatorgrade --report env md GITHUB_STEP_SUMMARY
 ```
 
-## Using GatorGrade
+## Details for Using GatorGrade
 
 To use GatorGrade to run GatorGrader checks for an assignment, the assignment
 must contain a `gatorgrade.yml` file that defines the GatorGrader checks.
@@ -198,7 +198,7 @@ Finished!
          ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-## Configuring Checks
+## Details About Configuring Checks
 
 Instructors can configure checks for an assignment by creating a
 `gatorgrade.yml` file. The file supports two types of checks:
