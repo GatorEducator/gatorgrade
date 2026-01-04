@@ -156,20 +156,13 @@ setup: |
 
 ### Report Configuration
 
-Generate reports in JSON or Markdown format:
+Generate reports in JSON or Markdown format. Here is one example that
+illustrates a command to output a Markdown report to GitHub Actions job summary:
 
 ```bash
-# Save JSON report to a file
-gatorgrade --report "file:json:report.json"
-
-# Save Markdown report to a file
-gatorgrade --report "file:md:report.md"
-
 # Output to GitHub Actions job summary
-gatorgrade --report "env:md:GITHUB_STEP_SUMMARY"
+gatorgrade --report env md GITHUB_STEP_SUMMARY
 ```
-
-This generates checks that verify TODO comments in the specified files.
 
 ## Using GatorGrade
 
