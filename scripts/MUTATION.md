@@ -16,8 +16,6 @@ GitHub repository for GatorGrade, which is where this document is located.
   - [Incremental Workflow](#incremental-workflow)
   - [Tips for Writing Tests](#tips-for-writing-tests)
 - [Helper Scripts Reference](#helper-scripts-reference)
-- [Automated Mutation Testing with
-  Kensa](#automated-mutation-testing-with-kensa)
 
 ---
 
@@ -280,4 +278,3 @@ scripts/test_mutant.sh <job_id>
 - [Mutation Testing Wikipedia](https://en.wikipedia.org/wiki/Mutation_testing)
 - [Equivalent Mutant Problem on
   Wikipedia](https://en.wikipedia.org/wiki/Mutation_testing#Equivalent_mutants)
-- [Kensa Implementation Plan](KENSA_PLAN.md)
