@@ -170,10 +170,8 @@ To use GatorGrade to run GatorGrader checks for an assignment, the assignment
 must contain a `gatorgrade.yml` file that defines the GatorGrader checks.
 Instructors, for more information on configuring the `gatorgrade.yml` file, see
 the [Configuring GatorGrader Checks](#configuring-gatorgrader-checks) section
-below.
-
-The following is the output of running GatorGrade on the [GatorGrade Hello
-World](https://github.com/GatorEducator/gatorgrade-hello-world/tree/main)
+below. The following is the output of running GatorGrade on the [GatorGrade
+Hello World](https://github.com/GatorEducator/gatorgrade-hello-world/tree/main)
 assignment.
 
 ```console
