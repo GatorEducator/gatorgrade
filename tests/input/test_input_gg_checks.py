@@ -14,7 +14,7 @@ def test_parse_config_gg_check_in_file_context_contains_file():
     # When parse_config is run
     output = parse_config(config)
     # Then the file path should be in the GatorGrader arguments
-    assert "file.py" in output[0].gg_args
+    assert "file.py" in output[0].gg_args  # type: ignore
 
 
 def test_parse_config_check_gg_matchfilefragment():
@@ -24,7 +24,7 @@ def test_parse_config_check_gg_matchfilefragment():
     # When parse_config is run
     output = parse_config(config)
     # Then the description, check name, and options appear in the GatorGrader arguments
-    assert output[0].gg_args == [
+    assert output[0].gg_args == [  # type: ignore
         "--description",
         "Complete all TODOs",
         "MatchFileFragment",
@@ -49,7 +49,7 @@ def test_parse_config_gg_check_no_file_context_contains_no_file():
     # When parse_config is run
     output = parse_config(config)
     # Then the GatorGrader arguments do not contain a file path
-    assert output[0].gg_args == [
+    assert output[0].gg_args == [  # type: ignore
         "--description",
         "Have 8 commits",
         "CountCommits",
@@ -76,7 +76,7 @@ def test_parse_config_yml_file_runs_setup_shell_checks():
     # When parse_config run
     output = parse_config(config)
     # Then the output should contain the GatorGrader check
-    assert output[0].gg_args == [
+    assert output[0].gg_args == [  # type: ignore
         "--description",
         "Have 8 commits",
         "CountCommits",
@@ -92,4 +92,4 @@ def test_parse_config_shell_check_contains_command():
     # When the parse_config is run
     output = parse_config(config)
     # Then the command should be stored in the shell check
-    assert output[0].command == "mdl ."
+    assert output[0].command == "mdl ."  # type: ignore

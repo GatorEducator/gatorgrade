@@ -1,68 +1,117 @@
-[tool.poetry]
+[project]
 name = "gatorgrade"
 version = "0.8.2"
 description = "GatorGrade executes GatorGrader checks!"
-authors = ["Michael Abraham", "Jacob Allebach", "Liam Black", "Katherine Burgess", "Pallas-Athena Cain", "Yanqiao Chen", "Ochirsaikhan Davaajambal", "Tuguldurnemekh Gantulga", "Anthony Grant-Cook", "Dylan Holland", "Gregory M. Kapfhammer", "Peyton Kelly", "Luke Lacaria", "Douglas Luman", "Lauren Nevill", "Rebekah Rudd", "Titus Smith", "Molly Suppo", "Jack Turner", "Daniel Ullrich", "Garrison Vanzin", "Rian Watson"]
+authors = [
+    { name = "Michael Abraham" },
+    { name = "Jacob Allebach" },
+    { name = "Liam Black" },
+    { name = "Katherine Burgess" },
+    { name = "Pallas-Athena Cain" },
+    { name = "Yanqiao Chen" },
+    { name = "Ochirsaikhan Davaajambal" },
+    { name = "Tuguldurnemekh Gantulga" },
+    { name = "Anthony Grant-Cook" },
+    { name = "Dylan Holland" },
+    { name = "Gregory M. Kapfhammer" },
+    { name = "Peyton Kelly" },
+    { name = "Luke Lacaria" },
+    { name = "Douglas Luman" },
+    { name = "Lauren Nevill" },
+    { name = "Rebekah Rudd" },
+    { name = "Titus Smith" },
+    { name = "Molly Suppo" },
+    { name = "Jack Turner" },
+    { name = "Daniel Ullrich" },
+    { name = "Garrison Vanzin" },
+    { name = "Rian Watson" },
+]
+requires-python = ">=3.10,<4.0"
 readme = "README.md"
+dependencies = [
+    "PyYAML>=6.0,<7",
+    "typer>=0.20.0,<0.21",
+    "rich>=13.8.1,<14",
+    "gatorgrader>=1.1.2,<2",
+    "click>=8.3.0,<9",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-PyYAML = "^6.0"
-typer = "^0.20.0"
-rich = "^13.8.1"
-gatorgrader = "^1.1.2"
-click = "^8.3.0"
+[project.scripts]
+gatorgrade = "gatorgrade.main:app"
 
-[tool.poetry.group.dev.dependencies]
-taskipy = "^1.10.1"
-pytest = "^7.1.1"
-pytest-cov = "^3.0.0"
-pylint = "^2.13.4"
-black = "^22.3.0"
-pydocstyle = "^6.1.1"
-mkdocs = "^1.3.0"
-mkdocstrings = {extras = ["python"], version = "^0.18.1"}
-mkdocs-gen-files = "^0.3.4"
-mkdocs-typer = "^0.0.2"
-mkdocs-literate-nav = "^0.4.1"
-toml = "^0.10.2"
-pytest-sugar = "^0.9.5"
-pytest-randomly = "^3.12.0"
-pytest-clarity = "^1.0.1"
-isort = "^5.10.1"
-mkdocs-material = "^8.4.2"
-symbex = "^1.4"
-mypy = "^1.11.2"
-types-pyyaml = "^6.0.12.20240917"
-ruff = "^0.9.3"
+[dependency-groups]
+dev = [
+    "taskipy>=1.10.1,<2",
+    "pytest>=7.1.1,<8",
+    "pytest-cov>=6.0.0,<7",
+    "pylint>=2.13.4,<3",
+    "black>=22.3.0,<23",
+    "pydocstyle>=6.1.1,<7",
+    "toml>=0.10.2,<0.11",
+    "pytest-sugar>=0.9.5,<0.10",
+    "pytest-randomly>=3.12.0,<4",
+    "pytest-clarity>=1.0.1,<2",
+    "isort>=5.10.1,<6",
+    "symbex>=1.4,<2",
+    "mypy>=1.11.2,<2",
+    "types-pyyaml>=6.0.12.20240917,<7",
+    "ruff>=0.9.3,<0.10",
+    "ty>=0.0.8",
+    "pyrefly>=0.46.2",
+    "cosmic-ray>=8.4.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.taskipy.variables]
 project = "gatorgrade"
 tests = "tests"
-check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov-context=test --cov-fail-under=90 --cov-report term-missing --cov-report json --cov --cov-branch"
+ruff-check-command = { var = "ruff check {project} {tests}", recursive = true }
+coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=95 --cov-report=term-missing tests/"
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
-fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
-format-command = { var = "ruff format --check {project} {tests}", recursive = true }
+ruff-fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
+ruff-format-command = { var = "ruff format --check {project} {tests}", recursive = true }
 symbex-typed-command = {var = "symbex -s --untyped -d {project} --check", recursive = true}
 symbex-documented-command = {var = "symbex -s --undocumented -d {project} --check", recursive = true}
 mypy-command = {var = "mypy {project}", recursive = true}
+ty-command = {var = "ty check {project}", recursive = true}
+pyrefly-command = {var = "pyrefly check {project}", recursive = true}
+cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
+cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
+cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
+cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 
 [tool.taskipy.tasks]
-all = "task lint && task test"
-lint = "task format && task check && task mypy"
-check = { cmd = "{check-command}", help = "Run the ruff linting checks", use_vars = true }
-format = { cmd = "{format-command}", help = "Run the ruff formatter on source code", use_vars = true }
-format-fix = { cmd = "{fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
+all = "task check && task test"
+check = "task lint && task typecheck"
+lint = "task ruff-format && task ruff-check"
+typecheck = "task mypy && task ty && task pyrefly && task symbex"
+ruff-check = { cmd = "{ruff-check-command}", help = "Run the ruff linting checks", use_vars = true }
+ruff-format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter on source code", use_vars = true }
+ruff-format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 mypy = { cmd = "{mypy-command}", help = "Run the mypy type checker for potential type errors", use_vars = true }
+ty = { cmd = "{ty-command}", help = "Run the ty type checker for potential type errors", use_vars = true }
+pyrefly = { cmd = "{pyrefly-command}", help = "Run the pyrefly type checker for potential type errors", use_vars = true }
 symbex = "task symbex-typed && task symbex-documented"
 symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully typed functions", use_vars = true }
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
+format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
+format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
+test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test suite with coverage tracking", use_vars = true }
+test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
+test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
+markdownlint = { cmd = "markdownlint-cli2 '**.md' '#node_modules'", help = "Run the Markdown linter" }
+cosmic-ray-init = { cmd = "{cosmic-ray-init-command}", help = "Initialize cosmic-ray mutation testing session", use_vars = true }
+cosmic-ray-baseline = { cmd = "{cosmic-ray-baseline-command}", help = "Run cosmic-ray baseline tests", use_vars = true }
+cosmic-ray-exec = { cmd = "{cosmic-ray-exec-command}", help = "Execute cosmic-ray mutation testing", use_vars = true }
+cosmic-ray-report = { cmd = "{cosmic-ray-report-command}", help = "Generate cosmic-ray mutation testing report (JSON)", use_vars = true }
 
 [tool.isort]
 include_trailing_comma = true
@@ -75,9 +124,21 @@ line_length = 88
 [tool.mypy]
 ignore_missing_imports = true
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.coverage.run]
+source = ["gatorgrade"]
+branch = true
+omit = ["tests/*", "**/__init__.py"]
 
-[tool.poetry.scripts]
-gatorgrade = 'gatorgrade.main:app'
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

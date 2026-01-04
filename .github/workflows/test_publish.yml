@@ -16,7 +16,7 @@ on:
 
 # Create one single job
 # that test publishes the package
-# to PyPI using Poetry
+# to PyPI using uv
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -27,30 +27,27 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '^3.11'  # Use the Python version compatible with your project
+          python-version: '^3.11'
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: |
-          poetry install
+        run: uv sync --dev
 
-      - name: Configure Poetry for TestPyPI
-        run: |
-          poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_TOKEN }}
+      - name: Build package
+        run: uv build
 
       - name: Publish package to TestPyPI
-        run: |
-          poetry publish --repository testpypi --build
+        run: uv publish --publish-url https://test.pypi.org/legacy/
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
 
       - name: Check for Successful Publication
         run: |
-          version=$(poetry version --short)
+          version=$(grep -oP 'version = "\K[^"]+' pyproject.toml)
           echo "Checking if package gatorgrade version $version is available on TestPyPI..."
+          sleep 10
           response=$(curl -s "https://test.pypi.org/pypi/gatorgrade/$version/json")
           if echo "$response" | grep -q "$version"; then
             echo "Package gatorgrade version $version is successfully published on TestPyPI."

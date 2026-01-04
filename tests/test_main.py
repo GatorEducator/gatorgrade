@@ -1,10 +1,4 @@
-"""Tests for the main file of the project.
-
-In the tests below, print statements that print Typer's captured stdout will
-only display output when tests fail. These print statements are required
-because disabling output capture through pytest does not disable Typer's output
-capturing.
-"""
+"""Tests for the main file of the project."""
 
 import builtins
 import io
@@ -58,27 +52,6 @@ def cleanup_files(monkeypatch):
         os.remove(file)
 
 
-# def test_generate_creates_valid_yml():
-#     """Ensure that the generate command creates the .yml file correctly."""
-#     result = runner.invoke(main.app, ["generate"])
-#     print(result.stdout)
-#     assert result.exit_code == 0
-
-
-# def test_generate_fails_with_existing_yml():
-#     """Ensure that a second yml file isn't generated without the force command."""
-#     result = runner.invoke(main.app, ["generate"])
-#     print(result.stdout)
-#     assert result.exit_code == 0
-
-
-# def test_generate_force_option_creates_yml():
-#     """Ensure that the force command works correctly."""
-#     result = runner.invoke(main.app, ["generate"])
-#     print(result.stdout)
-#     assert result.exit_code == 0
-
-
 @pytest.mark.parametrize(
     "assignment_path,expected_output_and_freqs",
     [
@@ -95,23 +68,71 @@ def cleanup_files(monkeypatch):
     ],
 )
 def test_full_integration_creates_valid_output(
-    assignment_path, expected_output_and_freqs, chdir
+    assignment_path, expected_output_and_freqs, chdir, capsys
 ):
     """Tests full integration pipeline to ensure input assignments give the correct output."""
     # the assignment path is:
     # tests/test_assignment
     chdir(assignment_path)
-    # print(assignment_path)
-
     # result is the following information:
     # ✓  Complete all TODOs
     # ✓  Use an if statement
     # ✓  Complete all TODOs
-
     result = runner.invoke(main.app)
-
+    capsys.readouterr()
     print(result.stdout)
-
     assert result.exit_code == 0
     for output, freq in expected_output_and_freqs:
         assert result.stdout.count(output) == freq
+
+
+def test_gatorgrade_with_nonexistent_file(chdir, capsys):
+    """Test that gatorgrade exits with error when config file doesn't exist."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "nonexistent.yml"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 1
+    assert "either does not exist or is not valid" in result.stdout
+    assert "Exiting now!" in result.stdout
+
+
+def test_gatorgrade_with_custom_config_name(chdir, capsys):
+    """Test that gatorgrade works with custom config file name."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout
+
+
+def test_gatorgrade_with_report_option(chdir, tmp_path, capsys):
+    """Test that gatorgrade works with report option."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(main.app, ["--report", "file", "json", str(report_file)])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_status_bar(chdir, capsys):
+    """Test that gatorgrade works with status bar enabled."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--status-bar"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout
+
+
+def test_gatorgrade_with_no_status_bar(chdir, capsys):
+    """Test that gatorgrade works with no status bar."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-status-bar"])
+    capsys.readouterr()
+    print(result.stdout)
+    assert result.exit_code == 0
+    assert "Passed 3/3 (100%) of checks" in result.stdout

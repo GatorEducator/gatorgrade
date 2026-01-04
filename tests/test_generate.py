@@ -1,38 +1,34 @@
-"""This module tests the generate.py functionality"""
+"""This module tests the deprecated generate.py functionality."""
+
+import os
 
 import pytest
 import typer
 
 from gatorgrade.generate.generate import generate_config
+from gatorgrade.generate.generate import input_correct
 
 
-def test_generate_should_create_gatorgrade_yml_file(tmp_path):
+def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
     """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run"""
-
     # Given a directory contains all the files and folders user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     readme_file = root_directory / "README.md"
     readme_file.write_text("# Lab 3")
-
     github_directory = root_directory / ".github"
     github_directory.mkdir()
-
     config_directory = root_directory / "config"
     config_directory.mkdir()
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 03")
-
     # When we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
-
+    capsys.readouterr()
     # Then "gatorgrade.yml" is generated in the root directory
     file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
@@ -40,48 +36,39 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path):
 
 def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(
     tmp_path,
+    capsys,
 ):
     """Check if gatorgrade.yml contains correct paths when successfully created"""
-
     # Given an assignment directory that contains all of the folders
     # and files that user inputted when calling generate.py
     root_directory = tmp_path / "Practical-01"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     main_py = src_directory / "main.py"
     main_py.write_text("import sys")
-
     test_file_1 = src_directory / "test_file_1.py"
     test_file_1.write_text("import sys")
-
     input_directory = src_directory / "input"
     input_directory.mkdir()
     input_file = input_directory / "input.txt"
     input_file.write_text("Test input")
-
     output_directory = src_directory / "output"
     output_directory.mkdir()
     output_file = output_directory / "output.txt"
     output_file.write_text("Test output")
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Practical 01")
-
     readme_file = root_directory / "README.md"
     readme_file.write_text("# Practical 01")
-
     # When we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
-
+    capsys.readouterr()
     # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
-
     assert "src/input/input.txt" in file_text
     assert "src/output/output.txt" in file_text
     assert "src/main.py" in file_text
@@ -136,37 +123,133 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
 ):
     """Check if generate.py throws an error and produce a failure message
     when none of user provided file paths exist in the root directory"""
-
     # Given an assignment directory
     root_directory = tmp_path / "Lab-01"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     input_directory = src_directory / "input"
     input_directory.mkdir()
     input_file = input_directory / "input.txt"
     input_file.write_text("Test input")
-
     main_py = src_directory / "main.py"
     main_py.write_text("import sys")
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 01")
-
     # When we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
-
     with pytest.raises(typer.Exit) as exc_info:
         generate_config(["tests", "README.md"], str(root_directory))
-
     _, err = capsys.readouterr()
-
     # Then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
     file = root_directory / "gatorgrade.yml"
     assert not file.is_file()
     assert "'gatorgrade.yml' is NOT generated" in err
     assert exc_info.value.exit_code == 1
+
+
+def test_generate_ignores_hidden_files(tmp_path, capsys):
+    """Check if generate.py ignores hidden files and directories."""
+    root_directory = tmp_path / "Lab-04"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    normal_file = src_directory / "main.py"
+    normal_file.write_text("import sys")
+    hidden_file = src_directory / ".hidden.py"
+    hidden_file.write_text("# hidden")
+    hidden_directory = root_directory / ".git"
+    hidden_directory.mkdir()
+    hidden_subfile = hidden_directory / "config"
+    hidden_subfile.write_text("git config")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "src/main.py" in file_text
+    assert ".hidden.py" not in file_text
+    assert ".git" not in file_text
+
+
+def test_generate_ignores_double_underscore_files(tmp_path, capsys):
+    """Check if generate.py ignores files starting with double underscore."""
+    root_directory = tmp_path / "Lab-05"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    normal_file = src_directory / "main.py"
+    normal_file.write_text("import sys")
+    dunder_file = src_directory / "__pycache__"
+    dunder_file.mkdir()
+    cached_file = dunder_file / "main.cpython-39.pyc"
+    cached_file.write_text("cached")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "src/main.py" in file_text
+    assert "__pycache__" not in file_text
+    assert ".pyc" not in file_text
+
+
+def test_generate_with_nested_directories(tmp_path, capsys):
+    """Check if generate.py handles deeply nested directory structures."""
+    root_directory = tmp_path / "Lab-06"
+    root_directory.mkdir()
+    level1 = root_directory / "level1"
+    level1.mkdir()
+    level2 = level1 / "level2"
+    level2.mkdir()
+    level3 = level2 / "level3"
+    level3.mkdir()
+    deep_file = level3 / "deep.py"
+    deep_file.write_text("# deep file")
+    generate_config(["level1"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    assert "level1/level2/level3/deep.py" in file_text
+
+
+def test_input_correct_adds_separator_when_run_path_missing_separator():
+    """Check that input_correct adds path separator when run_path doesn't end with it."""
+    paths = ["src", "tests"]
+    run_path = "/home/user/project"
+    result = input_correct(paths, run_path)
+    expected_sep = os.path.sep
+    assert f"/home/user/project{expected_sep}src{expected_sep}" in result
+    assert f"/home/user/project{expected_sep}tests{expected_sep}" in result
+
+
+def test_input_correct_adds_separator_to_individual_paths():
+    """Check that input_correct adds separator to each individual path that doesn't have one."""
+    paths = ["src", "tests"]
+    run_path = "/home/user/project"
+    result = input_correct(paths, run_path)
+    expected_sep = os.path.sep
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(expected_sep)
+    assert f"/home/user/project{expected_sep}src{expected_sep}" in all_keys
+    assert f"/home/user/project{expected_sep}tests{expected_sep}" in all_keys
+
+
+def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
+    """Check that generate.py preserves key insertion order not alphabetical order."""
+    root_directory = tmp_path / "Lab-07"
+    root_directory.mkdir()
+    src_directory = root_directory / "src"
+    src_directory.mkdir()
+    test_file = src_directory / "test.py"
+    test_file.write_text("# test file")
+    generate_config(["src"], str(root_directory))
+    capsys.readouterr()
+    file = root_directory / "gatorgrade.yml"
+    file_text = file.open().read()
+    description_pos = file_text.find("description:")
+    check_pos = file_text.find("check:")
+    options_pos = file_text.find("options:")
+    assert description_pos != -1 and check_pos != -1 and options_pos != -1
+    assert description_pos < check_pos < options_pos

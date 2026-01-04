@@ -133,3 +133,10 @@ gatorgrade.yml
 
 # poetry.toml files
 poetry.toml
+
+# cosmic ray files
+cosmic-ray.html
+cosmic-ray.sqlite
+
+# test files
+tests/test_assignment/json
