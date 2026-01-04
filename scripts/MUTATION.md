@@ -16,7 +16,8 @@ GitHub repository for GatorGrade, which is where this document is located.
   - [Incremental Workflow](#incremental-workflow)
   - [Tips for Writing Tests](#tips-for-writing-tests)
 - [Helper Scripts Reference](#helper-scripts-reference)
-- [Automated Mutation Testing with Kensa](#automated-mutation-testing-with-kensa)
+- [Automated Mutation Testing with
+  Kensa](#automated-mutation-testing-with-kensa)
 
 ---
 
@@ -70,28 +71,28 @@ This runs all tests against each mutant and records results in the database.
 Generate formatted report of all mutation testing results:
 
 ```bash
-uv run cr-report cosmic-ray.sqlite
+uv run task cosmic-ray-report
 ```
 
 Count killed vs survived mutants (summary):
 
 ```bash
-uv run cr-report cosmic-ray.sqlite | grep -c "KILLED"
-uv run cr-report cosmic-ray.sqlite | grep -c "SURVIVED"
+uv run task cosmic-ray-report | grep -c "KILLED"
+uv run task cosmic-ray-report | grep -c "SURVIVED"
 ```
 
 Show only survived mutants with file and line information:
 
 ```bash
-uv run cr-report cosmic-ray.sqlite | grep -B2 "SURVIVED"
+uv run task cosmic-ray-report | grep -B2 "SURVIVED"
 ```
 
 Query survived mutants from database (detailed):
 
 ```bash
 sqlite3 cosmic-ray.sqlite "SELECT m.job_id, m.module_path, m.operator_name,
-m.occurrence, m.start_pos_row FROM mutation_specs m JOIN work_results r ON
-m.job_id = r.job_id WHERE r.test_outcome = 'SURVIVED';"
+m.occurrence, m.start_pos_row FROM mutation_specs m JOIN work_results r
+ON m.job_id = r.job_id WHERE r.test_outcome = 'SURVIVED';"
 ```
 
 Use helper script to list survivors in readable format:
@@ -131,7 +132,8 @@ This means:
 To see the actual code change (diff) for any mutant:
 
 ```bash
-sqlite3 cosmic-ray.sqlite "SELECT diff FROM work_results WHERE job_id = '<job_id>';"
+sqlite3 cosmic-ray.sqlite "SELECT diff FROM work_results WHERE
+job_id = '<job_id>';"
 ```
 
 Or use the helper script:
@@ -272,9 +274,47 @@ scripts/test_mutant.sh <job_id>
 - `0`: Mutant was killed (tests failed)
 - `1`: Mutant survived (tests passed)
 
+---
+
+## Automated Mutation Testing with Kensa
+
+Kensa (検査) is an AI-powered tool that automates mutation testing workflows.
+It uses OpenCode's ACP (Agent Communication Protocol) to analyze mutation
+results, understand code changes, and generate tests to kill surviving mutants.
+
+For complete information about Kensa's architecture, implementation, and usage,
+see the [Kensa Implementation Plan](KENSA_PLAN.md).
+
+### Quick Start with Kensa
+
+```bash
+uvx kensa run \
+  --task mutation \
+  --analyze-cmd "scripts/list_survivors.sh 9999" \
+  --get-details-cmd "scripts/show_mutant_diff.sh {id}" \
+  --test-cmd "scripts/test_mutant.sh {id}" \
+  --target "kill-all" \
+  --limit 5
+```
+
+### Kensa Tasks
+
+Kensa supports multiple task types:
+
+1. **Mutation Testing**: Generate tests to kill surviving mutants
+2. **Coverage Improvement**: Generate tests to improve code coverage
+3. **Test Refactoring**: Refactor tests to improve speed/maintainability
+4. **Property-Based Testing**: Add Hypothesis property tests
+
+For detailed implementation steps and usage examples, see
+[KENSA_PLAN.md](KENSA_PLAN.md).
+
+---
+
 ## References
 
 - [Cosmic Ray Documentation](https://cosmic-ray.readthedocs.io/)
 - [Mutation Testing Wikipedia](https://en.wikipedia.org/wiki/Mutation_testing)
-- [Equivalent Mutant Problem](https://en.wikipedia.org/wiki/Mutation_testing#Equivalent_mutants)
+- [Equivalent Mutant Problem on
+  Wikipedia](https://en.wikipedia.org/wiki/Mutation_testing#Equivalent_mutants)
 - [Kensa Implementation Plan](KENSA_PLAN.md)
