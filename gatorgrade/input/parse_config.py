@@ -5,7 +5,10 @@ from pathlib import Path
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file
 from gatorgrade.input.in_file_path import reformat_yaml_data
+from gatorgrade.models import GatorCheck
 
+from pydantic import ValidationError
+import sys
 
 def parse_config(file: Path):
     """Parse the input yaml file and generate specified checks.
@@ -17,6 +20,22 @@ def parse_config(file: Path):
     """
     # parse the YAML file using parse_yaml_file provided by gatorgrade
     parsed_yaml_file = parse_yaml_file(file)
+
+    # added new validation method
+    if len(parsed_yaml_file) > 0:
+        try:
+            for entry in parsed_yaml_file:
+                if isinstance(entry, list):
+                    for check_item in entry:
+                        GatorCheck(**check_item)
+                else:
+                    GatorCheck(**entry)
+        except (ValidationError, TypeError, ValueError) as e:
+            print(f"Configuration Error in: {file.name}")
+            print("The YAML data does not match the required format.")
+            print(f"Details: {e}")
+            sys.exit(1)
+
     # the parsed YAML file contains some contents in a list and thus
     # the tool should generate a GatorGrader check for each element in list
     if len(parsed_yaml_file) > 0:

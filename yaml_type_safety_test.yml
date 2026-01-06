@@ -1,0 +1,4 @@
+- description: ["This", "is", "a", "list", "not", "a", "string"]
+  check: ConfirmFileExists
+  options:
+    path: "README.md"

@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 import yaml
 
 from gatorgrade.input.set_up_shell import run_setup
+from gatorgrade.models import GatorCheck
 
 # Represent data for a check from the configuration file.
 # Every check will have data (`check`) and some may also have a `file_context`,
@@ -35,22 +36,23 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
     return []
 
 
-def reformat_yaml_data(data: List[Any]) -> List[CheckData]:
+def reformat_yaml_data(data: List[GatorCheck]) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data: List[CheckData] = []
     if len(data) == 2:
         setup_commands = data.pop(0)  # Removes the setup commands
-        run_setup(setup_commands)
-    add_checks_to_list(None, data[0], reformatted_data)
+        run_setup(setup_commands.model_dump())
+    add_checks_to_list(None, data, reformatted_data)
     return reformatted_data
 
 
 def add_checks_to_list(
-    path: Optional[str], data_list: List[Any], reformatted_data: List[CheckData]
+    path: Optional[str], data_list: List[GatorCheck], reformatted_data: List[CheckData]
 ) -> None:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
     current_path = path  # Saves the current path to keep track of the location
-    for ddict in data_list:
+    for check_item in data_list:
+        ddict = check_item.model_dump()
         for item in ddict:
             if isinstance(
                 ddict[item], list
