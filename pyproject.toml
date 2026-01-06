@@ -34,6 +34,7 @@ dependencies = [
     "rich>=13.8.1,<14",
     "gatorgrader>=1.1.2,<2",
     "click>=8.3.0,<9",
+    "pydantic>=2.12.5",
 ]
 
 [project.scripts]
