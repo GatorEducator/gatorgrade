@@ -44,7 +44,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         icon_color = "green" if self.passed else "red"
         message = f"[{icon_color}]{icon}[/]  {self.description}"
         if not self.passed and show_diagnostic:
-            message += f"\n[yellow]   → {self.diagnostic}"
+            message += f"\n[blue]   → Failing command output: [green]{self.diagnostic}"
         return message
 
     def __repr__(self):
