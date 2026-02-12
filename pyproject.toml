@@ -42,13 +42,13 @@ gatorgrade = "gatorgrade.main:app"
 [dependency-groups]
 dev = [
     "taskipy>=1.10.1,<2",
-    "pytest>=7.1.1,<8",
+    "pytest>=7.1.1,<10",
     "pytest-cov>=6.0.0,<7",
     "pylint>=2.13.4,<3",
     "black>=22.3.0,<23",
     "pydocstyle>=6.1.1,<7",
     "toml>=0.10.2,<0.11",
-    "pytest-sugar>=0.9.5,<0.10",
+    "pytest-sugar>=1.0.0,<2",
     "pytest-randomly>=3.12.0,<4",
     "pytest-clarity>=1.0.1,<2",
     "isort>=5.10.1,<6",
@@ -107,6 +107,8 @@ test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly",
 test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test suite with coverage tracking", use_vars = true }
 test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
+test-flaky = { cmd = "pytest -x -s -vv --flakefighters", help = "Run the pytest test suite with flakefighters enabled" }
+test-flaky-suppress = { cmd = "pytest -x -s -vv --flakefighters --suppress-flaky-failures-exit-code", help = "Run the pytest test suite with flakefighters suppressing flaky failure exit codes" }
 markdownlint = { cmd = "markdownlint-cli2 '**.md' '#node_modules'", help = "Run the Markdown linter" }
 cosmic-ray-init = { cmd = "{cosmic-ray-init-command}", help = "Initialize cosmic-ray mutation testing session", use_vars = true }
 cosmic-ray-baseline = { cmd = "{cosmic-ray-baseline-command}", help = "Run cosmic-ray baseline tests", use_vars = true }
