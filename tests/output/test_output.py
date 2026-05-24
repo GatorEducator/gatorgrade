@@ -574,7 +574,7 @@ def test_configure_report_env_github_env_appends_not_overwrites(tmp_path, monkey
     assert "JSON_REPORT=" in env_content
 
 
-def test_configure_report_env_missing_env_vars(monkeypatch, tmp_path):
+def test_configure_report_env_missing_env_vars(monkeypatch):
     """Test that configure_report does not crash when env vars are missing."""
     monkeypatch.delenv("GITHUB_ENV", raising=False)
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
