@@ -773,3 +773,145 @@ def test_create_markdown_report_file_includes_file_option_only_when_present():
     )
     assert "**file:** main.py" in check_with_file_section
     assert "**file:**" not in check_without_file_section
+
+
+def test_create_markdown_report_file_with_command_and_diagnostic():
+    """Test markdown report with failing check that has command and diagnostic."""
+    json_data = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [
+            {
+                "status": False,
+                "description": "Run tests",
+                "command": "pytest",
+                "diagnostic": "2 tests failed",
+            }
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "- [ ] Run tests" in markdown
+    assert "**command:** pytest" in markdown
+    assert "**diagnostic:** 2 tests failed" in markdown
+
+
+def test_create_markdown_report_file_failing_check_no_options_no_command():
+    """Test markdown report with failing check that has neither options nor command."""
+    json_data = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [
+            {
+                "status": False,
+                "description": "Some check",
+                "diagnostic": "Something went wrong",
+            }
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "- [ ] Some check" in markdown
+    assert "**diagnostic:** Something went wrong" in markdown
+    assert "**command:**" not in markdown
+
+
+def test_configure_report_env_not_github_step_summary(tmp_path, monkeypatch):
+    """Test that GITHUB_ENV is written when report_name is not GITHUB_STEP_SUMMARY."""
+    import json
+
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "json", "OTHER_VAR")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    assert "JSON_REPORT=" in env_content
+    json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
+    parsed = json.loads(json_value)
+    assert parsed["amount_correct"] == 1
+
+
+def test_run_gg_check_without_directory_flag():
+    """Test _run_gg_check returns None path when no --directory flag."""
+    from unittest.mock import patch
+
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Check without directory",
+            "MatchFileFragment",
+            "--fragment",
+            "TODO",
+            "--count",
+            "0",
+            "--exact",
+        ],
+        json_info={"check": "test"},
+    )
+    with patch("gator.grader") as mock_grader:
+        mock_grader.return_value = ("Check without directory", True, "")
+        result = output._run_gg_check(check)
+    assert result.path is None
+
+
+def test_run_checks_no_status_bar_with_gg_check_command(capsys):
+    """Test no_status_bar path with GatorGrader check that has --command."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                "Check with command in no_status_bar",
+                "MatchFileFragment",
+                "--command",
+                "echo test",
+                "--fragment",
+                "nonexistent",
+                "--count",
+                "1",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ],
+            json_info={"check": "test"},
+        )
+    ]
+    report = (None, None, None)
+    result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+    assert result is False
+    out, _ = capsys.readouterr()
+    assert "Run this command:" in out
+    assert "echo test" in out
+
+
+def test_run_checks_no_status_bar_gg_check_without_command(capsys):
+    """Test no_status_bar path with GatorGrader check without --command."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                "Complete all TODOs in hello-world.py",
+                "MatchFileFragment",
+                "--fragment",
+                "TODO",
+                "--count",
+                "0",
+                "--exact",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ],
+            json_info="test",
+        )
+    ]
+    report = (None, None, None)
+    result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+    assert result is True
+    out, _ = capsys.readouterr()
+    assert "Passed 1/1 (100%) of checks" in out
