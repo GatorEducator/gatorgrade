@@ -78,8 +78,8 @@ ruff-format-command = { var = "ruff format --check {project} {tests}", recursive
 symbex-typed-command = {var = "symbex -s --untyped -d {project} --check", recursive = true}
 symbex-documented-command = {var = "symbex -s --undocumented -d {project} --check", recursive = true}
 mypy-command = {var = "mypy {project}", recursive = true}
-ty-command = {var = "ty check {project}", recursive = true}
-pyrefly-command = {var = "pyrefly check {project}", recursive = true}
+ty-command = {var = "ty check {project} {tests}", recursive = true}
+pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
 cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
