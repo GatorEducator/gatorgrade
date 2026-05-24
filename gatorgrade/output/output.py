@@ -228,7 +228,7 @@ def configure_report(
     # if the user wants the data stored in a file
     if report_format == "file":
         if report_type == "md":
-            write_json_or_md_file(report_name, report_type, report_output_data_md)  # type: ignore
+            write_json_or_md_file(report_name, report_type, report_output_data_md)
         else:
             write_json_or_md_file(report_name, report_type, report_output_data_json)
     # the user wants the data stored in an environment variable; do not attempt
@@ -238,7 +238,7 @@ def configure_report(
             env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
             if env_file is not None:
                 if report_type == "md":
-                    write_json_or_md_file(env_file, report_type, report_output_data_md)  # type: ignore
+                    write_json_or_md_file(env_file, report_type, report_output_data_md)
                 else:
                     write_json_or_md_file(
                         env_file, report_type, report_output_data_json
@@ -264,8 +264,8 @@ def configure_report(
             # GatorGrade inside of a GitHub Actions workflow because
             # this variable called GITHUB_ENV is used to store environment
             # variables that are available to all of the subsequent steps
-            with open(os.environ["GITHUB_ENV"], "a") as env_file:  # type: ignore
-                env_file.write(f"JSON_REPORT={json_string}\n")  # type: ignore
+            with open(os.environ["GITHUB_ENV"], "a") as env_file:
+                env_file.write(f"JSON_REPORT={json_string}\n")
     else:
         raise ValueError(
             "\n[red]The first argument of report has to be 'env' or 'file' "
