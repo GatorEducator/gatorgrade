@@ -7,6 +7,7 @@ import typer
 
 from gatorgrade.generate.generate import generate_config
 from gatorgrade.generate.generate import input_correct
+from gatorgrade.generate.generate import write_yaml_of_paths_list
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
@@ -253,3 +254,48 @@ def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
     options_pos = file_text.find("options:")
     assert description_pos != -1 and check_pos != -1 and options_pos != -1
     assert description_pos < check_pos < options_pos
+
+
+def test_input_correct_with_run_path_ending_in_separator():
+    """Check that input_correct does not add duplicate separator if run_path ends with one."""
+    sep = os.path.sep
+    run_path = f"/home/user/project{sep}"
+    paths = ["src", "tests"]
+    result = input_correct(paths, run_path)
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(sep)
+        assert f"{sep}{sep}" not in key
+
+
+def test_input_correct_with_path_already_ending_in_separator():
+    """Check that input_correct does not add duplicate separator if path ends with one."""
+    sep = os.path.sep
+    run_path = "/home/user/project"
+    paths: list[str] = [f"src{sep}", f"tests{sep}"]
+    result = input_correct(paths, run_path)
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(sep)
+        assert f"{sep}{sep}" not in key
+
+
+def test_write_yaml_of_paths_list_with_path_not_ending_in_separator(tmp_path):
+    """Check that write_yaml_of_paths_list handles paths without trailing separator."""
+    path_without_sep = f"src{os.path.sep}main.py"
+    write_yaml_of_paths_list([path_without_sep], str(tmp_path))
+    yml_file = tmp_path / "gatorgrade.yml"
+    assert yml_file.is_file()
+    content = yml_file.read_text()
+    assert "src/main.py" in content
+
+
+def test_write_yaml_of_paths_list_with_path_ending_in_separator(tmp_path):
+    """Check that write_yaml_of_paths_list strips trailing separator from paths."""
+    path_with_sep = f"src{os.path.sep}main.py{os.path.sep}"
+    write_yaml_of_paths_list([path_with_sep], str(tmp_path))
+    yml_file = tmp_path / "gatorgrade.yml"
+    assert yml_file.is_file()
+    content = yml_file.read_text()
+    assert "src/main.py" in content
+    assert f"main.py{os.path.sep}" not in content
