@@ -113,3 +113,31 @@ def test_shell_check_complex_command():
     check = ShellCheck(command=command, description="Find TODOs")
     assert check.command == command
     assert check.description == "Find TODOs"
+
+
+def test_shell_check_empty_string_description_uses_empty_string():
+    """Test that ShellCheck with empty string description keeps the empty string."""
+    check = ShellCheck(
+        command="echo test",
+        description="",
+        json_info={"command": "echo test"},
+    )
+    assert check.command == "echo test"
+    assert check.description == ""
+
+
+def test_shell_check_with_dict_json_info():
+    """Test ShellCheck with dictionary json_info preserves all data."""
+    json_data = {"command": "echo test", "description": "Test", "extra": "data"}
+    check = ShellCheck(command="echo test", json_info=json_data)
+    assert check.json_info == json_data
+
+
+def test_gatorgrader_check_with_single_arg():
+    """Test GatorGraderCheck construction with a single argument."""
+    check = GatorGraderCheck(
+        gg_args=["MatchFileFragment"],
+        json_info={"check": "MatchFileFragment"},
+    )
+    assert check.gg_args == ["MatchFileFragment"]
+    assert len(check.gg_args) == 1
