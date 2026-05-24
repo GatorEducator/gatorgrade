@@ -531,6 +531,63 @@ def test_configure_report_env_github_env(tmp_path, monkeypatch):
     assert "JSON_REPORT=" in env_content
 
 
+def test_configure_report_env_github_env_writes_valid_json(tmp_path, monkeypatch):
+    """Test that GITHUB_ENV receives valid JSON after the JSON_REPORT key."""
+    import json
+
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
+    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
+    parsed = json.loads(json_value)
+    assert parsed["amount_correct"] == 1
+    assert parsed["percentage_score"] == 100
+    assert len(parsed["checks"]) == 1
+    assert parsed["checks"][0]["status"] is True
+
+
+def test_configure_report_env_github_env_appends_not_overwrites(tmp_path, monkeypatch):
+    """Test that GITHUB_ENV file content is preserved when appending."""
+    tmp_env_file = tmp_path / "github_env"
+    existing_content = "EXISTING_VAR=existing_value\n"
+    tmp_env_file.write_text(existing_content)
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
+    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    assert env_content.startswith(existing_content)
+    assert "JSON_REPORT=" in env_content
+
+
+def test_configure_report_env_missing_env_vars(monkeypatch, tmp_path):
+    """Test that configure_report does not crash when env vars are missing."""
+    monkeypatch.delenv("GITHUB_ENV", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    result = output.configure_report(report_params, report_data)
+    assert result is None
+
+
 def test_run_checks_with_no_status_bar(capsys):
     """Test run_checks with no_status_bar flag enabled."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
