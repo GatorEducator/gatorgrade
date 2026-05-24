@@ -318,7 +318,7 @@ def run_checks(
     if no_status_bar:
         for check in checks:
             result = None
-            command_ran = None
+            # command_ran = None
             # run a shell check; this means
             # that it is going to run a command
             # in the shell as a part of a check;
@@ -367,7 +367,7 @@ def run_checks(
             # run each of the checks
             for check in checks:
                 result = None
-                command_ran = None
+                # command_ran = None
                 if isinstance(check, ShellCheck):
                     result = _run_shell_check(check)
                     command_ran = check.command
