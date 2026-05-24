@@ -115,10 +115,10 @@ def create_report_json(
     # will be converted into json
     overall_key_list = ["amount_correct", "percentage_score", "report_time", "checks"]
     checks_list = []
-    overall_dict = {}
+    # overall_dict = {}
     report_generation_time = datetime.datetime.now()
     formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
-    # for each check:
+    # for each check, perform the following steps
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
