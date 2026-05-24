@@ -264,8 +264,11 @@ def configure_report(
             # GatorGrade inside of a GitHub Actions workflow because
             # this variable called GITHUB_ENV is used to store environment
             # variables that are available to all of the subsequent steps
-            with open(os.environ["GITHUB_ENV"], "a") as env_file:
-                env_file.write(f"JSON_REPORT={json_string}\n")
+            # in the GitHub Actions workflow. It is also important to note
+            # that you must use the as for th with context to avoid errors
+            # that are flagged by one or more type checkers the project uses
+            with open(os.environ["GITHUB_ENV"], "a") as env_file_handle:
+                env_file_handle.write(f"JSON_REPORT={json_string}\n")
     else:
         raise ValueError(
             "\n[red]The first argument of report has to be 'env' or 'file' "
