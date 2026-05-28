@@ -299,3 +299,19 @@ def test_write_yaml_of_paths_list_with_path_ending_in_separator(tmp_path):
     content = yml_file.read_text()
     assert "src/main.py" in content
     assert f"main.py{os.path.sep}" not in content
+
+
+def test_input_correct_with_empty_path_list(tmp_path):
+    """Check that input_correct returns empty dict for empty path list."""
+    result = input_correct([], str(tmp_path))
+    assert result == {}
+
+
+def test_input_correct_with_duplicate_paths(tmp_path):
+    """Check that input_correct removes duplicate paths."""
+    sep = os.path.sep
+    run_path = str(tmp_path)
+    result = input_correct(["src", "src"], run_path)
+    all_keys = list(result.keys())
+    assert len(all_keys) == 1
+    assert f"{run_path}{sep}src{sep}" in all_keys
