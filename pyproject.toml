@@ -81,6 +81,7 @@ symbex-documented-command = {var = "symbex -s --undocumented -d {project} --chec
 mypy-command = {var = "mypy {project}", recursive = true}
 ty-command = {var = "ty check {project} {tests}", recursive = true}
 pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
+zuban-command = {var = "zuban check {project} {tests}", recursive = true}
 cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
@@ -90,13 +91,14 @@ cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 all = "task check && task test"
 check = "task lint && task typecheck"
 lint = "task ruff-format && task ruff-check"
-typecheck = "task mypy && task ty && task pyrefly && task symbex"
+typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
 ruff-check = { cmd = "{ruff-check-command}", help = "Run the ruff linting checks", use_vars = true }
 ruff-format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter on source code", use_vars = true }
 ruff-format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 mypy = { cmd = "{mypy-command}", help = "Run the mypy type checker for potential type errors", use_vars = true }
 ty = { cmd = "{ty-command}", help = "Run the ty type checker for potential type errors", use_vars = true }
 pyrefly = { cmd = "{pyrefly-command}", help = "Run the pyrefly type checker for potential type errors", use_vars = true }
+zuban = { cmd = "{zuban-command}", help = "Run the zuban type checker for potential type errors", use_vars = true }
 symbex = "task symbex-typed && task symbex-documented"
 symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully typed functions", use_vars = true }
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
@@ -116,17 +118,6 @@ cosmic-ray-baseline = { cmd = "{cosmic-ray-baseline-command}", help = "Run cosmi
 cosmic-ray-exec = { cmd = "{cosmic-ray-exec-command}", help = "Execute cosmic-ray mutation testing", use_vars = true }
 cosmic-ray-report = { cmd = "{cosmic-ray-report-command}", help = "Generate cosmic-ray mutation testing report (JSON)", use_vars = true }
 
-[tool.isort]
-include_trailing_comma = true
-force_single_line = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
-
-[tool.mypy]
-ignore_missing_imports = true
-
 [tool.coverage.run]
 source = ["gatorgrade"]
 branch = true
@@ -145,6 +136,44 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+[tool.ruff]
+line-length = 79
+lint.ignore = [
+    "D203", # do not check blank lines
+    "D213", # do not check multi-line docstrings
+    "E501", # do not check line length
+]
+lint.select = [
+    "E",    # pycodestyle
+    "D",    # pydocstyle
+    "I",    # isort
+    "F",    # pyflakes
+    "PL",   # pylint
+    "Q",    # flake8-quotes
+    "RUF",  # ruff-specific
+    "W",    # pycodestyle warnings
+    "T201"  # flake8-print
+]
+
+[tool.isort]
+include_trailing_comma = true
+force_single_line = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# [tool.ruff.lint.isort]
+# force-single-line = true
+# force-sort-within-sections = true
 
 [tool.pyrefly]
 preset = "legacy"
