@@ -100,3 +100,54 @@ def test_check_result_display_result_default_hides_diagnostic():
     assert "Test failed" in result
     assert "This should be hidden by default" not in result
     assert "→" not in result
+
+
+def test_check_result_display_result_passing_ignores_show_diagnostic():
+    """Test that a passing check never shows diagnostic even with show_diagnostic=True."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+        diagnostic="This should not appear",
+    )
+    result = check_result.display_result(show_diagnostic=True)
+    assert "✓" in result
+    assert "Test passed" in result
+    assert "This should not appear" not in result
+    assert "→" not in result
+
+
+def test_check_result_with_empty_path():
+    """Test CheckResult with an empty string path."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+        path="",
+    )
+    assert check_result.path == ""
+
+
+def test_check_result_with_explicit_empty_diagnostic():
+    """Test CheckResult with an explicitly empty diagnostic string."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test failed",
+        json_info={"check": "test"},
+        diagnostic="",
+    )
+    result = check_result.display_result(show_diagnostic=True)
+    assert "✕" in result
+    assert "Test failed" in result
+
+
+def test_check_result_print_does_not_crash(capsys):
+    """Test that the print method executes without crashing."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+    )
+    check_result.print()
+    out, _ = capsys.readouterr()
+    assert "Test passed" in out
