@@ -1,6 +1,7 @@
 """Define check result class."""
 
-from typing import Union
+from typing import Any, Dict, Optional, Union
+
 import rich
 
 
@@ -11,18 +12,22 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self,
         passed: bool,
         description: str,
-        json_info,
-        path: Union[str, None] = None,
+        json_info: Union[Dict[str, Any], str, None],
+        path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
     ):
         """Construct a CheckResult.
 
         Args:
-            passed: The passed or failed status of the check result. If true, indicates that the
-                check has passed.
+            passed: The passed or failed status of the check result.
+                If true, indicates that the check has passed.
             description: The description to use in output.
-            json_info: the overall information to be included in json output
-            diagnostic: The message to use in output if the check has failed.
+            json_info: The overall information to be included in
+                json output.
+            path: The path associated with the check result.
+            diagnostic: The message to use in output if the check
+                has failed.
+
         """
         self.passed = passed
         self.description = description
@@ -34,11 +39,13 @@ class CheckResult:  # pylint: disable=too-few-public-methods
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
-        If no diagnostic message is available, then the output will say so.
+        If no diagnostic message is available, then the output will
+        say so.
 
         Args:
-            show_diagnostic: If true, show the diagnostic message if the check has failed.
-                Defaults to false.
+            show_diagnostic: If true, show the diagnostic message if
+                the check has failed. Defaults to false.
+
         """
         icon = "✓" if self.passed else "✕"
         icon_color = "green" if self.passed else "red"
@@ -47,17 +54,27 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             message += f"\n[yellow]   → {self.diagnostic}"
         return message
 
-    def __repr__(self):
-        return f"CheckResult(passed={self.passed}, description='{self.description}', json_info={self.json_info}, path='{self.path}', diagnostic='{self.diagnostic}', run_command='{self.run_command}')"
+    def __repr__(self) -> str:
+        """Return a string representation of the CheckResult."""
+        return (
+            f"CheckResult(passed={self.passed}, "
+            f"description='{self.description}', "
+            f"json_info={self.json_info}, "
+            f"path='{self.path}', "
+            f"diagnostic='{self.diagnostic}', "
+            f"run_command='{self.run_command}')"
+        )
 
     def __str__(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
-        If no diagnostic message is available, then the output will say so.
+        If no diagnostic message is available, then the output will
+        say so.
 
         Args:
-            show_diagnostic: If true, show the diagnostic message if the check has failed.
-                Defaults to false.
+            show_diagnostic: If true, show the diagnostic message if
+                the check has failed. Defaults to false.
+
         """
         message = self.display_result(show_diagnostic)
         return message
@@ -65,11 +82,13 @@ class CheckResult:  # pylint: disable=too-few-public-methods
     def print(self, show_diagnostic: bool = False) -> None:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
 
-        If no diagnostic message is available, then the output will say so.
+        If no diagnostic message is available, then the output will
+        say so.
 
         Args:
-            show_diagnostic: If true, show the diagnostic message if the check has failed.
-                Defaults to false.
+            show_diagnostic: If true, show the diagnostic message if
+                the check has failed. Defaults to false.
+
         """
         message = self.display_result(show_diagnostic)
         rich.print(message)
