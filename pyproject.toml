@@ -55,10 +55,11 @@ dev = [
     "symbex>=1.4,<2",
     "mypy>=1.11.2,<2",
     "types-pyyaml>=6.0.12.20240917,<7",
-    "ruff>=0.9.3,<0.10",
     "ty>=0.0.8",
-    "pyrefly>=0.46.2",
     "cosmic-ray>=8.4.3",
+    "ruff>=0.15.15",
+    "zuban>=0.7.2",
+    "pyrefly>=1.0.0",
 ]
 
 [build-system]
