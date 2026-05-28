@@ -22,7 +22,9 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
             # Trims the white space
             command = line.strip()
             # Executes the command
-            proc = subprocess.run(command, shell=True, check=False, timeout=300)
+            proc = subprocess.run(
+                command, shell=True, check=False, timeout=300
+            )
             # If the exit code tells it was unsuccessful and did not return 0
             if proc.returncode != 0:
                 typer.secho(
