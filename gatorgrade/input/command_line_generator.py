@@ -1,11 +1,9 @@
 """Generates a dictionary of shell and gator grader command options from a list of dict checks."""
 
 import os
-from typing import List
-from typing import Union
+from typing import List, Union
 
-from .checks import GatorGraderCheck
-from .checks import ShellCheck
+from .checks import GatorGraderCheck, ShellCheck
 from .in_file_path import CheckData
 
 
@@ -21,6 +19,7 @@ def generate_checks(
 
     Returns:
         A list of ShellChecks and GatorGraderChecks.
+
     """
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
@@ -62,6 +61,8 @@ def generate_checks(
                 if dirname == "":
                     dirname = "."
                 gg_args.extend(["--directory", dirname, "--file", filename])
-            checks.append(GatorGraderCheck(gg_args=gg_args, json_info=check_data.check))
+            checks.append(
+                GatorGraderCheck(gg_args=gg_args, json_info=check_data.check)
+            )
 
     return checks
