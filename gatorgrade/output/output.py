@@ -97,9 +97,9 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
 
 
 def create_report_json(
-    passed_count,
+    passed_count: int,
     checkResults: List[CheckResult],
-    percent_passed,
+    percent_passed: int,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
