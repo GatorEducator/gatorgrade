@@ -126,11 +126,14 @@ def create_report_json(
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
         results_json = checkResults[i].json_info
-        results_json["status"] = checkResults[i].passed
-        if checkResults[i].path:
-            results_json["path"] = checkResults[i].path
-        if not checkResults[i].passed:
-            results_json["diagnostic"] = checkResults[i].diagnostic
+        # confirm that the json_info field of the check result is a dictionary
+        # and then add the status, path, and diagnostic information to that dictionary
+        if isinstance(results_json, dict):
+            results_json["status"] = checkResults[i].passed
+            if checkResults[i].path:
+                results_json["path"] = checkResults[i].path
+            if not checkResults[i].passed:
+                results_json["diagnostic"] = checkResults[i].diagnostic
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -142,7 +145,7 @@ def create_report_json(
     return overall_dict
 
 
-def create_markdown_report_file(json: dict) -> str:
+def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     """Create a markdown file using the created json to use in github actions summary, among other places.
 
     Args:
@@ -210,15 +213,17 @@ def create_markdown_report_file(json: dict) -> str:
 
 def configure_report(
     report_params: Tuple[str, str, str], report_output_data_json: dict
-):
+) -> None:
     """Put together the contents of the report depending on the inputs of the user.
 
     Args:
-        report_params: The details of what the user wants the report to look like
+        report_params: The details of what the user wants the report to
+            look like.
             report_params[0]: file or env
             report_params[1]: json or md
             report_params[2]: name of the file or env
-        report_output_data: the json dictionary that will be used or converted to md
+        report_output_data_json: The json dictionary that will be used
+            or converted to md.
 
     """
     report_format = report_params[0]
@@ -308,11 +313,11 @@ def write_json_or_md_file(
         ) from e
 
 
-def run_checks(
+def run_checks(  # noqa: PLR0912, PLR0915
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
-    running_mode=False,
-    no_status_bar=False,
+    running_mode: bool = False,
+    no_status_bar: bool = False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -321,8 +326,11 @@ def run_checks(
 
     Args:
         checks: The list of shell and GatorGrader checks to run.
-        running_mode: Convert the Progress Bar to update based on checks ran/not ran.
-        no_status_bar: Option to completely disable all Progress Bar options.
+        report: The tuple specifying the report format, type, and name.
+        running_mode: Convert the Progress Bar to update based on
+            checks ran/not ran.
+        no_status_bar: Option to completely disable all Progress Bar
+            options.
 
     """
     results: List[CheckResult] = []
@@ -359,7 +367,8 @@ def run_checks(
                 # an empty string in the constructor for CheckResult
                 if "--command" in check.gg_args:
                     index_of_command = check.gg_args.index("--command")
-                    index_of_new_command = int(index_of_command) + 1
+                    # index_of_new_command = int(index_of_command) + 1
+                    index_of_new_command = index_of_command + 1
                     result.run_command = check.gg_args[index_of_new_command]
             # there were results from running checks
             # and thus they must be displayed
@@ -403,7 +412,8 @@ def run_checks(
                     # an empty string in the constructor for CheckResult
                     if "--command" in check.gg_args:
                         index_of_command = check.gg_args.index("--command")
-                        index_of_new_command = int(index_of_command) + 1
+                        # index_of_new_command = int(index_of_command) + 1
+                        index_of_new_command = index_of_command + 1
                         result.run_command = check.gg_args[
                             index_of_new_command
                         ]
@@ -422,7 +432,7 @@ def run_checks(
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
-        print("\n-~-  FAILURES  -~-\n")
+        rich.print("\n-~-  FAILURES  -~-\n")
         for result in failed_results:
             # main.console.print("This is a result")
             # main.console.print(result)
