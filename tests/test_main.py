@@ -15,7 +15,7 @@ runner = CliRunner()
 def patch_open(open_func, files):
     """Create a patch to for file opening to track and later delete opened files."""
 
-    def open_patched(
+    def open_patched(  # noqa: PLR0913
         path,
         mode="r",
         buffering=-1,
