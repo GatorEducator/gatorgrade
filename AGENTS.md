@@ -56,6 +56,8 @@ Zellij command is always prefaced with a timeout of 2 seconds.
 - **Run a single test:** `pytest tests/test_file.py::test_function` or
   `uv run pytest tests/test_file.py::test_function`
 - **Markdown lint:** `uv run task markdownlint`
+- **Comment check:** `uv run ccl check` (check), `uv run ccl fix` (auto-fix),
+  or `uv run task comments`
 
 ## Code Requirements
 
@@ -66,7 +68,9 @@ contiguous.
 - **Docstrings:** Single-line docstrings starting with a capital letter, ending
 with a period.
 - **Comments:** Other comments start with a lowercase letter; preserve existing
-comments during refactoring.
+  comments during refactoring. The only exception is when the first word of the
+  comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
+  identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
 - **Imports:** Group imports in this order: standard library, third-party, local
 imports. Use absolute imports (`from pytest_brightest.module import`). Finally,
 make sure that all imports are placed at the top of the file. Do not place
@@ -129,3 +133,14 @@ by the coding agent to add additional details about this project that would
 be helpful for the agent to know when it is run again. Every time a coding
 agent finishes a task, it should add notes here as it deems appropriate.
 The coding agent should write the notes as a Markdown list.
+
+- The `ccl` (Comment Case Linter) tool is installed as a project entry
+  point in `gatorgrade/comments_checker.py`. It uses Tree-sitter to parse
+  Python files into a CST and checks that comments start with lowercase
+  letters (with proper-noun exceptions). Run `uv run ccl check` to check
+  and `uv run ccl fix` to auto-fix. The task `uv run task comments` also
+  runs `ccl check`.
+- The `ccl` command replaced the earlier `scripts/check_comments_lowercase.py`
+  approach. The old script file has been removed.
+- `tree-sitter` and `tree-sitter-python` are now production dependencies
+  because `ccl` is an installed entry point.
