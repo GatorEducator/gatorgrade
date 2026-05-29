@@ -1,6 +1,7 @@
 """Test the deprecated generate.py functionality."""
 
 import os
+from pathlib import Path
 
 import pytest
 import typer
@@ -12,8 +13,10 @@ from gatorgrade.generate.generate import (
 )
 
 
-def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
-    """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run"""
+def test_generate_should_create_gatorgrade_yml_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run."""
     # Given a directory contains all the files and folders user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
@@ -38,10 +41,10 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
 
 
 def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(
-    tmp_path,
-    capsys,
-):
-    """Check if gatorgrade.yml contains correct paths when successfully created"""
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Check if gatorgrade.yml contains correct paths when successfully created."""
     # Given an assignment directory that contains all of the folders
     # and files that user inputted when calling generate.py
     root_directory = tmp_path / "Practical-01"
@@ -80,10 +83,12 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
 
 
 def test_generate_should_produce_warning_message_when_some_user_inputted_files_dont_exist(
-    tmp_path, capsys
-):
-    """Check if gatorgrade.yml is created with existing file paths
-    when some user-provided file paths don't exist and if generate.py outputs a warning message
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if gatorgrade.yml is created with existing file paths.
+
+    When some user-provided file paths don't exist and if generate.py
+    outputs a warning message.
     """
     # Given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"
@@ -121,10 +126,11 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
 
 
 def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
-    tmp_path, capsys
-):
-    """Check if generate.py throws an error and produce a failure message
-    when none of user provided file paths exist in the root directory
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if generate.py throws an error and produce a failure message.
+
+    When none of user provided file paths exist in the root directory.
     """
     # Given an assignment directory
     root_directory = tmp_path / "Lab-01"
@@ -153,7 +159,9 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     assert exc_info.value.exit_code == 1
 
 
-def test_generate_ignores_hidden_files(tmp_path, capsys):
+def test_generate_ignores_hidden_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py ignores hidden files and directories."""
     root_directory = tmp_path / "Lab-04"
     root_directory.mkdir()
@@ -176,7 +184,9 @@ def test_generate_ignores_hidden_files(tmp_path, capsys):
     assert ".git" not in file_text
 
 
-def test_generate_ignores_double_underscore_files(tmp_path, capsys):
+def test_generate_ignores_double_underscore_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py ignores files starting with double underscore."""
     root_directory = tmp_path / "Lab-05"
     root_directory.mkdir()
@@ -197,7 +207,9 @@ def test_generate_ignores_double_underscore_files(tmp_path, capsys):
     assert ".pyc" not in file_text
 
 
-def test_generate_with_nested_directories(tmp_path, capsys):
+def test_generate_with_nested_directories(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py handles deeply nested directory structures."""
     root_directory = tmp_path / "Lab-06"
     root_directory.mkdir()
@@ -216,7 +228,9 @@ def test_generate_with_nested_directories(tmp_path, capsys):
     assert "level1/level2/level3/deep.py" in file_text
 
 
-def test_input_correct_adds_separator_when_run_path_missing_separator():
+def test_input_correct_adds_separator_when_run_path_missing_separator() -> (
+    None
+):
     """Check that input_correct adds path separator when run_path doesn't end with it."""
     paths = ["src", "tests"]
     run_path = "/home/user/project"
@@ -226,7 +240,7 @@ def test_input_correct_adds_separator_when_run_path_missing_separator():
     assert f"/home/user/project{expected_sep}tests{expected_sep}" in result
 
 
-def test_input_correct_adds_separator_to_individual_paths():
+def test_input_correct_adds_separator_to_individual_paths() -> None:
     """Check that input_correct adds separator to each individual path that doesn't have one."""
     paths = ["src", "tests"]
     run_path = "/home/user/project"
@@ -239,7 +253,9 @@ def test_input_correct_adds_separator_to_individual_paths():
     assert f"/home/user/project{expected_sep}tests{expected_sep}" in all_keys
 
 
-def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
+def test_generate_preserves_insertion_order_in_yaml(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check that generate.py preserves key insertion order not alphabetical order."""
     root_directory = tmp_path / "Lab-07"
     root_directory.mkdir()
@@ -258,7 +274,7 @@ def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
     assert description_pos < check_pos < options_pos
 
 
-def test_input_correct_with_run_path_ending_in_separator():
+def test_input_correct_with_run_path_ending_in_separator() -> None:
     """Check that input_correct does not add duplicate separator if run_path ends with one."""
     sep = os.path.sep
     run_path = f"/home/user/project{sep}"
@@ -270,7 +286,7 @@ def test_input_correct_with_run_path_ending_in_separator():
         assert f"{sep}{sep}" not in key
 
 
-def test_input_correct_with_path_already_ending_in_separator():
+def test_input_correct_with_path_already_ending_in_separator() -> None:
     """Check that input_correct does not add duplicate separator if path ends with one."""
     sep = os.path.sep
     run_path = "/home/user/project"
@@ -282,7 +298,9 @@ def test_input_correct_with_path_already_ending_in_separator():
         assert f"{sep}{sep}" not in key
 
 
-def test_write_yaml_of_paths_list_with_path_not_ending_in_separator(tmp_path):
+def test_write_yaml_of_paths_list_with_path_not_ending_in_separator(
+    tmp_path: Path,
+) -> None:
     """Check that write_yaml_of_paths_list handles paths without trailing separator."""
     path_without_sep = f"src{os.path.sep}main.py"
     write_yaml_of_paths_list([path_without_sep], str(tmp_path))
@@ -292,7 +310,9 @@ def test_write_yaml_of_paths_list_with_path_not_ending_in_separator(tmp_path):
     assert "src/main.py" in content
 
 
-def test_write_yaml_of_paths_list_with_path_ending_in_separator(tmp_path):
+def test_write_yaml_of_paths_list_with_path_ending_in_separator(
+    tmp_path: Path,
+) -> None:
     """Check that write_yaml_of_paths_list strips trailing separator from paths."""
     path_with_sep = f"src{os.path.sep}main.py{os.path.sep}"
     write_yaml_of_paths_list([path_with_sep], str(tmp_path))
@@ -303,13 +323,13 @@ def test_write_yaml_of_paths_list_with_path_ending_in_separator(tmp_path):
     assert f"main.py{os.path.sep}" not in content
 
 
-def test_input_correct_with_empty_path_list(tmp_path):
+def test_input_correct_with_empty_path_list(tmp_path: Path) -> None:
     """Check that input_correct returns empty dict for empty path list."""
     result = input_correct([], str(tmp_path))
     assert result == {}
 
 
-def test_input_correct_with_duplicate_paths(tmp_path):
+def test_input_correct_with_duplicate_paths(tmp_path: Path) -> None:
     """Check that input_correct removes duplicate paths."""
     sep = os.path.sep
     run_path = str(tmp_path)
