@@ -19,6 +19,9 @@ this file to verify their functionality.
 to review your work and catch errors early.
 - **Communicate clearly:** When you propose changes, explain what you've done
 and why.
+- **Create and Follow a TODO List**: Always create a TODO list and then
+follow that list. Do not stop until the tools that you call make it clear
+that you have completed all the tasks in the list.
 
 ## Notification Instructions
 
