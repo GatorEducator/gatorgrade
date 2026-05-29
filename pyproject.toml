@@ -34,10 +34,13 @@ dependencies = [
     "rich>=13.8.1,<14",
     "gatorgrader>=1.1.2,<2",
     "click>=8.3.0,<9",
+    "tree-sitter>=0.25.2",
+    "tree-sitter-python>=0.25.0",
 ]
 
 [project.scripts]
 gatorgrade = "gatorgrade.main:app"
+ccl = "gatorgrade.comments_checker:app"
 
 [dependency-groups]
 dev = [
@@ -104,6 +107,7 @@ symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully ty
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
 format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
 format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
+comments = { cmd = "ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
