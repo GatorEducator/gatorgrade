@@ -7,7 +7,7 @@ from gatorgrade.generate.generate import generate_config
 
 @pytest.fixture(name="testing_dir")
 def setup_files(tmp_path):
-    """Setup directory for tests"""
+    """Perform the setup for the directory for the tests."""
     # Given this file structure
     src_dir = tmp_path / "src"
     src_dir.mkdir()
@@ -24,7 +24,7 @@ def setup_files(tmp_path):
 
 
 def test_generate_config_create_gatorgrade_yml(testing_dir, capsys):
-    """Test to see that gatorgrade_yml file exist in file structure"""
+    """Test to see that gatorgrade_yml file exist in file structure."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
     capsys.readouterr()
@@ -36,7 +36,7 @@ def test_generate_config_create_gatorgrade_yml(testing_dir, capsys):
 def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(
     testing_dir, capsys
 ):
-    """Test to see if input matches directory"""
+    """Test to see if input matches directory."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
     capsys.readouterr()
@@ -49,7 +49,7 @@ def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
     testing_dir,
     capsys,
 ):
-    """Test to see if input does not match directory"""
+    """Test to see if input does not match directory."""
     # When generate_config is called
     generate_config(["writing"], str(testing_dir))
     capsys.readouterr()
@@ -60,7 +60,7 @@ def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
 
 
 def test_generate_success_message(capsys, testing_dir):
-    """Test to see that there is a success message"""
+    """Test to see that there is a success message."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
     out, _ = capsys.readouterr()
