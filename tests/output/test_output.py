@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 from typing import Any, List, Union
+from unittest.mock import patch
 
 import pytest
 
@@ -51,8 +52,8 @@ def test_run_checks_invalid_gg_args_prints_exception(
     # Then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
-    print("** ", out, " **")
-    print()
+    print("** ", out, " **")  # noqa: T201
+    print()  # noqa: T201
     assert "Invalid GatorGrader check:" in out
 
 
@@ -236,7 +237,7 @@ def test_md_report_file_created_correctly(
 def test_print_error_with_invalid_report_path(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Test the terminal should provide a decent error message if target path of report doesn't exist"""
+    """Test that the terminal provides a decent error message if target path of report doesn't exist."""
     checks = [
         ShellCheck(
             description='Echo "Hello!"',
@@ -379,8 +380,6 @@ def test_create_report_json_with_passing_checks(
     patch_datetime_now: None,
 ) -> None:
     """Test that create_report_json correctly formats passing checks."""
-    _ = patch_datetime_now
-
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
@@ -401,8 +400,6 @@ def test_create_report_json_with_failing_checks(
     patch_datetime_now: None,
 ) -> None:
     """Test that create_report_json correctly formats failing checks with diagnostics."""
-    _ = patch_datetime_now
-
     check_result = CheckResult(
         passed=False,
         description="Test check failed",
@@ -573,8 +570,7 @@ def test_configure_report_env_github_env_writes_valid_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test that GITHUB_ENV receives valid JSON after the JSON_REPORT key."""
-    import json
-
+    expected_percentage = 100
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
@@ -582,7 +578,7 @@ def test_configure_report_env_github_env_writes_valid_json(
     report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
     report_data = {
         "amount_correct": 1,
-        "percentage_score": 100,
+        "percentage_score": expected_percentage,
         "checks": [{"status": True, "description": "Test passed"}],
     }
     output.configure_report(report_params, report_data)
@@ -590,7 +586,7 @@ def test_configure_report_env_github_env_writes_valid_json(
     json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
     parsed = json.loads(json_value)
     assert parsed["amount_correct"] == 1
-    assert parsed["percentage_score"] == 100
+    assert parsed["percentage_score"] == expected_percentage
     assert len(parsed["checks"]) == 1
     assert parsed["checks"][0]["status"] is True
 
@@ -663,7 +659,6 @@ def test_create_report_json_with_passing_check_excludes_diagnostic(
     patch_datetime_now: None,
 ) -> None:
     """Test that passing checks do not include diagnostic in JSON output."""
-    _ = patch_datetime_now
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
@@ -677,7 +672,6 @@ def test_create_report_json_with_passing_check_excludes_diagnostic(
 
 def test_create_report_json_with_path_none(patch_datetime_now: None) -> None:
     """Test that None path is excluded from JSON output."""
-    _ = patch_datetime_now
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
@@ -690,7 +684,6 @@ def test_create_report_json_with_path_none(patch_datetime_now: None) -> None:
 
 def test_create_report_json_with_empty_path(patch_datetime_now: None) -> None:
     """Test that empty string path is excluded from JSON output."""
-    _ = patch_datetime_now
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
@@ -717,14 +710,16 @@ def test_configure_report_env_json_type(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test configure_report with env format and json type."""
+    expected_amount = 2
+    expected_percentage = 100
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
     report_params = ("env", "json", "GITHUB_STEP_SUMMARY")
     report_data = {
-        "amount_correct": 2,
-        "percentage_score": 100,
+        "amount_correct": expected_amount,
+        "percentage_score": expected_percentage,
         "checks": [
             {"status": True, "description": "Check 1"},
             {"status": True, "description": "Check 2"},
@@ -735,7 +730,7 @@ def test_configure_report_env_json_type(
     assert "JSON_REPORT=" in env_content
     json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
     parsed = json.loads(json_value)
-    assert parsed["amount_correct"] == 2
+    assert parsed["amount_correct"] == expected_amount
 
 
 def test_write_json_or_md_file_creates_md_file(tmp_path: Path) -> None:
@@ -811,6 +806,7 @@ def test_run_checks_with_report_file_json(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test run_checks generates JSON report file correctly."""
+    expected_percentage = 100
     report_file = tmp_path / "report.json"
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(
@@ -823,12 +819,10 @@ def test_run_checks_with_report_file_json(
     output.run_checks(checks, report)
     capsys.readouterr()
     assert report_file.exists()
-    import json
-
     with open(report_file, "r") as f:
         data = json.load(f)
     assert data["amount_correct"] == 1
-    assert data["percentage_score"] == 100
+    assert data["percentage_score"] == expected_percentage
 
 
 def test_run_gg_check_extracts_correct_file_path() -> None:
@@ -966,8 +960,6 @@ def test_configure_report_env_not_github_step_summary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test that GITHUB_ENV is written when report_name is not GITHUB_STEP_SUMMARY."""
-    import json
-
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
@@ -988,8 +980,6 @@ def test_configure_report_env_not_github_step_summary(
 
 def test_run_gg_check_without_directory_flag() -> None:
     """Test _run_gg_check returns None path when no --directory flag."""
-    from unittest.mock import patch
-
     check = GatorGraderCheck(
         gg_args=[
             "--description",
