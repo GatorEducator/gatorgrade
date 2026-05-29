@@ -1,12 +1,17 @@
 """Test the generate_config function in a perfect situation."""
 
+from pathlib import Path
+from typing import Any, Generator
+
 import pytest
 
 from gatorgrade.generate.generate import generate_config
 
 
 @pytest.fixture(name="testing_dir")
-def setup_files(tmp_path):
+def setup_files(
+    tmp_path: Path,
+) -> Generator[Path, None, None]:
     """Perform the setup for the directory for the tests."""
     # Given this file structure
     src_dir = tmp_path / "src"
@@ -23,7 +28,9 @@ def setup_files(tmp_path):
     yield tmp_path
 
 
-def test_generate_config_create_gatorgrade_yml(testing_dir, capsys):
+def test_generate_config_create_gatorgrade_yml(
+    testing_dir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test to see that gatorgrade_yml file exist in file structure."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
@@ -34,8 +41,8 @@ def test_generate_config_create_gatorgrade_yml(testing_dir, capsys):
 
 
 def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(
-    testing_dir, capsys
-):
+    testing_dir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test to see if input matches directory."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
@@ -46,9 +53,9 @@ def test_generate_config_creates_gatorgrade_yml_with_dir_in_user_input(
 
 
 def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
-    testing_dir,
-    capsys,
-):
+    testing_dir: Any,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test to see if input does not match directory."""
     # When generate_config is called
     generate_config(["writing"], str(testing_dir))
@@ -59,7 +66,9 @@ def test_generate_config_creates_gatorgrade_yml_without_dir_not_in_user_input(
     assert "writing/reflection.md" in gatorgrade_yml.open().read()
 
 
-def test_generate_success_message(capsys, testing_dir):
+def test_generate_success_message(
+    capsys: pytest.CaptureFixture[str], testing_dir: Any
+) -> None:
     """Test to see that there is a success message."""
     # When generate_config is called
     generate_config(["src"], str(testing_dir))
