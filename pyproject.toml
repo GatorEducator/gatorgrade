@@ -39,7 +39,11 @@ dependencies = [
 ]
 
 [project.scripts]
+# main entry point for the gatorgrade tool
 gatorgrade = "gatorgrade.main:app"
+# main entry point for the ccl tool that
+# is only used internally for checking code
+# comments inside of this project for conformance
 ccl = "gatorgrade.comments_checker:app"
 
 [dependency-groups]
