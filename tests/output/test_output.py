@@ -1,30 +1,33 @@
 """Test suite for output_functions.py."""
 
 import datetime
+import json
 import os
-from typing import List
-from typing import Union
+from pathlib import Path
+from typing import Any, List, Union
 
 import pytest
 
-from gatorgrade.input.checks import GatorGraderCheck
-from gatorgrade.input.checks import ShellCheck
+from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output import output
+from gatorgrade.output.check_result import CheckResult
 
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
 
 
 @pytest.fixture
-def patch_datetime_now(monkeypatch):
+def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
     class mydatetime:
         @classmethod
-        def now(cls):
+        def now(cls) -> datetime.datetime:
             return FAKE_TIME
 
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
-def test_run_checks_invalid_gg_args_prints_exception(capsys):
+def test_run_checks_invalid_gg_args_prints_exception(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
     # Given a GatorGrader check with invalid arguments
     check = GatorGraderCheck(
@@ -51,7 +54,9 @@ def test_run_checks_invalid_gg_args_prints_exception(capsys):
     assert "Invalid GatorGrader check:" in out
 
 
-def test_run_checks_some_failed_prints_correct_summary(capsys):
+def test_run_checks_some_failed_prints_correct_summary(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that run_checks, when given some checks that should fail, prints the correct summary."""
     # Given three checks with one check that should fail
     checks = [
@@ -100,7 +105,9 @@ def test_run_checks_some_failed_prints_correct_summary(capsys):
     capsys.readouterr()
 
 
-def test_run_checks_all_passed_prints_correct_summary(capsys):
+def test_run_checks_all_passed_prints_correct_summary(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that run_checks, when given checks that should all pass, prints the correct summary."""
     # Given three checks that should all pass
     checks = [
@@ -148,7 +155,9 @@ def test_run_checks_all_passed_prints_correct_summary(capsys):
     capsys.readouterr()
 
 
-def test_md_report_file_created_correctly(capsys):
+def test_md_report_file_created_correctly(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that with the cli input '--report file md insights.md' the file is created correctly."""
     # given the following checks
     checks = [
@@ -222,13 +231,18 @@ def test_md_report_file_created_correctly(capsys):
     assert expected_file_contents in file_contents
 
 
-def test_print_error_with_invalid_report_path(capsys):
+def test_print_error_with_invalid_report_path(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test the terminal should provide a decent error message if target path of report doesn't exist"""
     checks = [
         ShellCheck(
             description='Echo "Hello!"',
             command='echo "hello"',
-            json_info={"description": "Echo 'Hello!'", "command": 'echo "hello"'},
+            json_info={
+                "description": "Echo 'Hello!'",
+                "command": 'echo "hello"',
+            },
         ),
         GatorGraderCheck(
             gg_args=[
@@ -284,13 +298,18 @@ def test_print_error_with_invalid_report_path(capsys):
     capsys.readouterr()
 
 
-def test_throw_errors_if_report_type_not_md_nor_json(capsys):
+def test_throw_errors_if_report_type_not_md_nor_json(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test the value error should be thrown if no md nor json is inputted."""
     checks = [
         ShellCheck(
             description='Echo "Hello!"',
             command='echo "hello"',
-            json_info={"description": "Echo 'Hello!'", "command": 'echo "hello"'},
+            json_info={
+                "description": "Echo 'Hello!'",
+                "command": 'echo "hello"',
+            },
         ),
         GatorGraderCheck(
             gg_args=[
@@ -346,7 +365,7 @@ def test_throw_errors_if_report_type_not_md_nor_json(capsys):
     capsys.readouterr()
 
 
-def test_write_md_and_json_correctly(tmp_path):
+def test_write_md_and_json_correctly(tmp_path: Path) -> None:
     """Test process of writing is good for both json and md."""
     tmp_md = tmp_path / "test.md"
     tmp_json = tmp_path / "test.json"
@@ -354,7 +373,9 @@ def test_write_md_and_json_correctly(tmp_path):
     assert output.write_json_or_md_file(tmp_json, "json", "hello-world")
 
 
-def test_create_report_json_with_passing_checks(patch_datetime_now):
+def test_create_report_json_with_passing_checks(
+    patch_datetime_now: None,
+) -> None:
     """Test that create_report_json correctly formats passing checks."""
     from gatorgrade.output.check_result import CheckResult
 
@@ -375,7 +396,9 @@ def test_create_report_json_with_passing_checks(patch_datetime_now):
     assert result["checks"][0]["path"] == "test/path.py"
 
 
-def test_create_report_json_with_failing_checks(patch_datetime_now):
+def test_create_report_json_with_failing_checks(
+    patch_datetime_now: None,
+) -> None:
     """Test that create_report_json correctly formats failing checks with diagnostics."""
     from gatorgrade.output.check_result import CheckResult
 
@@ -395,7 +418,7 @@ def test_create_report_json_with_failing_checks(patch_datetime_now):
     assert result["checks"][0]["diagnostic"] == "This is a diagnostic message"
 
 
-def test_create_markdown_report_file_with_all_passing():
+def test_create_markdown_report_file_with_all_passing() -> None:
     """Test markdown report creation with all passing checks."""
     json_data = {
         "amount_correct": 2,
@@ -414,7 +437,7 @@ def test_create_markdown_report_file_with_all_passing():
     assert "## Failing Checks" in markdown
 
 
-def test_create_markdown_report_file_with_failing_checks_and_options():
+def test_create_markdown_report_file_with_failing_checks_and_options() -> None:
     """Test markdown report creation with failing checks that have options."""
     json_data = {
         "amount_correct": 0,
@@ -446,13 +469,19 @@ def test_create_markdown_report_file_with_failing_checks_and_options():
     assert "**diagnostic:** Check failed" in markdown
 
 
-def test_create_markdown_report_file_with_failing_check_no_description():
+def test_create_markdown_report_file_with_failing_check_no_description() -> (
+    None
+):
     """Test markdown report creation with failing checks without description."""
     json_data = {
         "amount_correct": 0,
         "percentage_score": 0,
         "checks": [
-            {"status": False, "check": "MatchFileFragment", "command": "echo test"}
+            {
+                "status": False,
+                "check": "MatchFileFragment",
+                "command": "echo test",
+            }
         ],
     }
     markdown = output.create_markdown_report_file(json_data)
@@ -460,7 +489,9 @@ def test_create_markdown_report_file_with_failing_check_no_description():
     assert "**command:** echo test" in markdown
 
 
-def test_create_markdown_report_file_with_passing_check_no_description():
+def test_create_markdown_report_file_with_passing_check_no_description() -> (
+    None
+):
     """Test markdown report creation with passing checks without description."""
     json_data = {
         "amount_correct": 1,
@@ -471,7 +502,7 @@ def test_create_markdown_report_file_with_passing_check_no_description():
     assert "- [x] MatchFileFragment" in markdown
 
 
-def test_configure_report_with_invalid_format():
+def test_configure_report_with_invalid_format() -> None:
     """Test that configure_report raises ValueError for invalid format."""
     report_params = ("invalid", "md", "test.md")
     report_data = {
@@ -481,10 +512,14 @@ def test_configure_report_with_invalid_format():
     }
     with pytest.raises(ValueError) as exc_info:
         output.configure_report(report_params, report_data)
-    assert "first argument of report has to be 'env' or 'file'" in str(exc_info.value)
+    assert "first argument of report has to be 'env' or 'file'" in str(
+        exc_info.value
+    )
 
 
-def test_configure_report_env_github_step_summary_md(tmp_path, monkeypatch):
+def test_configure_report_env_github_step_summary_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test configure_report with GITHUB_STEP_SUMMARY environment variable for markdown."""
     tmp_file = tmp_path / "summary.md"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
@@ -500,7 +535,9 @@ def test_configure_report_env_github_step_summary_md(tmp_path, monkeypatch):
     assert "# Gatorgrade Insights" in content
 
 
-def test_configure_report_env_github_step_summary_json(tmp_path, monkeypatch):
+def test_configure_report_env_github_step_summary_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test configure_report with GITHUB_STEP_SUMMARY environment variable for json."""
     tmp_file = tmp_path / "summary.json"
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
@@ -514,7 +551,9 @@ def test_configure_report_env_github_step_summary_json(tmp_path, monkeypatch):
     assert tmp_file.exists()
 
 
-def test_configure_report_env_github_env(tmp_path, monkeypatch):
+def test_configure_report_env_github_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test configure_report with GITHUB_ENV environment variable."""
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
@@ -531,7 +570,9 @@ def test_configure_report_env_github_env(tmp_path, monkeypatch):
     assert "JSON_REPORT=" in env_content
 
 
-def test_configure_report_env_github_env_writes_valid_json(tmp_path, monkeypatch):
+def test_configure_report_env_github_env_writes_valid_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test that GITHUB_ENV receives valid JSON after the JSON_REPORT key."""
     import json
 
@@ -555,7 +596,9 @@ def test_configure_report_env_github_env_writes_valid_json(tmp_path, monkeypatch
     assert parsed["checks"][0]["status"] is True
 
 
-def test_configure_report_env_github_env_appends_not_overwrites(tmp_path, monkeypatch):
+def test_configure_report_env_github_env_appends_not_overwrites(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test that GITHUB_ENV file content is preserved when appending."""
     tmp_env_file = tmp_path / "github_env"
     existing_content = "EXISTING_VAR=existing_value\n"
@@ -574,7 +617,9 @@ def test_configure_report_env_github_env_appends_not_overwrites(tmp_path, monkey
     assert "JSON_REPORT=" in env_content
 
 
-def test_configure_report_env_missing_env_vars(monkeypatch):
+def test_configure_report_env_missing_env_vars(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test that configure_report does not crash when env vars are missing."""
     monkeypatch.delenv("GITHUB_ENV", raising=False)
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
@@ -584,11 +629,12 @@ def test_configure_report_env_missing_env_vars(monkeypatch):
         "percentage_score": 100,
         "checks": [{"status": True, "description": "Test passed"}],
     }
-    result = output.configure_report(report_params, report_data)
-    assert result is None
+    output.configure_report(report_params, report_data)
 
 
-def test_run_checks_with_no_status_bar(capsys):
+def test_run_checks_with_no_status_bar(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test run_checks with no_status_bar flag enabled."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
@@ -600,7 +646,9 @@ def test_run_checks_with_no_status_bar(capsys):
     assert "Passed 1/1 (100%) of checks" in out
 
 
-def test_run_checks_with_running_mode(capsys):
+def test_run_checks_with_running_mode(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test run_checks with running_mode flag enabled."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
@@ -612,7 +660,98 @@ def test_run_checks_with_running_mode(capsys):
     assert "Passed 1/1 (100%) of checks" in out
 
 
-def test_run_checks_with_shell_check_command_display(capsys):
+def test_create_report_json_with_passing_check_excludes_diagnostic(
+    patch_datetime_now: None,
+) -> None:
+    """Test that passing checks do not include diagnostic in JSON output."""
+    _ = patch_datetime_now
+    check_result = CheckResult(
+        passed=True,
+        description="Test check passed",
+        json_info={"check": "test", "description": "Test check passed"},
+        diagnostic="This should not appear",
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert result["checks"][0]["status"] is True
+    assert "diagnostic" not in result["checks"][0]
+
+
+def test_create_report_json_with_path_none(patch_datetime_now: None) -> None:
+    """Test that None path is excluded from JSON output."""
+    _ = patch_datetime_now
+    check_result = CheckResult(
+        passed=True,
+        description="Test check passed",
+        json_info={"check": "test"},
+        path=None,
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert "path" not in result["checks"][0]
+
+
+def test_create_report_json_with_empty_path(patch_datetime_now: None) -> None:
+    """Test that empty string path is excluded from JSON output."""
+    _ = patch_datetime_now
+    check_result = CheckResult(
+        passed=True,
+        description="Test check passed",
+        json_info={"check": "test"},
+        path="",
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert "path" not in result["checks"][0]
+
+
+def test_create_markdown_report_file_with_zero_checks() -> None:
+    """Test markdown report creation with zero checks."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "# Gatorgrade Insights" in markdown
+    assert "0/0 (0%)" in markdown
+
+
+def test_configure_report_env_json_type(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report with env format and json type."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
+    report_params = ("env", "json", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 2,
+        "percentage_score": 100,
+        "checks": [
+            {"status": True, "description": "Check 1"},
+            {"status": True, "description": "Check 2"},
+        ],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    assert "JSON_REPORT=" in env_content
+    json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
+    parsed = json.loads(json_value)
+    assert parsed["amount_correct"] == 2
+
+
+def test_write_json_or_md_file_creates_md_file(tmp_path: Path) -> None:
+    """Test that write_json_or_md_file creates a markdown file."""
+    tmp_md = tmp_path / "output.md"
+    content = "# Test Report\n\nSome content here."
+    result = output.write_json_or_md_file(tmp_md, "md", content)
+    assert result is True
+    assert tmp_md.exists()
+    assert content in tmp_md.read_text()
+
+
+def test_run_checks_with_shell_check_command_display(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that failed shell check displays the command to run."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(description="Failing shell check", command="false"),
@@ -625,7 +764,9 @@ def test_run_checks_with_shell_check_command_display(capsys):
     assert "false" in out
 
 
-def test_run_checks_with_gg_check_command_display(capsys):
+def test_run_checks_with_gg_check_command_display(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that failed GatorGrader check with command displays the command to run."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         GatorGraderCheck(
@@ -655,7 +796,9 @@ def test_run_checks_with_gg_check_command_display(capsys):
     assert "echo test" in out
 
 
-def test_run_checks_zero_checks_no_division_error(capsys):
+def test_run_checks_zero_checks_no_division_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test run_checks with zero checks doesn't cause division by zero."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     report = (None, None, None)
@@ -665,7 +808,9 @@ def test_run_checks_zero_checks_no_division_error(capsys):
     assert "Passed 0/0 (0%) of checks" in out
 
 
-def test_run_checks_with_report_file_json(tmp_path, capsys):
+def test_run_checks_with_report_file_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test run_checks generates JSON report file correctly."""
     report_file = tmp_path / "report.json"
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
@@ -687,7 +832,7 @@ def test_run_checks_with_report_file_json(tmp_path, capsys):
     assert data["percentage_score"] == 100
 
 
-def test_run_gg_check_extracts_correct_file_path():
+def test_run_gg_check_extracts_correct_file_path() -> None:
     """Test that _run_gg_check correctly extracts file path from GatorGrader arguments."""
     check = GatorGraderCheck(
         gg_args=[
@@ -709,7 +854,7 @@ def test_run_gg_check_extracts_correct_file_path():
     assert result.path == "tests/test_assignment/src/hello-world.py"
 
 
-def test_run_gg_check_path_extraction_with_different_order():
+def test_run_gg_check_path_extraction_with_different_order() -> None:
     """Test that _run_gg_check extracts path correctly with directory flag earlier."""
     check = GatorGraderCheck(
         gg_args=[
@@ -731,7 +876,9 @@ def test_run_gg_check_path_extraction_with_different_order():
     assert result.path == "gatorgrade/input/checks.py"
 
 
-def test_create_markdown_report_file_includes_file_option_only_when_present():
+def test_create_markdown_report_file_includes_file_option_only_when_present() -> (
+    None
+):
     """Test that file option appears only for checks that have it, not for others."""
     json_data = {
         "amount_correct": 0,
@@ -775,7 +922,7 @@ def test_create_markdown_report_file_includes_file_option_only_when_present():
     assert "**file:**" not in check_without_file_section
 
 
-def test_create_markdown_report_file_with_command_and_diagnostic():
+def test_create_markdown_report_file_with_command_and_diagnostic() -> None:
     """Test markdown report with failing check that has command and diagnostic."""
     json_data = {
         "amount_correct": 0,
@@ -795,7 +942,9 @@ def test_create_markdown_report_file_with_command_and_diagnostic():
     assert "**diagnostic:** 2 tests failed" in markdown
 
 
-def test_create_markdown_report_file_failing_check_no_options_no_command():
+def test_create_markdown_report_file_failing_check_no_options_no_command() -> (
+    None
+):
     """Test markdown report with failing check that has neither options nor command."""
     json_data = {
         "amount_correct": 0,
@@ -814,7 +963,9 @@ def test_create_markdown_report_file_failing_check_no_options_no_command():
     assert "**command:**" not in markdown
 
 
-def test_configure_report_env_not_github_step_summary(tmp_path, monkeypatch):
+def test_configure_report_env_not_github_step_summary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test that GITHUB_ENV is written when report_name is not GITHUB_STEP_SUMMARY."""
     import json
 
@@ -836,7 +987,7 @@ def test_configure_report_env_not_github_step_summary(tmp_path, monkeypatch):
     assert parsed["amount_correct"] == 1
 
 
-def test_run_gg_check_without_directory_flag():
+def test_run_gg_check_without_directory_flag() -> None:
     """Test _run_gg_check returns None path when no --directory flag."""
     from unittest.mock import patch
 
@@ -859,7 +1010,9 @@ def test_run_gg_check_without_directory_flag():
     assert result.path is None
 
 
-def test_run_checks_no_status_bar_with_gg_check_command(capsys):
+def test_run_checks_no_status_bar_with_gg_check_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test no_status_bar path with GatorGrader check that has --command."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         GatorGraderCheck(
@@ -889,7 +1042,9 @@ def test_run_checks_no_status_bar_with_gg_check_command(capsys):
     assert "echo test" in out
 
 
-def test_run_checks_no_status_bar_gg_check_without_command(capsys):
+def test_run_checks_no_status_bar_gg_check_without_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test no_status_bar path with GatorGrader check without --command."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         GatorGraderCheck(
