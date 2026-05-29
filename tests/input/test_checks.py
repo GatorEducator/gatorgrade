@@ -1,10 +1,9 @@
 """Test suite for checks.py."""
 
-from gatorgrade.input.checks import GatorGraderCheck
-from gatorgrade.input.checks import ShellCheck
+from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 
 
-def test_shell_check_with_description():
+def test_shell_check_with_description() -> None:
     """Test ShellCheck construction with explicit description."""
     check = ShellCheck(
         command="echo 'test'",
@@ -16,7 +15,7 @@ def test_shell_check_with_description():
     assert check.json_info == {"command": "echo 'test'"}
 
 
-def test_shell_check_without_description():
+def test_shell_check_without_description() -> None:
     """Test ShellCheck construction without description uses command as description."""
     check = ShellCheck(
         command="echo 'test'",
@@ -27,7 +26,7 @@ def test_shell_check_without_description():
     assert check.json_info == {"command": "echo 'test'"}
 
 
-def test_shell_check_with_none_description():
+def test_shell_check_with_none_description() -> None:
     """Test ShellCheck construction with None description uses command as description."""
     check = ShellCheck(
         command="pytest tests/",
@@ -39,7 +38,7 @@ def test_shell_check_with_none_description():
     assert check.json_info == {"command": "pytest tests/"}
 
 
-def test_shell_check_without_json_info():
+def test_shell_check_without_json_info() -> None:
     """Test ShellCheck construction without json_info."""
     check = ShellCheck(command="ls -la", description="List files")
     assert check.command == "ls -la"
@@ -47,7 +46,7 @@ def test_shell_check_without_json_info():
     assert check.json_info is None
 
 
-def test_gatorgrader_check_construction():
+def test_gatorgrader_check_construction() -> None:
     """Test GatorGraderCheck construction with arguments."""
     gg_args = [
         "--description",
@@ -64,7 +63,7 @@ def test_gatorgrader_check_construction():
     assert check.json_info == json_info
 
 
-def test_gatorgrader_check_with_file_context():
+def test_gatorgrader_check_with_file_context() -> None:
     """Test GatorGraderCheck construction with file context."""
     gg_args = [
         "--description",
@@ -91,7 +90,7 @@ def test_gatorgrader_check_with_file_context():
     assert "--file" in check.gg_args
 
 
-def test_gatorgrader_check_empty_args():
+def test_gatorgrader_check_empty_args() -> None:
     """Test GatorGraderCheck construction with empty arguments."""
     gg_args = []
     json_info = {"check": "EmptyCheck"}
@@ -100,14 +99,14 @@ def test_gatorgrader_check_empty_args():
     assert check.json_info == {"check": "EmptyCheck"}
 
 
-def test_shell_check_empty_command():
+def test_shell_check_empty_command() -> None:
     """Test ShellCheck construction with empty command."""
     check = ShellCheck(command="", description="Empty command")
     assert check.command == ""
     assert check.description == "Empty command"
 
 
-def test_shell_check_complex_command():
+def test_shell_check_complex_command() -> None:
     """Test ShellCheck construction with complex shell command."""
     command = "find . -name '*.py' | xargs grep -l 'TODO'"
     check = ShellCheck(command=command, description="Find TODOs")
@@ -115,7 +114,7 @@ def test_shell_check_complex_command():
     assert check.description == "Find TODOs"
 
 
-def test_shell_check_empty_string_description_uses_empty_string():
+def test_shell_check_empty_string_description_uses_empty_string() -> None:
     """Test that ShellCheck with empty string description keeps the empty string."""
     check = ShellCheck(
         command="echo test",
@@ -126,14 +125,18 @@ def test_shell_check_empty_string_description_uses_empty_string():
     assert check.description == ""
 
 
-def test_shell_check_with_dict_json_info():
+def test_shell_check_with_dict_json_info() -> None:
     """Test ShellCheck with dictionary json_info preserves all data."""
-    json_data = {"command": "echo test", "description": "Test", "extra": "data"}
+    json_data = {
+        "command": "echo test",
+        "description": "Test",
+        "extra": "data",
+    }
     check = ShellCheck(command="echo test", json_info=json_data)
     assert check.json_info == json_data
 
 
-def test_gatorgrader_check_with_single_arg():
+def test_gatorgrader_check_with_single_arg() -> None:
     """Test GatorGraderCheck construction with a single argument."""
     check = GatorGraderCheck(
         gg_args=["MatchFileFragment"],
