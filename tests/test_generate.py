@@ -1,13 +1,15 @@
-"""This module tests the deprecated generate.py functionality."""
+"""Test the deprecated generate.py functionality."""
 
 import os
 
 import pytest
 import typer
 
-from gatorgrade.generate.generate import generate_config
-from gatorgrade.generate.generate import input_correct
-from gatorgrade.generate.generate import write_yaml_of_paths_list
+from gatorgrade.generate.generate import (
+    generate_config,
+    input_correct,
+    write_yaml_of_paths_list,
+)
 
 
 def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
@@ -83,7 +85,6 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     """Check if gatorgrade.yml is created with existing file paths
     when some user-provided file paths don't exist and if generate.py outputs a warning message
     """
-
     # Given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"
     root_directory.mkdir()
@@ -123,7 +124,8 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     tmp_path, capsys
 ):
     """Check if generate.py throws an error and produce a failure message
-    when none of user provided file paths exist in the root directory"""
+    when none of user provided file paths exist in the root directory
+    """
     # Given an assignment directory
     root_directory = tmp_path / "Lab-01"
     root_directory.mkdir()
