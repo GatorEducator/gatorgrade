@@ -79,8 +79,8 @@ developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
 ruff-fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
 ruff-format-command = { var = "ruff format --check {project} {tests}", recursive = true }
-symbex-typed-command = {var = "symbex -s --untyped -d {project} --check", recursive = true}
-symbex-documented-command = {var = "symbex -s --undocumented -d {project} --check", recursive = true}
+symbex-typed-command = {var = "symbex -s --untyped -d {project} -d {tests} --check", recursive = true}
+symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {tests} --check", recursive = true}
 mypy-command = {var = "mypy {project}", recursive = true}
 ty-command = {var = "ty check {project} {tests}", recursive = true}
 pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
