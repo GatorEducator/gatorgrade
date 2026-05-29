@@ -17,6 +17,8 @@ FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
 
 @pytest.fixture
 def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fixture to patch datetime.datetime.now() to return a fixed time."""
+
     class mydatetime:
         @classmethod
         def now(cls) -> datetime.datetime:
@@ -377,8 +379,6 @@ def test_create_report_json_with_passing_checks(
     patch_datetime_now: None,
 ) -> None:
     """Test that create_report_json correctly formats passing checks."""
-    from gatorgrade.output.check_result import CheckResult
-
     _ = patch_datetime_now
 
     check_result = CheckResult(
@@ -388,8 +388,9 @@ def test_create_report_json_with_passing_checks(
         path="test/path.py",
     )
     result = output.create_report_json(1, [check_result], 100)
+    full_percentage = 100
     assert result["amount_correct"] == 1
-    assert result["percentage_score"] == 100
+    assert result["percentage_score"] == full_percentage
     assert result["report_time"] == "2022-01-01 10:30:00"
     assert len(result["checks"]) == 1
     assert result["checks"][0]["status"] is True
@@ -400,8 +401,6 @@ def test_create_report_json_with_failing_checks(
     patch_datetime_now: None,
 ) -> None:
     """Test that create_report_json correctly formats failing checks with diagnostics."""
-    from gatorgrade.output.check_result import CheckResult
-
     _ = patch_datetime_now
 
     check_result = CheckResult(
