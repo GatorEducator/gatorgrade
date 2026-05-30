@@ -30,7 +30,7 @@ def test_shell_check_with_none_description() -> None:
     """Test ShellCheck construction with None description uses command as description."""
     check = ShellCheck(
         command="pytest tests/",
-        description=None,  # type: ignore
+        description=None,
         json_info={"command": "pytest tests/"},
     )
     assert check.command == "pytest tests/"
