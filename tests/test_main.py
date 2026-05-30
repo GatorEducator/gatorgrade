@@ -108,6 +108,23 @@ def test_gatorgrade_with_nonexistent_file(
     assert "Exiting now!" in result.stdout
 
 
+def test_gatorgrade_with_invalid_config_file(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that gatorgrade exits with error when config file is not valid."""
+    invalid_config = Path("invalid_main_test.yml")
+    invalid_config.write_text("this is not valid yaml: [")
+    result = runner.invoke(main.app, ["--config", "invalid_main_test.yml"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_subcommand() -> None:
+    """Test that gatorgrade skips core logic if a subcommand is invoked."""
+    result = runner.invoke(main.app, ["nonexistent-command"])
+    assert result.exit_code != 0
+
+
 def test_gatorgrade_with_custom_config_name(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
