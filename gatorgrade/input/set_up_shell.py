@@ -14,18 +14,18 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
         as a multi-line string.
 
     """
-    # If setup exists in the front matter
+    # if setup exists in the front matter
     setup = front_matter.get("setup")
     if setup:
         typer.echo("Running set up commands...")
         for line in setup.splitlines():
-            # Trims the white space
+            # trims the blank space
             command = line.strip()
-            # Executes the command
+            # executes the command
             proc = subprocess.run(
                 command, shell=True, check=False, timeout=300
             )
-            # If the exit code tells it was unsuccessful and did not return 0
+            # if the exit code tells it was unsuccessful and did not return 0
             if proc.returncode != 0:
                 typer.secho(
                     f'The set up command "{command}" failed.\
@@ -33,7 +33,7 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
                     err=True,
                     fg=typer.colors.RED,
                 )
-                # If a set up command failed, exit the execution
+                # if a set up command failed, exit the execution
                 # because environment was not set up correctly.
                 raise typer.Exit(1)
         typer.echo("Finished!\n")
