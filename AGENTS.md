@@ -74,7 +74,7 @@ All the Python code should follow these standards:
 - **Types:** All functions must have type hints for parameters and return values.
 - **Naming:** snake_case for functions/variables, PascalCase for classes,
   UPPER_SNAKE_CASE for constants.
-- **File operations:** Use `pathlib.Path` for all file system operations, never
+- **File operations:** Use `pathlib.Path` for all filesystem operations, never
   string paths.
 - **Error handling:** Use specific exceptions, not generic `Exception`; provide
   meaningful error messages.
