@@ -5,39 +5,37 @@ This document provides guidelines for AI agents contributing to this repository.
 ## Overview of Instructions
 
 - **Always use `uv`:** This project uses `uv` for all dependency management,
-virtual environments, and task running. Do not use `pip` or `venv` directly.
+  virtual environments, and task running. Do not use `pip` or `venv` directly.
 - **Follow all guidelines:** This document contains the complete set of
-guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
+  guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
 - **Verify your changes:** Before committing any changes, you must run all
-linters and tests to ensure your changes are correct and follow the project's
-style. Use `uv run task all`.
+  linters and tests to ensure your changes are correct and follow the project's
+  style. Use `uv run task all`.
 - **Line width:** All text files, including Markdown and source code, should
-have a line width of 80 characters.
+  have a line width of 80 characters.
 - **Permission to run commands:** You have permission to run all commands in
-this file to verify their functionality.
+  this file to verify their functionality.
 - **Incremental changes:** Make small, incremental changes. This makes it easier
-to review your work and catch errors early.
+  to review your work and catch errors early.
 - **Communicate clearly:** When you propose changes, explain what you've done
-and why.
+  and why.
 - **Create and Follow a TODO List**: Always create a TODO list and then
-follow that list. Do not stop until the tools that you call make it clear
-that you have completed all the tasks in the list.
+  follow that list. Do not stop until the tools that you call make it clear
+  that you have completed all the tasks in the list.
 
 ## Notification Instructions
 
 - The user has given permission to use the `notify-send` command to signal task
-completion. Here is an example of the command: `notify-send "Question from
-Coding Agent" "Please clarify how to complete the testing task."`.
+  completion. Here is an example of the command: `notify-send "Question from Coding Agent" "Please clarify how to complete the testing task."`.
 - The user wants a `notify-send` notification whenever I ask a question.
 - Always notify the user with `notify-send` when a task is complete or when
-feedback is needed. I have standing permission to use the notification tool.
+  feedback is needed. I have standing permission to use the notification tool.
 - You should also use the following command to notify the user when you are
-finished with a task or need further help: `timeout 2 zellij pipe --
-"zjstatus::notify::󰵰 Agent finished. This is really fun. "`
+  finished with a task or need further help: `timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
 - Note that this command will only display in the current Zellij session. Please
-also note that you need to add a space at the end of the notification.
+  also note that you need to add a space at the end of the notification.
 - You should use both notification methods as appropriate, making sure that the
-Zellij command is always prefaced with a timeout of 2 seconds.
+  Zellij command is always prefaced with a timeout of 2 seconds.
 
 ## Build, Lint, and Test Commands
 
@@ -47,8 +45,7 @@ Zellij command is always prefaced with a timeout of 2 seconds.
 - **Format code:** `uv run task format` (check), `uv run task format-fix` (fix)
 - **Lint code:** `uv run task check`
 - **Type check:** `uv run task typecheck` (runs mypy, ty, pyrefly), or
-  individual checkers: `uv run task mypy`, `uv run task ty`, `uv run task
-  pyrefly`, `uv run task symbex`
+  individual checkers: `uv run task mypy`, `uv run task ty`, `uv run task pyrefly`, `uv run task symbex`
 - **Test all:** `uv run task test`
 - **Test with coverage:** `uv run task test-coverage`
 - **Test variants:** `uv run task test-not-property`, `uv run task test-not-random`,
@@ -56,27 +53,26 @@ Zellij command is always prefaced with a timeout of 2 seconds.
 - **Run a single test:** `pytest tests/test_file.py::test_function` or
   `uv run pytest tests/test_file.py::test_function`
 - **Markdown lint:** `uv run task markdownlint`
-- **Comment check:** `uv run ccl check` (check), `uv run ccl fix` (auto-fix),
-  or `uv run task comments`
+- **Comment check:** `uv run task comments-check` (check) or `uv run comment-fix` (auto-fix)
 
 ## Code Requirements
 
 All the Python code should follow these standards:
 
 - **Function bodies:** No blank lines within function bodies - keep code
-contiguous.
+  contiguous.
 - **Docstrings:** Single-line docstrings starting with a capital letter, ending
-with a period.
+  with a period.
 - **Comments:** Other comments start with a lowercase letter; preserve existing
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
   identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
 - **Imports:** Group imports in this order: standard library, third-party, local
-imports. Use absolute imports (`from pytest_brightest.module import`). Finally,
-make sure that all imports are placed at the top of the file. Do not place
-imports into the middle of a file or even at the start of a function or class.
+  imports. Use absolute imports (`from gatorgrade.module import <name>`). Finally,
+  make sure that all imports are placed at the top of the file. Do not place
+  imports into the middle of a file or even at the start of a function or class.
 - **Formatting:** Use `ruff format` (line length 79 for lint, 88 for isort);
-  trailing commas enabled.
+  trailing commas enabled or the corresponding task called `uv run task ruff-format`.
 - **Types:** All functions must have type hints for parameters and return values.
 - **Naming:** snake_case for functions/variables, PascalCase for classes,
   UPPER_SNAKE_CASE for constants.
@@ -98,31 +94,31 @@ imports into the middle of a file or even at the start of a function or class.
 All test cases should follow these standards:
 
 - Since a test case is a Python function, it should always follow the code
-requirements above.
+  requirements above.
 - Test cases should have a descriptive name that starts with `test_`.
 - Test cases should be grouped by the function they are testing.
 - Test cases should be ordered in a way that makes sense to the reader.
 - Test cases should be independent of each other so that they can be run in a
-random order without affecting the results or each other.
+  random order without affecting the results or each other.
 - Test cases must work both on a local machine and in a CI environment.
 - Test cases should aim to achieve full function, statement, and branch
-coverage.
+  coverage.
 - Property-based tests, such as those that use the `hypothesis` package, must be
-marked with `@pytest.mark.property`.
+  marked with `@pytest.mark.property`.
 - Test cases should not produce any console output.
 
 ## Making Changes
 
 1. **Understand:** Thoroughly understand the request and the relevant codebase.
    Use the available tools to explore the code.
-2. **Plan:** Formulate a clear plan before making any changes.
-3. **Implement:** Make small, incremental changes.
-4. **Verify:** Run `uv run task all` to ensure your changes are correct and
+1. **Plan:** Formulate a clear plan before making any changes.
+1. **Implement:** Make small, incremental changes.
+1. **Verify:** Run `uv run task all` to ensure your changes are correct and
    follow the project's style.
-5. **Commit:** The software developer will always commit the changes.
-6. **Rules**: Always follow the rules in this file and in the `docs/plan.md`
+1. **Commit:** The software developer will always commit the changes.
+1. **Rules**: Always follow the rules in this file and in the `docs/plan.md`
    file.
-7. **Completion**: When you are finished with tasks, please summarize what tasks
+1. **Completion**: When you are finished with tasks, please summarize what tasks
    you completed, how you completed them, the challenges you faced, how you
    overcame them, and the rules that you followed during completion of the tasks.
 
@@ -144,3 +140,8 @@ The coding agent should write the notes as a Markdown list.
   approach. The old script file has been removed.
 - `tree-sitter` and `tree-sitter-python` are now production dependencies
   because `ccl` is an installed entry point.
+- Proper nouns allowed in comments: `CountCommits`, `GatorGrade`,
+  `GatorGrader`, `GatorGraderCheck`, `GITHUB_ENV`,
+  `GITHUB_STEP_SUMMARY`, `JSON`, `MatchFileFragment`, `ShellCheck`,
+  `STDOUT`, `STDERR`, `TODO`, `FIXME`, `NOTE`. "Typo" is NOT a proper
+  noun and was removed from the exceptions list.
