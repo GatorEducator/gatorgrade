@@ -1,9 +1,11 @@
 """Test suite for check_result.py."""
 
+import pytest
+
 from gatorgrade.output.check_result import CheckResult
 
 
-def test_check_result_str_method_without_diagnostic():
+def test_check_result_str_method_without_diagnostic() -> None:
     """Test the __str__ method for a passing CheckResult."""
     check_result = CheckResult(
         passed=True,
@@ -15,7 +17,7 @@ def test_check_result_str_method_without_diagnostic():
     assert "Test passed" in result_str
 
 
-def test_check_result_str_method_with_diagnostic():
+def test_check_result_str_method_with_diagnostic() -> None:
     """Test the __str__ method for a failing CheckResult with diagnostic."""
     check_result = CheckResult(
         passed=False,
@@ -29,7 +31,7 @@ def test_check_result_str_method_with_diagnostic():
     assert "This is a diagnostic message" in result_str
 
 
-def test_check_result_repr_method():
+def test_check_result_repr_method() -> None:
     """Test the __repr__ method for CheckResult."""
     check_result = CheckResult(
         passed=True,
@@ -47,7 +49,7 @@ def test_check_result_repr_method():
     assert "run_command='echo test'" in repr_str
 
 
-def test_check_result_display_result_passing():
+def test_check_result_display_result_passing() -> None:
     """Test display_result method for passing check."""
     check_result = CheckResult(
         passed=True,
@@ -59,7 +61,7 @@ def test_check_result_display_result_passing():
     assert "Test passed" in result
 
 
-def test_check_result_display_result_failing_with_diagnostic():
+def test_check_result_display_result_failing_with_diagnostic() -> None:
     """Test display_result method for failing check with diagnostic."""
     check_result = CheckResult(
         passed=False,
@@ -73,7 +75,7 @@ def test_check_result_display_result_failing_with_diagnostic():
     assert "Error occurred" in result
 
 
-def test_check_result_display_result_failing_without_diagnostic():
+def test_check_result_display_result_failing_without_diagnostic() -> None:
     """Test display_result method for failing check without showing diagnostic."""
     check_result = CheckResult(
         passed=False,
@@ -87,7 +89,7 @@ def test_check_result_display_result_failing_without_diagnostic():
     assert "Error occurred" not in result
 
 
-def test_check_result_display_result_default_hides_diagnostic():
+def test_check_result_display_result_default_hides_diagnostic() -> None:
     """Test that display_result defaults to NOT showing diagnostic when called without arguments."""
     check_result = CheckResult(
         passed=False,
@@ -102,7 +104,7 @@ def test_check_result_display_result_default_hides_diagnostic():
     assert "→" not in result
 
 
-def test_check_result_display_result_passing_ignores_show_diagnostic():
+def test_check_result_display_result_passing_ignores_show_diagnostic() -> None:
     """Test that a passing check never shows diagnostic even with show_diagnostic=True."""
     check_result = CheckResult(
         passed=True,
@@ -117,7 +119,7 @@ def test_check_result_display_result_passing_ignores_show_diagnostic():
     assert "→" not in result
 
 
-def test_check_result_with_empty_path():
+def test_check_result_with_empty_path() -> None:
     """Test CheckResult with an empty string path."""
     check_result = CheckResult(
         passed=True,
@@ -128,7 +130,7 @@ def test_check_result_with_empty_path():
     assert check_result.path == ""
 
 
-def test_check_result_with_explicit_empty_diagnostic():
+def test_check_result_with_explicit_empty_diagnostic() -> None:
     """Test CheckResult with an explicitly empty diagnostic string."""
     check_result = CheckResult(
         passed=False,
@@ -141,7 +143,9 @@ def test_check_result_with_explicit_empty_diagnostic():
     assert "Test failed" in result
 
 
-def test_check_result_print_does_not_crash(capsys):
+def test_check_result_print_does_not_crash(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that the print method executes without crashing."""
     check_result = CheckResult(
         passed=True,
