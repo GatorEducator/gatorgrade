@@ -17,7 +17,7 @@ def test_generate_should_create_gatorgrade_yml_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run."""
-    # Given a directory contains all the files and folders user inputted when calling generate.py
+    # given a directory contains all the files and folders user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
     src_directory = root_directory / "src"
@@ -32,10 +32,10 @@ def test_generate_should_create_gatorgrade_yml_file(
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 03")
-    # When we call the modularized version of "generate.py" with two arguments
+    # when we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
     capsys.readouterr()
-    # Then "gatorgrade.yml" is generated in the root directory
+    # then "gatorgrade.yml" is generated in the root directory
     file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
 
@@ -45,7 +45,7 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Check if gatorgrade.yml contains correct paths when successfully created."""
-    # Given an assignment directory that contains all of the folders
+    # given an assignment directory that contains all of the folders
     # and files that user inputted when calling generate.py
     root_directory = tmp_path / "Practical-01"
     root_directory.mkdir()
@@ -69,10 +69,10 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     reflection_file.write_text("# Reflection on Practical 01")
     readme_file = root_directory / "README.md"
     readme_file.write_text("# Practical 01")
-    # When we call the modularized version of "generate.py" with two arguments
+    # when we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
     capsys.readouterr()
-    # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
+    # then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
     assert "src/input/input.txt" in file_text
@@ -90,36 +90,28 @@ def test_generate_should_produce_warning_message_when_some_user_inputted_files_d
     When some user-provided file paths don't exist and if generate.py
     outputs a warning message.
     """
-    # Given an assignment directory that contains some folders
+    # given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     main_py = src_directory / "main.py"
     main_py.write_text("import sys")
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
-
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Practical 02")
-
     tests_directory = root_directory / "tests"
     tests_directory.mkdir()
     test_file = tests_directory / "test_file.py"
     test_file.write_text("import pytest")
-
-    # When we call the modularized version of "generate.py"
+    # when we call the modularized version of "generate.py"
     # with two arguments, but README.md doesn't exist
     generate_config(["src", "README.md"], str(root_directory))
-
-    # Then "gatorgrade.yml" is created with existing file paths and produce warning
+    # then "gatorgrade.yml" is created with existing file paths and produce warning
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
     captured = capsys.readouterr()
-
     assert "src/main.py" in file_text
     assert "README.md" not in file_text
     assert "file path is not FOUND!" in captured.out
@@ -132,7 +124,7 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
 
     When none of user provided file paths exist in the root directory.
     """
-    # Given an assignment directory
+    # given an assignment directory
     root_directory = tmp_path / "Lab-01"
     root_directory.mkdir()
     src_directory = root_directory / "src"
@@ -147,12 +139,12 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 01")
-    # When we call the modularized version of "generate.py"
+    # when we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
     with pytest.raises(typer.Exit) as exc_info:
         generate_config(["tests", "README.md"], str(root_directory))
     _, err = capsys.readouterr()
-    # Then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
+    # then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
     file = root_directory / "gatorgrade.yml"
     assert not file.is_file()
     assert "'gatorgrade.yml' is NOT generated" in err
