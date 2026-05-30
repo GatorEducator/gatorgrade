@@ -34,17 +34,10 @@ dependencies = [
     "rich>=13.8.1,<14",
     "gatorgrader>=1.1.2,<2",
     "click>=8.3.0,<9",
-    "tree-sitter>=0.25.2",
-    "tree-sitter-python>=0.25.0",
 ]
 
 [project.scripts]
-# main entry point for the gatorgrade tool
 gatorgrade = "gatorgrade.main:app"
-# main entry point for the ccl tool that
-# is only used internally for checking code
-# comments inside of this project for conformance
-ccl = "gatorgrade.comments_checker:app"
 
 [dependency-groups]
 dev = [
@@ -67,6 +60,8 @@ dev = [
     "ruff>=0.15.15",
     "zuban>=0.7.2",
     "pyrefly>=1.0.0",
+    "tree-sitter>=0.25.2",
+    "tree-sitter-python>=0.25.0",
 ]
 
 [build-system]
@@ -97,7 +92,7 @@ cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 [tool.taskipy.tasks]
 all = "task check && task test"
 check = "task lint && task typecheck"
-lint = "task ruff-format && task ruff-check"
+lint = "task ruff-format && task ruff-check && task comments-check"
 typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
 ruff-check = { cmd = "{ruff-check-command}", help = "Run the ruff linting checks", use_vars = true }
 ruff-format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter on source code", use_vars = true }
@@ -111,7 +106,8 @@ symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully ty
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
 format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
 format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
-comments = { cmd = "ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
+comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
+comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
