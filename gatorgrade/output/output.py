@@ -15,7 +15,7 @@ from rich.progress import BarColumn, Progress, TextColumn
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
 
-# Disable rich's default highlight to stop number coloring
+# disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
 
 
@@ -35,12 +35,12 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         check=False,
         timeout=300,
         stdout=subprocess.PIPE,
-        # Redirect STDERR to STDOUT so STDOUT and STDERR can be captured
+        # redirect STDERR to STDOUT so STDOUT and STDERR can be captured
         # together as diagnostic
         stderr=subprocess.STDOUT,
     )
     passed = result.returncode == 0
-    # Add spaces after each newline to indent all lines of diagnostic
+    # add spaces after each newline to indent all lines of diagnostic
     diagnostic = (
         ""
         if passed
@@ -69,7 +69,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         passed = result[1]
         description = result[0]
         diagnostic = result[2]
-        # Fetch the path from gatorgrade arguments
+        # fetch the path from gatorgrade arguments
         # the path pattern are 4 consistent string in the list
         # --dir `dir_name` --file `file_name`
         file_path = None
@@ -79,9 +79,9 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
                 file_name = check.gg_args[i + 3]
                 file_path = dir_name + "/" + file_name
                 break
-    # If arguments are formatted incorrectly, catch the exception and
+    # if arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
-    # Disable pylint to catch any type of exception thrown by GatorGrader
+    # disable pylint to catch any type of exception thrown by GatorGrader
     except Exception as command_exception:  # pylint: disable=W0703
         passed = False
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
@@ -262,7 +262,7 @@ def configure_report(
                     write_json_or_md_file(
                         env_file, report_type, report_output_data_json
                     )
-        # Add json report into the GITHUB_ENV environment variable for data collection purpose;
+        # add json report into the GITHUB_ENV environment variable for data collection purpose;
         # note that this is an undocumented side-effect of running gatorgrade with command-line
         # arguments that save data to the GITHUB_STEP_SUMMARY environment variable. The current
         # implementation of this approach should not cause the setting to fail when GatorGrade
@@ -300,7 +300,7 @@ def write_json_or_md_file(
     """Write a markdown or json file."""
     # try to store content in a file with user chosen format
     try:
-        # Second argument has to be json or md
+        # second argument has to be json or md
         with open(file_name, "w", encoding="utf-8") as file:
             if content_type == "json":
                 json.dump(content, file, indent=4)
