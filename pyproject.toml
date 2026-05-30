@@ -59,6 +59,7 @@ dev = [
     "pyrefly>=1.0.0",
     "tree-sitter>=0.25.2",
     "tree-sitter-python>=0.25.0",
+    "rumdl>=0.2.4",
 ]
 
 [build-system]
@@ -80,6 +81,8 @@ symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {te
 mypy-command = {var = "mypy {project}", recursive = true}
 ty-command = {var = "ty check {project} {tests}", recursive = true}
 pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
+rumdl-command = {var = "rumdl check", recursive = true}
+rumdl-command-fix = {var = "rumdl fmt", recursive = true}
 zuban-command = {var = "zuban check {project} {tests}", recursive = true}
 cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
@@ -89,11 +92,13 @@ cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 [tool.taskipy.tasks]
 all = "task check && task test"
 check = "task lint && task typecheck"
-lint = "task ruff-format && task ruff-check && task comments-check"
+lint = "task ruff-format && task ruff-check && task comments-check && task rumdl-check"
 typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
 ruff-check = { cmd = "{ruff-check-command}", help = "Run the ruff linting checks", use_vars = true }
 ruff-format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter on source code", use_vars = true }
 ruff-format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
+rumdl-check = { cmd = "{rumdl-command}", help = "Run the rumdl markdown linting checks", use_vars = true }
+rumdl-fix = { cmd = "{rumdl-command-fix}", help = "Run the rumdl markdown linter to fix markdown", use_vars = true }
 mypy = { cmd = "{mypy-command}", help = "Run the mypy type checker for potential type errors", use_vars = true }
 ty = { cmd = "{ty-command}", help = "Run the ty type checker for potential type errors", use_vars = true }
 pyrefly = { cmd = "{pyrefly-command}", help = "Run the pyrefly type checker for potential type errors", use_vars = true }
