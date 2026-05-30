@@ -90,7 +90,7 @@ def test_generate_config_with_no_files_found(
     # when generate_config is called with a path that doesn't exist
     with pytest.raises(typer.Exit) as exc_info:
         generate_config(["nonexistent_folder"], str(empty_dir))
-    out, err = capsys.readouterr()
+    _, err = capsys.readouterr()
     # then it should raise Exit(1) and print a failure message to stderr
     assert exc_info.value.exit_code == 1
     assert "FAILURE: None of the user-provided file paths are" in err
