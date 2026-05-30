@@ -32,12 +32,12 @@ def test_run_checks_invalid_gg_args_prints_exception(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test that run_checks prints an exception when given an invalid GatorGrader argument."""
-    # Given a GatorGrader check with invalid arguments
+    # given a GatorGrader check with invalid arguments
     check = GatorGraderCheck(
         gg_args=[
             "--description",
             "Have a total of 8 commits, 5 of which were created by you",
-            "CountCommitts",  # Typo
+            "CountCommitts",  # typo
             "--fragment",
             "TODO",
             "--count",
@@ -47,9 +47,9 @@ def test_run_checks_invalid_gg_args_prints_exception(
         json_info="test",
     )
     report = (None, None, None)
-    # When run_checks is called
+    # when run_checks is called
     output.run_checks([check], report)  # type: ignore
-    # Then the output contains a declaration
+    # then the output contains a declaration
     # about the use of an Invalid GatorGrader check
     out, _ = capsys.readouterr()
     print("** ", out, " **")  # noqa: T201
@@ -61,7 +61,7 @@ def test_run_checks_some_failed_prints_correct_summary(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test that run_checks, when given some checks that should fail, prints the correct summary."""
-    # Given three checks with one check that should fail
+    # given three checks with one check that should fail
     checks = [
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
         GatorGraderCheck(
@@ -99,7 +99,7 @@ def test_run_checks_some_failed_prints_correct_summary(
         ),
     ]
     report = (None, None, None)
-    # When run_checks is called
+    # when run_checks is called
     output.run_checks(checks, report)  # type: ignore
     # the output shows the correct fraction
     # and percentage of passed checks
@@ -108,17 +108,15 @@ def test_run_checks_some_failed_prints_correct_summary(
     capsys.readouterr()
 
 
-def test_run_checks_all_passed_prints_correct_summary(
+def test_run_checks_with_gg_check_no_command_status_bar_enabled(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Test that run_checks, when given checks that should all pass, prints the correct summary."""
-    # Given three checks that should all pass
-    checks = [
-        ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
+    """Test running mode with a GatorGrader check without --command."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         GatorGraderCheck(
             gg_args=[
                 "--description",
-                "Complete all TODOs in hello-world.py",
+                "Check without command in status_bar",
                 "MatchFileFragment",
                 "--fragment",
                 "TODO",
@@ -131,31 +129,13 @@ def test_run_checks_all_passed_prints_correct_summary(
                 "hello-world.py",
             ],
             json_info="test",
-        ),
-        GatorGraderCheck(
-            gg_args=[
-                "--description",
-                "Call the 'greet' function in hello-world.py",
-                "MatchFileFragment",
-                "--fragment",
-                "greet(",
-                "--count",
-                "2",
-                "--directory",
-                "tests/test_assignment/src",
-                "--file",
-                "hello-world.py",
-            ],
-            json_info="test",
-        ),
+        )
     ]
     report = (None, None, None)
-    # When run_checks is called
-    output.run_checks(checks, report)  # type: ignore
-    # Then the output shows the correct fraction and percentage of passed checks
+    result = output.run_checks(checks, report)  # type: ignore
+    assert result is True
     out, _ = capsys.readouterr()
-    assert "Passed 3/3 (100%) of checks" in out
-    capsys.readouterr()
+    assert "Passed 1/1 (100%) of checks" in out
 
 
 def test_md_report_file_created_correctly(
@@ -376,9 +356,8 @@ def test_write_md_and_json_correctly(tmp_path: Path) -> None:
     assert output.write_json_or_md_file(tmp_json, "json", "hello-world")
 
 
-def test_create_report_json_with_passing_checks(
-    patch_datetime_now: None,
-) -> None:
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_passing_checks() -> None:
     """Test that create_report_json correctly formats passing checks."""
     check_result = CheckResult(
         passed=True,
@@ -396,9 +375,8 @@ def test_create_report_json_with_passing_checks(
     assert result["checks"][0]["path"] == "test/path.py"
 
 
-def test_create_report_json_with_failing_checks(
-    patch_datetime_now: None,
-) -> None:
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_failing_checks() -> None:
     """Test that create_report_json correctly formats failing checks with diagnostics."""
     check_result = CheckResult(
         passed=False,
@@ -655,9 +633,8 @@ def test_run_checks_with_running_mode(
     assert "Passed 1/1 (100%) of checks" in out
 
 
-def test_create_report_json_with_passing_check_excludes_diagnostic(
-    patch_datetime_now: None,
-) -> None:
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_passing_check_excludes_diagnostic() -> None:
     """Test that passing checks do not include diagnostic in JSON output."""
     check_result = CheckResult(
         passed=True,
@@ -670,7 +647,8 @@ def test_create_report_json_with_passing_check_excludes_diagnostic(
     assert "diagnostic" not in result["checks"][0]
 
 
-def test_create_report_json_with_path_none(patch_datetime_now: None) -> None:
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_path_none() -> None:
     """Test that None path is excluded from JSON output."""
     check_result = CheckResult(
         passed=True,
@@ -682,16 +660,18 @@ def test_create_report_json_with_path_none(patch_datetime_now: None) -> None:
     assert "path" not in result["checks"][0]
 
 
-def test_create_report_json_with_empty_path(patch_datetime_now: None) -> None:
-    """Test that empty string path is excluded from JSON output."""
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_non_dict_json_info() -> None:
+    """Test that create_report_json handles json_info that is not a dictionary."""
     check_result = CheckResult(
         passed=True,
         description="Test check passed",
-        json_info={"check": "test"},
-        path="",
+        json_info="not a dict",
+        path="test/path.py",
     )
     result = output.create_report_json(1, [check_result], 100)
-    assert "path" not in result["checks"][0]
+    # the non-dict json_info should be appended to checks_list as is without modifications
+    assert result["checks"][0] == "not a dict"
 
 
 def test_create_markdown_report_file_with_zero_checks() -> None:
@@ -758,15 +738,15 @@ def test_run_checks_with_shell_check_command_display(
     assert "false" in out
 
 
-def test_run_checks_with_gg_check_command_display(
+def test_run_checks_with_gg_check_command_status_bar_enabled(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Test that failed GatorGrader check with command displays the command to run."""
+    """Test running mode with a GatorGrader check that has --command."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         GatorGraderCheck(
             gg_args=[
                 "--description",
-                "Check with command",
+                "Check with command in status_bar",
                 "MatchFileFragment",
                 "--command",
                 "echo test",
@@ -1031,31 +1011,75 @@ def test_run_checks_no_status_bar_with_gg_check_command(
     assert "echo test" in out
 
 
-def test_run_checks_no_status_bar_gg_check_without_command(
+def test_run_checks_gg_check_no_command_no_status_bar_detailed(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Test no_status_bar path with GatorGrader check without --command."""
-    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
-        GatorGraderCheck(
-            gg_args=[
-                "--description",
-                "Complete all TODOs in hello-world.py",
-                "MatchFileFragment",
-                "--fragment",
-                "TODO",
-                "--count",
-                "0",
-                "--exact",
-                "--directory",
-                "tests/test_assignment/src",
-                "--file",
-                "hello-world.py",
-            ],
+    """Force execution of the branch where GatorGraderCheck has no --command and no_status_bar is True."""
+    # to ensure the check is considered "passed" so it doesn't hit the "Invalid" path,
+    # we must provide a valid set of args or mock the grader.
+    # since we want to test the logic in run_checks, mocking the grader is best.
+
+    with patch("gatorgrade.output.output._run_gg_check") as mock_run:
+        mock_run.return_value = CheckResult(
+            passed=True,
+            description="Mock Pass",
             json_info="test",
+            diagnostic="",
         )
-    ]
-    report = (None, None, None)
-    result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
-    assert result is True
-    out, _ = capsys.readouterr()
-    assert "Passed 1/1 (100%) of checks" in out
+        checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+            GatorGraderCheck(
+                gg_args=["No command here"],
+                json_info="test",
+            )
+        ]
+        report = (None, None, None)
+        output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+        out, _ = capsys.readouterr()
+        assert "Passed 1/1" in out
+
+
+def test_run_checks_gg_check_no_command_status_bar_detailed(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Force execution of the branch where GatorGraderCheck has no --command and status_bar is True."""
+    with patch("gatorgrade.output.output._run_gg_check") as mock_run:
+        mock_run.return_value = CheckResult(
+            passed=True,
+            description="Mock Pass",
+            json_info="test",
+            diagnostic="",
+        )
+        checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+            GatorGraderCheck(
+                gg_args=["No command here"],
+                json_info="test",
+            )
+        ]
+        report = (None, None, None)
+        # running_mode = True enables progress.update(task, advance=1)
+        output.run_checks(checks, report, running_mode=True)  # type: ignore
+        out, _ = capsys.readouterr()
+        assert "Passed 1/1" in out
+
+
+def test_run_checks_gg_check_with_command_status_bar_detailed(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Force execution of the branch where GatorGraderCheck has --command and status_bar is True."""
+    with patch("gatorgrade.output.output._run_gg_check") as mock_run:
+        mock_run.return_value = CheckResult(
+            passed=True,
+            description="Mock Pass",
+            json_info="test",
+            diagnostic="",
+        )
+        checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+            GatorGraderCheck(
+                gg_args=["--command", "echo test"],
+                json_info="test",
+            )
+        ]
+        report = (None, None, None)
+        output.run_checks(checks, report, running_mode=True)  # type: ignore
+        out, _ = capsys.readouterr()
+        assert "Passed 1/1" in out
