@@ -9,6 +9,6 @@
 
 ### ✓ Use an if statement
 
-### ✓ Complete all TODOs
+### ✓ Complete all Tasks
 
 ## Failing Checks
