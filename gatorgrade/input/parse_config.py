@@ -1,12 +1,13 @@
 """Returns the list of commands to be run through gatorgrader."""
 
 from pathlib import Path
+from typing import Any, List
 
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file, reformat_yaml_data
 
 
-def parse_config(file: Path):
+def parse_config(file: Path) -> List[Any]:
     """Parse the input yaml file and generate specified checks.
 
     Args:
