@@ -15,6 +15,7 @@ from gatorgrade import main
 runner = CliRunner()
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
+PLATFORM_INFO_PARTS = 4
 
 
 def patch_open(
@@ -190,9 +191,81 @@ def test_gatorgrade_with_version_flag(
     assert result.exit_code == 0
     # strip ANSI escape codes that Rich may add when stdout is a TTY
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert f"GatorGrade version: {main.GATORGRADE_VERSION}" in plain_stdout
+    assert f"gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
 
 
 def test_gatorgrade_version_callback_with_false() -> None:
     """Test that the version callback does not exit when value is False."""
     main._version_callback(False)
+
+
+def test_gatorgrade_get_platform_info_format() -> None:
+    """Test that the platform info function returns a uv-like format string."""
+    platform_info = main._get_platform_info()
+    # the format is arch-vendor-os-libc with exactly four parts
+    parts = platform_info.split("-")
+    assert len(parts) == PLATFORM_INFO_PARTS
+    # no part should be empty
+    assert all(parts)
+    # the second part is the vendor which we hardcode to "unknown"
+    assert parts[1] == "unknown"
+
+
+def test_gatorgrade_get_platform_info_linux_musl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string on a Linux system with musl libc."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("musl", "1.2"))
+    assert main._get_platform_info() == "x86_64-unknown-linux-musl"
+
+
+def test_gatorgrade_get_platform_info_linux_empty_libc(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string on a Linux system with unknown libc."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    assert main._get_platform_info() == "x86_64-unknown-linux-unknown"
+
+
+def test_gatorgrade_get_platform_info_darwin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string on a Darwin (macOS) system."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    assert main._get_platform_info() == "arm64-unknown-darwin-none"
+
+
+def test_gatorgrade_get_platform_info_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string on a Windows system."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    assert main._get_platform_info() == "AMD64-unknown-windows-msvc"
+
+
+def test_gatorgrade_get_platform_info_unknown_system(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string on an unknown system."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Plan9")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    assert main._get_platform_info() == "x86_64-unknown-plan9-unknown"
+
+
+def test_gatorgrade_get_platform_info_fallback_arch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the platform info string when machine returns an empty value."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "")
+    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("glibc", "2.40"))
+    assert main._get_platform_info() == "unknown-unknown-linux-gnu"
