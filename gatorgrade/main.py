@@ -1,5 +1,6 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 
+import platform
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -38,15 +39,40 @@ FILE = "gatorgrade.yml"
 FAILURE = 1
 
 
+def _get_platform_info() -> str:
+    """Get the platform information string in the format used by uv."""
+    arch = platform.machine() or "unknown"
+    system = platform.system().lower() or "unknown"
+    libc_name, _ = platform.libc_ver()
+    if system == "linux":
+        libc_lower = libc_name.lower()
+        libc = (
+            "musl"
+            if "musl" in libc_lower
+            else "gnu"
+            if libc_name
+            else "unknown"
+        )
+    elif system == "darwin":
+        libc = "none"
+    elif system == "windows":
+        libc = "msvc"
+    else:
+        libc = "unknown"
+    return f"{arch}-unknown-{system}-{libc}"
+
+
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        console.print(f"GatorGrade version: {GATORGRADE_VERSION}")
+        console.print(
+            f"gatorgrade {GATORGRADE_VERSION} ({_get_platform_info()})"
+        )
         raise typer.Exit()
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0913
+def gatorgrade(
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -69,7 +95,7 @@ def gatorgrade(  # noqa: PLR0913
     no_status_bar: bool = typer.Option(
         False, "--no-status-bar", help="Disable the progress bar entirely."
     ),
-    version: bool = typer.Option(
+    _version: bool = typer.Option(
         False,
         "--version",
         callback=_version_callback,
