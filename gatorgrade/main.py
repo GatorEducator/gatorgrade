@@ -11,6 +11,9 @@ from rich.emoji import Emoji
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
+# define the version of gatorgrade; this is used in the --version option
+GATORGRADE_VERSION = "0.8.3"
+
 # create an app for the Typer-based CLI
 
 # define the emoji that will be prepended to the help message;
