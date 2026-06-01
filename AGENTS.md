@@ -27,15 +27,28 @@ This document provides guidelines for AI agents contributing to this repository.
 
 - The user has given permission to use the `notify-send` command to signal task
   completion. Here is an example of the command:
-  `notify-send "Question from Coding Agent" "Please clarify how to complete the testing task."`.
+
+  ```bash
+  notify-send "Question from Coding Agent" \
+    "Please clarify how to complete the testing task."
+  ```
+
 - The user wants a `notify-send` notification whenever I ask a question.
+
 - Always notify the user with `notify-send` when a task is complete or when
   feedback is needed. I have standing permission to use the notification tool.
+
 - You should also use the following command to notify the user when you are
   finished with a task or need further help:
-  `timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
+
+  ```bash
+  timeout 2 zellij pipe -- \
+    "zjstatus::notify::󰵰 Agent finished. This is really fun. "
+  ```
+
 - Note that this command will only display in the current Zellij session.
   Please also note that you need to add a space at the end of the notification.
+
 - You should use both notification methods as appropriate, making sure that the
   Zellij command is always prefaced with a timeout of 2 seconds.
 
