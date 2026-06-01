@@ -38,8 +38,15 @@ FILE = "gatorgrade.yml"
 FAILURE = 1
 
 
+def _version_callback(value: bool) -> None:
+    """Print the GatorGrade version and exit when --version is provided."""
+    if value:
+        console.print(f"GatorGrade version: {GATORGRADE_VERSION}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
-def gatorgrade(
+def gatorgrade(  # noqa: PLR0913
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -61,6 +68,13 @@ def gatorgrade(
     ),
     no_status_bar: bool = typer.Option(
         False, "--no-status-bar", help="Disable the progress bar entirely."
+    ),
+    version: bool = typer.Option(
+        False,
+        "--version",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show the GatorGrade version and exit.",
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
