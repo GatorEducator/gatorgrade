@@ -93,7 +93,7 @@ cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 [tool.taskipy.tasks]
 all = "task check && task test"
 check = "task lint && task typecheck"
-lint = "task ruff-format && task ruff-check && task comments-check && task rumdl-check"
+lint = "task ruff-format && task ruff-check && task comments-check && task vsc && task rumdl-check"
 typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
 ruff-check = { cmd = "{ruff-check-command}", help = "Run the ruff linting checks", use_vars = true }
 ruff-format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter on source code", use_vars = true }
@@ -111,6 +111,7 @@ format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to chec
 format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
 comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
 comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
+vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml" }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
