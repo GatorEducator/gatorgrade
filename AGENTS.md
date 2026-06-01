@@ -64,10 +64,13 @@ This document provides guidelines for AI agents contributing to this repository.
   `uv run task pyrefly`, `uv run task symbex`
 - **Test all:** `uv run task test`
 - **Test with coverage:** `uv run task test-coverage`
-- **Test variants:** `uv run task test-not-property`, `uv run task test-not-random`, `uv run task test-silent`
-- **Run a single test:** `pytest tests/test_file.py::test_function` or `uv run pytest tests/test_file.py::test_function`
+- **Test variants:** `uv run task test-not-property`,
+  `uv run task test-not-random`, `uv run task test-silent`
+- **Run a single test:** `pytest tests/test_file.py::test_function` or
+  `uv run pytest tests/test_file.py::test_function`
 - **Markdown lint:** `uv run task markdownlint`
-- **Comment check:** `uv run task comments-check` (check) or `uv run comment-fix` (auto-fix)
+- **Comment check:** `uv run task comments-check` (check) or
+  `uv run comment-fix` (auto-fix)
 
 ## Code Requirements
 
