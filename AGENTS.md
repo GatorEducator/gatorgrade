@@ -60,7 +60,8 @@ This document provides guidelines for AI agents contributing to this repository.
 - **Format code:** `uv run task format` (check), `uv run task format-fix` (fix)
 - **Lint code:** `uv run task check`
 - **Type check:** `uv run task typecheck` (runs mypy, ty, pyrefly, and zuban),
-  or individual checkers: `uv run task mypy`, `uv run task ty`, `uv run task pyrefly`, `uv run task symbex`
+  or individual checkers: `uv run task mypy`, `uv run task ty`,
+  `uv run task pyrefly`, `uv run task symbex`
 - **Test all:** `uv run task test`
 - **Test with coverage:** `uv run task test-coverage`
 - **Test variants:** `uv run task test-not-property`, `uv run task test-not-random`, `uv run task test-silent`
