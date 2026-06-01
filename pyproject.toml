@@ -60,6 +60,7 @@ dev = [
     "tree-sitter>=0.25.2",
     "tree-sitter-python>=0.25.0",
     "rumdl>=0.2.4",
+    "types-toml>=0.10.8.20260518",
 ]
 
 [build-system]
