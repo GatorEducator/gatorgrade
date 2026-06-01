@@ -59,7 +59,7 @@ _LIBC_BY_SYSTEM = {
 
 
 def _get_platform_info() -> str:
-    """Get the platform information string in the format used by uv."""
+    """Get the platform information string for Linux."""
     arch = platform.machine() or UNKNOWN_PLATFORM
     system = platform.system().lower() or UNKNOWN_PLATFORM
     libc_name, _ = platform.libc_ver()
@@ -79,12 +79,38 @@ def _get_platform_info() -> str:
     return f"{arch}-{system}-{libc}"
 
 
+def _get_python_info() -> str:
+    """Get the Python version, build, and compiler information string."""
+    version = platform.python_version()
+    build_no, build_date = platform.python_build()
+    compiler = platform.python_compiler().strip()
+    return f"Python {version} ({build_no}, {build_date}, {compiler})"
+
+
+def _get_os_release() -> str:
+    """Get the operating system release string for macOS or Windows."""
+    if platform.system() == SYSTEM_DARWIN.title():
+        release, _, _ = platform.mac_ver()
+        if release:
+            return f"macOS {release}"
+    elif platform.system() == "Windows":
+        release, _, _, _ = platform.win32_ver()
+        if release:
+            return f"Windows {release}"
+    return ""
+
+
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        console.print(
-            f"gatorgrade {GATORGRADE_VERSION} ({_get_platform_info()})"
-        )
+        lines = [
+            f"gatorgrade {GATORGRADE_VERSION} ({_get_platform_info()})",
+            _get_python_info(),
+        ]
+        os_release = _get_os_release()
+        if os_release:
+            lines.append(os_release)
+        console.print("\n".join(lines))
         raise typer.Exit()
 
 
