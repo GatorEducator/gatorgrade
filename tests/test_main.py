@@ -198,6 +198,50 @@ def test_gatorgrade_with_version_flag(
     assert "Python" in plain_stdout
     # the output should include the python version number
     assert platform.python_version() in plain_stdout
+    # the output should include the linux kernel release
+    assert "Linux" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_macos(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the macOS release on Darwin systems."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        main.platform, "mac_ver", lambda: ("14.5", (("", "", ""), ""), "arm64")
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "MacOS (14.5)" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_windows(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the Windows release on Windows systems."""
+    monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        main.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "Windows (10)" in plain_stdout
 
 
 def test_gatorgrade_version_callback_with_false() -> None:
@@ -310,7 +354,7 @@ def test_gatorgrade_get_os_release_darwin(
     monkeypatch.setattr(
         main.platform, "mac_ver", lambda: ("14.5", (("", "", ""), ""), "arm64")
     )
-    assert main._get_os_release() == "macOS 14.5"
+    assert main._get_os_release() == "MacOS (14.5)"
 
 
 def test_gatorgrade_get_os_release_darwin_no_release(
@@ -332,7 +376,7 @@ def test_gatorgrade_get_os_release_windows(
     monkeypatch.setattr(
         main.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
     )
-    assert main._get_os_release() == "Windows 10"
+    assert main._get_os_release() == "Windows (10)"
 
 
 def test_gatorgrade_get_os_release_windows_no_release(
@@ -347,6 +391,16 @@ def test_gatorgrade_get_os_release_windows_no_release(
 def test_gatorgrade_get_os_release_linux(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test the os release string on Linux returns empty string."""
+    """Test the os release string on Linux uses the kernel version."""
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(main.platform, "release", lambda: "6.18.17")
+    assert main._get_os_release() == "Linux (6.18.17)"
+
+
+def test_gatorgrade_get_os_release_linux_no_release(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on Linux when no kernel is available."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(main.platform, "release", lambda: "")
     assert main._get_os_release() == ""
