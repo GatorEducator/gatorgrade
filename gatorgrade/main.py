@@ -38,28 +38,45 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
+# define constants for the platform information that is displayed
+# by the --version option, mirroring the format used by uv; the
+# arch and system combination is already unique across platforms
+# (e.g., x86_64 + linux, arm64 + darwin, AMD64 + windows), so the
+# vendor field from Rust's target triple is omitted because Python
+# cannot determine it and it would always be "unknown"
+UNKNOWN_PLATFORM = "unknown"
+LIBC_GNU = "gnu"
+LIBC_MUSL = "musl"
+LIBC_NONE = "none"
+LIBC_MSVC = "msvc"
+SYSTEM_DARWIN = "darwin"
+SYSTEM_LINUX = "linux"
+SYSTEM_WINDOWS = "windows"
+_LIBC_BY_SYSTEM = {
+    SYSTEM_DARWIN: LIBC_NONE,
+    SYSTEM_WINDOWS: LIBC_MSVC,
+}
+
 
 def _get_platform_info() -> str:
     """Get the platform information string in the format used by uv."""
-    arch = platform.machine() or "unknown"
-    system = platform.system().lower() or "unknown"
+    arch = platform.machine() or UNKNOWN_PLATFORM
+    system = platform.system().lower() or UNKNOWN_PLATFORM
     libc_name, _ = platform.libc_ver()
-    if system == "linux":
+    if system == SYSTEM_LINUX:
         libc_lower = libc_name.lower()
         libc = (
-            "musl"
-            if "musl" in libc_lower
-            else "gnu"
+            LIBC_MUSL
+            if LIBC_MUSL in libc_lower
+            else LIBC_GNU
             if libc_name
-            else "unknown"
+            else UNKNOWN_PLATFORM
         )
-    elif system == "darwin":
-        libc = "none"
-    elif system == "windows":
-        libc = "msvc"
+    elif system in _LIBC_BY_SYSTEM:
+        libc = _LIBC_BY_SYSTEM[system]
     else:
-        libc = "unknown"
-    return f"{arch}-unknown-{system}-{libc}"
+        libc = UNKNOWN_PLATFORM
+    return f"{arch}-{system}-{libc}"
 
 
 def _version_callback(value: bool) -> None:
