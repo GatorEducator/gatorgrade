@@ -3,6 +3,7 @@
 import builtins
 import io
 import os
+import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
 
@@ -12,6 +13,8 @@ from typer.testing import CliRunner
 from gatorgrade import main
 
 runner = CliRunner()
+
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def patch_open(
@@ -174,3 +177,22 @@ def test_gatorgrade_with_no_status_bar(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
     assert "Passed 3/3 (100%) of checks" in result.stdout
+
+
+def test_gatorgrade_with_version_flag(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade displays the version when --version is provided."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    # strip ANSI escape codes that Rich may add when stdout is a TTY
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert f"GatorGrade version: {main.GATORGRADE_VERSION}" in plain_stdout
+
+
+def test_gatorgrade_version_callback_with_false() -> None:
+    """Test that the version callback does not exit when value is False."""
+    main._version_callback(False)
