@@ -3,6 +3,7 @@
 import builtins
 import io
 import os
+import platform
 import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
@@ -15,7 +16,7 @@ from gatorgrade import main
 runner = CliRunner()
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
-PLATFORM_INFO_PARTS = 4
+PLATFORM_INFO_PARTS = 3
 
 
 def patch_open(
@@ -202,13 +203,13 @@ def test_gatorgrade_version_callback_with_false() -> None:
 def test_gatorgrade_get_platform_info_format() -> None:
     """Test that the platform info function returns a uv-like format string."""
     platform_info = main._get_platform_info()
-    # the format is arch-vendor-os-libc with exactly four parts
+    # the format is arch-os-libc with exactly three parts
     parts = platform_info.split("-")
     assert len(parts) == PLATFORM_INFO_PARTS
     # no part should be empty
     assert all(parts)
-    # the second part is the vendor which we hardcode to "unknown"
-    assert parts[1] == "unknown"
+    # the second part is the operating system
+    assert parts[1] == platform.system().lower()
 
 
 def test_gatorgrade_get_platform_info_linux_musl(
@@ -218,7 +219,7 @@ def test_gatorgrade_get_platform_info_linux_musl(
     monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("musl", "1.2"))
-    assert main._get_platform_info() == "x86_64-unknown-linux-musl"
+    assert main._get_platform_info() == "x86_64-linux-musl"
 
 
 def test_gatorgrade_get_platform_info_linux_empty_libc(
@@ -228,7 +229,7 @@ def test_gatorgrade_get_platform_info_linux_empty_libc(
     monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "x86_64-unknown-linux-unknown"
+    assert main._get_platform_info() == "x86_64-linux-unknown"
 
 
 def test_gatorgrade_get_platform_info_darwin(
@@ -238,7 +239,7 @@ def test_gatorgrade_get_platform_info_darwin(
     monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
     monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "arm64-unknown-darwin-none"
+    assert main._get_platform_info() == "arm64-darwin-none"
 
 
 def test_gatorgrade_get_platform_info_windows(
@@ -248,7 +249,7 @@ def test_gatorgrade_get_platform_info_windows(
     monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
     monkeypatch.setattr(main.platform, "system", lambda: "Windows")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "AMD64-unknown-windows-msvc"
+    assert main._get_platform_info() == "AMD64-windows-msvc"
 
 
 def test_gatorgrade_get_platform_info_unknown_system(
@@ -258,7 +259,7 @@ def test_gatorgrade_get_platform_info_unknown_system(
     monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
     monkeypatch.setattr(main.platform, "system", lambda: "Plan9")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "x86_64-unknown-plan9-unknown"
+    assert main._get_platform_info() == "x86_64-plan9-unknown"
 
 
 def test_gatorgrade_get_platform_info_fallback_arch(
@@ -268,4 +269,4 @@ def test_gatorgrade_get_platform_info_fallback_arch(
     monkeypatch.setattr(main.platform, "machine", lambda: "")
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("glibc", "2.40"))
-    assert main._get_platform_info() == "unknown-unknown-linux-gnu"
+    assert main._get_platform_info() == "unknown-linux-gnu"
