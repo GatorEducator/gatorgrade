@@ -32,9 +32,10 @@ This document provides guidelines for AI agents contributing to this repository.
 - Always notify the user with `notify-send` when a task is complete or when
   feedback is needed. I have standing permission to use the notification tool.
 - You should also use the following command to notify the user when you are
-  finished with a task or need further help: `timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
-- Note that this command will only display in the current Zellij session. Please
-  also note that you need to add a space at the end of the notification.
+  finished with a task or need further help:
+  `timeout 2 zellij pipe -- "zjstatus::notify::󰵰 Agent finished. This is really fun. "`
+- Note that this command will only display in the current Zellij session.
+  Please also note that you need to add a space at the end of the notification.
 - You should use both notification methods as appropriate, making sure that the
   Zellij command is always prefaced with a timeout of 2 seconds.
 
@@ -66,13 +67,15 @@ All the Python code should follow these standards:
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
   identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
-- **Imports:** Group imports in this order: standard library, third-party, local
-  imports. Use absolute imports (`from gatorgrade.module import <name>`). Finally,
-  make sure that all imports are placed at the top of the file. Do not place
-  imports into the middle of a file or even at the start of a function or class.
+- **Imports:** Group imports in this order: standard library, third-party,
+  local imports. Use absolute imports (`from gatorgrade.module import <name>`).
+  Finally, make sure that all imports are placed at the top of the file. Do not
+  place imports into the middle of a file or even at the start of a function or
+  class.
 - **Formatting:** Use `ruff format` (line length 79 for lint, 88 for isort);
   trailing commas enabled or the corresponding task called `uv run task ruff-format`.
-- **Types:** All functions must have type hints for parameters and return values.
+- **Types:** All functions must have type hints for parameters and return
+  values.
 - **Naming:** snake_case for functions/variables, PascalCase for classes,
   UPPER_SNAKE_CASE for constants.
 - **File operations:** Use `pathlib.Path` for all filesystem operations, never
