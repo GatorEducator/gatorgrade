@@ -138,9 +138,7 @@ def project_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path
 
 
-def test_check_exits_zero_when_versions_match(
-    project_files: Path,
-) -> None:
+def test_check_exits_zero_when_versions_match() -> None:
     """Exit 0 and print a success message when versions match."""
     runner = CliRunner()
     result = runner.invoke(app, ["check"])
