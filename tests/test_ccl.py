@@ -222,7 +222,6 @@ def test_fix_comment_text_handles_trailing_punctuation() -> None:
 
 def test_check_exits_zero_when_no_errors(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Exit 0 and print a success message when no comments are uppercase."""
     _write_py(tmp_path, "good.py", "# fine\n")
