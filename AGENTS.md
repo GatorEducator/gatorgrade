@@ -26,7 +26,8 @@ This document provides guidelines for AI agents contributing to this repository.
 ## Notification Instructions
 
 - The user has given permission to use the `notify-send` command to signal task
-  completion. Here is an example of the command: `notify-send "Question from Coding Agent" "Please clarify how to complete the testing task."`.
+  completion. Here is an example of the command:
+  `notify-send "Question from Coding Agent" "Please clarify how to complete the testing task."`.
 - The user wants a `notify-send` notification whenever I ask a question.
 - Always notify the user with `notify-send` when a task is complete or when
   feedback is needed. I have standing permission to use the notification tool.
