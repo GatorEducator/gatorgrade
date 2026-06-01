@@ -1,5 +1,6 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 
+import importlib.metadata
 import platform
 import sys
 from pathlib import Path
@@ -45,6 +46,7 @@ FAILURE = 1
 # vendor field from Rust's target triple is omitted because Python
 # cannot determine it and it would always be "unknown"
 UNKNOWN_PLATFORM = "unknown"
+GATORGRADER_DEPENDENCY = "gatorgrader"
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
@@ -87,6 +89,12 @@ def _get_python_info() -> str:
     return f"Python {version} ({build_no}, {build_date}, {compiler})"
 
 
+def _get_gatorgrade_info() -> str:
+    """Get the parenthetic GatorGrade info string with the GatorGrader version."""
+    gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
+    return f"GatorGrader {gatorgrader_version}"
+
+
 def _get_os_release() -> str:
     """Get the operating system release string for Linux, macOS, or Windows."""
     parenthetic_platform_string = f"({_get_platform_info()})"
@@ -109,7 +117,7 @@ def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
         lines = [
-            f"gatorgrade {GATORGRADE_VERSION} ",
+            f"gatorgrade {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
             _get_python_info(),
         ]
         os_release = _get_os_release()
