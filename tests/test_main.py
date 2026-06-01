@@ -192,7 +192,12 @@ def test_gatorgrade_with_version_flag(
     assert result.exit_code == 0
     # strip ANSI escape codes that Rich may add when stdout is a TTY
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    # the output should include the program name, version, and platform info
     assert f"gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
+    # the output should also include the python version
+    assert "Python" in plain_stdout
+    # the output should include the python version number
+    assert platform.python_version() in plain_stdout
 
 
 def test_gatorgrade_version_callback_with_false() -> None:
@@ -270,3 +275,78 @@ def test_gatorgrade_get_platform_info_fallback_arch(
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "libc_ver", lambda: ("glibc", "2.40"))
     assert main._get_platform_info() == "unknown-linux-gnu"
+
+
+def test_gatorgrade_get_python_info_format() -> None:
+    """Test the python info string contains the expected fields."""
+    python_info = main._get_python_info()
+    # the format is Python {version} ({build_no}, {build_date}, {compiler})
+    assert python_info.startswith("Python ")
+    # it should contain a version in parentheses
+    assert "(" in python_info
+    assert python_info.endswith(")")
+
+
+def test_gatorgrade_get_python_info_uses_platform(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the python info string uses the platform module functions."""
+    monkeypatch.setattr(main.platform, "python_version", lambda: "3.12.0")
+    monkeypatch.setattr(
+        main.platform, "python_build", lambda: ("v3.12.0", "Jan 1 2024")
+    )
+    monkeypatch.setattr(main.platform, "python_compiler", lambda: "GCC 11.4 ")
+    assert (
+        main._get_python_info()
+        == "Python 3.12.0 (v3.12.0, Jan 1 2024, GCC 11.4)"
+    )
+
+
+def test_gatorgrade_get_os_release_darwin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on a Darwin (macOS) system."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(
+        main.platform, "mac_ver", lambda: ("14.5", (("", "", ""), ""), "arm64")
+    )
+    assert main._get_os_release() == "macOS 14.5"
+
+
+def test_gatorgrade_get_os_release_darwin_no_release(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on macOS when no release is available."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(
+        main.platform, "mac_ver", lambda: ("", (("", "", ""), ""), "")
+    )
+    assert main._get_os_release() == ""
+
+
+def test_gatorgrade_get_os_release_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on a Windows system."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(
+        main.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
+    )
+    assert main._get_os_release() == "Windows 10"
+
+
+def test_gatorgrade_get_os_release_windows_no_release(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on Windows when no release is available."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(main.platform, "win32_ver", lambda: ("", "", "", ""))
+    assert main._get_os_release() == ""
+
+
+def test_gatorgrade_get_os_release_linux(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the os release string on Linux returns empty string."""
+    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
+    assert main._get_os_release() == ""
