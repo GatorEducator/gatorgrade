@@ -185,3 +185,38 @@ def test_gatorgrader_check_with_single_arg() -> None:
     )
     assert check.gg_args == ["MatchFileFragment"]
     assert len(check.gg_args) == 1
+
+
+def test_shell_check_with_outputlimit() -> None:
+    """Test ShellCheck construction with explicit outputlimit."""
+    check = ShellCheck(command="echo test", outputlimit=25)
+    assert check.outputlimit == 25  # noqa: PLR2004
+
+
+def test_gatorgrader_check_with_outputlimit() -> None:
+    """Test GatorGraderCheck construction with explicit outputlimit."""
+    check = GatorGraderCheck(
+        gg_args=["Test"], json_info={"check": "Test"}, outputlimit=10
+    )
+    assert check.outputlimit == 10  # noqa: PLR2004
+
+
+def test_shell_check_invalid_outputlimit_zero() -> None:
+    """Test ShellCheck raises ValueError for outputlimit of 0."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", outputlimit=0)
+    assert "positive integer" in str(exc_info.value)
+
+
+def test_shell_check_invalid_outputlimit_negative() -> None:
+    """Test ShellCheck raises ValueError for negative outputlimit."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", outputlimit=-5)
+    assert "positive integer" in str(exc_info.value)
+
+
+def test_gatorgrader_check_invalid_outputlimit_zero() -> None:
+    """Test GatorGraderCheck raises ValueError for outputlimit of 0."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, outputlimit=0)
+    assert "positive integer" in str(exc_info.value)
