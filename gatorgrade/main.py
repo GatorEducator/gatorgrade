@@ -14,7 +14,7 @@ from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
-GATORGRADE_VERSION = "0.8.4"
+GATORGRADE_VERSION = "0.9.0"
 
 # create an app for the Typer-based CLI
 

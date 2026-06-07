@@ -1,5 +1,7 @@
 """Test suite for checks.py."""
 
+import pytest
+
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 
 
@@ -97,6 +99,45 @@ def test_gatorgrader_check_empty_args() -> None:
     check = GatorGraderCheck(gg_args=gg_args, json_info=json_info)
     assert check.gg_args == []
     assert check.json_info == {"check": "EmptyCheck"}
+
+
+def test_shell_check_with_weight() -> None:
+    """Test ShellCheck construction with explicit weight."""
+    check = ShellCheck(
+        command="echo test",
+        description="Test shell command",
+        weight=10,
+    )
+    assert check.weight == 10  # noqa: PLR2004
+
+
+def test_gatorgrader_check_with_weight() -> None:
+    """Test GatorGraderCheck construction with explicit weight."""
+    gg_args = ["MatchFileFragment"]
+    json_info = {"check": "MatchFileFragment"}
+    check = GatorGraderCheck(gg_args=gg_args, json_info=json_info, weight=5)
+    assert check.weight == 5  # noqa: PLR2004
+
+
+def test_shell_check_invalid_weight_zero() -> None:
+    """Test ShellCheck raises ValueError for weight of 0."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", weight=0)
+    assert "greater than 0" in str(exc_info.value)
+
+
+def test_shell_check_invalid_weight_negative() -> None:
+    """Test ShellCheck raises ValueError for negative weight."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", weight=-1)
+    assert "greater than 0" in str(exc_info.value)
+
+
+def test_gatorgrader_check_invalid_weight_zero() -> None:
+    """Test GatorGraderCheck raises ValueError for weight of 0."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, weight=0)
+    assert "greater than 0" in str(exc_info.value)
 
 
 def test_shell_check_empty_command() -> None:

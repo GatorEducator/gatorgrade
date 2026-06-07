@@ -1,5 +1,7 @@
 """Test suite for command_line_generator.py."""
 
+import pytest
+
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import CheckData
@@ -172,6 +174,71 @@ def test_generate_checks_empty_list() -> None:
     checks = generate_checks([])
     assert len(checks) == 0
     assert checks == []
+
+
+def test_generate_checks_with_shell_check_weight() -> None:
+    """Test generate_checks parses weight for shell check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "command": "echo 'hello'",
+            "description": "Echo hello",
+            "weight": 10,
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].weight == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_gatorgrader_check_weight() -> None:
+    """Test generate_checks parses weight for GatorGrader check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "check": "MatchFileFragment",
+            "description": "Check fragment",
+            "weight": 5,
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].weight == 5  # noqa: PLR2004
+
+
+def test_generate_checks_with_default_weight() -> None:
+    """Test generate_checks defaults weight to 1 when not specified."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data])
+    assert checks[0].weight == 1
+
+
+def test_generate_checks_with_invalid_weight_zero() -> None:
+    """Test generate_checks raises error for weight of 0."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": 0},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "greater than 0" in str(exc_info.value)
+
+
+def test_generate_checks_with_invalid_weight_negative() -> None:
+    """Test generate_checks raises error for negative weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": -2},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "greater than 0" in str(exc_info.value)
 
 
 def test_generate_checks_with_string_count_option() -> None:

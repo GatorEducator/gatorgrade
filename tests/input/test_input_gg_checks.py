@@ -105,3 +105,16 @@ def test_parse_config_shell_check_contains_command() -> None:
     # then the command should be stored in the shell check
     assert isinstance(output[0], ShellCheck)
     assert output[0].command == "mdl ."
+
+
+def test_parse_config_parses_weighted_checks() -> None:
+    """Test to make sure that weighted checks are parsed correctly."""
+    # given a configuration file with weighted checks
+    config = Path("tests/input/yml_test_files/gatorgrade_weighted_checks.yml")
+    # when parse_config is run
+    output = parse_config(config)
+    # then the weights should be parsed correctly
+    assert isinstance(output[0], GatorGraderCheck)
+    assert output[0].weight == 10  # noqa: PLR2004
+    assert isinstance(output[1], ShellCheck)
+    assert output[1].weight == 5  # noqa: PLR2004

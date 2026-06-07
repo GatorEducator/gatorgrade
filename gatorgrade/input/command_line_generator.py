@@ -23,6 +23,7 @@ def generate_checks(
     """
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
+        weight = check_data.check.get("weight", 1)
         # if the check has a `command` key, then it is a shell check
         if "command" in check_data.check:
             checks.append(
@@ -30,6 +31,7 @@ def generate_checks(
                     command=check_data.check.get("command"),
                     description=check_data.check.get("description"),
                     json_info=check_data.check,
+                    weight=weight,
                 )
             )
         # otherwise, it is a GatorGrader check
@@ -62,7 +64,9 @@ def generate_checks(
                     dirname = "."
                 gg_args.extend(["--directory", dirname, "--file", filename])
             checks.append(
-                GatorGraderCheck(gg_args=gg_args, json_info=check_data.check)
+                GatorGraderCheck(
+                    gg_args=gg_args, json_info=check_data.check, weight=weight
+                )
             )
 
     return checks

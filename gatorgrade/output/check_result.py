@@ -8,13 +8,14 @@ import rich
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         passed: bool,
         description: str,
         json_info: Union[Dict[str, Any], str, None],
         path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
+        weight: int | float = 1,
     ):
         """Construct a CheckResult.
 
@@ -27,6 +28,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             path: The path associated with the check result.
             diagnostic: The message to use in output if the check
                 has failed.
+            weight: The weight of the check result.
 
         """
         self.passed = passed
@@ -35,6 +37,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
+        self.weight = weight
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
@@ -62,7 +65,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"json_info={self.json_info}, "
             f"path='{self.path}', "
             f"diagnostic='{self.diagnostic}', "
-            f"run_command='{self.run_command}')"
+            f"run_command='{self.run_command}', "
+            f"weight={self.weight})"
         )
 
     def __str__(self, show_diagnostic: bool = False) -> str:

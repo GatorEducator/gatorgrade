@@ -51,6 +51,7 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
         description=check.description,
         json_info=check.json_info,
         diagnostic=diagnostic,
+        weight=check.weight,
     )
 
 
@@ -93,6 +94,7 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         json_info=check.json_info,
         diagnostic=diagnostic,
         path=file_path,
+        weight=check.weight,
     )
 
 
@@ -100,6 +102,7 @@ def create_report_json(
     passed_count: int,
     checkResults: List[CheckResult],
     percent_passed: int,
+    weighted_percent: int = 0,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
@@ -108,6 +111,7 @@ def create_report_json(
         check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
+        weighted_percent: the weighted percentage of checks that passed
 
     """
     # create list to hold the key values for the dictionary that
@@ -115,6 +119,7 @@ def create_report_json(
     overall_key_list = [
         "amount_correct",
         "percentage_score",
+        "weighted_percentage_score",
         "report_time",
         "checks",
     ]
@@ -139,7 +144,13 @@ def create_report_json(
     overall_dict = dict(
         zip(
             overall_key_list,
-            [passed_count, percent_passed, formatted_time, checks_list],
+            [
+                passed_count,
+                percent_passed,
+                weighted_percent,
+                formatted_time,
+                checks_list,
+            ],
         )
     )
     return overall_dict
@@ -157,7 +168,14 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     failing_checks = []
     num_checks = len(json.get("checks"))  # type: ignore
     # write the total, amt correct and percentage score to md file
-    markdown_contents += f"# Gatorgrade Insights\n\n**Project Name:** {Path.cwd().name}\n**Amount Correct:** {(json.get('amount_correct'))}/{num_checks} ({(json.get('percentage_score'))}%)\n"
+    weighted_score = json.get("weighted_percentage_score", 0)
+    markdown_contents += (
+        f"# Gatorgrade Insights\n\n"
+        f"**Project Name:** {Path.cwd().name}\n"
+        f"**Amount Correct:** {json.get('amount_correct')}/{num_checks} "
+        f"({json.get('percentage_score')}%)\n"
+        f"**Weighted Score:** {weighted_score}%\n"
+    )
     # split checks into passing and not passing
     for check in json.get("checks"):  # type: ignore
         # if the check is passing
@@ -456,14 +474,26 @@ def run_checks(  # noqa: PLR0912, PLR0915
         percent = 0
     else:
         percent = round(passed_count / len(results) * 100)
+    # compute the weighted percentage of checks passed
+    total_weight = sum(result.weight for result in results)
+    passed_weight = sum(result.weight for result in results if result.passed)
+    if total_weight == 0:
+        weighted_percent = 0
+    else:
+        weighted_percent = round(passed_weight / total_weight * 100)
     # if the report is wanted, create output in line with their specifications
     if all(report):
-        report_output_data = create_report_json(passed_count, results, percent)
+        report_output_data = create_report_json(
+            passed_count, results, percent, weighted_percent
+        )
         configure_report(report, report_output_data)
     # compute summary results and display them in the console using the Panel
     # provided by Rich; this enables a border that resizes with the terminal;
     # note that there is one blank line between the prior output and the Panel
-    summary = f"Passed {passed_count}/{len(results)} ({percent}%) of checks for {Path.cwd().name}!"
+    summary = (
+        f"Passed {passed_count}/{len(results)} ({percent}%) of checks "
+        f"for {Path.cwd().name}! (Weighted: {weighted_percent}%)"
+    )
     summary_color = "green" if passed_count == len(results) else "bright_red"
     rich.print("")
     rich.print(Panel(summary, expand=False, title=None, style=summary_color))

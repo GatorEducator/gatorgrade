@@ -206,7 +206,13 @@ def test_md_report_file_created_correctly(
     output.run_checks(checks, report)
     capsys.readouterr()
     # check to make sure the created file matches the expected output
-    expected_file_contents = """# Gatorgrade Insights\n\n**Project Name:** gatorgrade\n**Amount Correct:** 1/3 (33%)\n\n## Passing Checks"""
+    expected_file_contents = (
+        "# Gatorgrade Insights\n\n"
+        "**Project Name:** gatorgrade\n"
+        "**Amount Correct:** 1/3 (33%)\n"
+        "**Weighted Score:** 33%\n\n"
+        "## Passing Checks"
+    )
     file = open("insights.md", "r")
     file_contents = file.read()
     file.close()
@@ -1060,6 +1066,75 @@ def test_run_checks_gg_check_no_command_status_bar_detailed(
         output.run_checks(checks, report, running_mode=True)  # type: ignore
         out, _ = capsys.readouterr()
         assert "Passed 1/1" in out
+
+
+def test_run_checks_weighted_score_displayed(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that run_checks displays weighted score in summary."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"', command='echo "hello"', weight=10
+        ),
+        ShellCheck(description="Failing check", command="false", weight=5),
+    ]
+    report = (None, None, None)
+    output.run_checks(checks, report)  # type: ignore
+    out, _ = capsys.readouterr()
+    assert "Passed 1/2 (50%) of checks" in out
+    assert "(Weighted: 67%)" in out
+
+
+def test_run_checks_all_pass_weighted_score_100(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that run_checks shows 100% weighted score when all checks pass."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="Pass 1", command="echo 1", weight=10),
+        ShellCheck(description="Pass 2", command="echo 2", weight=5),
+    ]
+    report = (None, None, None)
+    result = output.run_checks(checks, report)  # type: ignore
+    assert result is True
+    out, _ = capsys.readouterr()
+    assert "(Weighted: 100%)" in out
+
+
+def test_run_checks_zero_checks_weighted_zero(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that run_checks shows 0% weighted score with no checks."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = []
+    report = (None, None, None)
+    output.run_checks(checks, report)  # type: ignore
+    out, _ = capsys.readouterr()
+    assert "(Weighted: 0%)" in out
+
+
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_weighted_percent() -> None:
+    """Test that create_report_json includes weighted percentage score."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test check passed",
+        json_info={"check": "test"},
+    )
+    result = output.create_report_json(1, [check_result], 100, 75)
+    assert result["weighted_percentage_score"] == 75  # noqa: PLR2004
+
+
+def test_create_markdown_report_file_includes_weighted_score() -> None:
+    """Test markdown report includes weighted score line."""
+    json_data = {
+        "amount_correct": 1,
+        "percentage_score": 50,
+        "weighted_percentage_score": 75,
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "**Weighted Score:** 75%" in markdown
 
 
 def test_run_checks_gg_check_with_command_status_bar_detailed(
