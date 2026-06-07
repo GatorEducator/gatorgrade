@@ -151,11 +151,14 @@ def gatorgrade(  # noqa: PLR0913
         (None, None, None),
         "--report",
         "-r",
-        help="A tuple containing the following REQUIRED values: \
-            1. The destination of the report (either file or env) \
-            2. The format of the report (either json or md) \
-            3. the name of the file or environment variable\
-            4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
+        help=(
+            f"A tuple containing the following REQUIRED values:{NEWLINE}{NEWLINE}"
+            f" 1. The destination of the report (either file or env){NEWLINE}{NEWLINE}"
+            "  2. The format of the report (either json or md)\n"
+            "  3. The name of the file or environment variable\n"
+            "  4. Use 'env md GITHUB_STEP_SUMMARY' to create GitHub job"
+            " summary in GitHub Action"
+        ),
     ),
     run_status_bar: bool = typer.Option(
         False,
