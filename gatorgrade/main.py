@@ -73,6 +73,9 @@ PYTHON_NAME = "Python"
 # newline character for joining lines
 NEWLINE = "\n"
 
+# exit message
+EXIT_MESSAGE = "Exiting now!"
+
 
 def _get_platform_info() -> str:
     """Get the platform information string for any platform."""
@@ -206,7 +209,7 @@ def gatorgrade(  # noqa: PLR0913
             console.print(
                 f"The file {filename} either does not exist or is not valid."
             )
-            console.print("Exiting now!")
+            console.print(EXIT_MESSAGE)
             console.print()
         # at least one of the checks did not pass or
         # the provided file was not valid and thus
