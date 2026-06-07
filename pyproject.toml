@@ -114,7 +114,7 @@ comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments th
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml" }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
-test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
+test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
 test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test suite with coverage tracking", use_vars = true }
 test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
