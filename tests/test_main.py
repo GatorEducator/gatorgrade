@@ -142,8 +142,9 @@ def test_gatorgrade_with_custom_config_name(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "- Checks: 3/3 (100%)" in result.stdout
-    assert "- Points: 3/3 (100%)" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_report_option(
@@ -170,8 +171,9 @@ def test_gatorgrade_with_status_bar(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "- Checks: 3/3 (100%)" in result.stdout
-    assert "- Points: 3/3 (100%)" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_no_status_bar(
