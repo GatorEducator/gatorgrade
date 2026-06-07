@@ -60,7 +60,7 @@ Then activate the virtual environment to use `gatorgrade`.
 To use GatorGrade to run checks for an assignment, the assignment must
 contain a `gatorgrade.yml` file that defines the checks to run. For more
 information on configuring this file, see the [Configuring
-Checks](#configuring-checks) section below.
+Checks](#introduction-to-configuring-checks) section below.
 
 To run GatorGrade checks, execute the `gatorgrade` command within the
 assignment directory:
@@ -169,7 +169,7 @@ gatorgrade --report env md GITHUB_STEP_SUMMARY
 To use GatorGrade to run GatorGrader checks for an assignment, the assignment
 must contain a `gatorgrade.yml` file that defines the GatorGrader checks.
 Instructors, for more information on configuring the `gatorgrade.yml` file, see
-the [Configuring GatorGrader Checks](#configuring-gatorgrader-checks) section
+the [Configuring GatorGrader Checks](#details-about-configuring-checks) section
 below. The following is the output of running GatorGrade on the [GatorGrade
 Hello World](https://github.com/GatorEducator/gatorgrade-hello-world/tree/main)
 assignment.
@@ -342,6 +342,38 @@ Run all linting and testing commands:
 ```bash
 uv run task all
 ```
+
+### Using a Local Development Version in Another Project
+
+If you are developing GatorGrade locally and want to test your changes in a
+different project that uses GatorGrade with `uv`, you can install the local
+version as an editable development dependency in that other project. From within
+the other project's directory, run the following command, specifying the fully
+qualified path to the directory containing your local GatorGrade source code:
+
+```bash
+uv add --dev /path/to/gatorgrade
+```
+
+After installing the local development version, you can run GatorGrade using:
+
+```bash
+uv run gatorgrade
+```
+
+This will use whatever code is currently in your local GatorGrade directory,
+so any changes you make to the source will take effect on the next run.
+
+**Important:** When you are finished testing and want to switch back to the
+published version from PyPI, remove the local development dependency by
+running this command in the other project's directory:
+
+```bash
+uv remove gatorgrade --dev
+```
+
+In the other project that uses GatorGrade, you can continue to type `uvx gatorgrade`
+and it will always use the published version of GatorGrade.
 
 ### Mutation Testing
 

@@ -1,5 +1,7 @@
 """Use Typer to run gatorgrade to run the checks and generate the yml file."""
 
+import importlib.metadata
+import platform
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -10,6 +12,9 @@ from rich.emoji import Emoji
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
+
+# define the version of gatorgrade; this is used in the --version option
+GATORGRADE_VERSION = "0.8.3"
 
 # create an app for the Typer-based CLI
 
@@ -34,11 +39,100 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
+# define constants for the platform information that is displayed
+# by the --version option, mirroring the format used by uv; the
+# arch and system combination is already unique across platforms
+# (e.g., x86_64 + linux, arm64 + darwin, AMD64 + windows), so the
+# vendor field from Rust's target triple is omitted because Python
+# cannot determine it and it would always be "unknown"
+UNKNOWN_PLATFORM = "unknown"
+GATORGRADER_DEPENDENCY = "gatorgrader"
+LIBC_GNU = "gnu"
+LIBC_MUSL = "musl"
+LIBC_NONE = "none"
+LIBC_MSVC = "msvc"
+SYSTEM_DARWIN = "darwin"
+SYSTEM_LINUX = "linux"
+SYSTEM_WINDOWS = "windows"
+_LIBC_BY_SYSTEM = {
+    SYSTEM_DARWIN: LIBC_NONE,
+    SYSTEM_WINDOWS: LIBC_MSVC,
+}
+
+
+def _get_platform_info() -> str:
+    """Get the platform information string for any platform."""
+    arch = platform.machine() or UNKNOWN_PLATFORM
+    system = platform.system().lower() or UNKNOWN_PLATFORM
+    libc_name, _ = platform.libc_ver()
+    if system == SYSTEM_LINUX:
+        libc_lower = libc_name.lower()
+        libc = (
+            LIBC_MUSL
+            if LIBC_MUSL in libc_lower
+            else LIBC_GNU
+            if libc_name
+            else UNKNOWN_PLATFORM
+        )
+    elif system in _LIBC_BY_SYSTEM:
+        libc = _LIBC_BY_SYSTEM[system]
+    else:
+        libc = UNKNOWN_PLATFORM
+    return f"{arch}-{system}-{libc}"
+
+
+def _get_python_info() -> str:
+    """Get the Python version, build, and compiler information string."""
+    version = platform.python_version()
+    build_no, build_date = platform.python_build()
+    compiler = platform.python_compiler().strip()
+    return f"Python {version} ({build_no}, {build_date}, {compiler})"
+
+
+def _get_gatorgrade_info() -> str:
+    """Get the parenthetic GatorGrade info string with the GatorGrader version."""
+    gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
+    return f"GatorGrader {gatorgrader_version}"
+
+
+def _get_os_release() -> str:
+    """Get the operating system release string for Linux, macOS, or Windows."""
+    parenthetic_platform_string = f"({_get_platform_info()})"
+    if platform.system() == SYSTEM_LINUX.title():
+        kernel = platform.release()
+        if kernel:
+            return f"Linux {kernel} {parenthetic_platform_string}"
+    elif platform.system() == SYSTEM_DARWIN.title():
+        release, _, _ = platform.mac_ver()
+        if release:
+            return f"MacOS {release} {parenthetic_platform_string}"
+    elif platform.system() == "Windows":
+        release, _, _, _ = platform.win32_ver()
+        if release:
+            return f"Windows {release} {parenthetic_platform_string}"
+    return ""
+
+
+def _version_callback(value: bool) -> None:
+    """Print the GatorGrade version and exit when --version is provided."""
+    if value:
+        lines = [
+            f"gatorgrade {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
+            _get_python_info(),
+        ]
+        os_release = _get_os_release()
+        if os_release:
+            lines.append(os_release)
+        console.print("\n".join(lines))
+        raise typer.Exit()
+
 
 @app.callback(invoke_without_command=True)
 def gatorgrade(
     ctx: typer.Context,
-    filename: Path = typer.Option(FILE, "--config", "-c", help="Name of the yml file."),
+    filename: Path = typer.Option(
+        FILE, "--config", "-c", help="Name of the yml file."
+    ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
         "--report",
@@ -57,7 +151,14 @@ def gatorgrade(
     no_status_bar: bool = typer.Option(
         False, "--no-status-bar", help="Disable the progress bar entirely."
     ),
-):
+    _version: bool = typer.Option(
+        False,
+        "--version",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show the GatorGrade version and exit.",
+    ),
+) -> None:
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
@@ -67,14 +168,18 @@ def gatorgrade(
         # there are valid checks and thus the
         # tool should run them with run_checks
         if len(checks) > 0:
-            checks_status = run_checks(checks, report, run_status_bar, no_status_bar)
+            checks_status = run_checks(
+                checks, report, run_status_bar, no_status_bar
+            )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
         else:
             checks_status = False
             console.print()
-            console.print(f"The file {filename} either does not exist or is not valid.")
+            console.print(
+                f"The file {filename} either does not exist or is not valid."
+            )
             console.print("Exiting now!")
             console.print()
         # at least one of the checks did not pass or

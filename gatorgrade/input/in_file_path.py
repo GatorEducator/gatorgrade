@@ -8,13 +8,16 @@ import yaml
 
 from gatorgrade.input.set_up_shell import run_setup
 
-# Represent data for a check from the configuration file.
-# Every check will have data (`check`) and some may also have a `file_context`,
+# represent data for a check from the configuration file.
+# every check will have data (`check`) and some may also have a `file_context`,
 # which is a file path associated with the check to be used when running the check.
 CheckData = namedtuple("CheckData", ["file_context", "check"])
 
 # define the default encoding
 DEFAULT_ENCODING = "utf8"
+
+# define the number of elements in YAML data that includes setup commands
+DATA_WITH_SETUP_LENGTH = 2
 
 
 def parse_yaml_file(file_path: Path) -> List[Any]:
@@ -38,31 +41,35 @@ def parse_yaml_file(file_path: Path) -> List[Any]:
 def reformat_yaml_data(data: List[Any]) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data: List[CheckData] = []
-    if len(data) == 2:
-        setup_commands = data.pop(0)  # Removes the setup commands
+    if len(data) == DATA_WITH_SETUP_LENGTH:
+        setup_commands = data.pop(0)  # removes the setup commands
         run_setup(setup_commands)
     add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
 
 
 def add_checks_to_list(
-    path: Optional[str], data_list: List[Any], reformatted_data: List[CheckData]
+    path: Optional[str],
+    data_list: List[Any],
+    reformatted_data: List[CheckData],
 ) -> None:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
-    current_path = path  # Saves the current path to keep track of the location
+    current_path = path  # saves the current path to keep track of the location
     for ddict in data_list:
         for item in ddict:
             if isinstance(
                 ddict[item], list
-            ):  # Checks if the current dictionary has another list as its value
+            ):  # checks if the current dictionary has another list as its value
                 if not path:
                     path = item
                 else:
                     path = f"{path}/{item}"
                 add_checks_to_list(
                     path, ddict[item], reformatted_data
-                )  # Runs this same function on the list inside of a dictionary
+                )  # runs this same function on the list inside of a dictionary
                 path = current_path
-            else:  # Adds the current check to the reformatted data list
-                reformatted_data.append(CheckData(file_context=path, check=ddict))
+            else:  # adds the current check to the reformatted data list
+                reformatted_data.append(
+                    CheckData(file_context=path, check=ddict)
+                )
                 break

@@ -1,17 +1,23 @@
-"""This module tests the deprecated generate.py functionality."""
+"""Test the deprecated generate.py functionality."""
 
 import os
+from pathlib import Path
 
 import pytest
 import typer
 
-from gatorgrade.generate.generate import generate_config
-from gatorgrade.generate.generate import input_correct
+from gatorgrade.generate.generate import (
+    generate_config,
+    input_correct,
+    write_yaml_of_paths_list,
+)
 
 
-def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
-    """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run"""
-    # Given a directory contains all the files and folders user inputted when calling generate.py
+def test_generate_should_create_gatorgrade_yml_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if generate.py creates a gatorgrade.yml file in the root directory after it's run."""
+    # given a directory contains all the files and folders user inputted when calling generate.py
     root_directory = tmp_path / "Lab-03"
     root_directory.mkdir()
     src_directory = root_directory / "src"
@@ -26,20 +32,20 @@ def test_generate_should_create_gatorgrade_yml_file(tmp_path, capsys):
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 03")
-    # When we call the modularized version of "generate.py" with two arguments
+    # when we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
     capsys.readouterr()
-    # Then "gatorgrade.yml" is generated in the root directory
+    # then "gatorgrade.yml" is generated in the root directory
     file_path = root_directory / "gatorgrade.yml"
     assert file_path.is_file()
 
 
 def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_successfully_ran(
-    tmp_path,
-    capsys,
-):
-    """Check if gatorgrade.yml contains correct paths when successfully created"""
-    # Given an assignment directory that contains all of the folders
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Check if gatorgrade.yml contains correct paths when successfully created."""
+    # given an assignment directory that contains all of the folders
     # and files that user inputted when calling generate.py
     root_directory = tmp_path / "Practical-01"
     root_directory.mkdir()
@@ -63,10 +69,10 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
     reflection_file.write_text("# Reflection on Practical 01")
     readme_file = root_directory / "README.md"
     readme_file.write_text("# Practical 01")
-    # When we call the modularized version of "generate.py" with two arguments
+    # when we call the modularized version of "generate.py" with two arguments
     generate_config(["src", "README.md"], str(root_directory))
     capsys.readouterr()
-    # Then the "gatorgrade.yml" contains correct paths to user inputted directories and files
+    # then the "gatorgrade.yml" contains correct paths to user inputted directories and files
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
     assert "src/input/input.txt" in file_text
@@ -77,53 +83,48 @@ def test_generated_gatorgrade_yml_file_should_contain_correct_paths_when_success
 
 
 def test_generate_should_produce_warning_message_when_some_user_inputted_files_dont_exist(
-    tmp_path, capsys
-):
-    """Check if gatorgrade.yml is created with existing file paths
-    when some user-provided file paths don't exist and if generate.py outputs a warning message
-    """
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if gatorgrade.yml is created with existing file paths.
 
-    # Given an assignment directory that contains some folders
+    When some user-provided file paths don't exist and if generate.py
+    outputs a warning message.
+    """
+    # given an assignment directory that contains some folders
     root_directory = tmp_path / "Practical-02"
     root_directory.mkdir()
-
     src_directory = root_directory / "src"
     src_directory.mkdir()
-
     main_py = src_directory / "main.py"
     main_py.write_text("import sys")
-
     writing_directory = root_directory / "writing"
     writing_directory.mkdir()
-
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Practical 02")
-
     tests_directory = root_directory / "tests"
     tests_directory.mkdir()
     test_file = tests_directory / "test_file.py"
     test_file.write_text("import pytest")
-
-    # When we call the modularized version of "generate.py"
+    # when we call the modularized version of "generate.py"
     # with two arguments, but README.md doesn't exist
     generate_config(["src", "README.md"], str(root_directory))
-
-    # Then "gatorgrade.yml" is created with existing file paths and produce warning
+    # then "gatorgrade.yml" is created with existing file paths and produce warning
     file = root_directory / "gatorgrade.yml"
     file_text = file.open().read()
     captured = capsys.readouterr()
-
     assert "src/main.py" in file_text
     assert "README.md" not in file_text
     assert "file path is not FOUND!" in captured.out
 
 
 def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
-    tmp_path, capsys
-):
-    """Check if generate.py throws an error and produce a failure message
-    when none of user provided file paths exist in the root directory"""
-    # Given an assignment directory
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Check if generate.py throws an error and produce a failure message.
+
+    When none of user provided file paths exist in the root directory.
+    """
+    # given an assignment directory
     root_directory = tmp_path / "Lab-01"
     root_directory.mkdir()
     src_directory = root_directory / "src"
@@ -138,19 +139,21 @@ def test_generate_should_throw_an_error_when_none_of_user_provided_files_exist(
     writing_directory.mkdir()
     reflection_file = writing_directory / "reflection.md"
     reflection_file.write_text("# Reflection on Lab 01")
-    # When we call the modularized version of "generate.py"
+    # when we call the modularized version of "generate.py"
     # with two arguments, but none of the files exist in the root directory
     with pytest.raises(typer.Exit) as exc_info:
         generate_config(["tests", "README.md"], str(root_directory))
     _, err = capsys.readouterr()
-    # Then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
+    # then "gatorgrade.yml" should not be generated and generate.py should throw a typer.Exit
     file = root_directory / "gatorgrade.yml"
     assert not file.is_file()
     assert "'gatorgrade.yml' is NOT generated" in err
     assert exc_info.value.exit_code == 1
 
 
-def test_generate_ignores_hidden_files(tmp_path, capsys):
+def test_generate_ignores_hidden_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py ignores hidden files and directories."""
     root_directory = tmp_path / "Lab-04"
     root_directory.mkdir()
@@ -173,7 +176,9 @@ def test_generate_ignores_hidden_files(tmp_path, capsys):
     assert ".git" not in file_text
 
 
-def test_generate_ignores_double_underscore_files(tmp_path, capsys):
+def test_generate_ignores_double_underscore_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py ignores files starting with double underscore."""
     root_directory = tmp_path / "Lab-05"
     root_directory.mkdir()
@@ -194,7 +199,9 @@ def test_generate_ignores_double_underscore_files(tmp_path, capsys):
     assert ".pyc" not in file_text
 
 
-def test_generate_with_nested_directories(tmp_path, capsys):
+def test_generate_with_nested_directories(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check if generate.py handles deeply nested directory structures."""
     root_directory = tmp_path / "Lab-06"
     root_directory.mkdir()
@@ -213,7 +220,9 @@ def test_generate_with_nested_directories(tmp_path, capsys):
     assert "level1/level2/level3/deep.py" in file_text
 
 
-def test_input_correct_adds_separator_when_run_path_missing_separator():
+def test_input_correct_adds_separator_when_run_path_missing_separator() -> (
+    None
+):
     """Check that input_correct adds path separator when run_path doesn't end with it."""
     paths = ["src", "tests"]
     run_path = "/home/user/project"
@@ -223,7 +232,7 @@ def test_input_correct_adds_separator_when_run_path_missing_separator():
     assert f"/home/user/project{expected_sep}tests{expected_sep}" in result
 
 
-def test_input_correct_adds_separator_to_individual_paths():
+def test_input_correct_adds_separator_to_individual_paths() -> None:
     """Check that input_correct adds separator to each individual path that doesn't have one."""
     paths = ["src", "tests"]
     run_path = "/home/user/project"
@@ -236,7 +245,9 @@ def test_input_correct_adds_separator_to_individual_paths():
     assert f"/home/user/project{expected_sep}tests{expected_sep}" in all_keys
 
 
-def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
+def test_generate_preserves_insertion_order_in_yaml(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Check that generate.py preserves key insertion order not alphabetical order."""
     root_directory = tmp_path / "Lab-07"
     root_directory.mkdir()
@@ -253,3 +264,68 @@ def test_generate_preserves_insertion_order_in_yaml(tmp_path, capsys):
     options_pos = file_text.find("options:")
     assert description_pos != -1 and check_pos != -1 and options_pos != -1
     assert description_pos < check_pos < options_pos
+
+
+def test_input_correct_with_run_path_ending_in_separator() -> None:
+    """Check that input_correct does not add duplicate separator if run_path ends with one."""
+    sep = os.path.sep
+    run_path = f"/home/user/project{sep}"
+    paths = ["src", "tests"]
+    result = input_correct(paths, run_path)
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(sep)
+        assert f"{sep}{sep}" not in key
+
+
+def test_input_correct_with_path_already_ending_in_separator() -> None:
+    """Check that input_correct does not add duplicate separator if path ends with one."""
+    sep = os.path.sep
+    run_path = "/home/user/project"
+    paths: list[str] = [f"src{sep}", f"tests{sep}"]
+    result = input_correct(paths, run_path)
+    all_keys = list(result.keys())
+    for key in all_keys:
+        assert key.endswith(sep)
+        assert f"{sep}{sep}" not in key
+
+
+def test_write_yaml_of_paths_list_with_path_not_ending_in_separator(
+    tmp_path: Path,
+) -> None:
+    """Check that write_yaml_of_paths_list handles paths without trailing separator."""
+    path_without_sep = f"src{os.path.sep}main.py"
+    write_yaml_of_paths_list([path_without_sep], str(tmp_path))
+    yml_file = tmp_path / "gatorgrade.yml"
+    assert yml_file.is_file()
+    content = yml_file.read_text()
+    assert "src/main.py" in content
+
+
+def test_write_yaml_of_paths_list_with_path_ending_in_separator(
+    tmp_path: Path,
+) -> None:
+    """Check that write_yaml_of_paths_list strips trailing separator from paths."""
+    path_with_sep = f"src{os.path.sep}main.py{os.path.sep}"
+    write_yaml_of_paths_list([path_with_sep], str(tmp_path))
+    yml_file = tmp_path / "gatorgrade.yml"
+    assert yml_file.is_file()
+    content = yml_file.read_text()
+    assert "src/main.py" in content
+    assert f"main.py{os.path.sep}" not in content
+
+
+def test_input_correct_with_empty_path_list(tmp_path: Path) -> None:
+    """Check that input_correct returns empty dict for empty path list."""
+    result = input_correct([], str(tmp_path))
+    assert result == {}
+
+
+def test_input_correct_with_duplicate_paths(tmp_path: Path) -> None:
+    """Check that input_correct removes duplicate paths."""
+    sep = os.path.sep
+    run_path = str(tmp_path)
+    result = input_correct(["src", "src"], run_path)
+    all_keys = list(result.keys())
+    assert len(all_keys) == 1
+    assert f"{run_path}{sep}src{sep}" in all_keys

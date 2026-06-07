@@ -100,6 +100,8 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+      - name: Display GatorGrade version details
+        run: uv run gatorgrade --version
       - name: Install dependencies
         run: uv sync --dev
       - name: Execute tests
@@ -127,17 +129,6 @@ jobs:
         run: uv sync --dev
       - name: Run tests with coverage
         run: uv run task test-coverage
-
-  markdown:
-    name: Lint Markdown
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@v4
 
   spelling:
     name: Check Spelling

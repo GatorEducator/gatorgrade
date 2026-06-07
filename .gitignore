@@ -140,3 +140,6 @@ cosmic-ray.sqlite
 
 # test files
 tests/test_assignment/json
+
+# AST cache files
+.ast-cache/

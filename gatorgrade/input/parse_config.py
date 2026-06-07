@@ -1,19 +1,20 @@
 """Returns the list of commands to be run through gatorgrader."""
 
 from pathlib import Path
+from typing import Any, List
 
 from gatorgrade.input.command_line_generator import generate_checks
-from gatorgrade.input.in_file_path import parse_yaml_file
-from gatorgrade.input.in_file_path import reformat_yaml_data
+from gatorgrade.input.in_file_path import parse_yaml_file, reformat_yaml_data
 
 
-def parse_config(file: Path):
+def parse_config(file: Path) -> List[Any]:
     """Parse the input yaml file and generate specified checks.
 
     Args:
         file: Yaml file containing gatorgrade and shell command checks
     Returns:
         Returns a dictionary that specifies shell commands and gatorgrade commands
+
     """
     # parse the YAML file using parse_yaml_file provided by gatorgrade
     parsed_yaml_file = parse_yaml_file(file)

@@ -17,7 +17,7 @@ GitHub repository for GatorGrade, which is where this document is located.
   - [Tips for Writing Tests](#tips-for-writing-tests)
 - [Helper Scripts Reference](#helper-scripts-reference)
 
----
+______________________________________________________________________
 
 ## Overview
 
@@ -35,7 +35,7 @@ The cosmic-ray configuration is located in `cosmic-ray.toml` and specifies:
 - **test-command**: `pytest -x --tb=short -q` (stops on first failure)
 - **distributor**: `local` (runs on local machine)
 
----
+______________________________________________________________________
 
 ## Manual Mutation Testing
 
@@ -109,13 +109,13 @@ scripts/show_mutant_diff.sh <job_id>
 
 When querying the database, each line contains:
 
-```
+```text
 job_id|module_path|operator_name|occurrence|start_pos_row
 ```
 
 For example:
 
-```
+```text
 33a053b45f654126811817a256780083|gatorgrade/output/output.py|core/AddNot|13|194
 ```
 
@@ -206,7 +206,7 @@ root directory when executed.
 - Verify state changes and side effects
 - Use parametrized tests to cover multiple scenarios
 
----
+______________________________________________________________________
 
 ## Helper Scripts Reference
 
@@ -226,7 +226,7 @@ scripts/list_survivors.sh [limit]
 
 **Output format**:
 
-```
+```text
 Job ID = abc123...
 Location = gatorgrade/output/output.py:194
 Operator = core/AddNot
@@ -262,10 +262,10 @@ scripts/test_mutant.sh <job_id>
 **Process**:
 
 1. Backs up original file
-2. Applies mutation using `cosmic-ray apply`
-3. Runs test suite
-4. Restores original file
-5. Reports KILLED or SURVIVED
+1. Applies mutation using `cosmic-ray apply`
+1. Runs test suite
+1. Restores original file
+1. Reports KILLED or SURVIVED
 
 **Exit codes**:
 
