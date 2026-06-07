@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, List, Union
 from unittest.mock import patch
@@ -13,6 +14,7 @@ from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output import output
 from gatorgrade.output.check_result import CheckResult
 
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
 
 
@@ -104,7 +106,10 @@ def test_run_checks_some_failed_prints_correct_summary(
     # the output shows the correct fraction
     # and percentage of passed checks
     out, _ = capsys.readouterr()
-    assert "Passed 2/3 (67%) of checks" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "- Project: gatorgrade" in plain_stdout
+    assert "- Checks: 2/3 (67%)" in plain_stdout
+    assert "- Points: 2/3 (67%)" in plain_stdout
     capsys.readouterr()
 
 
@@ -135,7 +140,9 @@ def test_run_checks_with_gg_check_no_command_status_bar_enabled(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Passed 1/1 (100%) of checks" in out
+    assert "- Project: gatorgrade" in out
+    assert "- Checks: 1/1 (100%)" in out
+    assert "- Points: 1/1 (100%)" in out
 
 
 def test_md_report_file_created_correctly(
@@ -210,7 +217,7 @@ def test_md_report_file_created_correctly(
         "# Gatorgrade Insights\n\n"
         "**Project Name:** gatorgrade\n"
         "**Amount Correct:** 1/3 (33%)\n"
-        "**Weighted Score:** 33%\n\n"
+        "**Points:** 1/3 (33%)\n\n"
         "## Passing Checks"
     )
     file = open("insights.md", "r")
@@ -622,7 +629,9 @@ def test_run_checks_with_no_status_bar(
     result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Passed 1/1 (100%) of checks" in out
+    assert "Project: gatorgrade" in out
+    assert "Checks: 1/1 (100%)" in out
+    assert "Points: 1/1 (100%)" in out
 
 
 def test_run_checks_with_running_mode(
@@ -636,7 +645,9 @@ def test_run_checks_with_running_mode(
     result = output.run_checks(checks, report, running_mode=True)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Passed 1/1 (100%) of checks" in out
+    assert "Project: gatorgrade" in out
+    assert "Checks: 1/1 (100%)" in out
+    assert "Points: 1/1 (100%)" in out
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -744,6 +755,22 @@ def test_run_checks_with_shell_check_command_display(
     assert "false" in out
 
 
+def test_run_checks_failed_check_displays_weight() -> None:
+    """Test that failed check displays its weight in the failure summary."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="Failing check", command="false", weight=10),
+    ]
+    report = (None, None, None)
+    with patch("gatorgrade.output.output.rich.print") as mock_print:
+        result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+        assert result is False
+        calls = [
+            str(call.args[0]) if call.args else ""
+            for call in mock_print.call_args_list
+        ]
+        assert any("Weight:" in c and "10" in c for c in calls)
+
+
 def test_run_checks_with_gg_check_command_status_bar_enabled(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -785,7 +812,9 @@ def test_run_checks_zero_checks_no_division_error(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Passed 0/0 (0%) of checks" in out
+    assert "Project: gatorgrade" in out
+    assert "Checks: 0/0 (0%)" in out
+    assert "Points: 0/0 (0%)" in out
 
 
 def test_run_checks_with_report_file_json(
@@ -1041,7 +1070,7 @@ def test_run_checks_gg_check_no_command_no_status_bar_detailed(
         report = (None, None, None)
         output.run_checks(checks, report, no_status_bar=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Passed 1/1" in out
+        assert "Checks: 1/1 (100%)" in out
 
 
 def test_run_checks_gg_check_no_command_status_bar_detailed(
@@ -1065,7 +1094,7 @@ def test_run_checks_gg_check_no_command_status_bar_detailed(
         # running_mode = True enables progress.update(task, advance=1)
         output.run_checks(checks, report, running_mode=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Passed 1/1" in out
+        assert "Checks: 1/1 (100%)" in out
 
 
 def test_run_checks_weighted_score_displayed(
@@ -1081,8 +1110,9 @@ def test_run_checks_weighted_score_displayed(
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "Passed 1/2 (50%) of checks" in out
-    assert "(Weighted: 67%)" in out
+    assert "Project: gatorgrade" in out
+    assert "Checks: 1/2 (50%)" in out
+    assert "Points: 10/15 (67%)" in out
 
 
 def test_run_checks_all_pass_weighted_score_100(
@@ -1097,7 +1127,9 @@ def test_run_checks_all_pass_weighted_score_100(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "(Weighted: 100%)" in out
+    assert "- Project: gatorgrade" in out
+    assert "- Checks: 2/2 (100%)" in out
+    assert "- Points: 15/15 (100%)" in out
 
 
 def test_run_checks_zero_checks_weighted_zero(
@@ -1108,7 +1140,9 @@ def test_run_checks_zero_checks_weighted_zero(
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "(Weighted: 0%)" in out
+    assert "- Project: gatorgrade" in out
+    assert "- Checks: 0/0 (0%)" in out
+    assert "- Points: 0/0 (0%)" in out
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -1128,13 +1162,15 @@ def test_create_markdown_report_file_includes_weighted_score() -> None:
     json_data = {
         "amount_correct": 1,
         "percentage_score": 50,
-        "weighted_percentage_score": 75,
+        "weighted_amount_correct": 1,
+        "weighted_total": 1,
+        "weighted_percentage_score": 100,
         "checks": [
             {"status": True, "description": "Passing check"},
         ],
     }
     markdown = output.create_markdown_report_file(json_data)
-    assert "**Weighted Score:** 75%" in markdown
+    assert "**Points:** 1/1 (100%)" in markdown
 
 
 def test_run_checks_gg_check_with_command_status_bar_detailed(
@@ -1157,4 +1193,87 @@ def test_run_checks_gg_check_with_command_status_bar_detailed(
         report = (None, None, None)
         output.run_checks(checks, report, running_mode=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Passed 1/1" in out
+        assert "Checks: 1/1 (100%)" in out
+
+
+def test_truncate_diagnostic_no_limit() -> None:
+    """Test _truncate_diagnostic returns full text when limit is None."""
+    diagnostic = "line1\nline2\nline3"
+    result = output._truncate_diagnostic(diagnostic, None)
+    assert result == diagnostic
+
+
+def test_truncate_diagnostic_within_limit() -> None:
+    """Test _truncate_diagnostic returns full text when under limit."""
+    diagnostic = "line1\nline2"
+    result = output._truncate_diagnostic(diagnostic, 5)
+    assert result == diagnostic
+
+
+def test_truncate_diagnostic_exceeds_limit() -> None:
+    """Test _truncate_diagnostic truncates when exceeding limit."""
+    diagnostic = "line1\nline2\nline3\nline4\nline5"
+    result = output._truncate_diagnostic(diagnostic, 3)
+    assert "line1" in result
+    assert "line3" in result
+    assert "line4" not in result
+    assert "... (output truncated to 3 line(s))" in result
+
+
+def test_run_checks_global_output_limit_truncates_diagnostic(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test global output_limit truncates diagnostic in terminal output."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description="Failing check",
+            command="echo 'line1'; echo 'line2'; echo 'line3'; false",
+        ),
+    ]
+    report = (None, None, None)
+    output.run_checks(checks, report, output_limit=1)  # type: ignore
+    out, _ = capsys.readouterr()
+    assert "... (output truncated to 1 line(s))" in out
+
+
+def test_run_checks_check_outputlimit_overrides_global(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test per-check outputlimit overrides global output_limit."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description="Failing check",
+            command="echo 'line1'; echo 'line2'; echo 'line3'; false",
+            outputlimit=1,
+        ),
+    ]
+    report = (None, None, None)
+    output.run_checks(checks, report, output_limit=100)  # type: ignore
+    out, _ = capsys.readouterr()
+    assert "... (output truncated to 1 line(s))" in out
+
+
+def test_run_checks_no_output_limit_shows_full_diagnostic(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that no output_limit shows full diagnostic without truncation."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="Failing check", command="false"),
+    ]
+    report = (None, None, None)
+    output.run_checks(checks, report)  # type: ignore
+    out, _ = capsys.readouterr()
+    assert "... (output truncated)" not in out
+
+
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_respects_output_limit() -> None:
+    """Test that create_report_json uses truncated diagnostic."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test check failed",
+        json_info={"check": "test", "description": "Test check failed"},
+        diagnostic="line1\nline2\nline3\nline4",
+    )
+    result = output.create_report_json(0, [check_result], 0, 0)
+    assert result["checks"][0]["diagnostic"] == "line1\nline2\nline3\nline4"
