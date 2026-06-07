@@ -70,6 +70,9 @@ GATORGRADE_NAME = "gatorgrade"
 GATORGRADER_NAME = "GatorGrader"
 PYTHON_NAME = "Python"
 
+# newline character for joining lines
+NEWLINE = "\n"
+
 
 def _get_platform_info() -> str:
     """Get the platform information string for any platform."""
@@ -134,7 +137,7 @@ def _version_callback(value: bool) -> None:
         os_release = _get_os_release()
         if os_release:
             lines.append(os_release)
-        console.print("\n".join(lines))
+        console.print(NEWLINE.join(lines))
         raise typer.Exit()
 
 
