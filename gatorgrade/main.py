@@ -9,6 +9,7 @@ from typing import Tuple
 import typer
 from rich.console import Console
 from rich.emoji import Emoji
+from rich.rule import Rule
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
@@ -187,12 +188,23 @@ def gatorgrade(  # noqa: PLR0913
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode
+    # (note that the current implementation of the tool only
+    # supports checking mode as all others are deprecated)
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks = parse_config(filename)
+        checks, parse_error = parse_config(filename)
+        # a YAML parsing error occurred and thus the
+        # tool should display the error and exit
+        if parse_error is not None:
+            checks_status = False
+            console.print()
+            console.print(Rule("Configuration Error", style="bright_red"))
+            console.print(NEWLINE + parse_error)
+            console.print(NEWLINE + EXIT_MESSAGE + NEWLINE)
+            console.print(Rule(style="bright_red"))
         # there are valid checks and thus the
         # tool should run them with run_checks
-        if len(checks) > 0:
+        elif len(checks) > 0:
             checks_status = run_checks(
                 checks,
                 report,
@@ -206,11 +218,13 @@ def gatorgrade(  # noqa: PLR0913
         else:
             checks_status = False
             console.print()
+            console.print(Rule("Configuration Error", style="bright_red"))
+            console.print()
             console.print(
                 f"The file {filename} either does not exist or is not valid."
             )
-            console.print(EXIT_MESSAGE)
-            console.print()
+            console.print(NEWLINE + EXIT_MESSAGE + NEWLINE)
+            console.print(Rule(style="bright_red"))
         # at least one of the checks did not pass or
         # the provided file was not valid and thus
         # the tool should return a non-zero exit
