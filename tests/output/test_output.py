@@ -140,9 +140,10 @@ def test_run_checks_with_gg_check_no_command_status_bar_enabled(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "- Project: gatorgrade" in out
-    assert "- Checks: 1/1 (100%)" in out
-    assert "- Points: 1/1 (100%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "- Project: gatorgrade" in plain_stdout
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+    assert "- Points: 1/1 (100%)" in plain_stdout
 
 
 def test_md_report_file_created_correctly(
