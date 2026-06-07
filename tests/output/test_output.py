@@ -1275,6 +1275,62 @@ def test_run_checks_no_output_limit_shows_full_diagnostic(
     assert "... (output truncated)" not in out
 
 
+def test_run_gg_check_global_output_limit_truncates_diagnostic() -> None:
+    """Test _run_gg_check applies global output_limit to truncate diagnostic."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Failing", "MatchFileFragment"],
+        json_info={"check": "test"},
+    )
+    with patch("gator.grader") as mock_grader:
+        mock_grader.return_value = (
+            "Failing check",
+            False,
+            "line1\nline2\nline3\nline4",
+        )
+        result = output._run_gg_check(check, output_limit=2)
+    assert "... (output truncated to 2 line(s))" in result.diagnostic
+
+
+def test_run_gg_check_check_outputlimit_overrides_global() -> None:
+    """Test per-check outputlimit overrides global output_limit in _run_gg_check."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Failing", "MatchFileFragment"],
+        json_info={"check": "test"},
+        outputlimit=1,
+    )
+    with patch("gator.grader") as mock_grader:
+        mock_grader.return_value = (
+            "Failing check",
+            False,
+            "line1\nline2\nline3\nline4",
+        )
+        result = output._run_gg_check(check, output_limit=100)
+    assert "... (output truncated to 1 line(s))" in result.diagnostic
+
+
+def test_run_checks_mixed_checks_use_correct_output_limit(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test run_checks applies correct limit to each check independently."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description="Check with per-check limit",
+            command="echo 'A1'; echo 'A2'; echo 'A3'; false",
+            outputlimit=2,
+        ),
+        ShellCheck(
+            description="Check using global limit",
+            command="echo 'B1'; echo 'B2'; echo 'B3'; false",
+        ),
+    ]
+    report = (None, None, None)
+    output.run_checks(checks, report, output_limit=3)  # type: ignore
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "... (output truncated to 2 line(s))" in plain_out
+    assert "... (output truncated to 3 line(s))" not in plain_out
+
+
 @pytest.mark.usefixtures("patch_datetime_now")
 def test_create_report_json_respects_output_limit() -> None:
     """Test that create_report_json uses truncated diagnostic."""
