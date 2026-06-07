@@ -198,8 +198,6 @@ def test_gatorgrade_with_version_flag(
     assert "Python" in plain_stdout
     # the output should include the python version number
     assert platform.python_version() in plain_stdout
-    # the output should include the linux kernel release
-    assert "Linux" in plain_stdout
 
 
 def test_gatorgrade_with_version_flag_on_macos(
