@@ -59,6 +59,17 @@ _LIBC_BY_SYSTEM = {
     SYSTEM_WINDOWS: LIBC_MSVC,
 }
 
+# operating system display names for version output
+OS_DARWIN = "Darwin"
+OS_LINUX = "Linux"
+OS_MACOS = "MacOS"
+OS_WINDOWS = "Windows"
+
+# program and language display names for version output
+GATORGRADE_NAME = "gatorgrade"
+GATORGRADER_NAME = "GatorGrader"
+PYTHON_NAME = "Python"
+
 
 def _get_platform_info() -> str:
     """Get the platform information string for any platform."""
@@ -86,30 +97,30 @@ def _get_python_info() -> str:
     version = platform.python_version()
     build_no, build_date = platform.python_build()
     compiler = platform.python_compiler().strip()
-    return f"Python {version} ({build_no}, {build_date}, {compiler})"
+    return f"{PYTHON_NAME} {version} ({build_no}, {build_date}, {compiler})"
 
 
 def _get_gatorgrade_info() -> str:
     """Get the parenthetic GatorGrade info string with the GatorGrader version."""
     gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
-    return f"GatorGrader {gatorgrader_version}"
+    return f"{GATORGRADER_NAME} {gatorgrader_version}"
 
 
 def _get_os_release() -> str:
     """Get the operating system release string for Linux, macOS, or Windows."""
     parenthetic_platform_string = f"({_get_platform_info()})"
-    if platform.system() == SYSTEM_LINUX.title():
+    if platform.system() == OS_LINUX:
         kernel = platform.release()
         if kernel:
-            return f"Linux {kernel} {parenthetic_platform_string}"
-    elif platform.system() == SYSTEM_DARWIN.title():
+            return f"{OS_LINUX} {kernel} {parenthetic_platform_string}"
+    elif platform.system() == OS_DARWIN:
         release, _, _ = platform.mac_ver()
         if release:
-            return f"MacOS {release} {parenthetic_platform_string}"
-    elif platform.system() == "Windows":
+            return f"{OS_MACOS} {release} {parenthetic_platform_string}"
+    elif platform.system() == OS_WINDOWS:
         release, _, _, _ = platform.win32_ver()
         if release:
-            return f"Windows {release} {parenthetic_platform_string}"
+            return f"{OS_WINDOWS} {release} {parenthetic_platform_string}"
     return ""
 
 
@@ -117,7 +128,7 @@ def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
         lines = [
-            f"gatorgrade {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
+            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
             _get_python_info(),
         ]
         os_release = _get_os_release()
