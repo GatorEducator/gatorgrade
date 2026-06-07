@@ -73,7 +73,9 @@ def cleanup_files(
                 ("Use an if statement", 1),
                 ("✓", 3),
                 ("✕", 0),
-                ("Passed 3/3 (100%) of checks", 1),
+                ("- Project: test_assignment", 1),
+                ("- Checks: 3/3 (100%)", 1),
+                ("- Points: 3/3 (100%)", 1),
             ],
         )
     ],
@@ -96,8 +98,9 @@ def test_full_integration_creates_valid_output(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     for output, freq in expected_output_and_freqs:
-        assert result.stdout.count(output) == freq
+        assert plain_stdout.count(output) == freq
 
 
 def test_gatorgrade_with_nonexistent_file(
@@ -139,7 +142,8 @@ def test_gatorgrade_with_custom_config_name(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    assert "- Checks: 3/3 (100%)" in result.stdout
+    assert "- Points: 3/3 (100%)" in result.stdout
 
 
 def test_gatorgrade_with_report_option(
@@ -166,7 +170,8 @@ def test_gatorgrade_with_status_bar(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    assert "- Checks: 3/3 (100%)" in result.stdout
+    assert "- Points: 3/3 (100%)" in result.stdout
 
 
 def test_gatorgrade_with_no_status_bar(
@@ -178,7 +183,9 @@ def test_gatorgrade_with_no_status_bar(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_version_flag(
