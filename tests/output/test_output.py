@@ -630,9 +630,10 @@ def test_run_checks_with_no_status_bar(
     result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Project: gatorgrade" in out
-    assert "Checks: 1/1 (100%)" in out
-    assert "Points: 1/1 (100%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Project: gatorgrade" in plain_stdout
+    assert "Checks: 1/1 (100%)" in plain_stdout
+    assert "Points: 1/1 (100%)" in plain_stdout
 
 
 def test_run_checks_with_running_mode(
@@ -646,9 +647,10 @@ def test_run_checks_with_running_mode(
     result = output.run_checks(checks, report, running_mode=True)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Project: gatorgrade" in out
-    assert "Checks: 1/1 (100%)" in out
-    assert "Points: 1/1 (100%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Project: gatorgrade" in plain_stdout
+    assert "Checks: 1/1 (100%)" in plain_stdout
+    assert "Points: 1/1 (100%)" in plain_stdout
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -813,9 +815,10 @@ def test_run_checks_zero_checks_no_division_error(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "Project: gatorgrade" in out
-    assert "Checks: 0/0 (0%)" in out
-    assert "Points: 0/0 (0%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Project: gatorgrade" in plain_stdout
+    assert "Checks: 0/0 (0%)" in plain_stdout
+    assert "Points: 0/0 (0%)" in plain_stdout
 
 
 def test_run_checks_with_report_file_json(
@@ -1071,7 +1074,8 @@ def test_run_checks_gg_check_no_command_no_status_bar_detailed(
         report = (None, None, None)
         output.run_checks(checks, report, no_status_bar=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Checks: 1/1 (100%)" in out
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+        assert "Checks: 1/1 (100%)" in plain_stdout
 
 
 def test_run_checks_gg_check_no_command_status_bar_detailed(
@@ -1092,10 +1096,10 @@ def test_run_checks_gg_check_no_command_status_bar_detailed(
             )
         ]
         report = (None, None, None)
-        # running_mode = True enables progress.update(task, advance=1)
         output.run_checks(checks, report, running_mode=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Checks: 1/1 (100%)" in out
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+        assert "Checks: 1/1 (100%)" in plain_stdout
 
 
 def test_run_checks_weighted_score_displayed(
@@ -1111,9 +1115,10 @@ def test_run_checks_weighted_score_displayed(
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "Project: gatorgrade" in out
-    assert "Checks: 1/2 (50%)" in out
-    assert "Points: 10/15 (67%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Project: gatorgrade" in plain_stdout
+    assert "Checks: 1/2 (50%)" in plain_stdout
+    assert "Points: 10/15 (67%)" in plain_stdout
 
 
 def test_run_checks_all_pass_weighted_score_100(
@@ -1128,9 +1133,10 @@ def test_run_checks_all_pass_weighted_score_100(
     result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
-    assert "- Project: gatorgrade" in out
-    assert "- Checks: 2/2 (100%)" in out
-    assert "- Points: 15/15 (100%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "- Project: gatorgrade" in plain_stdout
+    assert "- Checks: 2/2 (100%)" in plain_stdout
+    assert "- Points: 15/15 (100%)" in plain_stdout
 
 
 def test_run_checks_zero_checks_weighted_zero(
@@ -1141,9 +1147,10 @@ def test_run_checks_zero_checks_weighted_zero(
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "- Project: gatorgrade" in out
-    assert "- Checks: 0/0 (0%)" in out
-    assert "- Points: 0/0 (0%)" in out
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "- Project: gatorgrade" in plain_stdout
+    assert "- Checks: 0/0 (0%)" in plain_stdout
+    assert "- Points: 0/0 (0%)" in plain_stdout
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -1194,7 +1201,8 @@ def test_run_checks_gg_check_with_command_status_bar_detailed(
         report = (None, None, None)
         output.run_checks(checks, report, running_mode=True)  # type: ignore
         out, _ = capsys.readouterr()
-        assert "Checks: 1/1 (100%)" in out
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+        assert "Checks: 1/1 (100%)" in plain_stdout
 
 
 def test_truncate_diagnostic_no_limit() -> None:
