@@ -118,3 +118,17 @@ def test_parse_config_parses_weighted_checks() -> None:
     assert output[0].weight == 10  # noqa: PLR2004
     assert isinstance(output[1], ShellCheck)
     assert output[1].weight == 5  # noqa: PLR2004
+
+
+def test_parse_config_parses_outputlimit_checks() -> None:
+    """Test to make sure that checks with outputlimit are parsed correctly."""
+    # given a configuration file with outputlimit checks
+    config = Path("tests/input/yml_test_files/gatorgrade_outputlimit.yml")
+    # when parse_config is run
+    output = parse_config(config)
+    # then the outputlimits should be parsed correctly
+    assert isinstance(output[0], ShellCheck)
+    assert output[0].outputlimit == 5  # noqa: PLR2004
+    assert output[0].weight == 10  # noqa: PLR2004
+    assert isinstance(output[1], GatorGraderCheck)
+    assert output[1].outputlimit == 25  # noqa: PLR2004

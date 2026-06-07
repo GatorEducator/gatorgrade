@@ -9,8 +9,8 @@ from typing import Any, List, Tuple, Union
 
 import gator
 import rich
-from rich.panel import Panel
-from rich.progress import BarColumn, Progress, TextColumn
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
@@ -19,11 +19,37 @@ from gatorgrade.output.check_result import CheckResult
 rich.reconfigure(highlight=False)
 
 
-def _run_shell_check(check: ShellCheck) -> CheckResult:
+def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
+    """Truncate diagnostic output to a maximum number of lines.
+
+    Args:
+        diagnostic: The raw diagnostic output.
+        limit: The maximum number of lines to keep.
+
+    Returns:
+        The truncated diagnostic string.
+
+    """
+    if limit is None or limit <= 0:
+        return diagnostic
+    lines = diagnostic.splitlines()
+    if len(lines) <= limit:
+        return diagnostic
+    truncated = lines[:limit]
+    return (
+        "\n".join(truncated)
+        + f"\n   ... (output truncated to {limit} line(s))"
+    )
+
+
+def _run_shell_check(
+    check: ShellCheck, output_limit: int | None = None
+) -> CheckResult:
     """Run a shell check.
 
     Args:
         check: The shell check to run.
+        output_limit: The maximum number of diagnostic lines to display.
 
     Returns:
         The result of running the shell check as a CheckResult.
@@ -41,11 +67,15 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
     )
     passed = result.returncode == 0
     # add spaces after each newline to indent all lines of diagnostic
-    diagnostic = (
+    raw_diagnostic = (
         ""
         if passed
         else result.stdout.decode().strip().replace("\n", "\n     ")
     )
+    limit = (
+        check.outputlimit if check.outputlimit is not None else output_limit
+    )
+    diagnostic = _truncate_diagnostic(raw_diagnostic, limit)
     return CheckResult(
         passed=passed,
         description=check.description,
@@ -55,11 +85,14 @@ def _run_shell_check(check: ShellCheck) -> CheckResult:
     )
 
 
-def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
+def _run_gg_check(
+    check: GatorGraderCheck, output_limit: int | None = None
+) -> CheckResult:
     """Run a GatorGrader check.
 
     Args:
         check: The GatorGrader check to run.
+        output_limit: The maximum number of diagnostic lines to display.
 
     Returns:
         The result of running the GatorGrader check as a CheckResult.
@@ -88,6 +121,10 @@ def _run_gg_check(check: GatorGraderCheck) -> CheckResult:
         description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
         diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
         file_path = None
+    limit = (
+        check.outputlimit if check.outputlimit is not None else output_limit
+    )
+    diagnostic = _truncate_diagnostic(diagnostic, limit)
     return CheckResult(
         passed=passed,
         description=description,
@@ -114,11 +151,16 @@ def create_report_json(
         weighted_percent: the weighted percentage of checks that passed
 
     """
+    # compute weighted totals from check results
+    total_weight = sum(r.weight for r in checkResults)
+    passed_weight = sum(r.weight for r in checkResults if r.passed)
     # create list to hold the key values for the dictionary that
     # will be converted into json
     overall_key_list = [
         "amount_correct",
         "percentage_score",
+        "weighted_amount_correct",
+        "weighted_total",
         "weighted_percentage_score",
         "report_time",
         "checks",
@@ -147,6 +189,8 @@ def create_report_json(
             [
                 passed_count,
                 percent_passed,
+                passed_weight,
+                total_weight,
                 weighted_percent,
                 formatted_time,
                 checks_list,
@@ -169,12 +213,15 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     num_checks = len(json.get("checks"))  # type: ignore
     # write the total, amt correct and percentage score to md file
     weighted_score = json.get("weighted_percentage_score", 0)
+    weighted_amount = json.get("weighted_amount_correct", 0)
+    weighted_total = json.get("weighted_total", 0)
     markdown_contents += (
         f"# Gatorgrade Insights\n\n"
         f"**Project Name:** {Path.cwd().name}\n"
         f"**Amount Correct:** {json.get('amount_correct')}/{num_checks} "
         f"({json.get('percentage_score')}%)\n"
-        f"**Weighted Score:** {weighted_score}%\n"
+        f"**Points:** {weighted_amount}/{weighted_total} "
+        f"({weighted_score}%)\n"
     )
     # split checks into passing and not passing
     for check in json.get("checks"):  # type: ignore
@@ -336,6 +383,7 @@ def run_checks(  # noqa: PLR0912, PLR0915
     report: Tuple[str, str, str],
     running_mode: bool = False,
     no_status_bar: bool = False,
+    output_limit: int | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -349,6 +397,8 @@ def run_checks(  # noqa: PLR0912, PLR0915
             checks ran/not ran.
         no_status_bar: Option to completely disable all Progress Bar
             options.
+        output_limit: The maximum number of diagnostic lines to display
+            for each check.
 
     """
     results: List[CheckResult] = []
@@ -368,12 +418,12 @@ def run_checks(  # noqa: PLR0912, PLR0915
             # inside of a CheckResult object but
             # not initialized in the constructor
             if isinstance(check, ShellCheck):
-                result = _run_shell_check(check)
+                result = _run_shell_check(check, output_limit)
                 command_ran = check.command
                 result.run_command = command_ran
             # run a check that GatorGrader implements
             elif isinstance(check, GatorGraderCheck):
-                result = _run_gg_check(check)
+                result = _run_gg_check(check, output_limit)
                 # check to see if there was a command in the
                 # GatorGraderCheck. This code finds the index of the
                 # word "--command" in the check.gg_args list if it
@@ -403,6 +453,8 @@ def run_checks(  # noqa: PLR0912, PLR0915
                 finished_style="green",
             ),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TextColumn("[green]({task.completed}/{task.total})[/green]"),
+            TimeElapsedColumn(),
         ) as progress:
             # add a progress task for tracking
             task = progress.add_task(
@@ -413,12 +465,12 @@ def run_checks(  # noqa: PLR0912, PLR0915
                 result = None
                 # command_ran = None
                 if isinstance(check, ShellCheck):
-                    result = _run_shell_check(check)
+                    result = _run_shell_check(check, output_limit)
                     command_ran = check.command
                     result.run_command = command_ran
                 # run a check that GatorGrader implements
                 elif isinstance(check, GatorGraderCheck):
-                    result = _run_gg_check(check)
+                    result = _run_gg_check(check, output_limit)
                     # check to see if there was a command in the
                     # GatorGraderCheck. This code finds the index of the
                     # word "--command" in the check.gg_args list if it
@@ -447,25 +499,6 @@ def run_checks(  # noqa: PLR0912, PLR0915
                     progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
-    # print failures list if there are failures to print
-    # and print what ShellCheck command that Gatorgrade ran
-    if len(failed_results) > 0:
-        rich.print("\n-~-  FAILURES  -~-\n")
-        for result in failed_results:
-            # main.console.print("This is a result")
-            # main.console.print(result)
-            result.print(show_diagnostic=True)
-            # this result is an instance of CheckResult
-            # that has a run_command field that is some
-            # value that is not the default of an empty
-            # string and thus it should be displayed;
-            # the idea is that displaying this run_command
-            # will give the person using Gatorgrade a way
-            # to quickly run the command that failed
-            if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}"
-                )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
@@ -487,16 +520,54 @@ def run_checks(  # noqa: PLR0912, PLR0915
             passed_count, results, percent, weighted_percent
         )
         configure_report(report, report_output_data)
-    # compute summary results and display them in the console using the Panel
-    # provided by Rich; this enables a border that resizes with the terminal;
-    # note that there is one blank line between the prior output and the Panel
-    summary = (
-        f"Passed {passed_count}/{len(results)} ({percent}%) of checks "
-        f"for {Path.cwd().name}! (Weighted: {weighted_percent}%)"
-    )
+    # compute the summary color based on pass/fail status
     summary_color = "green" if passed_count == len(results) else "bright_red"
-    rich.print("")
-    rich.print(Panel(summary, expand=False, title=None, style=summary_color))
+    # print failures list if there are failures to print
+    # and print what ShellCheck command that Gatorgrade ran
+    if len(failed_results) > 0:
+        rich.print("")
+        rich.print(Rule("Failing checks", style="bright_red"))
+        rich.print("")
+        for result in failed_results:
+            result.print(show_diagnostic=True)
+            # display the weight of the check so that the
+            # person using gatorgrade understands the impact
+            # of this check on the overall score
+            rich.print(f"[blue]   → Weight: [green]{result.weight}")
+            # this result is an instance of CheckResult
+            # that has a run_command field that is some
+            # value that is not the default of an empty
+            # string and thus it should be displayed;
+            # the idea is that displaying this run_command
+            # will give the person using Gatorgrade a way
+            # to quickly run the command that failed
+            if result.run_command != "":
+                rich.print(
+                    f"[blue]   → Run this command: [green]{result.run_command}"
+                )
+        rich.print("")
+        rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
+        rich.print(
+            f"[bold]- Checks:[/] {passed_count}/{len(results)} "
+            f"[{summary_color}]({percent}%)[/]"
+        )
+        rich.print(
+            f"[bold]- Points:[/] {passed_weight}/{total_weight} "
+            f"[{summary_color}]({weighted_percent}%)[/]"
+        )
+        rich.print("")
+        rich.print(Rule(style="bright_red"))
+    else:
+        rich.print("")
+        rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
+        rich.print(
+            f"[bold]- Checks:[/] {passed_count}/{len(results)} "
+            f"[{summary_color}]({percent}%)[/]"
+        )
+        rich.print(
+            f"[bold]- Points:[/] {passed_weight}/{total_weight} "
+            f"[{summary_color}]({weighted_percent}%)[/]"
+        )
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False

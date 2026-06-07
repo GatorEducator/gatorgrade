@@ -128,7 +128,7 @@ def _version_callback(value: bool) -> None:
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(
+def gatorgrade(  # noqa: PLR0913
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -151,6 +151,12 @@ def gatorgrade(
     no_status_bar: bool = typer.Option(
         False, "--no-status-bar", help="Disable the progress bar entirely."
     ),
+    output_limit: int | None = typer.Option(
+        None,
+        "--output-limit",
+        "-o",
+        help="Maximum number of diagnostic lines to display for each check.",
+    ),
     _version: bool = typer.Option(
         False,
         "--version",
@@ -169,7 +175,11 @@ def gatorgrade(
         # tool should run them with run_checks
         if len(checks) > 0:
             checks_status = run_checks(
-                checks, report, run_status_bar, no_status_bar
+                checks,
+                report,
+                run_status_bar,
+                no_status_bar,
+                output_limit,
             )
         # no checks were created and this means
         # that, most likely, the file was not

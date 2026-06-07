@@ -1,7 +1,5 @@
 """Test suite for command_line_generator.py."""
 
-import pytest
-
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import CheckData
@@ -220,25 +218,59 @@ def test_generate_checks_with_default_weight() -> None:
 
 
 def test_generate_checks_with_invalid_weight_zero() -> None:
-    """Test generate_checks raises error for weight of 0."""
+    """Test generate_checks creates error check for weight of 0."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "weight": 0},
     )
-    with pytest.raises(ValueError) as exc_info:
-        generate_checks([check_data])
-    assert "greater than 0" in str(exc_info.value)
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].command == "false"
+    assert "Configuration error" in checks[0].description
+    assert "greater than 0" in checks[0].description
 
 
 def test_generate_checks_with_invalid_weight_negative() -> None:
-    """Test generate_checks raises error for negative weight."""
+    """Test generate_checks creates error check for negative weight."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "weight": -2},
     )
-    with pytest.raises(ValueError) as exc_info:
-        generate_checks([check_data])
-    assert "greater than 0" in str(exc_info.value)
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].command == "false"
+    assert "Configuration error" in checks[0].description
+    assert "greater than 0" in checks[0].description
+
+
+def test_generate_checks_with_invalid_outputlimit_zero() -> None:
+    """Test generate_checks creates error check for outputlimit of 0."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "outputlimit": 0},
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].command == "false"
+    assert "Configuration error" in checks[0].description
+    assert "positive integer" in checks[0].description
+
+
+def test_generate_checks_with_invalid_outputlimit_negative() -> None:
+    """Test generate_checks creates error check for negative outputlimit."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "outputlimit": -5},
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].command == "false"
+    assert "Configuration error" in checks[0].description
+    assert "positive integer" in checks[0].description
 
 
 def test_generate_checks_with_string_count_option() -> None:
@@ -256,3 +288,44 @@ def test_generate_checks_with_string_count_option() -> None:
     assert "--count" in checks[0].gg_args
     count_index = checks[0].gg_args.index("--count")
     assert checks[0].gg_args[count_index + 1] == "5"
+
+
+def test_generate_checks_with_shell_check_outputlimit() -> None:
+    """Test generate_checks parses outputlimit for shell check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "command": "echo 'hello'",
+            "outputlimit": 25,
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].outputlimit == 25  # noqa: PLR2004
+
+
+def test_generate_checks_with_gatorgrader_check_outputlimit() -> None:
+    """Test generate_checks parses outputlimit for GatorGrader check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "check": "MatchFileFragment",
+            "outputlimit": 10,
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].outputlimit == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_default_outputlimit() -> None:
+    """Test generate_checks defaults outputlimit to None when not specified."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data])
+    assert checks[0].outputlimit is None
