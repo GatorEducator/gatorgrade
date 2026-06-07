@@ -1,6 +1,6 @@
 [project]
 name = "gatorgrade"
-version = "0.8.3"
+version = "0.8.4"
 description = "GatorGrade executes GatorGrader checks!"
 authors = [
     { name = "Michael Abraham" },
