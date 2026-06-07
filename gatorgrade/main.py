@@ -164,11 +164,11 @@ def gatorgrade(  # noqa: PLR0913
     ),
     run_status_bar: bool = typer.Option(
         False,
-        "--status-bar",
+        "--progress-bar",
         help="Enable a progress bar for checks.",
     ),
     no_status_bar: bool = typer.Option(
-        False, "--no-status-bar", help="Disable a progress bar for checks."
+        False, "--no-progress-bar", help="Disable a progress bar for checks."
     ),
     output_limit: int | None = typer.Option(
         None,
