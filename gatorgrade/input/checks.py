@@ -2,6 +2,9 @@
 
 from typing import Any, List
 
+WEIGHT_FIELD = "weight"
+OUTPUTLIMIT_FIELD = "outputlimit"
+
 
 def validate_positive_nonzero_int(value: int, name: str) -> str | None:
     """Return an error message if value is not a positive integer, else None.
@@ -44,11 +47,13 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        error = validate_positive_nonzero_int(weight, "weight")
+        error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
         if error:
             raise ValueError(error)
         if outputlimit is not None:
-            error = validate_positive_nonzero_int(outputlimit, "outputlimit")
+            error = validate_positive_nonzero_int(
+                outputlimit, OUTPUTLIMIT_FIELD
+            )
             if error:
                 raise ValueError(error)
         self.command = command
@@ -77,11 +82,13 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        error = validate_positive_nonzero_int(weight, "weight")
+        error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
         if error:
             raise ValueError(error)
         if outputlimit is not None:
-            error = validate_positive_nonzero_int(outputlimit, "outputlimit")
+            error = validate_positive_nonzero_int(
+                outputlimit, OUTPUTLIMIT_FIELD
+            )
             if error:
                 raise ValueError(error)
         self.gg_args = gg_args
