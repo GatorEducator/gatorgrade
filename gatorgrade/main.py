@@ -93,7 +93,7 @@ def _validate_baseline_weight(
     ctx: typer.Context, param: typer.CallbackParam, value: int
 ) -> int:
     """Validate baseline weight is greater than 0."""
-    if value <= 0:
+    if value is not None and value < 1:
         raise BadParameter("Baseline weight must be at least 1.")
     return value
 
