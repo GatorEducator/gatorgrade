@@ -183,14 +183,6 @@ def gatorgrade(  # noqa: PLR0913
             f" (Use env md GITHUB_STEP_SUMMARY to create job summary in GitHub Actions)"
         ),
     ),
-    run_status_bar: bool = typer.Option(
-        False,
-        "--progress-bar",
-        help="Enable a progress bar for checks.",
-    ),
-    no_status_bar: bool = typer.Option(
-        False, "--no-progress-bar", help="Disable a progress bar for checks."
-    ),
     output_limit: int | None = typer.Option(
         None,
         "--output-limit",
@@ -202,7 +194,7 @@ def gatorgrade(  # noqa: PLR0913
         1,
         "--baseline-weight",
         "-b",
-        help="Default weight applied to checks that do not specify an explicit weight.",
+        help="Default weight applied to checks without an explicit weight (>= 1).",
         callback=_validate_baseline_weight,
     ),
     run_status_bar: bool = typer.Option(
