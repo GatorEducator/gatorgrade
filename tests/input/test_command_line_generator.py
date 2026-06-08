@@ -1,5 +1,7 @@
 """Test suite for command_line_generator.py."""
 
+import pytest
+
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import CheckData
@@ -218,59 +220,51 @@ def test_generate_checks_with_default_weight() -> None:
 
 
 def test_generate_checks_with_invalid_weight_zero() -> None:
-    """Test generate_checks creates error check for weight of 0."""
+    """Test generate_checks raises ValueError for weight of 0."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "weight": 0},
     )
-    checks = generate_checks([check_data])
-    assert len(checks) == 1
-    assert isinstance(checks[0], ShellCheck)
-    assert checks[0].command == "false"
-    assert "Configuration error" in checks[0].description
-    assert "greater than 0" in checks[0].description
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_generate_checks_with_invalid_weight_negative() -> None:
-    """Test generate_checks creates error check for negative weight."""
+    """Test generate_checks raises ValueError for negative weight."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "weight": -2},
     )
-    checks = generate_checks([check_data])
-    assert len(checks) == 1
-    assert isinstance(checks[0], ShellCheck)
-    assert checks[0].command == "false"
-    assert "Configuration error" in checks[0].description
-    assert "greater than 0" in checks[0].description
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_generate_checks_with_invalid_outputlimit_zero() -> None:
-    """Test generate_checks creates error check for outputlimit of 0."""
+    """Test generate_checks raises ValueError for outputlimit of 0."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "outputlimit": 0},
     )
-    checks = generate_checks([check_data])
-    assert len(checks) == 1
-    assert isinstance(checks[0], ShellCheck)
-    assert checks[0].command == "false"
-    assert "Configuration error" in checks[0].description
-    assert "positive integer" in checks[0].description
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_generate_checks_with_invalid_outputlimit_negative() -> None:
-    """Test generate_checks creates error check for negative outputlimit."""
+    """Test generate_checks raises ValueError for negative outputlimit."""
     check_data = CheckData(
         file_context=None,
         check={"command": "echo 'hello'", "outputlimit": -5},
     )
-    checks = generate_checks([check_data])
-    assert len(checks) == 1
-    assert isinstance(checks[0], ShellCheck)
-    assert checks[0].command == "false"
-    assert "Configuration error" in checks[0].description
-    assert "positive integer" in checks[0].description
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_generate_checks_with_string_count_option() -> None:
@@ -329,3 +323,37 @@ def test_generate_checks_with_default_outputlimit() -> None:
     )
     checks = generate_checks([check_data])
     assert checks[0].outputlimit is None
+
+
+def test_generate_checks_with_baseline_weight() -> None:
+    """Test generate_checks uses baseline_weight when check has no explicit weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data], baseline_weight=5)
+    assert len(checks) == 1
+    assert checks[0].weight == 5  # noqa: PLR2004
+
+
+def test_generate_checks_with_baseline_weight_and_explicit_weight() -> None:
+    """Test generate_checks uses explicit weight over baseline_weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": 10},
+    )
+    checks = generate_checks([check_data], baseline_weight=5)
+    assert len(checks) == 1
+    assert checks[0].weight == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_baseline_weight_for_gg_check() -> None:
+    """Test generate_checks uses baseline_weight for GatorGrader checks."""
+    check_data = CheckData(
+        file_context=None,
+        check={"check": "CountCommits", "options": {"count": 5}},
+    )
+    checks = generate_checks([check_data], baseline_weight=3)
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].weight == 3  # noqa: PLR2004
