@@ -146,3 +146,28 @@ def test_parse_config_parses_outputlimit_checks() -> None:
     assert output[0].weight == 10  # noqa: PLR2004
     assert isinstance(output[1], GatorGraderCheck)
     assert output[1].outputlimit == 25  # noqa: PLR2004
+
+
+def test_parse_config_with_baseline_weight() -> None:
+    """Test that baseline_weight affects checks without explicit weight."""
+    # given a configuration file with checks that have no explicit weight
+    config = Path("tests/test_assignment/gatorgrade.yml")
+    # when parse_config is run with a non-default baseline weight
+    output, _ = parse_config(config, baseline_weight=4)
+    # then all checks should have weight 4
+    for check in output:
+        assert check.weight == 4  # noqa: PLR2004
+
+
+def test_parse_config_with_baseline_weight_and_explicit_weight() -> None:
+    """Test that explicit weight overrides baseline_weight."""
+    # given a configuration file where some checks have explicit weights
+    config = Path("tests/input/yml_test_files/gatorgrade_outputlimit.yml")
+    # when parse_config is run with a non-default baseline weight
+    output, _ = parse_config(config, baseline_weight=2)
+    # then the check with explicit weight 10 retains it
+    assert isinstance(output[0], ShellCheck)
+    assert output[0].weight == 10  # noqa: PLR2004
+    # and the check without explicit weight gets the baseline weight
+    assert isinstance(output[1], GatorGraderCheck)
+    assert output[1].weight == 2  # noqa: PLR2004
