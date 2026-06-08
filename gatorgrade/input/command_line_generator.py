@@ -6,8 +6,25 @@ from typing import List, Union
 from .checks import GatorGraderCheck, ShellCheck, validate_positive_nonzero_int
 from .in_file_path import CheckData
 
+EMPTY = ""
 NEWLINE = "\n"
 TAB = "  "
+
+DEFAULT_DIRECTORY = "."
+
+ARG_DESCRIPTION = "--description"
+ARG_DIRECTORY = "--directory"
+ARG_FILE = "--file"
+
+DESCRIPTION_KEY = "description"
+UNNAMED_CHECK = "unnamed check"
+WEIGHT_KEY = "weight"
+OUTPUTLIMIT_KEY = "outputlimit"
+COMMAND_KEY = "command"
+CHECK_KEY = "check"
+OPTIONS_KEY = "options"
+
+CONFIG_ERROR_FMT = "- Configuration error in check '{}': {}{}{}"
 
 
 def generate_checks(  # noqa: PLR0912
