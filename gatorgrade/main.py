@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Tuple
 
 import typer
+from click import BadParameter
 from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
@@ -48,6 +49,17 @@ FAILURE = 1
 # cannot determine it and it would always be "unknown"
 UNKNOWN_PLATFORM = "unknown"
 GATORGRADER_DEPENDENCY = "gatorgrader"
+
+
+def _validate_output_limit(
+    ctx: typer.Context, param: typer.CallbackParam, value: int | None
+) -> int | None:
+    """Validate output limit is at least 1 if provided."""
+    if value is not None and value < 1:
+        raise BadParameter("Output limit must be at least 1.")
+    return value
+
+
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
@@ -175,7 +187,8 @@ def gatorgrade(  # noqa: PLR0913
         None,
         "--output-limit",
         "-o",
-        help="Maximum number of diagnostic lines to display for each check.",
+        help="Maximum number of diagnostic lines to display for a check (>= 1).",
+        callback=_validate_output_limit,
     ),
     _version: bool = typer.Option(
         False,
