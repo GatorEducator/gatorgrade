@@ -244,12 +244,27 @@ def gatorgrade(  # noqa: PLR0913
         # there are valid checks and thus the
         # tool should run them with run_checks
         elif len(checks) > 0:
+            # create a dictionary of the CLI arguments to pass to the report
+            # (this will enable them to be saved inside of a report)
+            cli_args = {
+                CONFIG_FLAG: str(filename),
+                REPORT_FLAG: list(report),
+                OUTPUT_LIMIT_FLAG: output_limit,
+                BASELINE_WEIGHT_FLAG: baseline_weight,
+                PROGRESS_BAR_FLAG: progress_bar,
+                SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
+            }
+            # run the checks that were specified in a way
+            # that adheres to the configuration both in
+            # the command-line arguments and also in the
+            # gatorgrade.yml file
             checks_status = run_checks(
                 checks,
                 report,
-                run_status_bar,
-                no_status_bar,
+                not progress_bar,
+                show_diagnostics,
                 output_limit,
+                cli_args,
             )
         # no checks were created and this means
         # that, most likely, the file was not
