@@ -9,11 +9,14 @@ from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file, reformat_yaml_data
 
 
-def parse_config(file: Path) -> Tuple[List[Any], str | None]:
+def parse_config(
+    file: Path, baseline_weight: int = 1
+) -> Tuple[List[Any], str | None]:
     """Parse the input YAML file and generate specified checks.
 
     Args:
         file: YAML file containing gatorgrade and shell command checks
+        baseline_weight: Default weight for checks that do not specify one
     Returns:
         Returns a tuple of (checks, error_message). When successful,
         checks contains the list of checks and error_message is None.
@@ -30,11 +33,13 @@ def parse_config(file: Path) -> Tuple[List[Any], str | None]:
             # use it to generate all of the checks;
             # these will be valid checks that are now
             # ready for execution with this tool
-            parse_con = generate_checks(reformat_yaml_data(parsed_yaml_file))
+            parse_con = generate_checks(
+                reformat_yaml_data(parsed_yaml_file), baseline_weight
+            )
             return parse_con, None
         # return an empty list because of the fact that the
         # parsing process did not return a list with content;
         # allow the calling function to handle the empty list
         return [], None
-    except yaml.YAMLError as error:
+    except (yaml.YAMLError, ValueError) as error:
         return [], str(error)
