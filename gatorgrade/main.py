@@ -179,8 +179,8 @@ def gatorgrade(  # noqa: PLR0913
             f" (Use env md GITHUB_STEP_SUMMARY to create job summary in GitHub Actions)"
         ),
     ),
-    output_limit: int | None = typer.Option(
-        None,
+    output_limit: int = typer.Option(
+        1,
         "--output-limit",
         "-o",
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
