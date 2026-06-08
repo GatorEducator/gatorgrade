@@ -21,7 +21,7 @@ This document provides guidelines for AI agents contributing to this repository.
   and why.
 - **Create and Follow a TODO List**: Always create a TODO list and then
   follow that list. Do not stop until the tools that you call make it clear
-  that you have completed all the tasks in the list.
+  that you have completed all the tasks in the TODO list.
 
 ## Notification Instructions
 
