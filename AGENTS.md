@@ -95,6 +95,10 @@ All the Python code should follow these standards:
   values.
 - **Naming:** snake_case for functions/variables, PascalCase for classes,
   UPPER_SNAKE_CASE for constants.
+- **Constants over literals:** All hard-coded strings, integers, and floats
+  must be extracted into named constants (UPPER_SNAKE_CASE) at the top of
+  the module. Use the constant everywhere the value is needed, not the raw
+  literal.
 - **File operations:** Use `pathlib.Path` for all filesystem operations, never
   string paths.
 - **Error handling:** Use specific exceptions, not generic `Exception`; provide
@@ -176,3 +180,9 @@ The coding agent should write the notes as a Markdown list.
 - `parse_config()` returns `(checks, error_message)`. Both YAML parse
   errors and validation errors are returned as the error string, which
   `main.py` displays with `Rule`-based formatting.
+- `EXIT_MESSAGE` is defined in `gatorgrade/main.py` and is the string
+  displayed below error details in configuration error boxes.
+- **Creativity is welcome:** Every once in a while, feel free to slip
+  in a bit of flair like a pun, a limerick, a dad joke, a haiku about
+  test cases, or anything else that might make the developer smile.
+  Don't force it; let it come naturally when the moment feels right.
