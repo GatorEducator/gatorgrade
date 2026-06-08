@@ -169,7 +169,6 @@ def create_report_json(
         "checks",
     ]
     checks_list = []
-    # overall_dict = {}
     report_generation_time = datetime.datetime.now()
     formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
     # for each check, perform the following steps
@@ -439,7 +438,6 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 # an empty string in the constructor for CheckResult
                 if "--command" in check.gg_args:
                     index_of_command = check.gg_args.index("--command")
-                    # index_of_new_command = int(index_of_command) + 1
                     index_of_new_command = index_of_command + 1
                     result.run_command = check.gg_args[index_of_new_command]
             # there were results from running checks
