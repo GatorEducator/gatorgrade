@@ -167,7 +167,7 @@ def test_gatorgrade_with_status_bar(
 ) -> None:
     """Test that gatorgrade works with status bar enabled."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--status-bar"])
+    result = runner.invoke(main.app, ["--progress-bar"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -181,7 +181,7 @@ def test_gatorgrade_with_no_status_bar(
 ) -> None:
     """Test that gatorgrade works with no status bar."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-status-bar"])
+    result = runner.invoke(main.app, ["--no-progress-bar"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -426,3 +426,48 @@ def test_gatorgrade_get_os_release_linux_no_release(
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "release", lambda: "")
     assert main._get_os_release() == ""
+
+
+def test_gatorgrade_with_output_limit_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative output limit is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "-5"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_one(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of one is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_output_limit_valid(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a valid output limit is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
