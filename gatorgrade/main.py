@@ -77,7 +77,7 @@ PYTHON_NAME = "Python"
 NEWLINE = "\n"
 
 # exit message
-EXIT_MESSAGE = "Fix these errors before runing gatorgrade."
+EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
 
 def _validate_output_limit(value: int | None) -> int | None:
