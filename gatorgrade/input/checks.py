@@ -11,7 +11,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         command: str,
         description: str | None = None,
         json_info: dict[str, Any] | str | None = None,
-        weight: int | float = 1,
+        weight: int = 1,
         outputlimit: int | None = None,
     ):
         """Construct a ShellCheck.
@@ -22,13 +22,13 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
                 If no description is given, the command is used as the description.
             json_info: The all-encompassing check information to include in json output.
                 If none is given, command is used
-            weight: The weight of the check. Must be greater than 0.
+            weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        if not isinstance(weight, (int, float)) or weight <= 0:
+        if not isinstance(weight, int) or weight <= 0:
             raise ValueError(
-                f"Check weight must be a number greater than 0, got {weight}"
+                f"Check weight must be a positive integer, got {weight}"
             )
         if outputlimit is not None and (
             not isinstance(outputlimit, int) or outputlimit <= 0
@@ -50,7 +50,7 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
         self,
         gg_args: List[str],
         json_info: dict[str, Any] | str,
-        weight: int | float = 1,
+        weight: int = 1,
         outputlimit: int | None = None,
     ):
         """Construct a GatorGraderCheck.
@@ -58,13 +58,13 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
         Args:
             gg_args: The list of arguments to pass to GatorGrader.
             json_info: The all-encompassing check information to include in json output.
-            weight: The weight of the check. Must be greater than 0.
+            weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        if not isinstance(weight, (int, float)) or weight <= 0:
+        if not isinstance(weight, int) or weight <= 0:
             raise ValueError(
-                f"Check weight must be a number greater than 0, got {weight}"
+                f"Check weight must be a positive integer, got {weight}"
             )
         if outputlimit is not None and (
             not isinstance(outputlimit, int) or outputlimit <= 0
