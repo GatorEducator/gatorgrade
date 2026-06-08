@@ -60,6 +60,15 @@ def _validate_output_limit(
     return value
 
 
+def _validate_baseline_weight(
+    ctx: typer.Context, param: typer.CallbackParam, value: int
+) -> int:
+    """Validate baseline weight is greater than 0."""
+    if value <= 0:
+        raise BadParameter("Baseline weight must be greater than 0.")
+    return value
+
+
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
