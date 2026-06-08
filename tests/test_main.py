@@ -517,3 +517,42 @@ def test_gatorgrade_with_baseline_weight_custom(
     assert result.exit_code == 0
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     assert "- Points: 15/15 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_show_diagnostics_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that show diagnostics is the default and runs successfully."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_show_diagnostics_explicit(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --show-diagnostics flag is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_no_show_diagnostics(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --no-show-diagnostics hides diagnostic output."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
