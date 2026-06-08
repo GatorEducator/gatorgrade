@@ -1,4 +1,4 @@
-"""Generates a dictionary of shell and gator grader command options from a list of dict checks."""
+"""Generates a dictionary of shell and GatorGrader command options from a list of dictionary-based checks."""
 
 import os
 from typing import List, Union
