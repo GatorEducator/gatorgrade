@@ -123,21 +123,21 @@ def test_shell_check_invalid_weight_zero() -> None:
     """Test ShellCheck raises ValueError for weight of 0."""
     with pytest.raises(ValueError) as exc_info:
         ShellCheck(command="echo test", weight=0)
-    assert "greater than 0" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_shell_check_invalid_weight_negative() -> None:
     """Test ShellCheck raises ValueError for negative weight."""
     with pytest.raises(ValueError) as exc_info:
         ShellCheck(command="echo test", weight=-1)
-    assert "greater than 0" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_gatorgrader_check_invalid_weight_zero() -> None:
     """Test GatorGraderCheck raises ValueError for weight of 0."""
     with pytest.raises(ValueError) as exc_info:
         GatorGraderCheck(gg_args=["Test"], json_info={}, weight=0)
-    assert "greater than 0" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_shell_check_empty_command() -> None:
@@ -205,18 +205,18 @@ def test_shell_check_invalid_outputlimit_zero() -> None:
     """Test ShellCheck raises ValueError for outputlimit of 0."""
     with pytest.raises(ValueError) as exc_info:
         ShellCheck(command="echo test", outputlimit=0)
-    assert "positive integer" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_shell_check_invalid_outputlimit_negative() -> None:
     """Test ShellCheck raises ValueError for negative outputlimit."""
     with pytest.raises(ValueError) as exc_info:
         ShellCheck(command="echo test", outputlimit=-5)
-    assert "positive integer" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
 
 
 def test_gatorgrader_check_invalid_outputlimit_zero() -> None:
     """Test GatorGraderCheck raises ValueError for outputlimit of 0."""
     with pytest.raises(ValueError) as exc_info:
         GatorGraderCheck(gg_args=["Test"], json_info={}, outputlimit=0)
-    assert "positive integer" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
