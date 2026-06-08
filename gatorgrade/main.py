@@ -50,25 +50,6 @@ FAILURE = 1
 UNKNOWN_PLATFORM = "unknown"
 GATORGRADER_DEPENDENCY = "gatorgrader"
 
-
-def _validate_output_limit(
-    ctx: typer.Context, param: typer.CallbackParam, value: int | None
-) -> int | None:
-    """Validate output limit is at least 1 if provided."""
-    if value is not None and value < 1:
-        raise BadParameter("Output limit must be at least 1.")
-    return value
-
-
-def _validate_baseline_weight(
-    ctx: typer.Context, param: typer.CallbackParam, value: int
-) -> int:
-    """Validate baseline weight is greater than 0."""
-    if value <= 0:
-        raise BadParameter("Baseline weight must be greater than 0.")
-    return value
-
-
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
@@ -97,6 +78,24 @@ NEWLINE = "\n"
 
 # exit message
 EXIT_MESSAGE = "Exiting now!"
+
+
+def _validate_output_limit(
+    ctx: typer.Context, param: typer.CallbackParam, value: int | None
+) -> int | None:
+    """Validate output limit is at least 1 if provided."""
+    if value is not None and value < 1:
+        raise BadParameter("Output limit must be at least 1.")
+    return value
+
+
+def _validate_baseline_weight(
+    ctx: typer.Context, param: typer.CallbackParam, value: int
+) -> int:
+    """Validate baseline weight is greater than 0."""
+    if value <= 0:
+        raise BadParameter("Baseline weight must be greater than 0.")
+    return value
 
 
 def _get_platform_info() -> str:
@@ -199,6 +198,13 @@ def gatorgrade(  # noqa: PLR0913
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
         callback=_validate_output_limit,
     ),
+    baseline_weight: int = typer.Option(
+        1,
+        "--baseline-weight",
+        "-b",
+        help="Default weight applied to checks that do not specify an explicit weight.",
+        callback=_validate_baseline_weight,
+    ),
     _version: bool = typer.Option(
         False,
         "--version",
@@ -214,7 +220,7 @@ def gatorgrade(  # noqa: PLR0913
     # supports checking mode as all others are deprecated)
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks, parse_error = parse_config(filename)
+        checks, parse_error = parse_config(filename, baseline_weight)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
