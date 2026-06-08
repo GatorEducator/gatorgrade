@@ -471,3 +471,49 @@ def test_gatorgrade_with_output_limit_valid(
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     assert "- Checks: 3/3 (100%)" in plain_stdout
     assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative baseline weight is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "-2"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of 1 is accepted and shows correct points."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_custom(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a custom baseline weight affects the points calculation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 15/15 (100%)" in plain_stdout
