@@ -60,8 +60,11 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             )
             if error:
                 errors.append(error)
+        # if there are any errors, raise a ValueError with all
+        # of the error messages joined by newlines
         if errors:
             raise ValueError(NEWLINE.join(errors))
+        # otherwise, set the attributes
         self.command = command
         self.description = description if description is not None else command
         self.json_info = json_info
@@ -89,6 +92,8 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
 
         """
         errors = []
+        # if there are any errors, raise a ValueError with all
+        # of the error messages joined by newlines
         error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
         if error:
             errors.append(error)
@@ -100,6 +105,7 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
                 errors.append(error)
         if errors:
             raise ValueError(NEWLINE.join(errors))
+        # otherwise, set the attributes
         self.gg_args = gg_args
         self.json_info = json_info
         self.weight = weight
