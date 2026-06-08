@@ -162,12 +162,12 @@ def test_gatorgrade_with_report_option(
     assert report_file.exists()
 
 
-def test_gatorgrade_with_status_bar(
+def test_gatorgrade_with_progress_bar_default(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test that gatorgrade works with status bar enabled."""
+    """Test that gatorgrade shows progress bar by default."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--progress-bar"])
+    result = runner.invoke(main.app, [])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
