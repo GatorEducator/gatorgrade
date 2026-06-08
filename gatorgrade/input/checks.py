@@ -2,6 +2,7 @@
 
 from typing import Any, List
 
+NEWLINE = "\n"
 WEIGHT_FIELD = "weight"
 OUTPUTLIMIT_FIELD = "outputlimit"
 
@@ -47,15 +48,20 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
+        # validate the weight and the outputlimit so that they
+        # are confirmed to be positive integers before setting any attributes
+        errors = []
         error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
         if error:
-            raise ValueError(error)
+            errors.append(error)
         if outputlimit is not None:
             error = validate_positive_nonzero_int(
                 outputlimit, OUTPUTLIMIT_FIELD
             )
             if error:
-                raise ValueError(error)
+                errors.append(error)
+        if errors:
+            raise ValueError(NEWLINE.join(errors))
         self.command = command
         self.description = description if description is not None else command
         self.json_info = json_info
@@ -82,15 +88,18 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
+        errors = []
         error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
         if error:
-            raise ValueError(error)
+            errors.append(error)
         if outputlimit is not None:
             error = validate_positive_nonzero_int(
                 outputlimit, OUTPUTLIMIT_FIELD
             )
             if error:
-                raise ValueError(error)
+                errors.append(error)
+        if errors:
+            raise ValueError(NEWLINE.join(errors))
         self.gg_args = gg_args
         self.json_info = json_info
         self.weight = weight
