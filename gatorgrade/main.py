@@ -80,18 +80,14 @@ NEWLINE = "\n"
 EXIT_MESSAGE = "Exiting now!"
 
 
-def _validate_output_limit(
-    ctx: typer.Context, param: typer.CallbackParam, value: int | None
-) -> int | None:
+def _validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided."""
     if value is not None and value < 1:
         raise BadParameter("Output limit must be at least 1.")
     return value
 
 
-def _validate_baseline_weight(
-    ctx: typer.Context, param: typer.CallbackParam, value: int
-) -> int:
+def _validate_baseline_weight(value: int) -> int:
     """Validate baseline weight is greater than 0."""
     if value is not None and value < 1:
         raise BadParameter("Baseline weight must be at least 1.")
