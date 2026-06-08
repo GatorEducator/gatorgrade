@@ -205,6 +205,14 @@ def gatorgrade(  # noqa: PLR0913
         help="Default weight applied to checks that do not specify an explicit weight.",
         callback=_validate_baseline_weight,
     ),
+    run_status_bar: bool = typer.Option(
+        False,
+        "--progress-bar",
+        help="Enable a progress bar for checks.",
+    ),
+    no_status_bar: bool = typer.Option(
+        False, "--no-progress-bar", help="Disable a progress bar for checks."
+    ),
     _version: bool = typer.Option(
         False,
         "--version",
