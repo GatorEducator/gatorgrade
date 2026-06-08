@@ -77,7 +77,7 @@ PYTHON_NAME = "Python"
 NEWLINE = "\n"
 
 # exit message
-EXIT_MESSAGE = "Exiting now!"
+EXIT_MESSAGE = "Fix these errors before runing gatorgrade."
 
 
 def _validate_output_limit(value: int | None) -> int | None:
@@ -222,7 +222,7 @@ def gatorgrade(  # noqa: PLR0913
         if parse_error is not None:
             checks_status = False
             console.print()
-            console.print(Rule("Configuration Error", style="bright_red"))
+            console.print(Rule("Configuration Error(s)", style="bright_red"))
             console.print(NEWLINE + parse_error)
             console.print(NEWLINE + EXIT_MESSAGE + NEWLINE)
             console.print(Rule(style="bright_red"))
