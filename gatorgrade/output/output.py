@@ -140,6 +140,7 @@ def create_report_json(
     checkResults: List[CheckResult],
     percent_passed: int,
     weighted_percent: int = 0,
+    cli_args: dict | None = None,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
@@ -149,6 +150,7 @@ def create_report_json(
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
         weighted_percent: the weighted percentage of checks that passed
+        cli_args: the command-line arguments to include in the report
 
     """
     # compute weighted totals from check results
@@ -162,6 +164,7 @@ def create_report_json(
         "weighted_amount_correct",
         "weighted_total",
         "weighted_percentage_score",
+        "cli_args",
         "report_time",
         "checks",
     ]
@@ -192,6 +195,7 @@ def create_report_json(
                 passed_weight,
                 total_weight,
                 weighted_percent,
+                cli_args if cli_args is not None else {},
                 formatted_time,
                 checks_list,
             ],
@@ -378,12 +382,13 @@ def write_json_or_md_file(
         ) from e
 
 
-def run_checks(  # noqa: PLR0912, PLR0915
+def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
-    running_mode: bool = False,
-    no_status_bar: bool = False,
+    no_progress_bar: bool = False,
+    show_diagnostics: bool = True,
     output_limit: int | None = None,
+    cli_args: dict | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -393,12 +398,11 @@ def run_checks(  # noqa: PLR0912, PLR0915
     Args:
         checks: The list of shell and GatorGrader checks to run.
         report: The tuple specifying the report format, type, and name.
-        running_mode: Convert the Progress Bar to update based on
-            checks ran/not ran.
-        no_status_bar: Option to completely disable all Progress Bar
-            options.
+        no_progress_bar: Disable the progress bar (shown by default).
+        show_diagnostics: Show diagnostic details for failing checks.
         output_limit: The maximum number of diagnostic lines to display
             for each check.
+        cli_args: The command-line arguments to include in the report.
 
     """
     results: List[CheckResult] = []
@@ -406,7 +410,7 @@ def run_checks(  # noqa: PLR0912, PLR0915
     # check how many tests are being ran
     total_checks = len(checks)
     # run checks with no progress bar
-    if no_status_bar:
+    if no_progress_bar:
         for check in checks:
             result = None
             # command_ran = None
@@ -492,10 +496,8 @@ def run_checks(  # noqa: PLR0912, PLR0915
                 if result is not None:
                     result.print()
                     results.append(result)
-                # update progress based on running_mode
-                if running_mode:
-                    progress.update(task, advance=1)
-                elif result and result.passed:
+                # update progress on passing checks
+                if result and result.passed:
                     progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
@@ -517,7 +519,7 @@ def run_checks(  # noqa: PLR0912, PLR0915
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(
-            passed_count, results, percent, weighted_percent
+            passed_count, results, percent, weighted_percent, cli_args
         )
         configure_report(report, report_output_data)
     # compute the summary color based on pass/fail status
@@ -529,22 +531,23 @@ def run_checks(  # noqa: PLR0912, PLR0915
         rich.print(Rule("Failing Checks", style="bright_red"))
         rich.print("")
         for result in failed_results:
-            result.print(show_diagnostic=True)
-            # display the weight of the check so that the
-            # person using gatorgrade understands the impact
-            # of this check on the overall score
-            rich.print(f"[blue]   → Weight: [green]{result.weight}")
-            # this result is an instance of CheckResult
-            # that has a run_command field that is some
-            # value that is not the default of an empty
-            # string and thus it should be displayed;
-            # the idea is that displaying this run_command
-            # will give the person using Gatorgrade a way
-            # to quickly run the command that failed
-            if result.run_command != "":
-                rich.print(
-                    f"[blue]   → Run this command: [green]{result.run_command}"
-                )
+            result.print(show_diagnostic=show_diagnostics)
+            if show_diagnostics:
+                # display the weight of the check so that the
+                # person using gatorgrade understands the impact
+                # of this check on the overall score
+                rich.print(f"[blue]   → Weight: [green]{result.weight}")
+                # this result is an instance of CheckResult
+                # that has a run_command field that is some
+                # value that is not the default of an empty
+                # string and thus it should be displayed;
+                # the idea is that displaying this run_command
+                # will give the person using Gatorgrade a way
+                # to quickly run the command that failed
+                if result.run_command != "":
+                    rich.print(
+                        f"[blue]   → Run this command: [green]{result.run_command}"
+                    )
         rich.print("")
         rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
         rich.print(
