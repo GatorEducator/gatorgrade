@@ -94,7 +94,7 @@ def _validate_baseline_weight(
 ) -> int:
     """Validate baseline weight is greater than 0."""
     if value <= 0:
-        raise BadParameter("Baseline weight must be greater than 0.")
+        raise BadParameter("Baseline weight must be at least 1.")
     return value
 
 
