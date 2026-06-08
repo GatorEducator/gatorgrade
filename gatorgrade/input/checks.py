@@ -3,6 +3,24 @@
 from typing import Any, List
 
 
+def validate_positive_nonzero_int(value: int, name: str) -> str | None:
+    """Return an error message if value is not a positive integer, else None.
+
+    Args:
+        value: The value to validate.
+        name: The name of the field (used in the error message).
+
+    Returns:
+        An error string if invalid, None if valid.
+
+    """
+    if not isinstance(value, int) or value <= 0:
+        return (
+            f"Check {name} must be a positive, non-zero integer, got {value}"
+        )
+    return None
+
+
 class ShellCheck:  # pylint: disable=too-few-public-methods
     """Represent a shell check."""
 
@@ -26,16 +44,13 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        if not isinstance(weight, int) or weight <= 0:
-            raise ValueError(
-                f"Check weight must be a positive integer, got {weight}"
-            )
-        if outputlimit is not None and (
-            not isinstance(outputlimit, int) or outputlimit <= 0
-        ):
-            raise ValueError(
-                f"Check outputlimit must be a positive integer, got {outputlimit}"
-            )
+        error = validate_positive_nonzero_int(weight, "weight")
+        if error:
+            raise ValueError(error)
+        if outputlimit is not None:
+            error = validate_positive_nonzero_int(outputlimit, "outputlimit")
+            if error:
+                raise ValueError(error)
         self.command = command
         self.description = description if description is not None else command
         self.json_info = json_info
@@ -62,16 +77,13 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines to display.
 
         """
-        if not isinstance(weight, int) or weight <= 0:
-            raise ValueError(
-                f"Check weight must be a positive integer, got {weight}"
-            )
-        if outputlimit is not None and (
-            not isinstance(outputlimit, int) or outputlimit <= 0
-        ):
-            raise ValueError(
-                f"Check outputlimit must be a positive integer, got {outputlimit}"
-            )
+        error = validate_positive_nonzero_int(weight, "weight")
+        if error:
+            raise ValueError(error)
+        if outputlimit is not None:
+            error = validate_positive_nonzero_int(outputlimit, "outputlimit")
+            if error:
+                raise ValueError(error)
         self.gg_args = gg_args
         self.json_info = json_info
         self.weight = weight
