@@ -526,7 +526,7 @@ def run_checks(  # noqa: PLR0912, PLR0915
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         rich.print("")
-        rich.print(Rule("Failing checks", style="bright_red"))
+        rich.print(Rule("Failing Checks", style="bright_red"))
         rich.print("")
         for result in failed_results:
             result.print(show_diagnostic=True)
