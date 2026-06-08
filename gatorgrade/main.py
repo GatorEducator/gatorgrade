@@ -199,6 +199,11 @@ def gatorgrade(  # noqa: PLR0913
         "--progress-bar/--no-progress-bar",
         help="Show or hide the progress bar for checks.",
     ),
+    show_diagnostics: bool = typer.Option(
+        True,
+        "--show-diagnostics/--no-show-diagnostics",
+        help="Show or hide diagnostic details for failing checks.",
+    ),
     _version: bool = typer.Option(
         False,
         "--version",
