@@ -80,6 +80,14 @@ NEWLINE = "\n"
 # exit message
 EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
+# cli flag names used in the report
+CONFIG_FLAG = "--config"
+REPORT_FLAG = "--report"
+OUTPUT_LIMIT_FLAG = "--output-limit"
+BASELINE_WEIGHT_FLAG = "--baseline-weight"
+PROGRESS_BAR_FLAG = "--progress-bar"
+SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+
 
 def _validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided."""
