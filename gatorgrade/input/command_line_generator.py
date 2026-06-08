@@ -48,35 +48,35 @@ def generate_checks(  # noqa: PLR0912
     """
     errors: List[str] = []
     for check_data in check_data_list:
-        desc = check_data.check.get("description", "unnamed check")
-        weight = check_data.check.get("weight", baseline_weight)
-        outputlimit = check_data.check.get("outputlimit")
-        weight_error = validate_positive_nonzero_int(weight, "weight")
+        desc = check_data.check.get(DESCRIPTION_KEY, UNNAMED_CHECK)
+        weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
+        outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
+        weight_error = validate_positive_nonzero_int(weight, WEIGHT_KEY)
         if weight_error:
             errors.append(
-                f"- Configuration error in check '{desc}': {NEWLINE}{TAB}{weight_error}"
+                CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, weight_error)
             )
         if outputlimit is not None:
             ol_error = validate_positive_nonzero_int(
-                outputlimit, "outputlimit"
+                outputlimit, OUTPUTLIMIT_KEY
             )
             if ol_error:
                 errors.append(
-                    f"- Configuration error in check '{desc}': {NEWLINE}{TAB}{ol_error}"
+                    CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, ol_error)
                 )
     if errors:
-        raise ValueError("\n".join(errors))
+        raise ValueError(NEWLINE.join(errors))
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
-        weight = check_data.check.get("weight", baseline_weight)
-        outputlimit = check_data.check.get("outputlimit")
+        weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
+        outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
         # if the check has a command key, then it is a shell check
         # which means that it will be run by the computer's shell
-        if "command" in check_data.check:
+        if COMMAND_KEY in check_data.check:
             checks.append(
                 ShellCheck(
-                    command=check_data.check.get("command"),
-                    description=check_data.check.get("description"),
+                    command=check_data.check.get(COMMAND_KEY),
+                    description=check_data.check.get(DESCRIPTION_KEY),
                     json_info=check_data.check,
                     weight=weight,
                     outputlimit=outputlimit,
@@ -87,13 +87,13 @@ def generate_checks(  # noqa: PLR0912
         else:
             gg_args = []
             # add description option if in data
-            description = check_data.check.get("description")
+            description = check_data.check.get(DESCRIPTION_KEY)
             if description is not None:
-                gg_args.extend(["--description", str(description)])
+                gg_args.extend([ARG_DESCRIPTION, str(description)])
             # always add name of check, which should be in data
-            gg_args.append(str(check_data.check.get("check")))
+            gg_args.append(str(check_data.check.get(CHECK_KEY)))
             # add any additional options
-            options = check_data.check.get("options")
+            options = check_data.check.get(OPTIONS_KEY)
             if options is not None:
                 for option in options:
                     # if option should be a flag (i.e., its value is the True boolean),
@@ -109,9 +109,9 @@ def generate_checks(  # noqa: PLR0912
             if check_data.file_context is not None:
                 # get the file and directory using os
                 dirname, filename = os.path.split(check_data.file_context)
-                if dirname == "":
-                    dirname = "."
-                gg_args.extend(["--directory", dirname, "--file", filename])
+                if dirname == EMPTY:
+                    dirname = DEFAULT_DIRECTORY
+                gg_args.extend([ARG_DIRECTORY, dirname, ARG_FILE, filename])
             checks.append(
                 GatorGraderCheck(
                     gg_args=gg_args,
