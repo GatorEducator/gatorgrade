@@ -113,7 +113,7 @@ def test_gatorgrade_with_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
-    assert "Exiting now!" in result.stdout
+    assert "Fix these error(s) before running gatorgrade." in result.stdout
 
 
 def test_gatorgrade_with_invalid_config_file(
