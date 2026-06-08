@@ -11,6 +11,7 @@ from click import BadParameter
 from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
+from rich.text import Text
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
@@ -222,9 +223,13 @@ def gatorgrade(  # noqa: PLR0913
         if parse_error is not None:
             checks_status = False
             console.print()
-            console.print(Rule("Configuration Error(s)", style="bright_red"))
+            console.print(
+                Rule(Text("Configuration Error(s)"), style="bright_red")
+            )
             console.print(NEWLINE + parse_error)
-            console.print(NEWLINE + EXIT_MESSAGE + NEWLINE)
+            console.print()
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
             console.print(Rule(style="bright_red"))
         # there are valid checks and thus the
         # tool should run them with run_checks
@@ -247,7 +252,9 @@ def gatorgrade(  # noqa: PLR0913
             console.print(
                 f"The file {filename} either does not exist or is not valid."
             )
-            console.print(NEWLINE + EXIT_MESSAGE + NEWLINE)
+            console.print()
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
             console.print(Rule(style="bright_red"))
         # at least one of the checks did not pass or
         # the provided file was not valid and thus
