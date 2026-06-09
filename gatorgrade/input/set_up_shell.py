@@ -3,7 +3,9 @@
 import subprocess
 from typing import Any, Dict
 
+import rich
 import typer
+from rich.rule import Rule
 
 
 def run_setup(front_matter: Dict[str, Any]) -> None:
@@ -17,7 +19,9 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
     # if setup exists in the front matter
     setup = front_matter.get("setup")
     if setup:
-        typer.echo("Running set up commands...")
+        rich.print()
+        rich.print(Rule("Running Set Up Commands", style="green"))
+        rich.print()
         for line in setup.splitlines():
             # trims the blank space
             command = line.strip()
@@ -37,3 +41,4 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
                 # because environment was not set up correctly.
                 raise typer.Exit(1)
         typer.echo("Finished!\n")
+        rich.print(Rule(style="green"))
