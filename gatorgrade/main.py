@@ -88,6 +88,10 @@ BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
 
+# labels for rich rule display
+CONFIG_ERROR_LABEL = "Configuration Error"
+CONFIG_ERROR_PLURAL_LABEL = "Configuration Error(s)"
+
 
 def _validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided."""
@@ -234,7 +238,7 @@ def gatorgrade(  # noqa: PLR0913
             checks_status = False
             console.print()
             console.print(
-                Rule(Text("Configuration Error(s)"), style="bright_red")
+                Rule(Text(CONFIG_ERROR_PLURAL_LABEL), style="bright_red")
             )
             console.print(NEWLINE + parse_error)
             console.print()
@@ -272,7 +276,7 @@ def gatorgrade(  # noqa: PLR0913
         else:
             checks_status = False
             console.print()
-            console.print(Rule("Configuration Error", style="bright_red"))
+            console.print(Rule(CONFIG_ERROR_LABEL, style="bright_red"))
             console.print()
             console.print(
                 f"The file {filename} either does not exist or is not valid."
