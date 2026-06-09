@@ -627,7 +627,7 @@ def test_run_checks_with_no_status_bar(
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
     ]
     report = (None, None, None)
-    result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+    result = output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
@@ -644,7 +644,7 @@ def test_run_checks_with_running_mode(
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
     ]
     report = (None, None, None)
-    result = output.run_checks(checks, report, running_mode=True)  # type: ignore
+    result = output.run_checks(checks, report)  # type: ignore
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
@@ -765,7 +765,7 @@ def test_run_checks_failed_check_displays_weight() -> None:
     ]
     report = (None, None, None)
     with patch("gatorgrade.output.output.rich.print") as mock_print:
-        result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+        result = output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
         assert result is False
         calls = [
             str(call.args[0]) if call.args else ""
@@ -1043,7 +1043,7 @@ def test_run_checks_no_status_bar_with_gg_check_command(
         )
     ]
     report = (None, None, None)
-    result = output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+    result = output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
     assert result is False
     out, _ = capsys.readouterr()
     assert "Run this command:" in out
@@ -1072,7 +1072,7 @@ def test_run_checks_gg_check_no_command_no_status_bar_detailed(
             )
         ]
         report = (None, None, None)
-        output.run_checks(checks, report, no_status_bar=True)  # type: ignore
+        output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
         out, _ = capsys.readouterr()
         plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
         assert "Checks: 1/1 (100%)" in plain_stdout
@@ -1096,7 +1096,7 @@ def test_run_checks_gg_check_no_command_status_bar_detailed(
             )
         ]
         report = (None, None, None)
-        output.run_checks(checks, report, running_mode=True)  # type: ignore
+        output.run_checks(checks, report)  # type: ignore
         out, _ = capsys.readouterr()
         plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
         assert "Checks: 1/1 (100%)" in plain_stdout
@@ -1199,7 +1199,7 @@ def test_run_checks_gg_check_with_command_status_bar_detailed(
             )
         ]
         report = (None, None, None)
-        output.run_checks(checks, report, running_mode=True)  # type: ignore
+        output.run_checks(checks, report)  # type: ignore
         out, _ = capsys.readouterr()
         plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
         assert "Checks: 1/1 (100%)" in plain_stdout
