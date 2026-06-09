@@ -24,7 +24,9 @@ NEWLINE = "\n"
 SPACE = " "
 
 # output labels
+CHECKS_LABEL = "Checks"
 FAILING_CHECKS_LABEL = "Failing Checks"
+POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
 RUNNING_CHECKS_LABEL = "Running checks"
 WEIGHT_LABEL = "Weight"
@@ -616,14 +618,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         rich.print("")
         rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
         rich.print(
-            f"[bold]- Checks:[/] {passed_count}/{len(results)} "
+            f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
         )
         rich.print(
-            f"[bold]- Points:[/] {passed_weight}/{total_weight} "
+            f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
-        rich.print("")
+        rich.print(EMPTY)
         rich.print(Rule(style="bright_red"))
     # all of the checks passed and thus the color highlights
     # are green instead of bright red; however, the same three
