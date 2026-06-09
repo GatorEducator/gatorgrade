@@ -18,6 +18,18 @@ from gatorgrade.output.check_result import CheckResult
 # disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
 
+# basic string constants
+EMPTY = ""
+NEWLINE = "\n"
+SPACE = " "
+
+# output labels
+FAILING_CHECKS_LABEL = "Failing Checks"
+PROJECT_LABEL = "Project"
+RUNNING_CHECKS_LABEL = "Running checks"
+WEIGHT_LABEL = "Weight"
+RUN_COMMAND_LABEL = "Run this command"
+
 # format strings for diagnostic truncation
 TRUNCATED_MSG = "\n   ... (output truncated to {} line(s))"
 DIAGNOSTIC_INDENT = "\n     "
@@ -109,7 +121,7 @@ def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
     if len(lines) <= limit:
         return diagnostic
     truncated = lines[:limit]
-    return "\n".join(truncated) + TRUNCATED_MSG.format(limit)
+    return NEWLINE.join(truncated) + TRUNCATED_MSG.format(limit)
 
 
 def _run_shell_check(
@@ -188,7 +200,7 @@ def _run_gg_check(
     # disable pylint to catch any type of exception thrown by GatorGrader
     except Exception as command_exception:  # pylint: disable=W0703
         passed = False
-        check_args_str = " ".join(check.gg_args)
+        check_args_str = SPACE.join(check.gg_args)
         description = INVALID_GG_CHECK_FMT.format(check_args_str)
         diagnostic = GG_ERROR_FMT.format(command_exception.__class__)
         file_path = None
@@ -240,6 +252,7 @@ def create_report_json(
         CHECKS_KEY,
     ]
     checks_list = []
+    # extract the date and time from the report generation time
     report_generation_time = datetime.datetime.now()
     formatted_time = report_generation_time.strftime(DATETIME_FMT)
     # for each check, perform the following steps
@@ -275,7 +288,7 @@ def create_report_json(
 
 
 def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
-    """Create a markdown file using the created json to use in github actions summary, among other places.
+    """Create a markdown file using the created json to use in GitHub actions summary, among other places.
 
     Args:
         json: a dictionary containing the json that should be converted to markdown
@@ -354,7 +367,7 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
             markdown_contents += MD_DIAGNOSTIC_LABEL.format(
                 check[DIAGNOSTIC_KEY]
             )
-        markdown_contents += "\n"
+        markdown_contents += NEWLINE
     return markdown_contents
 
 
@@ -422,7 +435,7 @@ def write_json_or_md_file(
     """Write a markdown or json file."""
     # try to store content in a file with user chosen format
     try:
-        # second argument has to be json or md
+        # second argument has to be either json or md
         with open(file_name, FILE_MODE_WRITE, encoding=FILE_ENCODING) as file:
             if content_type == REPORT_TYPE_JSON:
                 json.dump(content, file, indent=INDENT_JSON)
@@ -512,7 +525,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         ) as progress:
             # add a progress task for tracking
             task = progress.add_task(
-                "[green]Running checks", total=total_checks
+                f"[green]{RUNNING_CHECKS_LABEL}", total=total_checks
             )
             # run each of the checks
             for check in checks:
@@ -578,7 +591,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
         rich.print("")
-        rich.print(Rule("Failing Checks", style="bright_red"))
+        rich.print(Rule(f"{FAILING_CHECKS_LABEL}", style="bright_red"))
         rich.print("")
         for result in failed_results:
             result.print(show_diagnostic=show_diagnostics)
@@ -586,7 +599,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 # display the weight of the check so that the
                 # person using gatorgrade understands the impact
                 # of this check on the overall score
-                rich.print(f"[blue]   → Weight: [green]{result.weight}")
+                rich.print(
+                    f"[blue]   → {WEIGHT_LABEL}: [green]{result.weight}"
+                )
                 # this result is an instance of CheckResult
                 # that has a run_command field that is some
                 # value that is not the default of an empty
@@ -594,12 +609,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 # the idea is that displaying this run_command
                 # will give the person using Gatorgrade a way
                 # to quickly run the command that failed
-                if result.run_command != "":
+                if result.run_command != EMPTY:
                     rich.print(
-                        f"[blue]   → Run this command: [green]{result.run_command}"
+                        f"[blue]   → {RUN_COMMAND_LABEL}: [green]{result.run_command}"
                     )
         rich.print("")
-        rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
         rich.print(
             f"[bold]- Checks:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
@@ -610,6 +625,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         )
         rich.print("")
         rich.print(Rule(style="bright_red"))
+    # all of the checks passed and thus the color highlights
+    # are green instead of bright red; however, the same three
+    # scores are displayed as in the failure case
     else:
         rich.print("")
         rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
@@ -623,6 +641,6 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         )
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
-    # otherwise the function must return False
+    # otherwise the function must return False since run did not pass
     summary_status = True if passed_count == len(results) else False
     return summary_status
