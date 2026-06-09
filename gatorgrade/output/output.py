@@ -632,13 +632,13 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # scores are displayed as in the failure case
     else:
         rich.print("")
-        rich.print(f"[bold]- Project:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
         rich.print(
-            f"[bold]- Checks:[/] {passed_count}/{len(results)} "
+            f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
         )
         rich.print(
-            f"[bold]- Points:[/] {passed_weight}/{total_weight} "
+            f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
     # determine whether or not the run was a success or not:
