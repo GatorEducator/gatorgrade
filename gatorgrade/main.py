@@ -92,6 +92,13 @@ SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
 CONFIG_ERROR_LABEL = "Configuration Error"
 CONFIG_ERROR_PLURAL_LABEL = "Configuration Error(s)"
 
+# version info keys used in the report
+GATORGRADE_VERSION_KEY = "gatorgrade_version"
+GATORGRADER_VERSION_KEY = "gatorgrader_version"
+PYTHON_INFO_KEY = "python_info"
+PLATFORM_INFO_KEY = "platform_info"
+OS_RELEASE_KEY = "os_release"
+
 
 def _validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided."""
@@ -258,6 +265,13 @@ def gatorgrade(  # noqa: PLR0913
                 PROGRESS_BAR_FLAG: progress_bar,
                 SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
             }
+            version_info = {
+                GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
+                GATORGRADER_VERSION_KEY: _get_gatorgrade_info(),
+                PYTHON_INFO_KEY: _get_python_info(),
+                PLATFORM_INFO_KEY: _get_platform_info(),
+                OS_RELEASE_KEY: _get_os_release(),
+            }
             # run the checks that were specified in a way
             # that adheres to the configuration both in
             # the command-line arguments and also in the
@@ -269,6 +283,7 @@ def gatorgrade(  # noqa: PLR0913
                 show_diagnostics,
                 output_limit,
                 cli_args,
+                version_info,
             )
         # no checks were created and this means
         # that, most likely, the file was not
