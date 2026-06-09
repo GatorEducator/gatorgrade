@@ -15,7 +15,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         json_info: Union[Dict[str, Any], str, None],
         path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
-        weight: int | float = 1,
+        weight: int = 1,
     ):
         """Construct a CheckResult.
 
