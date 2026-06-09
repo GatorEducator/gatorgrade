@@ -18,6 +18,79 @@ from gatorgrade.output.check_result import CheckResult
 # disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
 
+# format strings for diagnostic truncation
+TRUNCATED_MSG = "\n   ... (output truncated to {} line(s))"
+DIAGNOSTIC_INDENT = "\n     "
+
+# argument strings used in GatorGrader checks
+GG_DIRECTORY_ARG = "--directory"
+GG_COMMAND_ARG = "--command"
+GG_PATH_SEPARATOR = "/"
+INVALID_GG_CHECK_FMT = 'Invalid GatorGrader check: "{}"'
+GG_ERROR_FMT = '"{}" thrown by GatorGrader'
+
+# JSON report key constants
+AMOUNT_CORRECT_KEY = "amount_correct"
+PERCENTAGE_SCORE_KEY = "percentage_score"
+WEIGHTED_AMOUNT_CORRECT_KEY = "weighted_amount_correct"
+WEIGHTED_TOTAL_KEY = "weighted_total"
+WEIGHTED_PERCENTAGE_KEY = "weighted_percentage_score"
+CLI_ARGS_KEY = "cli_args"
+REPORT_TIME_KEY = "report_time"
+CHECKS_KEY = "checks"
+STATUS_KEY = "status"
+PATH_KEY = "path"
+DIAGNOSTIC_KEY = "diagnostic"
+DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+# JSON key constants used in check results
+DESCRIPTION_KEY = "description"
+CHECK_KEY = "check"
+OPTIONS_KEY = "options"
+COMMAND_KEY = "command"
+FRAGMENT_KEY = "fragment"
+TAG_KEY = "tag"
+COUNT_KEY = "count"
+DIRECTORY_KEY = "directory"
+FILE_KEY = "file"
+
+# report format strings
+REPORT_TYPE_JSON = "json"
+REPORT_TYPE_MD = "md"
+REPORT_FORMAT_FILE = "file"
+REPORT_FORMAT_ENV = "env"
+GITHUB_STEP_SUMMARY_VAR = "GITHUB_STEP_SUMMARY"
+GITHUB_ENV_VAR = "GITHUB_ENV"
+JSON_REPORT_KEY = "JSON_REPORT"
+
+# file operation constants
+FILE_MODE_WRITE = "w"
+FILE_ENCODING = "utf-8"
+INDENT_JSON = 4
+
+# markdown template strings
+MD_HEADER = "# Gatorgrade Insights\n\n"
+MD_PASSING_HEADER = "\n## Passing Checks\n"
+MD_FAILING_HEADER = "\n\n## Failing Checks\n"
+MD_PASSING_ITEM = "\n- [x] {}"
+MD_FAILING_ITEM = "\n- [ ] {}"
+MD_OPTION_CMD_FMT = "\n\t- **{}** {}"
+MD_OPTION_FMT = "\n\t- **{}:** {}"
+MD_TOP_CMD_FMT = "\n\t- **command:** {}"
+MD_DIAGNOSTIC_LABEL = "\n\t- **diagnostic:** {}"
+
+# error message strings
+REPORT_TYPE_ERR = (
+    "\n[red]The second argument of report has to be 'md' or 'json' "
+)
+REPORT_FORMAT_ERR = (
+    "\n[red]The first argument of report has to be 'env' or 'file' "
+)
+FILE_WRITE_ERR = "\n[red]Can't open or write the target file, check if you provide a valid path"
+
+# empty dict for CLI args default
+EMPTY_CLI_ARGS: dict = {}
+
 
 def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
     """Truncate diagnostic output to a maximum number of lines.
@@ -36,10 +109,7 @@ def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
     if len(lines) <= limit:
         return diagnostic
     truncated = lines[:limit]
-    return (
-        "\n".join(truncated)
-        + f"\n   ... (output truncated to {limit} line(s))"
-    )
+    return "\n".join(truncated) + TRUNCATED_MSG.format(limit)
 
 
 def _run_shell_check(
@@ -70,7 +140,7 @@ def _run_shell_check(
     raw_diagnostic = (
         ""
         if passed
-        else result.stdout.decode().strip().replace("\n", "\n     ")
+        else result.stdout.decode().strip().replace("\n", DIAGNOSTIC_INDENT)
     )
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
@@ -108,18 +178,19 @@ def _run_gg_check(
         # --dir `dir_name` --file `file_name`
         file_path = None
         for i in range(len(check.gg_args)):
-            if check.gg_args[i] == "--directory":
+            if check.gg_args[i] == GG_DIRECTORY_ARG:
                 dir_name = check.gg_args[i + 1]
                 file_name = check.gg_args[i + 3]
-                file_path = dir_name + "/" + file_name
+                file_path = dir_name + GG_PATH_SEPARATOR + file_name
                 break
     # if arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
     # disable pylint to catch any type of exception thrown by GatorGrader
     except Exception as command_exception:  # pylint: disable=W0703
         passed = False
-        description = f'Invalid GatorGrader check: "{" ".join(check.gg_args)}"'
-        diagnostic = f'"{command_exception.__class__}" thrown by GatorGrader'
+        check_args_str = " ".join(check.gg_args)
+        description = INVALID_GG_CHECK_FMT.format(check_args_str)
+        diagnostic = GG_ERROR_FMT.format(command_exception.__class__)
         file_path = None
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
@@ -159,18 +230,18 @@ def create_report_json(
     # create list to hold the key values for the dictionary that
     # will be converted into json
     overall_key_list = [
-        "amount_correct",
-        "percentage_score",
-        "weighted_amount_correct",
-        "weighted_total",
-        "weighted_percentage_score",
-        "cli_args",
-        "report_time",
-        "checks",
+        AMOUNT_CORRECT_KEY,
+        PERCENTAGE_SCORE_KEY,
+        WEIGHTED_AMOUNT_CORRECT_KEY,
+        WEIGHTED_TOTAL_KEY,
+        WEIGHTED_PERCENTAGE_KEY,
+        CLI_ARGS_KEY,
+        REPORT_TIME_KEY,
+        CHECKS_KEY,
     ]
     checks_list = []
     report_generation_time = datetime.datetime.now()
-    formatted_time = report_generation_time.strftime("%Y-%m-%d %H:%M:%S")
+    formatted_time = report_generation_time.strftime(DATETIME_FMT)
     # for each check, perform the following steps
     for i in range(len(checkResults)):
         # grab all of the information in it and add it to the checks list
@@ -178,11 +249,11 @@ def create_report_json(
         # confirm that the json_info field of the check result is a dictionary
         # and then add the status, path, and diagnostic information to that dictionary
         if isinstance(results_json, dict):
-            results_json["status"] = checkResults[i].passed
+            results_json[STATUS_KEY] = checkResults[i].passed
             if checkResults[i].path:
-                results_json["path"] = checkResults[i].path
+                results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
-                results_json["diagnostic"] = checkResults[i].diagnostic
+                results_json[DIAGNOSTIC_KEY] = checkResults[i].diagnostic
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -194,7 +265,7 @@ def create_report_json(
                 passed_weight,
                 total_weight,
                 weighted_percent,
-                cli_args if cli_args is not None else {},
+                cli_args if cli_args is not None else EMPTY_CLI_ARGS,
                 formatted_time,
                 checks_list,
             ],
@@ -213,68 +284,76 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     markdown_contents = ""
     passing_checks = []
     failing_checks = []
-    num_checks = len(json.get("checks"))  # type: ignore
+    num_checks = len(json.get(CHECKS_KEY))  # type: ignore
     # write the total, amt correct and percentage score to md file
-    weighted_score = json.get("weighted_percentage_score", 0)
-    weighted_amount = json.get("weighted_amount_correct", 0)
-    weighted_total = json.get("weighted_total", 0)
+    weighted_score = json.get(WEIGHTED_PERCENTAGE_KEY, 0)
+    weighted_amount = json.get(WEIGHTED_AMOUNT_CORRECT_KEY, 0)
+    weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
-        f"# Gatorgrade Insights\n\n"
+        f"{MD_HEADER}"
         f"**Project Name:** {Path.cwd().name}\n"
-        f"**Amount Correct:** {json.get('amount_correct')}/{num_checks} "
-        f"({json.get('percentage_score')}%)\n"
+        f"**Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
+        f"({json.get(PERCENTAGE_SCORE_KEY)}%)\n"
         f"**Points:** {weighted_amount}/{weighted_total} "
         f"({weighted_score}%)\n"
     )
     # split checks into passing and not passing
-    for check in json.get("checks"):  # type: ignore
+    for check in json.get(CHECKS_KEY):  # type: ignore
         # if the check is passing
-        if check["status"]:
+        if check[STATUS_KEY]:
             passing_checks.append(check)
         # if the check is failing
         else:
             failing_checks.append(check)
     # give short info about passing checks
-    markdown_contents += "\n## Passing Checks\n"
+    markdown_contents += MD_PASSING_HEADER
     for check in passing_checks:
-        if "description" in check:
-            markdown_contents += f"\n- [x] {check['description']}"
+        if DESCRIPTION_KEY in check:
+            markdown_contents += MD_PASSING_ITEM.format(check[DESCRIPTION_KEY])
         else:
-            markdown_contents += f"\n- [x] {check['check']}"
+            markdown_contents += MD_PASSING_ITEM.format(check[CHECK_KEY])
     # give extended information about failing checks
-    markdown_contents += "\n\n## Failing Checks\n"
+    markdown_contents += MD_FAILING_HEADER
     # for each failing check, print out all related information
     for check in failing_checks:
         # for each key val pair in the check dictionary
-        if "description" in check:
-            markdown_contents += f"\n- [ ] {check['description']}"
+        if DESCRIPTION_KEY in check:
+            markdown_contents += MD_FAILING_ITEM.format(check[DESCRIPTION_KEY])
         else:
-            markdown_contents += f"\n- [ ] {check['check']}"
-        if "options" in check:
-            for i in check.get("options"):
-                if "command" == i:
-                    val = check["options"]["command"]
-                    markdown_contents += f"\n\t- **command** {val}"
-                if "fragment" == i:
-                    val = check["options"]["fragment"]
-                    markdown_contents += f"\n\t- **fragment:** {val}"
-                if "tag" == i:
-                    val = check["options"]["tag"]
-                    markdown_contents += f"\n\t- **tag:** {val}"
-                if "count" == i:
-                    val = check["options"]["count"]
-                    markdown_contents += f"\n\t- **count:** {val}"
-                if "directory" == i:
-                    val = check["options"]["directory"]
-                    markdown_contents += f"\n\t- **directory:** {val}"
-                if "file" == i:
-                    val = check["options"]["file"]
-                    markdown_contents += f"\n\t- **file:** {val}"
-        elif "command" in check:
-            val = check["command"]
-            markdown_contents += f"\n\t- **command:** {val}"
-        if "diagnostic" in check:
-            markdown_contents += f"\n\t- **diagnostic:** {check['diagnostic']}"
+            markdown_contents += MD_FAILING_ITEM.format(check[CHECK_KEY])
+        if OPTIONS_KEY in check:
+            for i in check.get(OPTIONS_KEY):
+                if COMMAND_KEY == i:
+                    val = check[OPTIONS_KEY][COMMAND_KEY]
+                    markdown_contents += MD_OPTION_CMD_FMT.format(
+                        COMMAND_KEY, val
+                    )
+                if FRAGMENT_KEY == i:
+                    val = check[OPTIONS_KEY][FRAGMENT_KEY]
+                    markdown_contents += MD_OPTION_FMT.format(
+                        FRAGMENT_KEY, val
+                    )
+                if TAG_KEY == i:
+                    val = check[OPTIONS_KEY][TAG_KEY]
+                    markdown_contents += MD_OPTION_FMT.format(TAG_KEY, val)
+                if COUNT_KEY == i:
+                    val = check[OPTIONS_KEY][COUNT_KEY]
+                    markdown_contents += MD_OPTION_FMT.format(COUNT_KEY, val)
+                if DIRECTORY_KEY == i:
+                    val = check[OPTIONS_KEY][DIRECTORY_KEY]
+                    markdown_contents += MD_OPTION_FMT.format(
+                        DIRECTORY_KEY, val
+                    )
+                if FILE_KEY == i:
+                    val = check[OPTIONS_KEY][FILE_KEY]
+                    markdown_contents += MD_OPTION_FMT.format(FILE_KEY, val)
+        elif COMMAND_KEY in check:
+            val = check[COMMAND_KEY]
+            markdown_contents += MD_TOP_CMD_FMT.format(val)
+        if DIAGNOSTIC_KEY in check:
+            markdown_contents += MD_DIAGNOSTIC_LABEL.format(
+                check[DIAGNOSTIC_KEY]
+            )
         markdown_contents += "\n"
     return markdown_contents
 
@@ -297,18 +376,16 @@ def configure_report(
     report_format = report_params[0]
     report_type = report_params[1]
     report_name = report_params[2]
-    if report_type not in ("json", "md"):
-        raise ValueError(
-            "\n[red]The second argument of report has to be 'md' or 'json' "
-        )
+    if report_type not in (REPORT_TYPE_JSON, REPORT_TYPE_MD):
+        raise ValueError(REPORT_TYPE_ERR)
     # if the user wants markdown, get markdown content based on json
-    if report_type == "md":
+    if report_type == REPORT_TYPE_MD:
         report_output_data_md = create_markdown_report_file(
             report_output_data_json
         )
     # if the user wants the data stored in a file
-    if report_format == "file":
-        if report_type == "md":
+    if report_format == REPORT_FORMAT_FILE:
+        if report_type == REPORT_TYPE_MD:
             write_json_or_md_file(
                 report_name, report_type, report_output_data_md
             )
@@ -318,11 +395,11 @@ def configure_report(
             )
     # the user wants the data stored in an environment variable; do not attempt
     # to save to the environment variable if it does not exist in the environment
-    elif report_format == "env":
-        if report_name == "GITHUB_STEP_SUMMARY":
-            env_file = os.getenv("GITHUB_STEP_SUMMARY", None)
+    elif report_format == REPORT_FORMAT_ENV:
+        if report_name == GITHUB_STEP_SUMMARY_VAR:
+            env_file = os.getenv(GITHUB_STEP_SUMMARY_VAR, None)
             if env_file is not None:
-                if report_type == "md":
+                if report_type == REPORT_TYPE_MD:
                     write_json_or_md_file(
                         env_file, report_type, report_output_data_md
                     )
@@ -330,36 +407,13 @@ def configure_report(
                     write_json_or_md_file(
                         env_file, report_type, report_output_data_json
                     )
-        # add json report into the GITHUB_ENV environment variable for data collection purpose;
-        # note that this is an undocumented side-effect of running gatorgrade with command-line
-        # arguments that save data to the GITHUB_STEP_SUMMARY environment variable. The current
-        # implementation of this approach should not cause the setting to fail when GatorGrade
-        # is run with the same command-line for which it is normally run in a GitHub Actions
-        # convert the data to a JSON string so that it can potentially be saved
         json_string = json.dumps(report_output_data_json)
-        # check to see if the GITHUB_ENV environment variable is set
-        env_file = os.getenv("GITHUB_ENV", None)
-        # the environment variable is defined and thus it is acceptable
-        # to write a key-value pair to the GITHUB_ENV environment file
-        # (note that the comment on the previous line is correct; this
-        # environment variable is a pointer to a file that allows for
-        # key-value pairs in one step to be passed to the next step
-        # inside of GitHub Actions and it is done through a file)
+        env_file = os.getenv(GITHUB_ENV_VAR, None)
         if env_file is not None:
-            # if it is, append the JSON string to the GITHUB_ENV file;
-            # note that this step is specifically helpful when running
-            # GatorGrade inside of a GitHub Actions workflow because
-            # this variable called GITHUB_ENV is used to store environment
-            # variables that are available to all of the subsequent steps
-            # in the GitHub Actions workflow. It is also important to note
-            # that you must use the as for th with context to avoid errors
-            # that are flagged by one or more type checkers the project uses
-            with open(os.environ["GITHUB_ENV"], "a") as env_file_handle:
-                env_file_handle.write(f"JSON_REPORT={json_string}\n")
+            with open(os.environ[GITHUB_ENV_VAR], "a") as env_file_handle:
+                env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
     else:
-        raise ValueError(
-            "\n[red]The first argument of report has to be 'env' or 'file' "
-        )
+        raise ValueError(REPORT_FORMAT_ERR)
 
 
 def write_json_or_md_file(
@@ -369,16 +423,14 @@ def write_json_or_md_file(
     # try to store content in a file with user chosen format
     try:
         # second argument has to be json or md
-        with open(file_name, "w", encoding="utf-8") as file:
-            if content_type == "json":
-                json.dump(content, file, indent=4)
+        with open(file_name, FILE_MODE_WRITE, encoding=FILE_ENCODING) as file:
+            if content_type == REPORT_TYPE_JSON:
+                json.dump(content, file, indent=INDENT_JSON)
             else:
                 file.write(str(content))
         return True
     except Exception as e:
-        raise ValueError(
-            "\n[red]Can't open or write the target file, check if you provide a valid path"
-        ) from e
+        raise ValueError(FILE_WRITE_ERR) from e
 
 
 def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
@@ -436,8 +488,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 # command run and then stores that command in the
                 # result.run_command field that is initialized to
                 # an empty string in the constructor for CheckResult
-                if "--command" in check.gg_args:
-                    index_of_command = check.gg_args.index("--command")
+                if GG_COMMAND_ARG in check.gg_args:
+                    index_of_command = check.gg_args.index(GG_COMMAND_ARG)
                     index_of_new_command = index_of_command + 1
                     result.run_command = check.gg_args[index_of_new_command]
             # there were results from running checks
@@ -482,8 +534,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                     # command run and then stores that command in the
                     # result.run_command field that is initialized to
                     # an empty string in the constructor for CheckResult
-                    if "--command" in check.gg_args:
-                        index_of_command = check.gg_args.index("--command")
+                    if GG_COMMAND_ARG in check.gg_args:
+                        index_of_command = check.gg_args.index(GG_COMMAND_ARG)
                         # index_of_new_command = int(index_of_command) + 1
                         index_of_new_command = index_of_command + 1
                         result.run_command = check.gg_args[
