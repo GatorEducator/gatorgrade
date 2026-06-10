@@ -114,6 +114,25 @@ def _validate_baseline_weight(value: int) -> int:
     return value
 
 
+def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
+    """Validate report tuple arguments up front to avoid crashes later."""
+    if any(v is not None for v in value):
+        errors = []
+        if value[0] is not None and value[0].upper() not in ("FILE", "ENV"):
+            errors.append(
+                f"First report argument must be 'FILE' or 'ENV', "
+                f"got '{value[0]}'"
+            )
+        if value[1] is not None and value[1].upper() not in ("JSON", "MD"):
+            errors.append(
+                f"Second report argument must be 'JSON' or 'MD', "
+                f"got '{value[1]}'"
+            )
+        if errors:
+            raise BadParameter("; ".join(errors))
+    return value
+
+
 def _get_platform_info() -> str:
     """Get the platform information string for any platform."""
     arch = platform.machine() or UNKNOWN_PLATFORM
@@ -199,6 +218,7 @@ def gatorgrade(  # noqa: PLR0913
             f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
             f" [green]FILE JSON report.json[/green] to save summary in report.json."
         ),
+        callback=_validate_report,
     ),
     output_limit: int = typer.Option(
         5,
