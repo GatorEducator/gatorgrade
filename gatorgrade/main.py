@@ -268,7 +268,9 @@ def gatorgrade(  # noqa: PLR0913
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
-                GATORGRADER_VERSION_KEY: _get_gatorgrade_info(),
+                GATORGRADER_VERSION_KEY: importlib.metadata.version(
+                    GATORGRADER_DEPENDENCY
+                ),
                 PYTHON_INFO_KEY: _get_python_info(),
                 PLATFORM_INFO_KEY: _get_platform_info(),
                 OS_RELEASE_KEY: _get_os_release(),
