@@ -80,7 +80,7 @@ All the Python code should follow these standards:
   contiguous.
 - **Docstrings:** Single-line docstrings starting with a capital letter, ending
   with a period. Follow this for new files. In existing files, preserve the
-  established docstring style even if it is multi-line with Args sections.
+  established docstring style even if it is multi-line with `Args` sections.
 - **Comments:** Other comments start with a lowercase letter; preserve existing
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
