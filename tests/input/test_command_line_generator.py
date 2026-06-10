@@ -460,6 +460,10 @@ def test_generate_checks_without_command_yields_gg_check_property(
                 "outputlimit" not in cd.check
                 or isinstance(cd.check["outputlimit"], int)
             )
+            and (
+                "options" not in cd.check
+                or isinstance(cd.check["options"], dict)
+            )
             for cd in lst
         )
     )
