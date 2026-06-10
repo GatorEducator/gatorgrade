@@ -201,7 +201,7 @@ def gatorgrade(  # noqa: PLR0913
         ),
     ),
     output_limit: int = typer.Option(
-        1,
+        5,
         "--output-limit",
         "-o",
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
