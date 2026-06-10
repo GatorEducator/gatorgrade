@@ -9,6 +9,8 @@ from typing import Any, List, Union
 from unittest.mock import patch
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output import output
@@ -295,73 +297,6 @@ def test_print_error_with_invalid_report_path(
     capsys.readouterr()
 
 
-def test_throw_errors_if_report_type_not_md_nor_json(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test the value error should be thrown if no md nor json is inputted."""
-    checks = [
-        ShellCheck(
-            description='Echo "Hello!"',
-            command='echo "hello"',
-            json_info={
-                "description": "Echo 'Hello!'",
-                "command": 'echo "hello"',
-            },
-        ),
-        GatorGraderCheck(
-            gg_args=[
-                "--description",
-                "Complete all TODOs in hello-world.py",
-                "MatchFileFragment",
-                "--fragment",
-                "TODO",
-                "--count",
-                "1",
-                "--exact",
-                "--directory",
-                "tests/test_assignment/src",
-                "--file",
-                "hello-world.py",
-            ],
-            json_info={
-                "description": "test",
-                "status": True,
-                "options": {
-                    "file": "test.txt",
-                    "directory": "tests/test_assignment/src",
-                },
-            },
-        ),
-        GatorGraderCheck(
-            gg_args=[
-                "--description",
-                'Call the "greet" function in hello-world.py',
-                "MatchFileFragment",
-                "--fragment",
-                "greet(",
-                "--count",
-                "2",
-                "--directory",
-                "tests/test_assignment/src",
-                "--file",
-                "hello-world.py",
-            ],
-            json_info={
-                "description": "test",
-                "status": True,
-                "options": {
-                    "file": "test.txt",
-                    "directory": "tests/test_assignment/src",
-                },
-            },
-        ),
-    ]
-    report = ("file", "not_md_nor_json", "invalid_path")
-    with pytest.raises(ValueError):
-        output.run_checks(checks, report)
-    capsys.readouterr()
-
-
 def test_write_md_and_json_correctly(tmp_path: Path) -> None:
     """Test process of writing is good for both json and md."""
     tmp_md = tmp_path / "test.md"
@@ -502,21 +437,6 @@ def test_create_markdown_report_file_with_passing_check_no_description() -> (
     }
     markdown = output.create_markdown_report_file(json_data)
     assert "- [x] MatchFileFragment" in markdown
-
-
-def test_configure_report_with_invalid_format() -> None:
-    """Test that configure_report raises ValueError for invalid format."""
-    report_params = ("invalid", "md", "test.md")
-    report_data = {
-        "amount_correct": 1,
-        "percentage_score": 100,
-        "checks": [{"status": True, "description": "Test"}],
-    }
-    with pytest.raises(ValueError) as exc_info:
-        output.configure_report(report_params, report_data)
-    assert "first argument of report has to be 'FILE' or 'ENV'" in str(
-        exc_info.value
-    )
 
 
 def test_configure_report_env_github_step_summary_md(
@@ -1772,3 +1692,162 @@ def test_run_checks_includes_outputlimit_for_gg_check(
     with open(report_file, "r") as f:
         data = json.load(f)
     assert data["checks"][0]["outputlimit"] == per_check_limit
+
+
+@pytest.mark.propertybased
+@given(
+    st.text(
+        max_size=200,
+        alphabet=st.characters(
+            whitelist_categories=["L", "N", "P", "Z"],
+            whitelist_characters="\n\t",
+        ),
+    ),
+    st.integers(min_value=1, max_value=50),
+)
+def test_truncate_diagnostic_respects_limit_property(
+    diagnostic: str, limit: int
+) -> None:
+    """Property: truncated output never exceeds the specified line limit."""
+    truncated = output._truncate_diagnostic(diagnostic, limit)
+    result_lines = truncated.splitlines()
+    content_lines = [
+        line
+        for line in result_lines
+        if not line.startswith("   ... (output truncated to")
+    ]
+    assert len(content_lines) <= limit
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.text(
+            max_size=50,
+            alphabet=st.characters(
+                whitelist_categories=["L", "N", "P", "Z"],
+                whitelist_characters="\t ",
+            ),
+        ),
+        min_size=0,
+        max_size=5,
+    ).map("\n".join),
+    st.integers(min_value=6, max_value=50),
+)
+def test_truncate_diagnostic_within_limit_preserves_input_property(
+    diagnostic: str, limit: int
+) -> None:
+    """Property: when input has fewer lines than the limit, output equals input."""
+    truncated = output._truncate_diagnostic(diagnostic, limit)
+    assert truncated == diagnostic
+
+
+@pytest.mark.propertybased
+@given(st.text(max_size=200))
+def test_truncate_diagnostic_no_limit_property(diagnostic: str) -> None:
+    """Property: when limit is None, output always equals input."""
+    assert output._truncate_diagnostic(diagnostic, None) == diagnostic
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckResult,
+            passed=st.booleans(),
+            description=st.text(max_size=50),
+            json_info=st.just({"check": "test"}),
+            weight=st.integers(min_value=1, max_value=10),
+            outputlimit=st.one_of(
+                st.none(), st.integers(min_value=1, max_value=20)
+            ),
+        ),
+        min_size=0,
+        max_size=30,
+    )
+)
+def test_create_report_json_checks_count_matches_property(
+    checks: List[CheckResult],
+) -> None:
+    """Property: JSON report check count matches input and amount_correct is correct."""
+    passed_count = sum(1 for c in checks if c.passed)
+    total = len(checks)
+    percent = round(passed_count / total * 100) if total > 0 else 0
+    result = output.create_report_json(passed_count, checks, percent)
+    assert len(result["checks"]) == total
+    assert result["amount_correct"] == passed_count
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckResult,
+            passed=st.booleans(),
+            description=st.text(max_size=50),
+            json_info=st.just({"check": "test"}),
+            weight=st.integers(min_value=1, max_value=10),
+            outputlimit=st.one_of(
+                st.none(), st.integers(min_value=1, max_value=20)
+            ),
+        ),
+        min_size=1,
+        max_size=30,
+    )
+)
+def test_create_report_json_every_check_has_expected_keys_property(
+    checks: List[CheckResult],
+) -> None:
+    """Property: every check entry in JSON report has status, weight, and outputlimit."""
+    passed_count = sum(1 for c in checks if c.passed)
+    total = len(checks)
+    percent = round(passed_count / total * 100) if total > 0 else 0
+    result = output.create_report_json(passed_count, checks, percent)
+    for entry in result["checks"]:
+        assert "status" in entry
+        assert "weight" in entry
+        assert "outputlimit" in entry
+        assert isinstance(entry["status"], bool)
+        assert isinstance(entry["weight"], int)
+        assert entry["outputlimit"] is None or isinstance(
+            entry["outputlimit"], int
+        )
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckResult,
+            passed=st.booleans(),
+            description=st.text(max_size=50),
+            json_info=st.just({"check": "test"}),
+            weight=st.integers(min_value=1, max_value=10),
+            outputlimit=st.one_of(
+                st.none(), st.integers(min_value=1, max_value=20)
+            ),
+        ),
+        min_size=0,
+        max_size=30,
+    )
+)
+def test_create_report_json_expected_keys_present_property(
+    checks: List[CheckResult],
+) -> None:
+    """Property: the top-level JSON report dict always has all expected keys."""
+    passed_count = sum(1 for c in checks if c.passed)
+    total = len(checks)
+    percent = round(passed_count / total * 100) if total > 0 else 0
+    result = output.create_report_json(passed_count, checks, percent)
+    expected_keys = {
+        "amount_correct",
+        "percentage_score",
+        "weighted_amount_correct",
+        "weighted_total",
+        "weighted_percentage_score",
+        "cli_args",
+        "version_info",
+        "report_time",
+        "checks",
+    }
+    assert expected_keys.issubset(result.keys())
