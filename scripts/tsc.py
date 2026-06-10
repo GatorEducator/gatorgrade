@@ -1,5 +1,11 @@
 """Check which functions in gatorgrade are directly tested vs. indirectly tested.
 
+If a function is indirectly covered that means that a test case
+calls a function that transitively calls that function. Importantly,
+a function that is indirectly tested does not have a test case that
+calls it directly and this could be a sign that the function is not
+being tested as thoroughly as it should be.
+
 Uses `tree-sitter-analyzer` (Python API) for language detection and
 file analysis, then falls back to raw Tree-sitter for function-definition
 extraction and call-graph construction (the installed version of
