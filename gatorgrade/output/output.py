@@ -100,13 +100,9 @@ MD_TOP_CMD_FMT = "\n\t- **command:** {}"
 MD_DIAGNOSTIC_LABEL = "\n\t- **diagnostic:** {}"
 
 # error message strings
-REPORT_TYPE_ERR = (
-    "\n[red]The second argument of report has to be 'md' or 'json' "
+FILE_WRITE_ERR = (
+    "Can't open or write the target file, check if you provide a valid path"
 )
-REPORT_FORMAT_ERR = (
-    "\n[red]The first argument of report has to be 'env' or 'file' "
-)
-FILE_WRITE_ERR = "\n[red]Can't open or write the target file, check if you provide a valid path"
 
 # empty dict for CLI args default
 EMPTY_CLI_ARGS: dict = {}
@@ -172,6 +168,7 @@ def _run_shell_check(
         json_info=check.json_info,
         diagnostic=diagnostic,
         weight=check.weight,
+        outputlimit=limit,
     )
 
 
@@ -223,15 +220,17 @@ def _run_gg_check(
         diagnostic=diagnostic,
         path=file_path,
         weight=check.weight,
+        outputlimit=limit,
     )
 
 
-def create_report_json(
+def create_report_json(  # noqa: PLR0913
     passed_count: int,
     checkResults: List[CheckResult],
     percent_passed: int,
     weighted_percent: int = 0,
     cli_args: dict | None = None,
+    version_info: dict | None = None,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
@@ -242,6 +241,7 @@ def create_report_json(
         percent_passed: the percentage of checks that passed
         weighted_percent: the weighted percentage of checks that passed
         cli_args: the command-line arguments to include in the report
+        version_info: the version and platform information to include in the report
 
     """
     # compute weighted totals from check results
@@ -256,6 +256,7 @@ def create_report_json(
         WEIGHTED_TOTAL_KEY,
         WEIGHTED_PERCENTAGE_KEY,
         CLI_ARGS_KEY,
+        VERSION_INFO_KEY,
         REPORT_TIME_KEY,
         CHECKS_KEY,
     ]
@@ -271,6 +272,8 @@ def create_report_json(
         # and then add the status, path, and diagnostic information to that dictionary
         if isinstance(results_json, dict):
             results_json[STATUS_KEY] = checkResults[i].passed
+            results_json[WEIGHT_KEY] = checkResults[i].weight
+            results_json[OUTPUTLIMIT_KEY] = checkResults[i].outputlimit
             if checkResults[i].path:
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
@@ -287,6 +290,7 @@ def create_report_json(
                 total_weight,
                 weighted_percent,
                 cli_args if cli_args is not None else EMPTY_CLI_ARGS,
+                version_info if version_info is not None else EMPTY_CLI_ARGS,
                 formatted_time,
                 checks_list,
             ],
@@ -387,18 +391,26 @@ def configure_report(
     Args:
         report_params: The details of what the user wants the report to
             look like.
-            report_params[0]: file or env
-            report_params[1]: json or md
-            report_params[2]: name of the file or env
-        report_output_data_json: The json dictionary that will be used
-            or converted to md.
+            report_params[0]: FILE or ENV (lowercase also accepted)
+            report_params[1]: JSON or MD (lowercase also accepted)
+            report_params[2]: name of the file or environment variable
+        report_output_data_json: The JSON dictionary that will be used
+            or converted to markdown.
 
     """
-    report_format = report_params[0]
-    report_type = report_params[1]
+    # normalize to uppercase for case-insensitive matching
+    # as the tool expects capitalized versions of these fields
+    # as in "JSON" or "MD". With that said, a prior version of the
+    # tool also supported lowercase versions of these fields
+    # as in "json" or "md". The command-line interface only
+    # advertisies the capitalized versions, but lowercasing them
+    # here will ensure that this is backwards compatible
+    report_format = report_params[0].upper()
+    report_type = report_params[1].upper()
+    # the report name is not normalized to uppercase because
+    # it could be a file name or environment variable name that
+    # is case-sensitive, which is the same as in prior versions
     report_name = report_params[2]
-    if report_type not in (REPORT_TYPE_JSON, REPORT_TYPE_MD):
-        raise ValueError(REPORT_TYPE_ERR)
     # if the user wants markdown, get markdown content based on json
     if report_type == REPORT_TYPE_MD:
         report_output_data_md = create_markdown_report_file(
@@ -433,19 +445,19 @@ def configure_report(
         if env_file is not None:
             with open(os.environ[GITHUB_ENV_VAR], "a") as env_file_handle:
                 env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
-    else:
-        raise ValueError(REPORT_FORMAT_ERR)
 
 
 def write_json_or_md_file(
     file_name: Union[str, Path], content_type: str, content: Any
 ) -> bool:
-    """Write a markdown or json file."""
+    """Write a Markdown or JSON file."""
     # try to store content in a file with user chosen format
+    # normalize content_type to uppercase for case-insensitive matching
+    normalized_type = content_type.upper()
     try:
         # second argument has to be either json or md
         with open(file_name, FILE_MODE_WRITE, encoding=FILE_ENCODING) as file:
-            if content_type == REPORT_TYPE_JSON:
+            if normalized_type == REPORT_TYPE_JSON:
                 json.dump(content, file, indent=INDENT_JSON)
             else:
                 file.write(str(content))
@@ -461,6 +473,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     show_diagnostics: bool = True,
     output_limit: int | None = None,
     cli_args: dict | None = None,
+    version_info: dict | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -475,6 +488,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         output_limit: The maximum number of diagnostic lines to display
             for each check.
         cli_args: The command-line arguments to include in the report.
+        version_info: Version and platform information to include in the report.
 
     """
     results: List[CheckResult] = []
@@ -483,6 +497,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     total_checks = len(checks)
     # run checks with no progress bar
     if no_progress_bar:
+        rich.print()
+        rich.print(Rule(RUNNING_CHECKS_RULE_LABEL))
+        rich.print()
         for check in checks:
             result = None
             # command_ran = None
@@ -519,6 +536,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 result.print()
                 results.append(result)
     else:
+        rich.print()
+        rich.print(Rule(RUNNING_CHECKS_RULE_LABEL))
+        rich.print()
         with Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(
@@ -590,7 +610,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # if the report is wanted, create output in line with their specifications
     if all(report):
         report_output_data = create_report_json(
-            passed_count, results, percent, weighted_percent, cli_args
+            passed_count,
+            results,
+            percent,
+            weighted_percent,
+            cli_args,
+            version_info,
         )
         configure_report(report, report_output_data)
     # compute the summary color based on pass/fail status
@@ -598,6 +623,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # print failures list if there are failures to print
     # and print what ShellCheck command that Gatorgrade ran
     if len(failed_results) > 0:
+        # close the running checks section with an outcome-colored rule
+        rich.print()
+        rich.print(Rule(style=summary_color))
+        # failing checks section (with its own red rules)
         rich.print("")
         rich.print(Rule(f"{FAILING_CHECKS_LABEL}", style="bright_red"))
         rich.print("")
@@ -647,6 +676,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # close the running checks section with an outcome-colored rule
+        rich.print()
+        rich.print(Rule(style=summary_color))
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False since run did not pass
