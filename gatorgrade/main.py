@@ -196,7 +196,8 @@ def gatorgrade(  # noqa: PLR0913
             f" 1. The destination of the report (either file or env){NEWLINE}{NEWLINE}"
             f" 2. The format of the report (either json or md){NEWLINE}{NEWLINE}"
             f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
-            f" (Use env md GITHUB_STEP_SUMMARY to create job summary in GitHub Actions)"
+            f" (Use [green]env md GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
+            f" [green]file json report.json[/green] to save summary in the report.json file."
         ),
     ),
     output_limit: int = typer.Option(
