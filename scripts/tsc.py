@@ -1,9 +1,9 @@
 """Check which functions in gatorgrade are directly tested vs. indirectly tested.
 
-Uses ``tree-sitter-analyzer`` (Python API) for language detection and
+Uses `tree-sitter-analyzer` (Python API) for language detection and
 file analysis, then falls back to raw Tree-sitter for function-definition
 extraction and call-graph construction (the installed version of
-``tree-sitter-analyzer`` uses a deprecated ``query.captures()`` API that
+`tree-sitter-analyzer` uses a deprecated `query.captures()` API that
 has been removed from modern tree-sitter).
 
 Usage:
@@ -14,7 +14,7 @@ Exit code:
     1 — at least one function is only indirectly tested
 
 Output:
-    Writes ``test_coverage_report.json`` to the project root and prints
+    Writes `tsc.json` to the project root and prints
     a summary to stdout.
 
 """
@@ -202,7 +202,7 @@ def main() -> int:
 
     report = classify_and_report(all_functions, directly_tested)
 
-    report_path = project_root / "test_coverage_report.json"
+    report_path = project_root / "tsc.json"
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"Report written to {report_path}\n")
 
