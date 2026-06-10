@@ -41,5 +41,5 @@ def parse_config(
         # parsing process did not return a list with content;
         # allow the calling function to handle the empty list
         return [], None
-    except (yaml.YAMLError, ValueError) as error:
+    except (yaml.YAMLError, ValueError, TypeError, IndexError) as error:
         return [], str(error)
