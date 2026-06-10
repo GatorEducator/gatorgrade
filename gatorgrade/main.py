@@ -192,7 +192,7 @@ def gatorgrade(  # noqa: PLR0913
         "--report",
         "-r",
         help=(
-            f"A tuple containing the following REQUIRED values:{NEWLINE}{NEWLINE}"
+            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
             f" 1. The destination of the report (either file or env){NEWLINE}{NEWLINE}"
             f" 2. The format of the report (either json or md){NEWLINE}{NEWLINE}"
             f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
