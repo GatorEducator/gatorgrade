@@ -143,6 +143,40 @@ def test_check_result_with_explicit_empty_diagnostic() -> None:
     assert "Test failed" in result
 
 
+def test_check_result_with_outputlimit_default() -> None:
+    """Test CheckResult with default outputlimit (None)."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+    )
+    assert check_result.outputlimit is None
+
+
+def test_check_result_with_explicit_outputlimit() -> None:
+    """Test CheckResult with an explicit outputlimit value."""
+    expected_limit = 10
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+        outputlimit=expected_limit,
+    )
+    assert check_result.outputlimit == expected_limit
+
+
+def test_check_result_repr_includes_outputlimit() -> None:
+    """Test that __repr__ includes outputlimit field."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test",
+        json_info={"check": "test"},
+        outputlimit=5,
+    )
+    repr_str = repr(check_result)
+    assert "outputlimit=5" in repr_str
+
+
 def test_check_result_print_does_not_crash(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
