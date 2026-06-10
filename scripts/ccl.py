@@ -69,6 +69,13 @@ class CommentError:
 
 
 def _find_errors(filepath: Path, parser: Parser) -> list[CommentError]:
+    """Find comment-case errors in a Python file.
+
+    Walks the Tree-sitter CST looking for comment nodes, then checks
+    whether each non-empty comment starts with a lowercase letter
+    (allowing proper nouns).
+
+    """
     errors = []
     source = filepath.read_bytes()
     tree = parser.parse(source)
@@ -98,6 +105,15 @@ def _find_errors(filepath: Path, parser: Parser) -> list[CommentError]:
 def _scan_files(
     paths: list[Path] | None = None,
 ) -> tuple[list[Path], list[CommentError]]:
+    """Scan Python files for comment-case errors.
+
+    Finds all ``.py`` files under the given paths (or the current
+    directory by default), then checks each one for comments that
+    start with an uppercase letter.
+
+    Returns a tuple of (all_matched_files, errors_found).
+
+    """
     parser = Parser(PY_LANGUAGE)
     root = Path(".")
     if paths:
