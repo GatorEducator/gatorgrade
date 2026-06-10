@@ -16,6 +16,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
         weight: int = 1,
+        outputlimit: int | None = None,
     ):
         """Construct a CheckResult.
 
@@ -29,6 +30,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             diagnostic: The message to use in output if the check
                 has failed.
             weight: The weight of the check result.
+            outputlimit: The maximum number of diagnostic lines
+                displayed for this check.
 
         """
         self.passed = passed
@@ -38,6 +41,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.path = path
         self.run_command = ""
         self.weight = weight
+        self.outputlimit = outputlimit
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
@@ -74,7 +78,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"path='{self.path}', "
             f"diagnostic='{self.diagnostic}', "
             f"run_command='{self.run_command}', "
-            f"weight={self.weight})"
+            f"weight={self.weight}, "
+            f"outputlimit={self.outputlimit})"
         )
 
     def __str__(self, show_diagnostic: bool = False) -> str:
