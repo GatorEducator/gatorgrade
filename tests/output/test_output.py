@@ -19,6 +19,12 @@ from gatorgrade.output.check_result import CheckResult
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
 
+# cross-platform shell commands for testing failing checks
+FAILING_CMD = 'python -c "exit(1)"'
+FAILING_CMD_WITH_LINES = (
+    "python -c \"print('line1'); print('line2'); print('line3'); exit(1)\""
+)
+
 
 @pytest.fixture
 def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -682,20 +688,22 @@ def test_run_checks_with_shell_check_command_display(
 ) -> None:
     """Test that failed shell check displays the command to run."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
-        ShellCheck(description="Failing shell check", command="false"),
+        ShellCheck(description="Failing shell check", command=FAILING_CMD),
     ]
     report = (None, None, None)
     result = output.run_checks(checks, report)  # type: ignore
     assert result is False
     out, _ = capsys.readouterr()
     assert "Run this command:" in out
-    assert "false" in out
+    assert "exit(1)" in out
 
 
 def test_run_checks_failed_check_displays_weight() -> None:
     """Test that failed check displays its weight in the failure summary."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
-        ShellCheck(description="Failing check", command="false", weight=10),
+        ShellCheck(
+            description="Failing check", command=FAILING_CMD, weight=10
+        ),
     ]
     report = (None, None, None)
     with patch("gatorgrade.output.output.rich.print") as mock_print:
@@ -1334,7 +1342,7 @@ def test_run_checks_weighted_score_displayed(
         ShellCheck(
             description='Echo "Hello!"', command='echo "hello"', weight=10
         ),
-        ShellCheck(description="Failing check", command="false", weight=5),
+        ShellCheck(description="Failing check", command=FAILING_CMD, weight=5),
     ]
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
@@ -1460,7 +1468,7 @@ def test_run_checks_global_output_limit_truncates_diagnostic(
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(
             description="Failing check",
-            command="echo 'line1'; echo 'line2'; echo 'line3'; false",
+            command=FAILING_CMD_WITH_LINES,
         ),
     ]
     report = (None, None, None)
@@ -1476,7 +1484,7 @@ def test_run_checks_check_outputlimit_overrides_global(
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(
             description="Failing check",
-            command="echo 'line1'; echo 'line2'; echo 'line3'; false",
+            command=FAILING_CMD_WITH_LINES,
             outputlimit=1,
         ),
     ]
@@ -1491,7 +1499,7 @@ def test_run_checks_no_output_limit_shows_full_diagnostic(
 ) -> None:
     """Test that no output_limit shows full diagnostic without truncation."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
-        ShellCheck(description="Failing check", command="false"),
+        ShellCheck(description="Failing check", command=FAILING_CMD),
     ]
     report = (None, None, None)
     output.run_checks(checks, report)  # type: ignore
@@ -1539,12 +1547,12 @@ def test_run_checks_mixed_checks_use_correct_output_limit(
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(
             description="Check with per-check limit",
-            command="echo 'A1'; echo 'A2'; echo 'A3'; false",
+            command=FAILING_CMD_WITH_LINES,
             outputlimit=2,
         ),
         ShellCheck(
             description="Check using global limit",
-            command="echo 'B1'; echo 'B2'; echo 'B3'; false",
+            command=FAILING_CMD_WITH_LINES,
         ),
     ]
     report = (None, None, None)
