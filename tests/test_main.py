@@ -63,7 +63,7 @@ def cleanup_files(
     monkeypatch.setattr(io, "open", patch_open(io.open, files))
     yield
     for file in files:
-        os.remove(file)
+        Path(file).unlink(missing_ok=True)
 
 
 @pytest.mark.parametrize(
