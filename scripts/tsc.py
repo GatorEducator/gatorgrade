@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 import tree_sitter_python as tspython
+import typer
 from tree_sitter import Language, Node, Parser
 from tree_sitter_analyzer.api import (
     detect_language,
@@ -41,10 +42,12 @@ PY_LANGUAGE = Language(tspython.language())
 
 
 def _make_parser() -> Parser:
+    """Create a tree-sitter parser for Python."""
     return Parser(PY_LANGUAGE)
 
 
 def _walk_node(node: Node) -> list[Node]:
+    """Walk the tree recursively and return all descendant nodes."""
     nodes = [node]
     for child in node.children:
         nodes.extend(_walk_node(child))
@@ -55,7 +58,9 @@ def _get_func_name(func_node: Node) -> str | None:
     """Extract the function name from a function_definition node."""
     for child in func_node.children:
         if child.type == "identifier":
-            return child.text.decode("utf-8")
+            text = child.text
+            if text is not None:
+                return text.decode("utf-8")
     return None
 
 
@@ -69,11 +74,15 @@ def _get_call_names(call_node: Node) -> list[str]:
     names: list[str] = []
     for child in call_node.children:
         if child.type == "identifier":
-            names.append(child.text.decode("utf-8"))
+            text = child.text
+            if text is not None:
+                names.append(text.decode("utf-8"))
         elif child.type == "attribute":
             for attr_child in child.children:
                 if attr_child.type == "identifier":
-                    names.append(attr_child.text.decode("utf-8"))
+                    text = attr_child.text
+                    if text is not None:
+                        names.append(text.decode("utf-8"))
     return names
 
 
@@ -170,57 +179,58 @@ def classify_and_report(
 def print_summary(report: dict[str, Any]) -> None:
     """Print a human-readable summary."""
     s = report["summary"]
-    print(f"Total source functions:  {s['total']}")
-    print(f"Directly tested:         {s['directly_tested']}")
-    print(f"Indirectly tested only:  {s['indirectly_tested']}")
+    typer.echo(f"Total source functions:  {s['total']}")
+    typer.echo(f"Directly tested:         {s['directly_tested']}")
+    typer.echo(f"Indirectly tested only:  {s['indirectly_tested']}")
     if report["indirectly_tested_list"]:
-        print()
-        print("Functions with only indirect test coverage:")
+        typer.echo()
+        typer.echo("Functions with only indirect test coverage:")
         for entry in report["indirectly_tested_list"]:
-            print(f"  {entry['name']}  ({entry['file']}:{entry['line']})")
+            typer.echo(f"  {entry['name']}  ({entry['file']}:{entry['line']})")
 
 
 def demo_api() -> None:
     """Demonstrate the tree-sitter-analyzer Python API."""
     langs = get_supported_languages()
-    print(f"tree-sitter-analyzer supports {len(langs)} languages.")
+    typer.echo(f"tree-sitter-analyzer supports {len(langs)} languages.")
     py_ext = "gatorgrade/output/output.py"
     detected = detect_language(py_ext)
-    print(f"  detect_language('{py_ext}') -> {detected}")
-    print()
+    typer.echo(f"  detect_language('{py_ext}') -> {detected}")
+    typer.echo()
 
 
 def main() -> int:
+    """Run the coverage analysis and return 0 if all functions are directly tested."""
     project_root = Path(__file__).resolve().parent.parent
     source_dir = project_root / "gatorgrade"
     test_dir = project_root / "tests"
 
     demo_api()
 
-    print("Extracting function definitions via Tree-sitter ...")
+    typer.echo("Extracting function definitions via Tree-sitter ...")
     all_functions = find_function_definitions(source_dir)
     target_funcs = set(all_functions.keys())
-    print(f"  Found {len(all_functions)} functions.\n")
+    typer.echo(f"  Found {len(all_functions)} functions.\n")
 
-    print("Finding direct calls in test files ...")
+    typer.echo("Finding direct calls in test files ...")
     directly_tested = find_direct_test_calls(test_dir, target_funcs)
-    print(f"  Found {len(directly_tested)} directly-tested functions.\n")
+    typer.echo(f"  Found {len(directly_tested)} directly-tested functions.\n")
 
     report = classify_and_report(all_functions, directly_tested)
 
     report_path = project_root / "tsc.json"
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(f"Report written to {report_path}\n")
+    typer.echo(f"Report written to {report_path}\n")
 
     print_summary(report)
 
     if report["summary"]["indirectly_tested"] > 0:
-        print(
-            f"\nFAILURE: {report['summary']['indirectly_tested']} "
+        typer.echo(
+            f"FAILURE: {report['summary']['indirectly_tested']} "
             "function(s) lack direct test coverage."
         )
         return 1
-    print("\nAll functions have direct test coverage.")
+    typer.echo("All functions have direct test coverage.")
     return 0
 
 
