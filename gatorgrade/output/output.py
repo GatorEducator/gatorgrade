@@ -73,10 +73,12 @@ DIRECTORY_KEY = "directory"
 FILE_KEY = "file"
 
 # report format strings
-REPORT_TYPE_JSON = "json"
-REPORT_TYPE_MD = "md"
-REPORT_FORMAT_FILE = "file"
-REPORT_FORMAT_ENV = "env"
+# (uppercase is now canonical,
+# but lowercase accepted for backward compatability)
+REPORT_TYPE_JSON = "JSON"
+REPORT_TYPE_MD = "MD"
+REPORT_FORMAT_FILE = "FILE"
+REPORT_FORMAT_ENV = "ENV"
 GITHUB_STEP_SUMMARY_VAR = "GITHUB_STEP_SUMMARY"
 GITHUB_ENV_VAR = "GITHUB_ENV"
 JSON_REPORT_KEY = "JSON_REPORT"
