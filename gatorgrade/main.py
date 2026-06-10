@@ -193,11 +193,11 @@ def gatorgrade(  # noqa: PLR0913
         "-r",
         help=(
             f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
-            f" 1. The destination of the report (either file or env){NEWLINE}{NEWLINE}"
-            f" 2. The format of the report (either json or md){NEWLINE}{NEWLINE}"
+            f" 1. The destination of the report (either FILE or ENV){NEWLINE}{NEWLINE}"
+            f" 2. The format of the report (either JSON or MD){NEWLINE}{NEWLINE}"
             f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
-            f" (Use [green]env md GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
-            f" [green]file json report.json[/green] to save summary in the report.json file."
+            f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
+            f" [green]FILE JSON report.json[/green] to save summary in the report.json file."
         ),
     ),
     output_limit: int = typer.Option(
