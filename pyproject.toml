@@ -71,22 +71,23 @@ build-backend = "hatchling.build"
 
 [tool.taskipy.variables]
 project = "gatorgrade"
+scripts = "scripts"
 tests = "tests"
-ruff-check-command = { var = "ruff check {project} {tests}", recursive = true }
+ruff-check-command = { var = "ruff check {project} {tests} {scripts}", recursive = true }
 coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=98 --cov-report=term-missing tests/"
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
-ruff-fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
-ruff-format-command = { var = "ruff format --check {project} {tests}", recursive = true }
-symbex-typed-command = {var = "symbex -s --untyped -d {project} -d {tests} --check", recursive = true}
-symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {tests} --check", recursive = true}
-mypy-command = {var = "mypy {project}", recursive = true}
-ty-command = {var = "ty check {project} {tests}", recursive = true}
-pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
+ruff-fixformat-command = { var = "ruff format {project} {tests} {scripts}", recursive = true }
+ruff-format-command = { var = "ruff format --check {project} {tests} {scripts}", recursive = true }
+symbex-typed-command = {var = "symbex -s --untyped -d {project} -d {tests} -d {scripts} --check", recursive = true}
+symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {tests} -d {scripts} --check", recursive = true}
+mypy-command = {var = "mypy {project} {scripts}", recursive = true}
+ty-command = {var = "ty check {project} {tests} {scripts}", recursive = true}
+pyrefly-command = {var = "pyrefly check {project} {tests} {scripts}", recursive = true}
 rumdl-command = {var = "rumdl check", recursive = true}
 rumdl-command-fix = {var = "rumdl fmt", recursive = true}
-zuban-command = {var = "zuban check {project} {tests}", recursive = true}
+zuban-command = {var = "zuban check {project} {tests} {scripts}", recursive = true}
 cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
@@ -114,6 +115,7 @@ format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter 
 comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
 comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml" }
+test-coverage-check = { cmd = "uv run python -m scripts.tsc", help = "Check which functions are indirectly tested using tree-sitter-analyzer" }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
