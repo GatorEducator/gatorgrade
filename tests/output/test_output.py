@@ -387,6 +387,7 @@ def test_create_report_json_with_passing_checks() -> None:
     assert len(result["checks"]) == 1
     assert result["checks"][0]["status"] is True
     assert result["checks"][0]["path"] == "test/path.py"
+    assert result["checks"][0]["weight"] == 1
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -404,6 +405,19 @@ def test_create_report_json_with_failing_checks() -> None:
     assert len(result["checks"]) == 1
     assert result["checks"][0]["status"] is False
     assert result["checks"][0]["diagnostic"] == "This is a diagnostic message"
+
+
+@pytest.mark.usefixtures("patch_datetime_now")
+def test_create_report_json_with_weight_in_checks() -> None:
+    """Test that create_report_json includes the resolved weight in each check entry."""
+    check_result = CheckResult(
+        passed=True,
+        description="Weighted check",
+        json_info={"check": "test", "description": "Weighted check"},
+        weight=10,
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert result["checks"][0]["weight"] == 10  # noqa: PLR2004
 
 
 def test_create_markdown_report_file_with_all_passing() -> None:
@@ -500,7 +514,7 @@ def test_configure_report_with_invalid_format() -> None:
     }
     with pytest.raises(ValueError) as exc_info:
         output.configure_report(report_params, report_data)
-    assert "first argument of report has to be 'env' or 'file'" in str(
+    assert "first argument of report has to be 'FILE' or 'ENV'" in str(
         exc_info.value
     )
 
@@ -997,6 +1011,296 @@ def test_configure_report_env_not_github_step_summary(
     assert parsed["amount_correct"] == 1
 
 
+def test_configure_report_file_json_uppercase() -> None:
+    """Test configure_report accepts uppercase FILE and JSON."""
+    report_params = ("FILE", "JSON", "/tmp/test_report.json")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    with patch("gatorgrade.output.output.write_json_or_md_file") as mock_write:
+        output.configure_report(report_params, report_data)
+    mock_write.assert_called_once()
+
+
+def test_configure_report_file_md_uppercase() -> None:
+    """Test configure_report accepts uppercase FILE and MD."""
+    report_params = ("FILE", "MD", "/tmp/test_report.md")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    with patch(
+        "gatorgrade.output.output.create_markdown_report_file"
+    ) as mock_create:
+        mock_create.return_value = "# Markdown"
+        with patch(
+            "gatorgrade.output.output.write_json_or_md_file"
+        ) as mock_write:
+            output.configure_report(report_params, report_data)
+    mock_create.assert_called_once()
+    mock_write.assert_called_once()
+
+
+def test_configure_report_env_json_uppercase(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report accepts uppercase ENV and JSON."""
+    tmp_file = tmp_path / "summary.json"
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    report_params = ("ENV", "JSON", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+
+
+def test_configure_report_env_md_uppercase(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report accepts uppercase ENV and MD."""
+    tmp_file = tmp_path / "summary.md"
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    report_params = ("ENV", "MD", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Insights" in content
+
+
+def test_write_json_or_md_file_accepts_lowercase(tmp_path: Path) -> None:
+    """Test write_json_or_md_file accepts lowercase type for backwards compatibility."""
+    tmp_md = tmp_path / "output.md"
+    tmp_json = tmp_path / "output.json"
+    assert output.write_json_or_md_file(tmp_md, "md", "# Hello")
+    assert output.write_json_or_md_file(tmp_json, "json", {"key": "value"})
+
+
+def test_write_json_or_md_file_accepts_uppercase(tmp_path: Path) -> None:
+    """Test write_json_or_md_file accepts uppercase type."""
+    tmp_md = tmp_path / "output.md"
+    tmp_json = tmp_path / "output.json"
+    assert output.write_json_or_md_file(tmp_md, "MD", "# Hello")
+    assert output.write_json_or_md_file(tmp_json, "JSON", {"key": "value"})
+
+
+def test_configure_report_file_json_backwards_compatible(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test run_checks with lowercase file/json for backwards compatibility."""
+    expected_percentage = 100
+    report_file = tmp_path / "report.json"
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("file", "json", str(report_file))
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert report_file.exists()
+    with open(report_file, "r") as f:
+        data = json.load(f)
+    assert data["amount_correct"] == 1
+    assert data["percentage_score"] == expected_percentage
+
+
+def test_configure_report_file_md_backwards_compatible(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test run_checks with lowercase file/md for backwards compatibility."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={
+                "description": "test",
+                "options": {
+                    "file": "test.txt",
+                    "directory": "tests/test_assignment/src",
+                },
+            },
+        ),
+    ]
+    report = ("file", "md", "invalid_path/insight.md")
+    with pytest.raises(ValueError):
+        output.run_checks(checks, report)
+    capsys.readouterr()
+
+
+def test_run_checks_with_report_file_json_uppercase(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test run_checks generates JSON report with uppercase FILE JSON."""
+    expected_percentage = 100
+    report_file = tmp_path / "report.json"
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("FILE", "JSON", str(report_file))
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert report_file.exists()
+    with open(report_file, "r") as f:
+        data = json.load(f)
+    assert data["amount_correct"] == 1
+    assert data["percentage_score"] == expected_percentage
+
+
+def test_run_checks_env_json_uppercase(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks with uppercase ENV JSON and GITHUB_STEP_SUMMARY."""
+    tmp_file = tmp_path / "summary.json"
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("ENV", "JSON", "GITHUB_STEP_SUMMARY")
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert tmp_file.exists()
+
+
+def test_run_checks_env_md_uppercase(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks with uppercase ENV MD and GITHUB_STEP_SUMMARY."""
+    tmp_file = tmp_path / "summary.md"
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("ENV", "MD", "GITHUB_STEP_SUMMARY")
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Insights" in content
+
+
+def test_run_checks_env_json_uppercase_other_var(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks with uppercase ENV JSON and a non-GITHUB_STEP_SUMMARY variable."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("ENV", "JSON", "MY_CUSTOM_VAR")
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    env_content = tmp_env_file.read_text()
+    assert "JSON_REPORT=" in env_content
+
+
+def test_configure_report_backwards_compatible_lowercase_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report with lowercase env for backwards compatibility."""
+    tmp_file = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_path / "github_env"))
+    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Insights" in content
+
+
+def test_configure_report_backwards_compatible_lowercase_file_json(
+    tmp_path: Path,
+) -> None:
+    """Test configure_report with lowercase file/json for backwards compatibility."""
+    tmp_file = tmp_path / "report.json"
+    report_params = ("file", "json", str(tmp_file))
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    with patch("gatorgrade.output.output.write_json_or_md_file") as mock_write:
+        output.configure_report(report_params, report_data)
+    mock_write.assert_called_once()
+
+
+def test_configure_report_backwards_compatible_lowercase_file_md(
+    tmp_path: Path,
+) -> None:
+    """Test configure_report with lowercase file/md for backwards compatibility."""
+    tmp_file = tmp_path / "report.md"
+    report_params = ("file", "md", str(tmp_file))
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    with patch(
+        "gatorgrade.output.output.create_markdown_report_file"
+    ) as mock_create:
+        mock_create.return_value = "# Markdown"
+        with patch(
+            "gatorgrade.output.output.write_json_or_md_file"
+        ) as mock_write:
+            output.configure_report(report_params, report_data)
+    mock_create.assert_called_once()
+    mock_write.assert_called_once()
+
+
 def test_run_gg_check_without_directory_flag() -> None:
     """Test _run_gg_check returns None path when no --directory flag."""
     check = GatorGraderCheck(
@@ -1342,3 +1646,129 @@ def test_create_report_json_respects_output_limit() -> None:
     )
     result = output.create_report_json(0, [check_result], 0, 0)
     assert result["checks"][0]["diagnostic"] == "line1\nline2\nline3\nline4"
+
+
+def test_create_report_json_includes_outputlimit_for_every_check() -> None:
+    """Test that outputlimit is present for every check in JSON report."""
+    check_result_1 = CheckResult(
+        passed=True,
+        description="Check one",
+        json_info={"check": "test1"},
+        outputlimit=5,
+    )
+    check_result_2 = CheckResult(
+        passed=False,
+        description="Check two",
+        json_info={"check": "test2"},
+        outputlimit=10,
+    )
+    result = output.create_report_json(1, [check_result_1, check_result_2], 50)
+    assert result["checks"][0]["outputlimit"] == 5  # noqa: PLR2004
+    assert result["checks"][1]["outputlimit"] == 10  # noqa: PLR2004
+
+
+def test_create_report_json_includes_explicit_outputlimit() -> None:
+    """Test that explicit per-check outputlimit is saved in JSON report."""
+    expected_limit = 15
+    check_result = CheckResult(
+        passed=True,
+        description="Explicit limit check",
+        json_info={"check": "test"},
+        outputlimit=expected_limit,
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert result["checks"][0]["outputlimit"] == expected_limit
+
+
+def test_create_report_json_includes_global_outputlimit() -> None:
+    """Test that global default outputlimit is saved when no explicit limit."""
+    check_result = CheckResult(
+        passed=True,
+        description="No explicit limit",
+        json_info={"check": "test"},
+        outputlimit=5,
+    )
+    result = output.create_report_json(1, [check_result], 100)
+    assert result["checks"][0]["outputlimit"] == 5  # noqa: PLR2004
+
+
+def test_run_checks_includes_outputlimit_in_json_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that run_checks saves outputlimit in JSON report for every check."""
+    report_file = tmp_path / "report.json"
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+            weight=1,
+        ),
+    ]
+    global_limit = 3
+    report = ("file", "json", str(report_file))
+    output.run_checks(checks, report, output_limit=global_limit)
+    capsys.readouterr()
+    assert report_file.exists()
+    with open(report_file, "r") as f:
+        data = json.load(f)
+    assert data["checks"][0]["outputlimit"] == global_limit
+
+
+def test_run_checks_includes_per_check_outputlimit_in_json_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that per-check outputlimit overrides global and is saved in JSON report."""
+    report_file = tmp_path / "report.json"
+    per_check_limit = 7
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+            outputlimit=per_check_limit,
+            weight=1,
+        ),
+    ]
+    report = ("file", "json", str(report_file))
+    output.run_checks(checks, report, output_limit=3)
+    capsys.readouterr()
+    assert report_file.exists()
+    with open(report_file, "r") as f:
+        data = json.load(f)
+    assert data["checks"][0]["outputlimit"] == per_check_limit
+
+
+def test_run_checks_includes_outputlimit_for_gg_check(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that GatorGraderCheck outputlimit is saved in JSON report."""
+    report_file = tmp_path / "report.json"
+    per_check_limit = 4
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        GatorGraderCheck(
+            gg_args=[
+                "--description",
+                "Test check",
+                "MatchFileFragment",
+                "--fragment",
+                "TODO",
+                "--count",
+                "0",
+                "--exact",
+                "--directory",
+                "tests/test_assignment/src",
+                "--file",
+                "hello-world.py",
+            ],
+            json_info={"check": "test"},
+            outputlimit=per_check_limit,
+        ),
+    ]
+    report = ("file", "json", str(report_file))
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert report_file.exists()
+    with open(report_file, "r") as f:
+        data = json.load(f)
+    assert data["checks"][0]["outputlimit"] == per_check_limit
