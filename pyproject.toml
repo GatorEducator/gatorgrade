@@ -145,6 +145,11 @@ exclude_lines = [
     "@abstractmethod",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "propertybased: property-based tests using hypothesis",
+]
+
 [tool.ruff]
 line-length = 79
 lint.ignore = [
