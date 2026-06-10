@@ -15,7 +15,7 @@ EXIT_SUCCESS = 0
 
 # define constants used in setup command execution
 SETUP_KEY = "setup"
-SETUP_RULE_TITLE = "Running Set Up Commands"
+SETUP_RULE_TITLE = "Running Set Up Command(s)"
 GREEN_STYLE = "green"
 BRIGHT_RED_STYLE = "bright_red"
 TIMEOUT_SECONDS = 300
