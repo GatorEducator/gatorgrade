@@ -25,10 +25,11 @@ SPACE = " "
 
 # output labels
 CHECKS_LABEL = "Checks"
-FAILING_CHECKS_LABEL = "Failing Checks"
+FAILING_CHECKS_LABEL = "Failing Check(s)"
 POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
 RUNNING_CHECKS_LABEL = "Running checks"
+RUNNING_CHECKS_RULE_LABEL = "Running Check(s)"
 WEIGHT_LABEL = "Weight"
 RUN_COMMAND_LABEL = "Run this command"
 
