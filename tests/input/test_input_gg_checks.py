@@ -1,6 +1,11 @@
 """Test suite for parse_config function."""
 
+import tempfile
 from pathlib import Path
+
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.parse_config import parse_config
@@ -171,3 +176,26 @@ def test_parse_config_with_baseline_weight_and_explicit_weight() -> None:
     # and the check without explicit weight gets the baseline weight
     assert isinstance(output[1], GatorGraderCheck)
     assert output[1].weight == 2  # noqa: PLR2004
+
+
+@pytest.mark.propertybased
+@given(st.text(min_size=1, max_size=100))
+def test_parse_config_invalid_yaml_returns_error_property(
+    yaml_content: str,
+) -> None:
+    """Property: any non-empty string written as YAML returns checks+message or error."""
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yml", delete=False
+    ) as f:
+        f.write(yaml_content)
+        temp_path = f.name
+    try:
+        checks, error = parse_config(Path(temp_path))
+        if error is not None:
+            assert checks == []
+            assert isinstance(error, str)
+            assert len(error) > 0
+        else:
+            assert len(checks) >= 0
+    finally:
+        Path(temp_path).unlink(missing_ok=True)

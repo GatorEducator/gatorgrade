@@ -1,8 +1,14 @@
 """Test suite for checks.py."""
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
-from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.checks import (
+    GatorGraderCheck,
+    ShellCheck,
+    validate_positive_nonzero_int,
+)
 
 
 def test_shell_check_with_description() -> None:
@@ -220,3 +226,41 @@ def test_gatorgrader_check_invalid_outputlimit_zero() -> None:
     with pytest.raises(ValueError) as exc_info:
         GatorGraderCheck(gg_args=["Test"], json_info={}, outputlimit=0)
     assert "positive, non-zero integer" in str(exc_info.value)
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000000), st.text(min_size=1))
+def test_validate_positive_nonzero_int_valid_property(
+    value: int, name: str
+) -> None:
+    """Property: valid positive integers always return None."""
+    assert validate_positive_nonzero_int(value, name) is None
+
+
+@pytest.mark.propertybased
+@given(
+    st.integers(max_value=0),
+    st.text(min_size=1),
+)
+def test_validate_positive_nonzero_int_non_positive_property(
+    value: int, name: str
+) -> None:
+    """Property: non-positive integers always return an error containing the field name."""
+    result = validate_positive_nonzero_int(value, name)
+    assert result is not None
+    assert name in result
+    assert str(value) in result
+
+
+@pytest.mark.propertybased
+@given(
+    st.one_of(st.floats(allow_nan=False), st.text()),
+    st.text(min_size=1),
+)
+def test_validate_positive_nonzero_int_non_int_property(
+    value: float | str, name: str
+) -> None:
+    """Property: non-int types always return an error containing the field name."""
+    result = validate_positive_nonzero_int(value, name)  # type: ignore
+    assert result is not None
+    assert name in result

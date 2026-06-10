@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any, Callable, Generator, List
 
 import pytest
+from click import BadParameter
+from hypothesis import given
+from hypothesis import strategies as st
 from typer.testing import CliRunner
 
 from gatorgrade import main
@@ -607,3 +610,73 @@ def test_gatorgrade_with_no_show_diagnostics(
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     assert "- Checks: 3/3 (100%)" in plain_stdout
     assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000))
+def test_validate_output_limit_valid_property(value: int) -> None:
+    """Property: positive ints pass through validation unchanged."""
+    result = main._validate_output_limit(value)
+    assert result == value
+
+
+@pytest.mark.propertybased
+@given(st.integers(max_value=0))
+def test_validate_output_limit_invalid_property(value: int) -> None:
+    """Property: non-positive ints cause BadParameter."""
+    with pytest.raises(BadParameter):
+        main._validate_output_limit(value)
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000))
+def test_validate_baseline_weight_valid_property(value: int) -> None:
+    """Property: positive ints pass through validation unchanged."""
+    result = main._validate_baseline_weight(value)
+    assert result == value
+
+
+@pytest.mark.propertybased
+@given(st.integers(max_value=0))
+def test_validate_baseline_weight_invalid_property(value: int) -> None:
+    """Property: non-positive ints cause BadParameter."""
+    with pytest.raises(BadParameter):
+        main._validate_baseline_weight(value)
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_platform_info_format_property(_: st.DataObject) -> None:
+    """Property: platform info is a non-empty string with at least one dash."""
+    info = main._get_platform_info()
+    assert isinstance(info, str)
+    assert len(info) > 0
+    assert "-" in info
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_python_info_starts_with_python_property(_: st.DataObject) -> None:
+    """Property: python info starts with 'Python'."""
+    info = main._get_python_info()
+    assert info.startswith("Python")
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_gatorgrade_info_contains_gatorgrader_property(
+    _: st.DataObject,
+) -> None:
+    """Property: gatorgrade info contains 'GatorGrader'."""
+    info = main._get_gatorgrade_info()
+    assert "GatorGrader" in info
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_os_release_format_property(_: st.DataObject) -> None:
+    """Property: os release is non-empty with parens or empty string."""
+    info = main._get_os_release()
+    assert isinstance(info, str)
+    if info:
+        assert "(" in info and ")" in info

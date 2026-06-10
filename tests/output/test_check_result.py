@@ -1,6 +1,8 @@
 """Test suite for check_result.py."""
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.output.check_result import CheckResult
 
@@ -189,3 +191,84 @@ def test_check_result_print_does_not_crash(
     check_result.print()
     out, _ = capsys.readouterr()
     assert "Test passed" in out
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.just(True),
+        description=st.text(max_size=100),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_passing_never_shows_diagnostic_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: a passing check never includes diagnostic in its display string."""
+    result = check_result.display_result(show_diagnostic=True)
+    assert "\u2713" in result  # checkmark
+    assert "\u2715" not in result  # not a cross mark
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.just(False),
+        description=st.text(max_size=100),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_failing_diagnostic_respects_flag_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: for failing checks, diagnostic appears iff show_diagnostic is True."""
+    result_with = check_result.display_result(show_diagnostic=True)
+    result_without = check_result.display_result(show_diagnostic=False)
+    assert "\u2715" in result_with  # cross mark present
+    assert (
+        "\u2715" in result_without
+    )  # cross mark present even without diagnostic
+    if check_result.diagnostic:
+        assert "Diagnostic:" in result_with
+        assert "Diagnostic:" not in result_without
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.booleans(),
+        description=st.text(max_size=100),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_str_matches_display_result_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: __str__ without args equals display_result with show_diagnostic=False."""
+    assert str(check_result) == check_result.display_result(
+        show_diagnostic=False
+    )

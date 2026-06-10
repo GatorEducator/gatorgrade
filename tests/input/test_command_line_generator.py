@@ -1,6 +1,8 @@
 """Test suite for command_line_generator.py."""
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
@@ -357,3 +359,120 @@ def test_generate_checks_with_baseline_weight_for_gg_check() -> None:
     assert len(checks) == 1
     assert isinstance(checks[0], GatorGraderCheck)
     assert checks[0].weight == 3  # noqa: PLR2004
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=0, max_value=10))
+def test_generate_checks_empty_list_property(_: int) -> None:
+    """Property: empty check data list always returns an empty list."""
+    result = generate_checks([])
+    assert result == []
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.none(),
+            check=st.fixed_dictionaries(
+                {
+                    "command": st.text(min_size=1, max_size=50),
+                    st.one_of(
+                        st.just("description"), st.just("weight")
+                    ): st.one_of(st.none(), st.text(max_size=50)),
+                },
+                optional={
+                    "weight": st.integers(min_value=1, max_value=100),
+                },
+            ),
+        ),
+        min_size=1,
+        max_size=5,
+    )
+)
+def test_generate_checks_with_command_yields_shell_check_property(
+    check_data_list: list,
+) -> None:
+    """Property: every check with a 'command' key produces a ShellCheck."""
+    checks = generate_checks(check_data_list)
+    assert len(checks) == len(check_data_list)
+    for check in checks:
+        assert isinstance(check, ShellCheck)
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.none(),
+            check=st.fixed_dictionaries(
+                {
+                    "check": st.text(min_size=1, max_size=50),
+                    st.one_of(
+                        st.just("options"), st.just("description")
+                    ): st.one_of(st.none(), st.text(max_size=50)),
+                },
+                optional={
+                    "weight": st.integers(min_value=1, max_value=100),
+                },
+            ),
+        ),
+        min_size=1,
+        max_size=5,
+    )
+)
+def test_generate_checks_without_command_yields_gg_check_property(
+    check_data_list: list,
+) -> None:
+    """Property: every check without a 'command' key but with 'check' produces GatorGraderCheck."""
+    checks = generate_checks(check_data_list)
+    assert len(checks) == len(check_data_list)
+    for check in checks:
+        assert isinstance(check, GatorGraderCheck)
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.one_of(st.none(), st.text(max_size=30)),
+            check=st.dictionaries(
+                st.text(min_size=1, max_size=20),
+                st.one_of(
+                    st.text(max_size=50),
+                    st.integers(),
+                    st.booleans(),
+                    st.none(),
+                ),
+                min_size=1,
+                max_size=5,
+            ),
+        ),
+        min_size=0,
+        max_size=5,
+    ).filter(
+        lambda lst: all(
+            "weight" not in cd.check or isinstance(cd.check["weight"], int)
+            for cd in lst
+        )
+    )
+)
+def test_generate_checks_count_matches_input_property(
+    check_data_list: list,
+) -> None:
+    """Property: number of generated checks always matches the input list length."""
+    try:
+        checks = generate_checks(check_data_list)
+        assert len(checks) == len(check_data_list)
+    except ValueError:
+        assert any(
+            "weight" in cd.check
+            and (
+                not isinstance(cd.check["weight"], int)
+                or cd.check["weight"] <= 0
+            )
+            for cd in check_data_list
+        )
