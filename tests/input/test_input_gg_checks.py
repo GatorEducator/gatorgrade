@@ -185,7 +185,7 @@ def test_parse_config_invalid_yaml_returns_error_property(
 ) -> None:
     """Property: any non-empty string written as YAML returns checks+message or error."""
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".yml", delete=False
+        mode="w", suffix=".yml", delete=False, encoding="utf-8"
     ) as f:
         f.write(yaml_content)
         temp_path = f.name
