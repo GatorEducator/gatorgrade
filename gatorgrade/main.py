@@ -115,7 +115,15 @@ def _validate_baseline_weight(value: int) -> int:
 
 
 def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
-    """Validate report tuple arguments up front to avoid crashes later."""
+    """Validate report tuple arguments up front to avoid crashes later.
+
+    Validates that:
+    - First argument is FILE or ENV (case-insensitive for backwards compatibility)
+    - Second argument is JSON or MD (case-insensitive for backwards compatibility)
+    - When the destination is not explicitly ENV, validate the third
+      argument's parent directory exists (it is a file path)
+
+    """
     if any(v is not None for v in value):
         errors = []
         if value[0] is not None and value[0].upper() not in ("FILE", "ENV"):
@@ -128,6 +136,14 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
                 f"Second report argument must be 'JSON' or 'MD', "
                 f"got '{value[1]}'"
             )
+        if value[0] is not None and value[0].upper() != "ENV":
+            file_path = Path(value[2])
+            parent_dir = file_path.resolve().parent
+            if not parent_dir.exists():
+                errors.append(
+                    f"Cannot write report to '{value[2]}': "
+                    f"directory '{parent_dir}' does not exist"
+                )
         if errors:
             raise BadParameter("; ".join(errors))
     return value
