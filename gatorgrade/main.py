@@ -99,6 +99,19 @@ PYTHON_INFO_KEY = "python_info"
 PLATFORM_INFO_KEY = "platform_info"
 OS_RELEASE_KEY = "os_release"
 
+# report argument constants
+REPORT_DEST_FILE = "FILE"
+REPORT_DEST_ENV = "ENV"
+REPORT_TYPE_JSON = "JSON"
+REPORT_TYPE_MD = "MD"
+VALID_REPORT_DESTS = (REPORT_DEST_FILE, REPORT_DEST_ENV)
+VALID_REPORT_TYPES = (REPORT_TYPE_JSON, REPORT_TYPE_MD)
+REPORT_DEST_ERR_FMT = "First report argument must be '{}' or '{}', got '{}'"
+REPORT_TYPE_ERR_FMT = "Second report argument must be '{}' or '{}', got '{}'"
+REPORT_PATH_ERR_FMT = (
+    "Cannot write report to '{}': directory '{}' does not exist"
+)
+
 
 def _validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided."""
@@ -118,34 +131,35 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
     """Validate report tuple arguments up front to avoid crashes later.
 
     Validates that:
-    - First argument is FILE or ENV (case-insensitive for backwards compatibility)
-    - Second argument is JSON or MD (case-insensitive for backwards compatibility)
+    - First argument is FILE or ENV (case-insensitive for backwards
+      compatibility)
+    - Second argument is JSON or MD (case-insensitive for backwards
+      compatibility)
     - When the destination is not explicitly ENV, validate the third
       argument's parent directory exists (it is a file path)
 
     """
     if any(v is not None for v in value):
         errors = []
-        if value[0] is not None and value[0].upper() not in ("FILE", "ENV"):
+        if value[0] is not None and value[0].upper() not in VALID_REPORT_DESTS:
             errors.append(
-                f"First report argument must be 'FILE' or 'ENV', "
-                f"got '{value[0]}'"
+                REPORT_DEST_ERR_FMT.format(
+                    REPORT_DEST_FILE, REPORT_DEST_ENV, value[0]
+                )
             )
-        if value[1] is not None and value[1].upper() not in ("JSON", "MD"):
+        if value[1] is not None and value[1].upper() not in VALID_REPORT_TYPES:
             errors.append(
-                f"Second report argument must be 'JSON' or 'MD', "
-                f"got '{value[1]}'"
+                REPORT_TYPE_ERR_FMT.format(
+                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[1]
+                )
             )
-        if value[0] is not None and value[0].upper() != "ENV":
+        if value[0] is not None and value[0].upper() != REPORT_DEST_ENV:
             file_path = Path(value[2])
             parent_dir = file_path.resolve().parent
             if not parent_dir.exists():
-                errors.append(
-                    f"Cannot write report to '{value[2]}': "
-                    f"directory '{parent_dir}' does not exist"
-                )
+                errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
         if errors:
-            raise BadParameter("; ".join(errors))
+            raise BadParameter(";\n".join(errors))
     return value
 
 
