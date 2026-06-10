@@ -162,6 +162,57 @@ def test_gatorgrade_with_report_option(
     assert report_file.exists()
 
 
+def test_gatorgrade_with_report_invalid_destination(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report destination is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "FILe111", "json", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_invalid_type(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report type is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "file", "html", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_uppercase_valid(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that uppercase FILE/JSON is accepted."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "FILE", "JSON", str(report_file)]
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_file_path(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a report file path with a non-existent directory is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--report", "file", "json", "nonexistent_dir/report.json"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
 def test_gatorgrade_with_progress_bar_default(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
