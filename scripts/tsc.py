@@ -19,6 +19,9 @@ Options:
     --threshold, -t INT  Minimum percentage of directly tested functions
                          required (default 100).
     --output, -o PATH    Path for the JSON report file (default tsc.json).
+    --verbose, --no-verbose
+                         Show detailed coverage analysis output (default:
+                         no-verbose).
 
 Exit code:
     0 — at least THRESHOLD% of functions are directly tested
@@ -463,7 +466,7 @@ def demo_api() -> list[str]:
     return lines
 
 
-def main(
+def main(  # noqa: PLR0915
     threshold: int = typer.Option(
         100,
         "--threshold",
@@ -476,6 +479,11 @@ def main(
         "-o",
         help="Path for the JSON report file.",
     ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose/--no-verbose",
+        help="Show detailed coverage analysis output.",
+    ),
 ) -> None:
     """Run the coverage analysis and check against a direct-test threshold."""
     project_root = Path(__file__).resolve().parent.parent
@@ -484,7 +492,7 @@ def main(
     report_path = Path(output)
     if not report_path.is_absolute():
         report_path = project_root / report_path
-    # -- Analysis phase -------------------------------------------------------
+    # Analysis phase
     analysis_lines: list[str] = []
     for line in demo_api():
         analysis_lines.append(line)
@@ -510,12 +518,13 @@ def main(
     analysis_lines.append(f"  Found {total_edges} internal call edges.")
     analysis_lines.append("")
     analysis_lines.append(f"Report written to {report_path}")
-    CONSOLE.print()
-    CONSOLE.print(Rule("Coverage Analysis", style="blue"))
-    CONSOLE.print()
-    for line in analysis_lines:
-        CONSOLE.print(line)
-    # -- Build report ---------------------------------------------------------
+    if verbose:
+        CONSOLE.print()
+        CONSOLE.print(Rule("Coverage Analysis", style="blue"))
+        CONSOLE.print()
+        for line in analysis_lines:
+            CONSOLE.print(line)
+    # Build report
     report = classify_and_report(
         all_functions,
         directly_tested,
@@ -523,29 +532,43 @@ def main(
         func_to_test_details,
     )
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    CONSOLE.print()
-    CONSOLE.print(Rule("Coverage Results", style="dim"))
-    CONSOLE.print()
-    print_summary(report)
+    if verbose:
+        CONSOLE.print()
+        CONSOLE.print(Rule("Coverage Results", style="dim"))
+        CONSOLE.print()
+        print_summary(report)
+        CONSOLE.print()
+    # threshold check
     s = report["summary"]
     total = s["total"]
     direct_count = s["directly_tested"]
     pct = (direct_count / total * 100) if total > 0 else 100.0
     if pct < threshold:
+        if verbose:
+            CONSOLE.print()
+        CONSOLE.print(Rule("Failure", style="red"))
         CONSOLE.print()
-        CONSOLE.print(Rule("FAILURE", style="red"))
         CONSOLE.print(
             f"Only {pct:.1f}% of functions are directly tested "
             f"(threshold: {threshold}%)."
         )
+        if not verbose:
+            for entry in report["indirectly_tested_list"]:
+                CONSOLE.print(
+                    f"  {entry['name']}  ({entry['file']}:{entry['line']})"
+                )
+            for entry in report["untested_list"]:
+                CONSOLE.print(
+                    f"  {entry['name']}  ({entry['file']}:{entry['line']})"
+                )
         raise typer.Exit(code=1)
-
-    CONSOLE.print()
-    CONSOLE.print(Rule("PASS", style="green"))
-    CONSOLE.print(
-        f"All functions have sufficient direct test coverage "
-        f"({pct:.1f}% >= {threshold}%)."
-    )
+    if verbose:
+        CONSOLE.print()
+        CONSOLE.print(Rule("Pass", style="green"))
+        CONSOLE.print(
+            f"All functions have sufficient direct test coverage "
+            f"({pct:.1f}% >= {threshold}%)."
+        )
 
 
 if __name__ == "__main__":
