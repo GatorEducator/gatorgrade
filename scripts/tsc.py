@@ -13,25 +13,33 @@ tree-sitter-analyzer uses a deprecated query.captures() API that
 has been removed from modern tree-sitter).
 
 Usage:
-    uv run python -m scripts.tsc
+    uv run python -m scripts.tsc [OPTIONS]
+
+Options:
+    --threshold, -t INT  Minimum percentage of directly tested functions
+                         required (default 100).
+    --output, -o PATH    Path for the JSON report file (default tsc.json).
 
 Exit code:
-    0 — every function has at least one direct test caller
-    1 — at least one function is only indirectly tested
+    0 — at least THRESHOLD% of functions are directly tested
+    1 — fewer than THRESHOLD% of functions are directly tested
 
 Output:
-    Writes to a hard-coded tsc.json to the project root and prints
-    a summary to stdout.
+    Writes a JSON report and prints a color-coded summary to stdout.
 
 """
 
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
 import tree_sitter_python as tspython
 import typer
+from rich import box
+from rich.console import Console
+from rich.rule import Rule
+from rich.style import Style
+from rich.table import Table
 from tree_sitter import Language, Node, Parser
 from tree_sitter_analyzer.api import (
     detect_language,
@@ -39,6 +47,7 @@ from tree_sitter_analyzer.api import (
 )
 
 PY_LANGUAGE = Language(tspython.language())
+CONSOLE = Console()
 
 
 def _make_parser() -> Parser:
@@ -67,8 +76,8 @@ def _get_func_name(func_node: Node) -> str | None:
 def _get_call_names(call_node: Node) -> list[str]:
     """Extract all function names from a call node.
 
-    Handles both bare calls (``foo(...)``) and dotted calls
-    (``mod.foo(...)``, ``a.b.foo(...)``).
+    Handles both bare calls (foo(...)) and dotted calls
+    (mod.foo(...), a.b.foo(...)).
 
     """
     names: list[str] = []
@@ -92,7 +101,7 @@ def find_function_definitions(
     """Walk source files and extract every function definition.
 
     Uses the Tree-sitter CST to find nodes of type
-    ``function_definition`` and records the child ``identifier``
+    function_definition and records the child identifier
     node's text as the function name.
 
     """
@@ -126,7 +135,7 @@ def find_direct_test_calls(
 ) -> tuple[set[str], dict[str, list[dict[str, Any]]]]:
     """Scan test files for direct calls to any target function.
 
-    Walks the Tree-sitter CST of every ``test_*.py`` file, tracking
+    Walks the Tree-sitter CST of every test_*.py file, tracking
     the enclosing test-function scope, and records which test function
     calls which target function directly, along with the test's file
     and line-number range.
@@ -134,8 +143,8 @@ def find_direct_test_calls(
     Returns a tuple of:
     - set of directly-called function names
     - dict mapping each directly-called function to a list of test
-      detail dicts with keys ``test_name``, ``test_file``,
-      ``test_start_line``, ``test_end_line``
+      detail dicts with keys test_name, test_file,
+      test_start_line, test_end_line
 
     """
     directly_called: set[str] = set()
@@ -197,8 +206,8 @@ def build_call_graph(
     """Build a call graph of which source functions call which others.
 
     Parses every source file and tracks which function body contains
-    each ``call`` node. Returns a dict mapping each caller to the set
-    of callees (functions in *target_funcs*) it invokes.
+    each call node. Returns a dict mapping each caller to the set
+    of callees (functions in target_funcs) it invokes.
 
     """
     call_graph: dict[str, set[str]] = {f: set() for f in target_funcs}
@@ -241,16 +250,15 @@ def compute_coverage_status(
     """Determine test status for every function.
 
     Returns a dict mapping each function name to one of:
-    - ``"direct"`` — called directly by at least one test
-    - ``"indirect"`` — not called directly, but reachable via the
+    - "direct" — called directly by at least one test
+    - "indirect" — not called directly, but reachable via the
       call graph from a directly-tested function
-    - ``"none"`` — no test coverage (direct or indirect)
+    - "none" — no test coverage (direct or indirect)
 
     """
     status: dict[str, str] = {}
     for name in all_functions:
         status[name] = "direct" if name in directly_tested else "unknown"
-
     # BFS through the call graph starting from directly-tested functions
     queue = list(directly_tested)
     while queue:
@@ -259,7 +267,6 @@ def compute_coverage_status(
             if status[callee] == "unknown":
                 status[callee] = "indirect"
                 queue.append(callee)
-
     # remaining unknown functions have no coverage at all
     for name in all_functions:
         if status[name] == "unknown":
@@ -282,9 +289,9 @@ def compute_indirect_paths(
     location of every step.
 
     Returns a dict mapping each indirectly-tested function to a list
-    of path entries, each with ``test`` and ``chain`` keys.  Every
-    chain element contains ``name``, ``file``, ``start_line``, and
-    ``end_line``.
+    of path entries, each with test and chain keys.  Every
+    chain element contains name, file, start_line, and
+    end_line.
 
     """
     indirect_info: dict[str, list[dict[str, Any]]] = {}
@@ -400,80 +407,147 @@ def classify_and_report(
 
 
 def print_summary(report: dict[str, Any]) -> None:
-    """Print a human-readable summary."""
+    """Print a human-readable summary using rich formatting."""
     s = report["summary"]
-    typer.echo(f"Total source functions:  {s['total']}")
-    typer.echo(f"Directly tested:         {s['directly_tested']}")
-    typer.echo(f"Indirectly tested only:  {s['indirectly_tested']}")
-    typer.echo(f"Untested:                {s['untested']}")
+    table = Table(
+        title="Function Coverage Summary",
+        box=box.SIMPLE,
+        title_style=Style(bold=True),
+        header_style=Style(bold=True),
+    )
+    table.add_column("Status", style="bold")
+    table.add_column("Count", justify="right")
+    table.add_column("Percent", justify="right")
+    total = s["total"] or 1
+    table.add_row(
+        "Directly tested",
+        str(s["directly_tested"]),
+        f"{s['directly_tested'] / total * 100:.1f}%",
+    )
+    table.add_row(
+        "Indirectly tested only",
+        str(s["indirectly_tested"]),
+        f"{s['indirectly_tested'] / total * 100:.1f}%",
+    )
+    table.add_row(
+        "Untested",
+        str(s["untested"]),
+        f"{s['untested'] / total * 100:.1f}%",
+    )
+    CONSOLE.print(table)
     if report["indirectly_tested_list"]:
-        typer.echo()
-        typer.echo("Functions with only indirect test coverage:")
+        CONSOLE.print()
+        CONSOLE.print(Rule("Indirectly Tested Functions", style="yellow"))
+        CONSOLE.print()
         for entry in report["indirectly_tested_list"]:
-            typer.echo(f"  {entry['name']}  ({entry['file']}:{entry['line']})")
+            CONSOLE.print(
+                f"  {entry['name']}  ({entry['file']}:{entry['line']})"
+            )
     if report["untested_list"]:
-        typer.echo()
-        typer.echo("Functions with no test coverage:")
+        CONSOLE.print()
+        CONSOLE.print(Rule("Not Tested Functions", style="red"))
+        CONSOLE.print()
         for entry in report["untested_list"]:
-            typer.echo(f"  {entry['name']}  ({entry['file']}:{entry['line']})")
+            CONSOLE.print(
+                f"  {entry['name']}  ({entry['file']}:{entry['line']})"
+            )
 
 
-def demo_api() -> None:
-    """Demonstrate the tree-sitter-analyzer Python API."""
+def demo_api() -> list[str]:
+    """Demonstrate the tree-sitter-analyzer Python API and return lines."""
+    lines: list[str] = []
     langs = get_supported_languages()
-    typer.echo(f"tree-sitter-analyzer supports {len(langs)} languages.")
+    lines.append(f"tree-sitter-analyzer supports {len(langs)} languages.")
     py_ext = "gatorgrade/output/output.py"
     detected = detect_language(py_ext)
-    typer.echo(f"  detect_language('{py_ext}') -> {detected}")
-    typer.echo()
+    lines.append(f"  detect_language('{py_ext}') -> {detected}")
+    return lines
 
 
-def main() -> int:
-    """Run the coverage analysis and return 0 if all functions are directly tested."""
+def main(
+    threshold: int = typer.Option(
+        100,
+        "--threshold",
+        "-t",
+        help="Minimum percentage of directly tested functions required.",
+    ),
+    output: Path = typer.Option(
+        "tsc.json",
+        "--output",
+        "-o",
+        help="Path for the JSON report file.",
+    ),
+) -> None:
+    """Run the coverage analysis and check against a direct-test threshold."""
     project_root = Path(__file__).resolve().parent.parent
     source_dir = project_root / "gatorgrade"
     test_dir = project_root / "tests"
-
-    demo_api()
-
-    typer.echo("Extracting function definitions via Tree-sitter ...")
+    report_path = Path(output)
+    if not report_path.is_absolute():
+        report_path = project_root / report_path
+    # -- Analysis phase -------------------------------------------------------
+    analysis_lines: list[str] = []
+    for line in demo_api():
+        analysis_lines.append(line)
+    analysis_lines.append("")
+    analysis_lines.append(
+        "Extracting function definitions via Tree-sitter ..."
+    )
     all_functions = find_function_definitions(source_dir)
     target_funcs = set(all_functions.keys())
-    typer.echo(f"  Found {len(all_functions)} functions.\n")
-
-    typer.echo("Finding direct calls in test files ...")
+    analysis_lines.append(f"  Found {len(all_functions)} functions.")
+    analysis_lines.append("")
+    analysis_lines.append("Searching for direct calls in test files ...")
     directly_tested, func_to_test_details = find_direct_test_calls(
         test_dir, target_funcs
     )
-    typer.echo(f"  Found {len(directly_tested)} directly-tested functions.\n")
-
-    typer.echo("Building call graph of source functions ...")
+    analysis_lines.append(
+        f"  Found {len(directly_tested)} directly-tested functions."
+    )
+    analysis_lines.append("")
+    analysis_lines.append("Building internal call graph ...")
     call_graph = build_call_graph(source_dir, target_funcs)
     total_edges = sum(len(v) for v in call_graph.values())
-    typer.echo(f"  Found {total_edges} internal call edges.\n")
-
+    analysis_lines.append(f"  Found {total_edges} internal call edges.")
+    analysis_lines.append("")
+    analysis_lines.append(f"Report written to {report_path}")
+    CONSOLE.print()
+    CONSOLE.print(Rule("Coverage Analysis", style="blue"))
+    CONSOLE.print()
+    for line in analysis_lines:
+        CONSOLE.print(line)
+    # -- Build report ---------------------------------------------------------
     report = classify_and_report(
         all_functions,
         directly_tested,
         call_graph,
         func_to_test_details,
     )
-
-    report_path = project_root / "tsc.json"
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    typer.echo(f"Report written to {report_path}\n")
-
+    CONSOLE.print()
+    CONSOLE.print(Rule("Coverage Results", style="dim"))
+    CONSOLE.print()
     print_summary(report)
-
-    if report["summary"]["indirectly_tested"] > 0:
-        typer.echo(
-            f"FAILURE: {report['summary']['indirectly_tested']} "
-            "function(s) lack direct test coverage."
+    s = report["summary"]
+    total = s["total"]
+    direct_count = s["directly_tested"]
+    pct = (direct_count / total * 100) if total > 0 else 100.0
+    if pct < threshold:
+        CONSOLE.print()
+        CONSOLE.print(Rule("FAILURE", style="red"))
+        CONSOLE.print(
+            f"Only {pct:.1f}% of functions are directly tested "
+            f"(threshold: {threshold}%)."
         )
-        return 1
-    typer.echo("All functions have direct test coverage.")
-    return 0
+        raise typer.Exit(code=1)
+
+    CONSOLE.print()
+    CONSOLE.print(Rule("PASS", style="green"))
+    CONSOLE.print(
+        f"All functions have sufficient direct test coverage "
+        f"({pct:.1f}% >= {threshold}%)."
+    )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    typer.run(main)
