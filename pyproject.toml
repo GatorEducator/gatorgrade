@@ -117,7 +117,8 @@ format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter 
 comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
 comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml", use_vars = true }
-test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested using tree-sitter-analyzer", use_vars = true }
+test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested", use_vars = true }
+test-coverage-check-verbose = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder} --verbose", help = "Check function coverage with detailed analysis output", use_vars = true }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
