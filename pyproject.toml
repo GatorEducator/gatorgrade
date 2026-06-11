@@ -96,7 +96,7 @@ cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
 cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 
 [tool.taskipy.tasks]
-all = "task check && task test"
+all = "task check && task test && task test-coverage-check"
 check = "task lint && task typecheck"
 lint = "task ruff-format && task ruff-check && task comments-check && task vsc && task rumdl-check"
 typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
