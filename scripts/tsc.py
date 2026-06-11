@@ -33,6 +33,7 @@ Output:
 """
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,8 @@ from tree_sitter_analyzer.api import (
     detect_language,
     get_supported_languages,
 )
+
+logging.getLogger("tree_sitter_analyzer").setLevel(logging.WARNING)
 
 PY_LANGUAGE = Language(tspython.language())
 CONSOLE = Console()
@@ -262,7 +265,7 @@ def compute_coverage_status(
     status: dict[str, str] = {}
     for name in all_functions:
         status[name] = "direct" if name in directly_tested else "unknown"
-    # BFS through the call graph starting from directly-tested functions
+    # breadth-first search through the call graph starting from directly-tested functions
     queue = list(directly_tested)
     while queue:
         caller = queue.pop(0)
@@ -492,7 +495,7 @@ def main(  # noqa: PLR0915
     report_path = Path(output)
     if not report_path.is_absolute():
         report_path = project_root / report_path
-    # Analysis phase
+    # analysis phase
     analysis_lines: list[str] = []
     for line in demo_api():
         analysis_lines.append(line)
@@ -524,7 +527,7 @@ def main(  # noqa: PLR0915
         CONSOLE.print()
         for line in analysis_lines:
             CONSOLE.print(line)
-    # Build report
+    # build report
     report = classify_and_report(
         all_functions,
         directly_tested,
@@ -567,6 +570,11 @@ def main(  # noqa: PLR0915
         CONSOLE.print(Rule("Pass", style="green"))
         CONSOLE.print(
             f"All functions have sufficient direct test coverage "
+            f"({pct:.1f}% >= {threshold}%)."
+        )
+    else:
+        CONSOLE.print(
+            f"[green]Success[/green]: All functions have sufficient direct test coverage "
             f"({pct:.1f}% >= {threshold}%)."
         )
 
