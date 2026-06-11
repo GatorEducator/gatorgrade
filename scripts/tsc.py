@@ -436,7 +436,6 @@ def print_summary(report: dict[str, Any]) -> None:
     )
     CONSOLE.print(table)
     if report["indirectly_tested_list"]:
-        CONSOLE.print()
         CONSOLE.print(Rule("Indirectly Tested Functions", style="yellow"))
         CONSOLE.print()
         for entry in report["indirectly_tested_list"]:
