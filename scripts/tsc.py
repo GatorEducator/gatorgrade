@@ -6,10 +6,10 @@ a function that is indirectly tested does not have a test case that
 calls it directly and this could be a sign that the function is not
 being tested as thoroughly as it should be.
 
-Uses `tree-sitter-analyzer` (Python API) for language detection and
+Uses tree-sitter-analyzer (Python API) for language detection and
 file analysis, then falls back to raw Tree-sitter for function-definition
 extraction and call-graph construction (the installed version of
-`tree-sitter-analyzer` uses a deprecated `query.captures()` API that
+tree-sitter-analyzer uses a deprecated query.captures() API that
 has been removed from modern tree-sitter).
 
 Usage:
@@ -20,7 +20,7 @@ Exit code:
     1 — at least one function is only indirectly tested
 
 Output:
-    Writes `tsc.json` to the project root and prints
+    Writes to a hard-coded tsc.json to the project root and prints
     a summary to stdout.
 
 """
