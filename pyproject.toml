@@ -114,8 +114,8 @@ symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully ty
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
 format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
 format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
-comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
-comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
+comments-check = { cmd = "uv run -m scripts.ccl check {project} {tests} {scripts}", help = "Check that comments start with lowercase letters using Tree-sitter", use_vars = true }
+comments-fix = { cmd = "uv run -m scripts.ccl fix {project} {tests} {scripts}", help = "Auto-fix comments that start with uppercase letters", use_vars = true }
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml", use_vars = true }
 test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested", use_vars = true }
 test-coverage-check-verbose = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder} --verbose", help = "Check function coverage with detailed analysis output", use_vars = true }
