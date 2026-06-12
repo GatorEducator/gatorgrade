@@ -126,7 +126,7 @@ def _elide_report_path(path_str: str) -> str:
     parts = path.parts
     if len(parts) <= MIN_PATH_PARTS:
         return path_str
-    if path.is_absolute():
+    if path.root:
         kept_start = parts[0] + os.sep.join(parts[1:KEEP_ABSOLUTE_PARTS])
     else:
         kept_start = os.sep.join(parts[:KEEP_RELATIVE_PARTS])
