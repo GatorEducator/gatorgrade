@@ -123,7 +123,7 @@ def _validate_output_limit(value: int | None) -> int | None:
 
 def _validate_baseline_weight(value: int) -> int:
     """Validate baseline weight is greater than 0."""
-    if value is not None and value < 1:
+    if value < 1:
         raise BadParameter("Baseline weight must be at least 1.")
     return value
 
