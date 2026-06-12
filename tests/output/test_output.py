@@ -222,18 +222,15 @@ def test_md_report_file_created_correctly(
     output.run_checks(checks, report)
     capsys.readouterr()
     # check to make sure the created file matches the expected output
-    expected_file_contents = (
-        "# Gatorgrade Insights\n\n"
-        "**Project Name:** gatorgrade\n"
-        "**Amount Correct:** 1/3 (33%)\n"
-        "**Points:** 1/3 (33%)\n\n"
-        "## Passing Checks"
-    )
     file = open("insights.md", "r")
     file_contents = file.read()
     file.close()
     os.remove("insights.md")
-    assert expected_file_contents in file_contents
+    assert "# Gatorgrade Report" in file_contents
+    assert "**Project Name:** gatorgrade" in file_contents
+    assert "**Amount Correct:** 1/3 (33%)" in file_contents
+    assert "**Points:** 1/3 (33%)" in file_contents
+    assert "## Passing Checks" in file_contents
 
 
 def test_print_error_with_invalid_report_path(
@@ -372,7 +369,7 @@ def test_create_markdown_report_file_with_all_passing() -> None:
         ],
     }
     markdown = output.create_markdown_report_file(json_data)
-    assert "# Gatorgrade Insights" in markdown
+    assert "# Gatorgrade Report" in markdown
     assert "**Amount Correct:** 2/2 (100%)" in markdown
     assert "## Passing Checks" in markdown
     assert "- [x] First passing check" in markdown
@@ -403,13 +400,13 @@ def test_create_markdown_report_file_with_failing_checks_and_options() -> None:
     }
     markdown = output.create_markdown_report_file(json_data)
     assert "- [ ] Failing check" in markdown
-    assert "**command** pytest" in markdown
+    assert "**command:** pytest" in markdown
     assert "**fragment:** TODO" in markdown
     assert "**tag:** test" in markdown
     assert "**count:** 5" in markdown
     assert "**directory:** src" in markdown
     assert "**file:** test.py" in markdown
-    assert "**diagnostic:** Check failed" in markdown
+    assert "Check failed" in markdown
 
 
 def test_create_markdown_report_file_with_failing_check_no_description() -> (
@@ -460,7 +457,7 @@ def test_configure_report_env_github_step_summary_md(
     output.configure_report(report_params, report_data)
     assert tmp_file.exists()
     content = tmp_file.read_text()
-    assert "# Gatorgrade Insights" in content
+    assert "# Gatorgrade Report" in content
 
 
 def test_configure_report_env_github_step_summary_json(
@@ -642,7 +639,7 @@ def test_create_markdown_report_file_with_zero_checks() -> None:
         "checks": [],
     }
     markdown = output.create_markdown_report_file(json_data)
-    assert "# Gatorgrade Insights" in markdown
+    assert "# Gatorgrade Report" in markdown
     assert "0/0 (0%)" in markdown
 
 
@@ -893,7 +890,7 @@ def test_create_markdown_report_file_with_command_and_diagnostic() -> None:
     markdown = output.create_markdown_report_file(json_data)
     assert "- [ ] Run tests" in markdown
     assert "**command:** pytest" in markdown
-    assert "**diagnostic:** 2 tests failed" in markdown
+    assert "2 tests failed" in markdown
 
 
 def test_create_markdown_report_file_failing_check_no_options_no_command() -> (
@@ -913,8 +910,154 @@ def test_create_markdown_report_file_failing_check_no_options_no_command() -> (
     }
     markdown = output.create_markdown_report_file(json_data)
     assert "- [ ] Some check" in markdown
-    assert "**diagnostic:** Something went wrong" in markdown
+    assert "Something went wrong" in markdown
     assert "**command:**" not in markdown
+
+
+def test_create_markdown_report_includes_report_time() -> None:
+    """Test markdown report includes report time."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 1,
+        "percentage_score": 50,
+        "report_time": "2026-06-11 12:00:00",
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "**Report Time:** 2026-06-11 12:00:00" in markdown
+
+
+def test_create_markdown_report_includes_cli_args_block() -> None:
+    """Test markdown report includes CLI arguments in a code block."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "cli_args": {"--config": "gatorgrade.yml", "--output-limit": 5},
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "## Command-Line Arguments" in markdown
+    assert "```json" in markdown
+    assert '"--config"' in markdown
+
+
+def test_create_markdown_report_includes_version_info_block() -> None:
+    """Test markdown report includes version information in a code block."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "version_info": {
+            "gatorgrade_version": "0.9.0",
+            "python_info": "Python 3.14.1",
+        },
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "## Version Information" in markdown
+    assert "```json" in markdown
+    assert '"gatorgrade_version"' in markdown
+
+
+def test_create_markdown_report_summary_is_list() -> None:
+    """Test summary items are formatted as a Markdown list."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 3,
+        "percentage_score": 100,
+        "weighted_amount_correct": 5,
+        "weighted_total": 5,
+        "weighted_percentage_score": 100,
+        "checks": [
+            {"status": True, "description": "Check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "- **Project Name:**" in markdown
+    assert "- **Amount Correct:**" in markdown
+    assert "- **Points:**" in markdown
+    assert "- **Amount Correct:** 3/1 (100%)" in markdown
+    assert "- **Points:** 5/5 (100%)" in markdown
+
+
+def test_create_markdown_report_failing_check_shows_weight_outputlimit_path() -> (
+    None
+):
+    """Test failing checks show weight, outputlimit, and path."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [
+            {
+                "status": False,
+                "description": "Failing check",
+                "weight": 3,
+                "outputlimit": 5,
+                "path": "src/file.py",
+                "diagnostic": "error",
+            }
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "- **weight:** 3" in markdown
+    assert "- **outputlimit:** 5" in markdown
+    assert "- **path:** src/file.py" in markdown
+
+
+def test_create_markdown_report_failing_check_diagnostic_uses_text_fence() -> (
+    None
+):
+    """Test diagnostic fence opens with ````text and closes with plain ````."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 0,
+        "percentage_score": 0,
+        "checks": [
+            {
+                "status": False,
+                "description": "Fail",
+                "diagnostic": "line1\n    line2",
+            }
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "````text" in markdown
+    text_count = markdown.count("````text")
+    close_count = markdown.count("````")
+    # text_count for the opening, close_count includes both opening and closing
+    # opening has ````text, closing is just ````
+    assert close_count > text_count
+    assert "line1" in markdown
+
+
+def test_create_markdown_report_no_cli_args_omits_section() -> None:
+    """Test CLI arguments section is omitted when cli_args is empty."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "cli_args": {},
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "## Command-Line Arguments" not in markdown
+
+
+def test_create_markdown_report_no_version_info_omits_section() -> None:
+    """Test Version Information section is omitted when version_info is empty."""
+    json_data: dict[str, Any] = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "version_info": {},
+        "checks": [
+            {"status": True, "description": "Passing check"},
+        ],
+    }
+    markdown = output.create_markdown_report_file(json_data)
+    assert "## Version Information" not in markdown
 
 
 def test_configure_report_env_not_github_step_summary(
@@ -1009,7 +1152,7 @@ def test_configure_report_env_md_uppercase(
     output.configure_report(report_params, report_data)
     assert tmp_file.exists()
     content = tmp_file.read_text()
-    assert "# Gatorgrade Insights" in content
+    assert "# Gatorgrade Report" in content
 
 
 def test_write_json_or_md_file_accepts_lowercase(tmp_path: Path) -> None:
@@ -1144,7 +1287,7 @@ def test_run_checks_env_md_uppercase(
     capsys.readouterr()
     assert tmp_file.exists()
     content = tmp_file.read_text()
-    assert "# Gatorgrade Insights" in content
+    assert "# Gatorgrade Report" in content
 
 
 def test_run_checks_env_json_uppercase_other_var(
@@ -1187,7 +1330,7 @@ def test_configure_report_backwards_compatible_lowercase_env(
     output.configure_report(report_params, report_data)
     assert tmp_file.exists()
     content = tmp_file.read_text()
-    assert "# Gatorgrade Insights" in content
+    assert "# Gatorgrade Report" in content
 
 
 def test_configure_report_backwards_compatible_lowercase_file_json(
@@ -1458,7 +1601,7 @@ def test_truncate_diagnostic_exceeds_limit() -> None:
     assert "line1" in result
     assert "line3" in result
     assert "line4" not in result
-    assert "... (output truncated to 3 line(s))" in result
+    assert "... (output truncated from 5 to 3 line(s))" in result
 
 
 def test_run_checks_global_output_limit_truncates_diagnostic(
@@ -1474,7 +1617,7 @@ def test_run_checks_global_output_limit_truncates_diagnostic(
     report = (None, None, None)
     output.run_checks(checks, report, output_limit=1)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "... (output truncated to 1 line(s))" in out
+    assert "... (output truncated from 3 to 1 line(s))" in out
 
 
 def test_run_checks_check_outputlimit_overrides_global(
@@ -1491,7 +1634,7 @@ def test_run_checks_check_outputlimit_overrides_global(
     report = (None, None, None)
     output.run_checks(checks, report, output_limit=100)  # type: ignore
     out, _ = capsys.readouterr()
-    assert "... (output truncated to 1 line(s))" in out
+    assert "... (output truncated from 3 to 1 line(s))" in out
 
 
 def test_run_checks_no_output_limit_shows_full_diagnostic(
@@ -1520,7 +1663,7 @@ def test_run_gg_check_global_output_limit_truncates_diagnostic() -> None:
             "line1\nline2\nline3\nline4",
         )
         result = output._run_gg_check(check, output_limit=2)
-    assert "... (output truncated to 2 line(s))" in result.diagnostic
+    assert "... (output truncated from 4 to 2 line(s))" in result.diagnostic
 
 
 def test_run_gg_check_check_outputlimit_overrides_global() -> None:
@@ -1537,7 +1680,7 @@ def test_run_gg_check_check_outputlimit_overrides_global() -> None:
             "line1\nline2\nline3\nline4",
         )
         result = output._run_gg_check(check, output_limit=100)
-    assert "... (output truncated to 1 line(s))" in result.diagnostic
+    assert "... (output truncated from 4 to 1 line(s))" in result.diagnostic
 
 
 def test_run_checks_mixed_checks_use_correct_output_limit(
@@ -1559,8 +1702,8 @@ def test_run_checks_mixed_checks_use_correct_output_limit(
     output.run_checks(checks, report, output_limit=3)  # type: ignore
     out, _ = capsys.readouterr()
     plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "... (output truncated to 2 line(s))" in plain_out
-    assert "... (output truncated to 3 line(s))" not in plain_out
+    assert "... (output truncated from 3 to 2 line(s))" in plain_out
+    assert "... (output truncated from 3 to 3 line(s))" not in plain_out
 
 
 @pytest.mark.usefixtures("patch_datetime_now")
@@ -1722,7 +1865,7 @@ def test_truncate_diagnostic_respects_limit_property(
     content_lines = [
         line
         for line in result_lines
-        if not line.startswith("   ... (output truncated to")
+        if not line.startswith("   ... (output truncated")
     ]
     assert len(content_lines) <= limit
 
@@ -1755,6 +1898,49 @@ def test_truncate_diagnostic_within_limit_preserves_input_property(
 def test_truncate_diagnostic_no_limit_property(diagnostic: str) -> None:
     """Property: when limit is None, output always equals input."""
     assert output._truncate_diagnostic(diagnostic, None) == diagnostic
+
+
+def test_elide_report_path_short_path_unchanged() -> None:
+    """Test _elide_report_path keeps short paths as-is."""
+    path = "report.json"
+    result = output._elide_report_path(path)
+    assert result == path
+
+
+def test_elide_report_path_elides_long_path() -> None:
+    """Test _elide_report_path shows start and filename with ellipsis."""
+    path = "/this/is/a/very/long/path/name/extra/to/some/report.json"
+    result = output._elide_report_path(path)
+    assert result == "/this/is/.../report.json"
+
+
+def test_elide_report_path_absolute_no_double_slash() -> None:
+    """Test _elide_report_path does not double the root slash."""
+    path = "/home/gkapfham/projects/gatorgrade/reports/report.json"
+    result = output._elide_report_path(path)
+    assert "//" not in result
+    assert result.startswith("/home/gkapfham")
+
+
+def test_elide_report_path_keeps_two_part_path() -> None:
+    """Test _elide_report_path keeps paths with only two parts."""
+    path = "reports/report.json"
+    result = output._elide_report_path(path)
+    assert result == path
+
+
+def test_elide_report_path_short_boundary_not_elided() -> None:
+    """Test _elide_report_path does not elide path at exactly 50 chars."""
+    path = "a" * 50
+    result = output._elide_report_path(path)
+    assert result == path
+
+
+def test_elide_report_path_long_single_file_unchanged() -> None:
+    """Test _elide_report_path returns single file path as-is."""
+    path = "a" * 60 + ".json"
+    result = output._elide_report_path(path)
+    assert result == path
 
 
 @pytest.mark.propertybased
