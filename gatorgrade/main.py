@@ -293,9 +293,11 @@ def gatorgrade(  # noqa: PLR0913
 ) -> None:
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
-    # that, by default, gatorgrade should run in checking mode
-    # (note that the current implementation of the tool only
-    # supports checking mode as all others are deprecated)
+    # that, by default, gatorgrade should run in checking mode;
+    # note that the current implementation of the tool only
+    # supports checking mode as all others are deprecated;
+    # also note that the output of the tool is now segmented
+    # into sections that are demarcated by horizintal rules
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
         checks, parse_error = parse_config(filename, baseline_weight)
