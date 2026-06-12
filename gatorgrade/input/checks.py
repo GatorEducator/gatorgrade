@@ -18,7 +18,10 @@ def validate_positive_nonzero_int(value: int, name: str) -> str | None:
         An error string if invalid, None if valid.
 
     """
-    if not isinstance(value, int) or value <= 0:
+    # confirm that the value is an integer (and not a boolean, which is also
+    # a subclass of int) and that it is greater than 0; if these conditions
+    # are not met this this parameter is not a positive non-zero integer
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         return (
             f"Check {name} must be a positive, non-zero integer, got {value}"
         )
