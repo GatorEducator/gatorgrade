@@ -254,13 +254,27 @@ def test_validate_positive_nonzero_int_non_positive_property(
 
 @pytest.mark.propertybased
 @given(
-    st.one_of(st.floats(allow_nan=False), st.text()),
+    st.one_of(st.floats(allow_nan=False), st.text(), st.booleans()),
     st.text(min_size=1),
 )
 def test_validate_positive_nonzero_int_non_int_property(
-    value: float | str, name: str
+    value: float | str | bool, name: str
 ) -> None:
-    """Property: non-int types always return an error containing the field name."""
+    """Property: non-int types (including bools) always return an error containing the field name."""
     result = validate_positive_nonzero_int(value, name)  # type: ignore
     assert result is not None
     assert name in result
+
+
+def test_validate_positive_nonzero_int_rejects_true() -> None:
+    """Test that True is rejected even though isinstance(True, int) is True."""
+    result = validate_positive_nonzero_int(True, "weight")
+    assert result is not None
+    assert "True" in result
+
+
+def test_validate_positive_nonzero_int_rejects_false() -> None:
+    """Test that False is rejected even though isinstance(False, int) is True."""
+    result = validate_positive_nonzero_int(False, "outputlimit")
+    assert result is not None
+    assert "False" in result
