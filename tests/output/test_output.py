@@ -1944,7 +1944,7 @@ def test_elide_report_path_absolute_no_double_slash() -> None:
         ]
     )
     result = output._elide_report_path(path)
-    assert "//" not in result
+    assert os.sep + os.sep not in result
     expected_prefix = S + S.join(["home", "gkapfham"])
     assert result.startswith(expected_prefix)
 
