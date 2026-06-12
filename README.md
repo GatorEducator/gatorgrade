@@ -79,86 +79,81 @@ The following options control how GatorGrade runs:
 ## Configuring Checks
 
 Checks are defined in a `gatorgrade.yml` file. Each check can be either a
-GatorGrader check or a shell command check.
+GatorGrader check or a shell command check. The following example shows a
+representative configuration. It is not exhaustive. You can combine these
+features in any way that fits your assignment.
 
-### GatorGrader Checks
-
-GatorGrader checks verify specific aspects of source code or writing.
-
-```yaml
-- description: Complete all TODOs
-  check: MatchFileFragment
-  options:
-    fragment: TODO
-    count: 0
-```
-
-### Shell Command Checks
-
-Shell command checks run arbitrary shell commands.
-
-```yaml
-- description: Run pylint
-  command: pylint src/*.py --disable=all --enable=E
-```
-
-### File Context Checks
-
-Checks can target specific files by nesting them under a file path.
-
-```yaml
-- src:
-  - hello_world.py:
-    - description: Complete all TODOs
-      check: MatchFileFragment
-      options:
-        fragment: TODO
-        count: 0
-```
-
-### Setup Commands
-
-You can include setup commands that run before the checks.
+### Example Configuration
 
 ```yaml
 setup: |
   pip install -r requirements.txt
-  echo "Setup complete"
 
-- description: Run tests
-  command: pytest
+---
+- src:
+  - main.py:
+    - description: Complete all TODOs
+      check: MatchFileFragment
+      weight: 2
+      options:
+        fragment: TODO
+        count: 0
+        exact: true
+    - description: Define a greet function
+      check: MatchFileFragment
+      options:
+        fragment: "def greet("
+        count: 1
+  - tests:
+    - test_main.py:
+      - description: Write at least three test cases
+        check: MatchFileFragment
+        options:
+          fragment: "def test_"
+          count: 3
+- writing:
+  - reflection.md:
+    - description: Write at least 100 words
+      check: CountMarkdownWords
+      weight: 3
+      options:
+        count: 100
+- description: Pass all tests
+  check: ShellCommand
+  outputlimit: 5
+  command: pytest --tb=short
+- description: Check code formatting
+  check: ShellCommand
+  command: ruff format --check src/
 ```
+
+### Setup Commands
+
+The `setup` section runs shell commands before the checks. If a setup command
+fails, GatorGrade exits immediately.
+
+### File Context Checks
+
+Checks nested under a file path run in that file's context. The path is
+converted into `--directory` and `--file` arguments for GatorGrader.
+
+### Global Checks
+
+Checks at the top level run without a file context. These are useful for
+repository-wide checks or shell commands.
 
 ### Weight
 
-Each check can have an optional weight that affects the overall score. The
-weight must be a positive integer.
-
-```yaml
-- description: Critical check
-  check: MatchFileFragment
-  weight: 10
-  options:
-    fragment: TODO
-    count: 0
-```
-
+Each check can have an optional weight. The weight must be a positive integer.
 Checks without an explicit weight use the baseline weight. The default baseline
 weight is 1. You can change it with `--baseline-weight`.
 
 ### Output Limit
 
 Each check can have an optional output limit that controls how many diagnostic
-lines are displayed if the check fails. The limit must be a positive integer.
-
-```yaml
-- description: Limited check
-  command: echo "test"
-  outputlimit: 3
-```
-
-If a check does not specify an output limit, GatorGrade uses the global limit
-set by `--output-limit`.
+lines are displayed if the check fails. The limit must be a positive integer. If
+a check does not specify an output limit, GatorGrade uses the global limit set
+by `--output-limit`.
 
 ## Reports
 
