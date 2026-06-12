@@ -225,7 +225,7 @@ def test_md_report_file_created_correctly(
     file = open("insights.md", "r")
     file_contents = file.read()
     file.close()
-    os.remove("insights.md")
+    Path("insights.md").unlink()
     assert "# Gatorgrade Report" in file_contents
     assert "**Project Name:** gatorgrade" in file_contents
     assert "**Amount Correct:** 1/3 (33%)" in file_contents
@@ -294,7 +294,7 @@ def test_print_error_with_invalid_report_path(
             },
         ),
     ]
-    report = ("file", "md", "invalid_path/insight.md")
+    report = ("file", "md", str(Path("invalid_path") / "insight.md"))
     with pytest.raises(ValueError):
         output.run_checks(checks, report)
     capsys.readouterr()
@@ -1084,7 +1084,7 @@ def test_configure_report_env_not_github_step_summary(
 
 def test_configure_report_file_json_uppercase() -> None:
     """Test configure_report accepts uppercase FILE and JSON."""
-    report_params = ("FILE", "JSON", "/tmp/test_report.json")
+    report_params = ("FILE", "JSON", str(Path("test_report.json")))
     report_data = {
         "amount_correct": 1,
         "percentage_score": 100,
@@ -1097,7 +1097,7 @@ def test_configure_report_file_json_uppercase() -> None:
 
 def test_configure_report_file_md_uppercase() -> None:
     """Test configure_report accepts uppercase FILE and MD."""
-    report_params = ("FILE", "MD", "/tmp/test_report.md")
+    report_params = ("FILE", "MD", str(Path("test_report.md")))
     report_data = {
         "amount_correct": 1,
         "percentage_score": 100,
@@ -1211,7 +1211,7 @@ def test_configure_report_file_md_backwards_compatible(
             },
         ),
     ]
-    report = ("file", "md", "invalid_path/insight.md")
+    report = ("file", "md", str(Path("invalid_path") / "insight.md"))
     with pytest.raises(ValueError):
         output.run_checks(checks, report)
     capsys.readouterr()
@@ -1909,22 +1909,49 @@ def test_elide_report_path_short_path_unchanged() -> None:
 
 def test_elide_report_path_elides_long_path() -> None:
     """Test _elide_report_path shows start and filename with ellipsis."""
-    path = "/this/is/a/very/long/path/name/extra/to/some/report.json"
+    S = os.sep
+    path = S + S.join(
+        [
+            "this",
+            "is",
+            "a",
+            "very",
+            "long",
+            "path",
+            "name",
+            "extra",
+            "to",
+            "some",
+            "report.json",
+        ]
+    )
+    expected = S + S.join(["this", "is", "...", "report.json"])
     result = output._elide_report_path(path)
-    assert result == "/this/is/.../report.json"
+    assert result == expected
 
 
 def test_elide_report_path_absolute_no_double_slash() -> None:
     """Test _elide_report_path does not double the root slash."""
-    path = "/home/gkapfham/projects/gatorgrade/reports/report.json"
+    S = os.sep
+    path = S + S.join(
+        [
+            "home",
+            "gkapfham",
+            "projects",
+            "gatorgrade",
+            "reports",
+            "report.json",
+        ]
+    )
     result = output._elide_report_path(path)
     assert "//" not in result
-    assert result.startswith("/home/gkapfham")
+    expected_prefix = S + S.join(["home", "gkapfham"])
+    assert result.startswith(expected_prefix)
 
 
 def test_elide_report_path_keeps_two_part_path() -> None:
     """Test _elide_report_path keeps paths with only two parts."""
-    path = "reports/report.json"
+    path = os.sep.join(["reports", "report.json"])
     result = output._elide_report_path(path)
     assert result == path
 
