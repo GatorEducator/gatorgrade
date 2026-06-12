@@ -5,8 +5,11 @@ from typing import Any, List, Tuple
 
 import yaml
 
+from gatorgrade.input.checks import validate_positive_nonzero_int
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import parse_yaml_file, reformat_yaml_data
+
+BASELINE_WEIGHT_FIELD = "baseline_weight"
 
 
 def parse_config(
@@ -23,6 +26,16 @@ def parse_config(
         On failure, checks is empty and error_message contains details.
 
     """
+    # validate the baseline_weight so that it is a positive integer;
+    # note that this is already checked by the validation of the
+    # command-line arguments provided by the person using the program;
+    # however, adding the check here in case this function is called
+    # directly without going through the command-line argument validation
+    error = validate_positive_nonzero_int(
+        baseline_weight, BASELINE_WEIGHT_FIELD
+    )
+    if error:
+        return [], error
     try:
         # parse the YAML file using parse_yaml_file provided by gatorgrade
         parsed_yaml_file = parse_yaml_file(file)
