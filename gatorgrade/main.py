@@ -159,6 +159,10 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
             parent_dir = file_path.resolve().parent
             if not parent_dir.exists():
                 errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
+        # if there are one or more errors, then raise a BadParameter exception
+        # with all of the error messages joined by newlines (reporting all
+        # of the possible exceptions instead of failing fast with only the
+        # first one should enable a person to better debug command-line arguments)
         if errors:
             raise BadParameter(";\n".join(errors))
     return value
