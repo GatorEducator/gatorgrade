@@ -199,6 +199,10 @@ def _get_python_info() -> str:
 
 def _get_gatorgrade_info() -> str:
     """Get the parenthetic GatorGrade info string with the GatorGrader version."""
+    # use the importlib.metadata version function to get the
+    # version of the gatorgrader dependency (note that this works correctly
+    # even when gatorgrade is published to PyPI and download and used because
+    # of the fact that gatorgrader is a required and packaged dependnecy)
     gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
     return f"{GATORGRADER_NAME} {gatorgrader_version}"
 
