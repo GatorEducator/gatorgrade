@@ -1,7 +1,7 @@
 """Run checks and display whether each has passed or failed."""
 
 import datetime
-import json
+import json as json_module
 import os
 import subprocess
 from pathlib import Path
@@ -28,13 +28,14 @@ CHECKS_LABEL = "Checks"
 FAILING_CHECKS_LABEL = "Failing Check(s)"
 POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
+REPORT_LABEL = "Report"
 RUNNING_CHECKS_LABEL = "Running checks"
 RUNNING_CHECKS_RULE_LABEL = "Running Check(s)"
 WEIGHT_LABEL = "Weight"
 RUN_COMMAND_LABEL = "Run this command"
 
 # format strings for diagnostic truncation
-TRUNCATED_MSG = "\n   ... (output truncated to {} line(s))"
+TRUNCATED_MSG = "\n   ... (output truncated from {} to {} line(s))"
 DIAGNOSTIC_INDENT = "\n     "
 
 # argument strings used in GatorGrader checks
@@ -88,16 +89,25 @@ FILE_MODE_WRITE = "w"
 FILE_ENCODING = "utf-8"
 INDENT_JSON = 4
 
+# path eliding constants for report display
+MAX_REPORT_PATH_LENGTH = 50
+MIN_PATH_PARTS = 2
+KEEP_ABSOLUTE_PARTS = 3
+KEEP_RELATIVE_PARTS = 2
+PATH_ELLIPSIS = "..."
+
 # markdown template strings
-MD_HEADER = "# Gatorgrade Insights\n\n"
+MD_HEADER = "# Gatorgrade Report\n\n"
 MD_PASSING_HEADER = "\n## Passing Checks\n"
 MD_FAILING_HEADER = "\n\n## Failing Checks\n"
 MD_PASSING_ITEM = "\n- [x] {}"
 MD_FAILING_ITEM = "\n- [ ] {}"
-MD_OPTION_CMD_FMT = "\n\t- **{}** {}"
-MD_OPTION_FMT = "\n\t- **{}:** {}"
-MD_TOP_CMD_FMT = "\n\t- **command:** {}"
-MD_DIAGNOSTIC_LABEL = "\n\t- **diagnostic:** {}"
+MD_CODE_BLOCK_FMT = "\n## {}\n\n```json\n{}\n```"
+MD_LIST_INDENT = SPACE + SPACE
+MD_DIAG_OPEN = "````text"
+MD_DIAG_CLOSE = "````"
+MD_CLI_ARGS_HEADING = "Command-Line Arguments"
+MD_VERSION_INFO_HEADING = "Version Information"
 
 # error message strings
 FILE_WRITE_ERR = (
@@ -106,6 +116,25 @@ FILE_WRITE_ERR = (
 
 # empty dict for CLI args default
 EMPTY_CLI_ARGS: dict = {}
+
+
+def _elide_report_path(path_str: str) -> str:
+    """Elide the middle of a long path, keeping the start and filename."""
+    if len(path_str) <= MAX_REPORT_PATH_LENGTH:
+        return path_str
+    path = Path(path_str)
+    parts = path.parts
+    if len(parts) <= MIN_PATH_PARTS:
+        return path_str
+    if path.is_absolute():
+        kept_start = parts[0] + os.sep.join(parts[1:KEEP_ABSOLUTE_PARTS])
+    else:
+        kept_start = os.sep.join(parts[:KEEP_RELATIVE_PARTS])
+    kept_end = parts[-1]
+    elided = f"{kept_start}{os.sep}{PATH_ELLIPSIS}{os.sep}{kept_end}"
+    if len(elided) < len(path_str):
+        return elided
+    return path_str
 
 
 def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
@@ -124,8 +153,9 @@ def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
     lines = diagnostic.splitlines()
     if len(lines) <= limit:
         return diagnostic
+    total = len(lines)
     truncated = lines[:limit]
-    return NEWLINE.join(truncated) + TRUNCATED_MSG.format(limit)
+    return NEWLINE.join(truncated) + TRUNCATED_MSG.format(total, limit)
 
 
 def _run_shell_check(
@@ -307,8 +337,8 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
 
     """
     markdown_contents = ""
-    passing_checks = []
-    failing_checks = []
+    passing_checks: list[dict] = []
+    failing_checks: list[dict] = []
     num_checks = len(json.get(CHECKS_KEY))  # type: ignore
     # write the total, amt correct and percentage score to md file
     weighted_score = json.get(WEIGHTED_PERCENTAGE_KEY, 0)
@@ -316,12 +346,31 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
         f"{MD_HEADER}"
-        f"**Project Name:** {Path.cwd().name}\n"
-        f"**Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
-        f"({json.get(PERCENTAGE_SCORE_KEY)}%)\n"
-        f"**Points:** {weighted_amount}/{weighted_total} "
-        f"({weighted_score}%)\n"
+        f"- **Project Name:** {Path.cwd().name}{NEWLINE}"
+        f"- **Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
+        f"({json.get(PERCENTAGE_SCORE_KEY)}%){NEWLINE}"
+        f"- **Points:** {weighted_amount}/{weighted_total} "
+        f"({weighted_score}%){NEWLINE}"
     )
+    # report time
+    if REPORT_TIME_KEY in json:
+        markdown_contents += (
+            f"- **Report Time:** {json[REPORT_TIME_KEY]}{NEWLINE}"
+        )
+    # fenced code block for cli arguments
+    cli_args = json.get(CLI_ARGS_KEY, {})
+    if cli_args:
+        cli_args_json = json_module.dumps(cli_args, indent=INDENT_JSON)
+        markdown_contents += MD_CODE_BLOCK_FMT.format(
+            MD_CLI_ARGS_HEADING, cli_args_json
+        )
+    # fenced code block for version information
+    version_info = json.get(VERSION_INFO_KEY, {})
+    if version_info:
+        version_json = json_module.dumps(version_info, indent=INDENT_JSON)
+        markdown_contents += MD_CODE_BLOCK_FMT.format(
+            MD_VERSION_INFO_HEADING, version_json
+        )
     # split checks into passing and not passing
     for check in json.get(CHECKS_KEY):  # type: ignore
         # if the check is passing
@@ -346,39 +395,35 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
             markdown_contents += MD_FAILING_ITEM.format(check[DESCRIPTION_KEY])
         else:
             markdown_contents += MD_FAILING_ITEM.format(check[CHECK_KEY])
-        if OPTIONS_KEY in check:
-            for i in check.get(OPTIONS_KEY):
-                if COMMAND_KEY == i:
-                    val = check[OPTIONS_KEY][COMMAND_KEY]
-                    markdown_contents += MD_OPTION_CMD_FMT.format(
-                        COMMAND_KEY, val
+        # show all keys except status and description
+        for key, value in check.items():
+            if key in (STATUS_KEY, DESCRIPTION_KEY, CHECK_KEY):
+                continue
+            if key == OPTIONS_KEY and value:
+                markdown_contents += f"{NEWLINE}{MD_LIST_INDENT}- **options:**"
+                for opt_key, opt_val in value.items():
+                    markdown_contents += (
+                        f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
+                        f"- **{opt_key}:** {opt_val}"
                     )
-                if FRAGMENT_KEY == i:
-                    val = check[OPTIONS_KEY][FRAGMENT_KEY]
-                    markdown_contents += MD_OPTION_FMT.format(
-                        FRAGMENT_KEY, val
+            elif key == DIAGNOSTIC_KEY:
+                markdown_contents += (
+                    f"{NEWLINE}{MD_LIST_INDENT}- **diagnostic:**"
+                    f"{NEWLINE}{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
+                    f"{MD_DIAG_OPEN}{NEWLINE}"
+                )
+                for value_line in value.splitlines():
+                    markdown_contents += (
+                        f"{MD_LIST_INDENT}{MD_LIST_INDENT}"
+                        f"{value_line}{NEWLINE}"
                     )
-                if TAG_KEY == i:
-                    val = check[OPTIONS_KEY][TAG_KEY]
-                    markdown_contents += MD_OPTION_FMT.format(TAG_KEY, val)
-                if COUNT_KEY == i:
-                    val = check[OPTIONS_KEY][COUNT_KEY]
-                    markdown_contents += MD_OPTION_FMT.format(COUNT_KEY, val)
-                if DIRECTORY_KEY == i:
-                    val = check[OPTIONS_KEY][DIRECTORY_KEY]
-                    markdown_contents += MD_OPTION_FMT.format(
-                        DIRECTORY_KEY, val
-                    )
-                if FILE_KEY == i:
-                    val = check[OPTIONS_KEY][FILE_KEY]
-                    markdown_contents += MD_OPTION_FMT.format(FILE_KEY, val)
-        elif COMMAND_KEY in check:
-            val = check[COMMAND_KEY]
-            markdown_contents += MD_TOP_CMD_FMT.format(val)
-        if DIAGNOSTIC_KEY in check:
-            markdown_contents += MD_DIAGNOSTIC_LABEL.format(
-                check[DIAGNOSTIC_KEY]
-            )
+                markdown_contents += (
+                    f"{MD_LIST_INDENT}{MD_LIST_INDENT}{MD_DIAG_CLOSE}"
+                )
+            else:
+                markdown_contents += (
+                    f"{NEWLINE}{MD_LIST_INDENT}- **{key}:** {value}"
+                )
         markdown_contents += NEWLINE
     return markdown_contents
 
@@ -440,7 +485,7 @@ def configure_report(
                     write_json_or_md_file(
                         env_file, report_type, report_output_data_json
                     )
-        json_string = json.dumps(report_output_data_json)
+        json_string = json_module.dumps(report_output_data_json)
         env_file = os.getenv(GITHUB_ENV_VAR, None)
         if env_file is not None:
             with open(os.environ[GITHUB_ENV_VAR], "a") as env_file_handle:
@@ -458,7 +503,7 @@ def write_json_or_md_file(
         # second argument has to be either json or md
         with open(file_name, FILE_MODE_WRITE, encoding=FILE_ENCODING) as file:
             if normalized_type == REPORT_TYPE_JSON:
-                json.dump(content, file, indent=INDENT_JSON)
+                json_module.dump(content, file, indent=INDENT_JSON)
             else:
                 file.write(str(content))
         return True
@@ -608,6 +653,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     else:
         weighted_percent = round(passed_weight / total_weight * 100)
     # if the report is wanted, create output in line with their specifications
+    report_display_name = None
     if all(report):
         report_output_data = create_report_json(
             passed_count,
@@ -618,6 +664,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             version_info,
         )
         configure_report(report, report_output_data)
+        if report[0].upper() == REPORT_FORMAT_FILE:
+            report_display_name = _elide_report_path(report[2])
+        else:
+            report_display_name = report[2]
     # compute the summary color based on pass/fail status
     summary_color = "green" if passed_count == len(results) else "bright_red"
     # print failures list if there are failures to print
@@ -660,6 +710,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        if report_display_name is not None:
+            rich.print(f"[bold]- {REPORT_LABEL}:[/] {report_display_name}")
         rich.print(EMPTY)
         rich.print(Rule(style="bright_red"))
     # all of the checks passed and thus the color highlights
@@ -676,6 +728,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        if report_display_name is not None:
+            rich.print(f"[bold]- {REPORT_LABEL}:[/] {report_display_name}")
         # close the running checks section with an outcome-colored rule
         rich.print()
         rich.print(Rule(style=summary_color))
