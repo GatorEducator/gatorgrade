@@ -632,8 +632,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 if result is not None:
                     result.print()
                     results.append(result)
-                # update progress on passing checks
-                if result and result.passed:
+                # update progress for every check
+                if result:
                     progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
