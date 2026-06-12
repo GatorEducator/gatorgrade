@@ -44,7 +44,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.outputlimit = outputlimit
 
     def display_result(self, show_diagnostic: bool = False) -> str:
-        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+        """Return check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will
         say so.
@@ -83,7 +83,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         )
 
     def __str__(self, show_diagnostic: bool = False) -> str:
-        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+        """Return check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will
         say so.
