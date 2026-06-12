@@ -17,6 +17,7 @@ from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
+# and must always match the value in the pyproject.toml file
 GATORGRADE_VERSION = "0.9.0"
 
 # create an app for the Typer-based CLI
