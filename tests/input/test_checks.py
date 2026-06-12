@@ -228,6 +228,62 @@ def test_gatorgrader_check_invalid_outputlimit_zero() -> None:
     assert "positive, non-zero integer" in str(exc_info.value)
 
 
+def test_shell_check_rejects_weight_true() -> None:
+    """Test ShellCheck raises ValueError for weight=True."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", weight=True)
+    assert "True" in str(exc_info.value)
+
+
+def test_shell_check_rejects_outputlimit_true() -> None:
+    """Test ShellCheck raises ValueError for outputlimit=True."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", outputlimit=True)
+    assert "True" in str(exc_info.value)
+
+
+def test_gatorgrader_check_rejects_weight_true() -> None:
+    """Test GatorGraderCheck raises ValueError for weight=True."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, weight=True)
+    assert "True" in str(exc_info.value)
+
+
+def test_gatorgrader_check_rejects_outputlimit_true() -> None:
+    """Test GatorGraderCheck raises ValueError for outputlimit=True."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, outputlimit=True)
+    assert "True" in str(exc_info.value)
+
+
+def test_shell_check_rejects_weight_false() -> None:
+    """Test ShellCheck raises ValueError for weight=False."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", weight=False)
+    assert "False" in str(exc_info.value)
+
+
+def test_shell_check_rejects_outputlimit_false() -> None:
+    """Test ShellCheck raises ValueError for outputlimit=False."""
+    with pytest.raises(ValueError) as exc_info:
+        ShellCheck(command="echo test", outputlimit=False)
+    assert "False" in str(exc_info.value)
+
+
+def test_gatorgrader_check_rejects_weight_false() -> None:
+    """Test GatorGraderCheck raises ValueError for weight=False."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, weight=False)
+    assert "False" in str(exc_info.value)
+
+
+def test_gatorgrader_check_rejects_outputlimit_false() -> None:
+    """Test GatorGraderCheck raises ValueError for outputlimit=False."""
+    with pytest.raises(ValueError) as exc_info:
+        GatorGraderCheck(gg_args=["Test"], json_info={}, outputlimit=False)
+    assert "False" in str(exc_info.value)
+
+
 @pytest.mark.propertybased
 @given(st.integers(min_value=1, max_value=1000000), st.text(min_size=1))
 def test_validate_positive_nonzero_int_valid_property(
