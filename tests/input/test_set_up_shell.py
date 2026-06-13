@@ -28,8 +28,10 @@ def test_run_setup_with_successful_commands() -> None:
         )
 
 
-def test_run_setup_with_stderr_output() -> None:
-    """Test run_setup captures stderr output."""
+def test_run_setup_with_stderr_output(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test run_setup captures and displays stderr output."""
     front_matter = {
         "setup": "echo 'stdout message'\necho 'stderr message' >&2"
     }
@@ -39,6 +41,8 @@ def test_run_setup_with_stderr_output() -> None:
         pytest.fail(
             "Calling run_setup with stderr-producing commands raised an unexpected exception"
         )
+    out, _ = capsys.readouterr()
+    assert "stderr message" in out
 
 
 def test_run_setup_with_whitespace_in_commands() -> None:
