@@ -455,10 +455,19 @@ def test_generate_checks_without_command_yields_gg_check_property(
         max_size=5,
     ).filter(
         lambda lst: all(
-            ("weight" not in cd.check or isinstance(cd.check["weight"], int))
+            (
+                "weight" not in cd.check
+                or (
+                    isinstance(cd.check["weight"], int)
+                    and not isinstance(cd.check["weight"], bool)
+                )
+            )
             and (
                 "outputlimit" not in cd.check
-                or isinstance(cd.check["outputlimit"], int)
+                or (
+                    isinstance(cd.check["outputlimit"], int)
+                    and not isinstance(cd.check["outputlimit"], bool)
+                )
             )
             and (
                 "options" not in cd.check
@@ -481,6 +490,7 @@ def test_generate_checks_count_matches_input_property(
                 "weight" in cd.check
                 and (
                     not isinstance(cd.check["weight"], int)
+                    or isinstance(cd.check["weight"], bool)
                     or cd.check["weight"] <= 0
                 )
             )
@@ -488,6 +498,7 @@ def test_generate_checks_count_matches_input_property(
                 "outputlimit" in cd.check
                 and (
                     not isinstance(cd.check["outputlimit"], int)
+                    or isinstance(cd.check["outputlimit"], bool)
                     or cd.check["outputlimit"] <= 0
                 )
             )
