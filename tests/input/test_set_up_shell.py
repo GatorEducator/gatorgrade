@@ -28,6 +28,19 @@ def test_run_setup_with_successful_commands() -> None:
         )
 
 
+def test_run_setup_with_stderr_output() -> None:
+    """Test run_setup captures stderr output."""
+    front_matter = {
+        "setup": "echo 'stdout message'\necho 'stderr message' >&2"
+    }
+    try:
+        run_setup(front_matter)
+    except Exception:
+        pytest.fail(
+            "Calling run_setup with stderr-producing commands raised an unexpected exception"
+        )
+
+
 def test_run_setup_with_whitespace_in_commands() -> None:
     """Test run_setup handles commands with whitespace correctly."""
     front_matter = {"setup": "  echo 'Test'  \n  echo 'Another test'  "}
