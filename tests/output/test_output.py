@@ -982,7 +982,7 @@ def test_create_markdown_report_includes_version_info_block() -> None:
 def test_create_markdown_report_summary_is_list() -> None:
     """Test summary items are formatted as a Markdown list."""
     json_data: dict[str, Any] = {
-        "amount_correct": 3,
+        "amount_correct": 1,
         "percentage_score": 100,
         "weighted_amount_correct": 5,
         "weighted_total": 5,
@@ -995,7 +995,7 @@ def test_create_markdown_report_summary_is_list() -> None:
     assert "- **Project Name:**" in markdown
     assert "- **Amount Correct:**" in markdown
     assert "- **Points:**" in markdown
-    assert "- **Amount Correct:** 3/1 (100%)" in markdown
+    assert "- **Amount Correct:** 1/1 (100%)" in markdown
     assert "- **Points:** 5/5 (100%)" in markdown
 
 
