@@ -1171,6 +1171,15 @@ def test_write_json_or_md_file_accepts_uppercase(tmp_path: Path) -> None:
     assert output.write_json_or_md_file(tmp_json, "JSON", {"key": "value"})
 
 
+def test_write_json_or_md_file_raises_value_error() -> None:
+    """Test write_json_or_md_file raises ValueError when file cannot be opened."""
+    with pytest.raises(ValueError) as exc_info:
+        output.write_json_or_md_file(
+            Path("/nonexistent_directory") / "report.json", "json", {}
+        )
+    assert "Can't open or write the target file" in str(exc_info.value)
+
+
 def test_configure_report_file_json_backwards_compatible(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1538,6 +1547,20 @@ def test_create_report_json_with_weighted_percent() -> None:
     )
     result = output.create_report_json(1, [check_result], 100, 75)
     assert result["weighted_percentage_score"] == 75  # noqa: PLR2004
+
+
+def test_create_report_json_with_empty_checks() -> None:
+    """Test create_report_json with an empty check list."""
+    result = output.create_report_json(0, [], 0)
+    assert result["amount_correct"] == 0
+    assert result["percentage_score"] == 0
+    assert result["weighted_amount_correct"] == 0
+    assert result["weighted_total"] == 0
+    assert result["weighted_percentage_score"] == 0
+    assert result["checks"] == []
+    assert "report_time" in result
+    assert "cli_args" in result
+    assert "version_info" in result
 
 
 def test_create_markdown_report_file_includes_weighted_score() -> None:
@@ -1966,6 +1989,37 @@ def test_elide_report_path_short_boundary_not_elided() -> None:
 def test_elide_report_path_long_single_file_unchanged() -> None:
     """Test _elide_report_path returns single file path as-is."""
     path = "a" * 60 + ".json"
+    result = output._elide_report_path(path)
+    assert result == path
+
+
+def test_elide_report_path_relative_long_path() -> None:
+    """Test _elide_report_path elides long relative paths."""
+    S = os.sep
+    path = S.join(
+        [
+            "aaaaa",
+            "bbbbb",
+            "ccccc",
+            "ddddd",
+            "eeeee",
+            "fffff",
+            "ggggg",
+            "hhhhh",
+            "iiiii",
+            "jjjjj",
+            "kkkkk",
+            "lllll",
+        ]
+    )
+    result = output._elide_report_path(path)
+    expected = S.join(["aaaaa", "bbbbb", "...", "lllll"])
+    assert result == expected
+
+
+def test_elide_report_path_elide_not_shorter() -> None:
+    """Test _elide_report_path returns original when elided is not shorter."""
+    path = os.sep + "a" * 25 + os.sep + "b" * 25
     result = output._elide_report_path(path)
     assert result == path
 
