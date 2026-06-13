@@ -7,14 +7,18 @@ from pathlib import Path
 from typing import Tuple
 
 import typer
+from click import BadParameter
 from rich.console import Console
 from rich.emoji import Emoji
+from rich.rule import Rule
+from rich.text import Text
 
 from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
-GATORGRADE_VERSION = "0.8.4"
+# and must always match the value in the pyproject.toml file
+GATORGRADE_VERSION = "0.9.0"
 
 # create an app for the Typer-based CLI
 
@@ -47,6 +51,7 @@ FAILURE = 1
 # cannot determine it and it would always be "unknown"
 UNKNOWN_PLATFORM = "unknown"
 GATORGRADER_DEPENDENCY = "gatorgrader"
+
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
@@ -58,6 +63,109 @@ _LIBC_BY_SYSTEM = {
     SYSTEM_DARWIN: LIBC_NONE,
     SYSTEM_WINDOWS: LIBC_MSVC,
 }
+
+# operating system display names for version output
+OS_DARWIN = "Darwin"
+OS_LINUX = "Linux"
+OS_MACOS = "MacOS"
+OS_WINDOWS = "Windows"
+
+# program and language display names for version output
+GATORGRADE_NAME = "gatorgrade"
+GATORGRADER_NAME = "GatorGrader"
+PYTHON_NAME = "Python"
+
+# newline character for joining lines
+NEWLINE = "\n"
+
+# exit message
+EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
+
+# cli flag names used in the report
+CONFIG_FLAG = "--config"
+REPORT_FLAG = "--report"
+OUTPUT_LIMIT_FLAG = "--output-limit"
+BASELINE_WEIGHT_FLAG = "--baseline-weight"
+PROGRESS_BAR_FLAG = "--progress-bar"
+SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+
+# labels for rich rule display
+CONFIG_ERROR_LABEL = "Configuration Error"
+CONFIG_ERROR_PLURAL_LABEL = "Configuration Error(s)"
+
+# version info keys used in the report
+GATORGRADE_VERSION_KEY = "gatorgrade_version"
+GATORGRADER_VERSION_KEY = "gatorgrader_version"
+PYTHON_INFO_KEY = "python_info"
+PLATFORM_INFO_KEY = "platform_info"
+OS_RELEASE_KEY = "os_release"
+
+# report argument constants
+REPORT_DEST_FILE = "FILE"
+REPORT_DEST_ENV = "ENV"
+REPORT_TYPE_JSON = "JSON"
+REPORT_TYPE_MD = "MD"
+VALID_REPORT_DESTS = (REPORT_DEST_FILE, REPORT_DEST_ENV)
+VALID_REPORT_TYPES = (REPORT_TYPE_JSON, REPORT_TYPE_MD)
+REPORT_DEST_ERR_FMT = "First report argument must be '{}' or '{}', got '{}'"
+REPORT_TYPE_ERR_FMT = "Second report argument must be '{}' or '{}', got '{}'"
+REPORT_PATH_ERR_FMT = (
+    "Cannot write report to '{}': directory '{}' does not exist"
+)
+
+
+def _validate_output_limit(value: int | None) -> int | None:
+    """Validate output limit is at least 1 if provided."""
+    if value is not None and value < 1:
+        raise BadParameter("Output limit must be at least 1.")
+    return value
+
+
+def _validate_baseline_weight(value: int) -> int:
+    """Validate baseline weight is greater than 0."""
+    if value < 1:
+        raise BadParameter("Baseline weight must be at least 1.")
+    return value
+
+
+def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
+    """Validate report tuple arguments up front to avoid crashes later.
+
+    Validates that:
+    - First argument is FILE or ENV (case-insensitive for backwards
+      compatibility)
+    - Second argument is JSON or MD (case-insensitive for backwards
+      compatibility)
+    - When the destination is not explicitly ENV, validate the third
+      argument's parent directory exists (it is a file path)
+
+    """
+    if any(v is not None for v in value):
+        errors = []
+        if value[0] is not None and value[0].upper() not in VALID_REPORT_DESTS:
+            errors.append(
+                REPORT_DEST_ERR_FMT.format(
+                    REPORT_DEST_FILE, REPORT_DEST_ENV, value[0]
+                )
+            )
+        if value[1] is not None and value[1].upper() not in VALID_REPORT_TYPES:
+            errors.append(
+                REPORT_TYPE_ERR_FMT.format(
+                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[1]
+                )
+            )
+        if value[0] is not None and value[0].upper() != REPORT_DEST_ENV:
+            file_path = Path(value[2])
+            parent_dir = file_path.resolve().parent
+            if not parent_dir.exists():
+                errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
+        # if there are one or more errors, then raise a BadParameter exception
+        # with all of the error messages joined by newlines (reporting all
+        # of the possible exceptions instead of failing fast with only the
+        # first one should enable a person to better debug command-line arguments)
+        if errors:
+            raise BadParameter(";\n".join(errors))
+    return value
 
 
 def _get_platform_info() -> str:
@@ -86,30 +194,34 @@ def _get_python_info() -> str:
     version = platform.python_version()
     build_no, build_date = platform.python_build()
     compiler = platform.python_compiler().strip()
-    return f"Python {version} ({build_no}, {build_date}, {compiler})"
+    return f"{PYTHON_NAME} {version} ({build_no}, {build_date}, {compiler})"
 
 
 def _get_gatorgrade_info() -> str:
     """Get the parenthetic GatorGrade info string with the GatorGrader version."""
+    # use the importlib.metadata version function to get the
+    # version of the gatorgrader dependency (note that this works correctly
+    # even when gatorgrade is published to PyPI and download and used because
+    # of the fact that gatorgrader is a required and packaged dependnecy)
     gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
-    return f"GatorGrader {gatorgrader_version}"
+    return f"{GATORGRADER_NAME} {gatorgrader_version}"
 
 
 def _get_os_release() -> str:
     """Get the operating system release string for Linux, macOS, or Windows."""
     parenthetic_platform_string = f"({_get_platform_info()})"
-    if platform.system() == SYSTEM_LINUX.title():
+    if platform.system() == OS_LINUX:
         kernel = platform.release()
         if kernel:
-            return f"Linux {kernel} {parenthetic_platform_string}"
-    elif platform.system() == SYSTEM_DARWIN.title():
+            return f"{OS_LINUX} {kernel} {parenthetic_platform_string}"
+    elif platform.system() == OS_DARWIN:
         release, _, _ = platform.mac_ver()
         if release:
-            return f"MacOS {release} {parenthetic_platform_string}"
-    elif platform.system() == "Windows":
+            return f"{OS_MACOS} {release} {parenthetic_platform_string}"
+    elif platform.system() == OS_WINDOWS:
         release, _, _, _ = platform.win32_ver()
         if release:
-            return f"Windows {release} {parenthetic_platform_string}"
+            return f"{OS_WINDOWS} {release} {parenthetic_platform_string}"
     return ""
 
 
@@ -117,18 +229,18 @@ def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
         lines = [
-            f"gatorgrade {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
+            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
             _get_python_info(),
         ]
         os_release = _get_os_release()
         if os_release:
             lines.append(os_release)
-        console.print("\n".join(lines))
+        console.print(NEWLINE.join(lines))
         raise typer.Exit()
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(
+def gatorgrade(  # noqa: PLR0913
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -137,19 +249,39 @@ def gatorgrade(
         (None, None, None),
         "--report",
         "-r",
-        help="A tuple containing the following REQUIRED values: \
-            1. The destination of the report (either file or env) \
-            2. The format of the report (either json or md) \
-            3. the name of the file or environment variable\
-            4. use 'env md GITHUB_STEP_SUMMARY' to create GitHub job summary in GitHub Action",
+        help=(
+            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
+            f" 1. The destination of the report (either FILE or ENV){NEWLINE}{NEWLINE}"
+            f" 2. The format of the report (either JSON or MD){NEWLINE}{NEWLINE}"
+            f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
+            f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
+            f" [green]FILE JSON report.json[/green] to save summary in report.json)."
+        ),
+        callback=_validate_report,
     ),
-    run_status_bar: bool = typer.Option(
-        False,
-        "--status-bar",
-        help="Enable a progress bar for checks running/not running.",
+    output_limit: int = typer.Option(
+        5,
+        "--output-limit",
+        "-o",
+        help="Maximum number of diagnostic lines to display for a check (>= 1).",
+        callback=_validate_output_limit,
     ),
-    no_status_bar: bool = typer.Option(
-        False, "--no-status-bar", help="Disable the progress bar entirely."
+    baseline_weight: int = typer.Option(
+        1,
+        "--baseline-weight",
+        "-b",
+        help="Default weight applied to checks without an explicit weight (>= 1).",
+        callback=_validate_baseline_weight,
+    ),
+    progress_bar: bool = typer.Option(
+        True,
+        "--progress-bar/--no-progress-bar",
+        help="Show or hide the progress bar for checks.",
+    ),
+    show_diagnostics: bool = typer.Option(
+        True,
+        "--show-diagnostics/--no-show-diagnostics",
+        help="Show or hide diagnostic details for failing checks.",
     ),
     _version: bool = typer.Option(
         False,
@@ -161,15 +293,61 @@ def gatorgrade(
 ) -> None:
     """Run the GatorGrader checks in the specified gatorgrade.yml file."""
     # if ctx.subcommand is None then this means
-    # that, by default, gatorgrade should run in checking mode
+    # that, by default, gatorgrade should run in checking mode;
+    # note that the current implementation of the tool only
+    # supports checking mode as all others are deprecated;
+    # also note that the output of the tool is now segmented
+    # into sections that are demarcated by horizintal rules
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
-        checks = parse_config(filename)
+        checks, parse_error = parse_config(filename, baseline_weight)
+        # a YAML parsing error occurred and thus the
+        # tool should display the error and exit
+        if parse_error is not None:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(Text(CONFIG_ERROR_PLURAL_LABEL), style="bright_red")
+            )
+            console.print(NEWLINE + parse_error)
+            console.print()
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
         # there are valid checks and thus the
         # tool should run them with run_checks
-        if len(checks) > 0:
+        elif len(checks) > 0:
+            # create a dictionary of the CLI arguments to pass to the report
+            # (this will enable them to be saved inside of a report)
+            cli_args = {
+                CONFIG_FLAG: str(filename),
+                REPORT_FLAG: list(report),
+                OUTPUT_LIMIT_FLAG: output_limit,
+                BASELINE_WEIGHT_FLAG: baseline_weight,
+                PROGRESS_BAR_FLAG: progress_bar,
+                SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
+            }
+            version_info = {
+                GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
+                GATORGRADER_VERSION_KEY: importlib.metadata.version(
+                    GATORGRADER_DEPENDENCY
+                ),
+                PYTHON_INFO_KEY: _get_python_info(),
+                PLATFORM_INFO_KEY: _get_platform_info(),
+                OS_RELEASE_KEY: _get_os_release(),
+            }
+            # run the checks that were specified in a way
+            # that adheres to the configuration both in
+            # the command-line arguments and also in the
+            # gatorgrade.yml file
             checks_status = run_checks(
-                checks, report, run_status_bar, no_status_bar
+                checks,
+                report,
+                not progress_bar,
+                show_diagnostics,
+                output_limit,
+                cli_args,
+                version_info,
             )
         # no checks were created and this means
         # that, most likely, the file was not
@@ -177,11 +355,15 @@ def gatorgrade(
         else:
             checks_status = False
             console.print()
+            console.print(Rule(CONFIG_ERROR_LABEL, style="bright_red"))
+            console.print()
             console.print(
                 f"The file {filename} either does not exist or is not valid."
             )
-            console.print("Exiting now!")
             console.print()
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
         # at least one of the checks did not pass or
         # the provided file was not valid and thus
         # the tool should return a non-zero exit

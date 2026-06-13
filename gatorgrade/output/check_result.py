@@ -8,13 +8,15 @@ import rich
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         passed: bool,
         description: str,
         json_info: Union[Dict[str, Any], str, None],
         path: Optional[str] = None,
         diagnostic: str = "No diagnostic message available",
+        weight: int = 1,
+        outputlimit: int | None = None,
     ):
         """Construct a CheckResult.
 
@@ -27,6 +29,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             path: The path associated with the check result.
             diagnostic: The message to use in output if the check
                 has failed.
+            weight: The weight of the check result.
+            outputlimit: The maximum number of diagnostic lines
+                displayed for this check.
 
         """
         self.passed = passed
@@ -35,9 +40,11 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.diagnostic = diagnostic
         self.path = path
         self.run_command = ""
+        self.weight = weight
+        self.outputlimit = outputlimit
 
     def display_result(self, show_diagnostic: bool = False) -> str:
-        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+        """Return check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will
         say so.
@@ -51,7 +58,15 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         icon_color = "green" if self.passed else "red"
         message = f"[{icon_color}]{icon}[/]  {self.description}"
         if not self.passed and show_diagnostic:
-            message += f"\n[yellow]   → {self.diagnostic}"
+            if "\n" in self.diagnostic:
+                message += (
+                    f"\n[blue]   → Diagnostic:[/]\n"
+                    f"     [yellow]{self.diagnostic}[/]"
+                )
+            else:
+                message += (
+                    f"\n[blue]   → Diagnostic:[yellow] {self.diagnostic}[/]"
+                )
         return message
 
     def __repr__(self) -> str:
@@ -62,11 +77,13 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"json_info={self.json_info}, "
             f"path='{self.path}', "
             f"diagnostic='{self.diagnostic}', "
-            f"run_command='{self.run_command}')"
+            f"run_command='{self.run_command}', "
+            f"weight={self.weight}, "
+            f"outputlimit={self.outputlimit})"
         )
 
     def __str__(self, show_diagnostic: bool = False) -> str:
-        """Print check's passed or failed status, description, and, optionally, diagnostic message.
+        """Return check's passed or failed status, description, and, optionally, diagnostic message.
 
         If no diagnostic message is available, then the output will
         say so.

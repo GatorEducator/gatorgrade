@@ -1,0 +1,11 @@
+- description: Limited output shell check
+  command: echo "this is a test"
+  outputlimit: 5
+  weight: 10
+- description: Limited output gg check
+  check: MatchFileFragment
+  outputlimit: 25
+  options:
+    fragment: TODO
+    count: 0
+    exact: true

@@ -21,7 +21,7 @@ This document provides guidelines for AI agents contributing to this repository.
   and why.
 - **Create and Follow a TODO List**: Always create a TODO list and then
   follow that list. Do not stop until the tools that you call make it clear
-  that you have completed all the tasks in the list.
+  that you have completed all the tasks in the TODO list.
 
 ## Notification Instructions
 
@@ -79,7 +79,8 @@ All the Python code should follow these standards:
 - **Function bodies:** No blank lines within function bodies - keep code
   contiguous.
 - **Docstrings:** Single-line docstrings starting with a capital letter, ending
-  with a period.
+  with a period. Follow this for new files. In existing files, preserve the
+  established docstring style even if it is multi-line with `Args` sections.
 - **Comments:** Other comments start with a lowercase letter; preserve existing
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
@@ -95,6 +96,10 @@ All the Python code should follow these standards:
   values.
 - **Naming:** snake_case for functions/variables, PascalCase for classes,
   UPPER_SNAKE_CASE for constants.
+- **Constants over literals:** All hard-coded strings, integers, and floats
+  must be extracted into named constants (UPPER_SNAKE_CASE) at the top of
+  the module. Use the constant everywhere the value is needed, not the raw
+  literal.
 - **File operations:** Use `pathlib.Path` for all filesystem operations, never
   string paths.
 - **Error handling:** Use specific exceptions, not generic `Exception`; provide
@@ -164,3 +169,21 @@ The coding agent should write the notes as a Markdown list.
   `GITHUB_STEP_SUMMARY`, `JSON`, `MatchFileFragment`, `ShellCheck`,
   `STDOUT`, `STDERR`, `TODO`, `FIXME`, `NOTE`. "Typo" is NOT a proper
   noun and was removed from the exceptions list.
+- Suppress lint rules with inline `# noqa: PLR...` comments (e.g.,
+  `# noqa: PLR0913`), not `# pylint: disable`.
+- Weight is always `int` throughout the codebase (refactored from
+  `int | float`). Validate with `validate_positive_nonzero_int()` in
+  `gatorgrade/input/checks.py`.
+- `generate_checks()` in `command_line_generator.py` validates all
+  check data upfront and raises `ValueError` on any invalid weight or
+  outputlimit (fail-fast). It no longer creates error `ShellCheck`
+  objects for misconfigured checks.
+- `parse_config()` returns `(checks, error_message)`. Both YAML parse
+  errors and validation errors are returned as the error string, which
+  `main.py` displays with `Rule`-based formatting.
+- `EXIT_MESSAGE` is defined in `gatorgrade/main.py` and is the string
+  displayed below error details in configuration error boxes.
+- **Creativity is welcome:** Every once in a while, feel free to slip
+  in a bit of flair like a pun, a limerick, a dad joke, a haiku about
+  test cases, or anything else that might make the developer smile.
+  Don't force it; let it come naturally when the moment feels right.
