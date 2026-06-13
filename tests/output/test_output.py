@@ -713,6 +713,22 @@ def test_run_checks_failed_check_displays_weight() -> None:
         assert any("Weight:" in c and "10" in c for c in calls)
 
 
+def test_run_checks_failed_with_progress_bar(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test that a failing check with progress bar shows correct summary."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="Passing", command='echo "hello"'),
+        ShellCheck(description="Failing", command=FAILING_CMD),
+    ]
+    report = (None, None, None)
+    result = output.run_checks(checks, report)  # type: ignore
+    assert result is False
+    out, _ = capsys.readouterr()
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "- Checks: 1/2 (50%)" in plain_stdout
+
+
 def test_run_checks_with_gg_check_command_status_bar_enabled(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
