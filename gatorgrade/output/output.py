@@ -226,9 +226,13 @@ def _run_gg_check(
         file_path = None
         for i in range(len(check.gg_args)):
             if check.gg_args[i] == GG_DIRECTORY_ARG:
-                dir_name = check.gg_args[i + 1]
-                file_name = check.gg_args[i + 3]
-                file_path = dir_name + GG_PATH_SEPARATOR + file_name
+                # confirm that all of the parameters are
+                # available and then extract them from the
+                # list of the GatorGrader arguments
+                if i + 3 < len(check.gg_args):
+                    dir_name = check.gg_args[i + 1]
+                    file_name = check.gg_args[i + 3]
+                    file_path = dir_name + GG_PATH_SEPARATOR + file_name
                 break
     # if arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
