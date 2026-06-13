@@ -178,6 +178,15 @@ def test_parse_config_with_baseline_weight_and_explicit_weight() -> None:
     assert output[1].weight == 2  # noqa: PLR2004
 
 
+def test_parse_config_rejects_invalid_baseline_weight() -> None:
+    """Test parse_config returns error for baseline_weight=0."""
+    config = Path("tests/test_assignment/gatorgrade.yml")
+    checks, error = parse_config(config, baseline_weight=0)
+    assert checks == []
+    assert error is not None
+    assert "baseline_weight" in error
+
+
 @pytest.mark.propertybased
 @given(st.text(min_size=1, max_size=100))
 def test_parse_config_invalid_yaml_returns_error_property(
