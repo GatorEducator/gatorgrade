@@ -266,7 +266,6 @@ def create_report_json(  # noqa: PLR0913
 
     Args:
         passed_count: the number of checks that passed
-        check_information: the basic information about checks and their params
         checkResults: the list of check results that will be put in json
         percent_passed: the percentage of checks that passed
         weighted_percent: the weighted percentage of checks that passed
