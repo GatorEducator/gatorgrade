@@ -8,6 +8,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.in_file_path import reformat_yaml_data
 from gatorgrade.input.parse_config import parse_config
 
 
@@ -208,3 +209,9 @@ def test_parse_config_invalid_yaml_returns_error_property(
             assert len(checks) >= 0
     finally:
         Path(temp_path).unlink(missing_ok=True)
+
+
+def test_reformat_yaml_data_with_empty_list() -> None:
+    """Test reformat_yaml_data raises IndexError with an empty list."""
+    with pytest.raises(IndexError):
+        reformat_yaml_data([])
