@@ -25,6 +25,9 @@ FAILING_CMD_WITH_LINES = (
     "python -c \"print('line1'); print('line2'); print('line3'); exit(1)\""
 )
 
+EXPECTED_AMOUNT = 2
+EXPECTED_PERCENTAGE = 100
+
 
 @pytest.fixture
 def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1098,6 +1101,111 @@ def test_configure_report_env_not_github_step_summary(
     assert parsed["amount_correct"] == 1
 
 
+def test_configure_report_env_custom_var_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report writes JSON to a custom environment variable."""
+    tmp_file = tmp_path / "custom_report.json"
+    monkeypatch.setenv("MY_REPORT_VAR", str(tmp_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "json", "MY_REPORT_VAR")
+    report_data = {
+        "amount_correct": EXPECTED_AMOUNT,
+        "percentage_score": EXPECTED_PERCENTAGE,
+        "checks": [
+            {"status": True, "description": "Check 1"},
+            {"status": True, "description": "Check 2"},
+        ],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    parsed = json.loads(content)
+    assert parsed["amount_correct"] == EXPECTED_AMOUNT
+    assert parsed["percentage_score"] == EXPECTED_PERCENTAGE
+
+
+def test_configure_report_env_custom_var_md(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report writes Markdown to a custom environment variable."""
+    tmp_file = tmp_path / "custom_report.md"
+    monkeypatch.setenv("MY_REPORT_VAR", str(tmp_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "md", "MY_REPORT_VAR")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Report" in content
+
+
+def test_configure_report_env_custom_var_md_no_github_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test MD to custom var with no GITHUB_ENV set."""
+    tmp_file = tmp_path / "custom_report.md"
+    monkeypatch.setenv("MY_REPORT_VAR", str(tmp_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    monkeypatch.delenv("GITHUB_ENV", raising=False)
+    report_params = ("env", "md", "MY_REPORT_VAR")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Report" in content
+
+
+def test_configure_report_env_custom_var_not_set(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test configure_report does nothing when the env var is not set."""
+    tmp_file = tmp_path / "should_not_exist.json"
+    monkeypatch.delenv("MY_REPORT_VAR", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "json", "MY_REPORT_VAR")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    assert not tmp_file.exists()
+
+
+def test_configure_report_env_github_env_as_dest_skips_raw_write(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that GITHUB_ENV as report_name skips raw report write."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("EXISTING=1\n")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    report_params = ("env", "json", "GITHUB_ENV")
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    # the raw JSON should NOT be written to the GITHUB_ENV file
+    # only the JSON_REPORT key should be appended
+    assert env_content.startswith("EXISTING=1\n")
+    assert "JSON_REPORT=" in env_content
+    # count the number of lines to verify there is no extra raw JSON
+    lines = env_content.strip().splitlines()
+    assert len(lines) == 2  # noqa: PLR2004
+
+
 def test_configure_report_file_json_uppercase() -> None:
     """Test configure_report accepts uppercase FILE and JSON."""
     report_params = ("FILE", "JSON", str(Path("test_report.json")))
@@ -1337,6 +1445,31 @@ def test_run_checks_env_json_uppercase_other_var(
     capsys.readouterr()
     env_content = tmp_env_file.read_text()
     assert "JSON_REPORT=" in env_content
+
+
+def test_run_checks_env_md_uppercase_other_var(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks with uppercase ENV MD and a non-GITHUB_STEP_SUMMARY variable."""
+    tmp_file = tmp_path / "custom_report.md"
+    monkeypatch.setenv("MY_CUSTOM_VAR", str(tmp_file))
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    monkeypatch.delenv("GITHUB_ENV", raising=False)
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("ENV", "MD", "MY_CUSTOM_VAR")
+    output.run_checks(checks, report)
+    capsys.readouterr()
+    assert tmp_file.exists()
+    content = tmp_file.read_text()
+    assert "# Gatorgrade Report" in content
 
 
 def test_configure_report_backwards_compatible_lowercase_env(
