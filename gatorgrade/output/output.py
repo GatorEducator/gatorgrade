@@ -434,7 +434,20 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
 def configure_report(
     report_params: Tuple[str, str, str], report_output_data_json: dict
 ) -> None:
-    """Put together the contents of the report depending on the inputs of the user.
+    """Write the report based on the user's destination and format.
+
+    When the destination is FILE, the report is written directly to the
+    specified file path in the requested format.
+
+    When the destination is ENV, the report_name is treated as an environment
+    variable name. If that variable exists, its value is used as a file path
+    and the report is written there. This works for any environment variable,
+    including GitHub Actions variables like GITHUB_STEP_SUMMARY.
+
+    Additionally, when the GITHUB_ENV environment variable is set, the full
+    JSON report is always appended as JSON_REPORT=<json> to that file. This
+    behavior is designed for GitHub Actions, where GITHUB_ENV is a special
+    file that sets environment variables for downstream steps.
 
     Args:
         report_params: The details of what the user wants the report to
@@ -477,21 +490,28 @@ def configure_report(
     # the user wants the data stored in an environment variable; do not attempt
     # to save to the environment variable if it does not exist in the environment
     elif report_format == REPORT_FORMAT_ENV:
-        if report_name == GITHUB_STEP_SUMMARY_VAR:
-            env_file = os.getenv(GITHUB_STEP_SUMMARY_VAR, None)
-            if env_file is not None:
+        # do not write the raw report to GITHUB_ENV because that file is a
+        # special GitHub Actions workflow file for setting environment
+        # variables; writing raw JSON to it would corrupt the file format
+        if report_name != GITHUB_ENV_VAR:
+            report_dest_path = os.getenv(report_name)
+            if report_dest_path is not None:
                 if report_type == REPORT_TYPE_MD:
                     write_json_or_md_file(
-                        env_file, report_type, report_output_data_md
+                        report_dest_path, report_type, report_output_data_md
                     )
                 else:
                     write_json_or_md_file(
-                        env_file, report_type, report_output_data_json
+                        report_dest_path, report_type, report_output_data_json
                     )
-        json_string = json_module.dumps(report_output_data_json)
-        env_file = os.getenv(GITHUB_ENV_VAR, None)
-        if env_file is not None:
-            with open(os.environ[GITHUB_ENV_VAR], "a") as env_file_handle:
+        # if running in GitHub Actions, also append the JSON report to the
+        # GITHUB_ENV file so that downstream steps can access it
+        github_env_path = os.getenv(GITHUB_ENV_VAR)
+        if github_env_path is not None:
+            json_string = json_module.dumps(report_output_data_json)
+            with open(
+                github_env_path, "a", encoding=FILE_ENCODING
+            ) as env_file_handle:
                 env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
 
 
