@@ -159,35 +159,48 @@ by `--output-limit`.
 
 GatorGrade can generate reports in JSON or Markdown format.
 
-### JSON Report
+### File Reports
 
-Save a JSON report to a file:
+Save a report directly to a file path:
 
 ```bash
+# JSON report
 gatorgrade --report FILE JSON report.json
-```
 
-### Markdown Report
-
-Save a Markdown report to a file:
-
-```bash
+# Markdown report
 gatorgrade --report FILE MD report.md
 ```
 
-### GitHub Actions
+### Environment Variable Reports
 
-Write a Markdown report to the GitHub Actions job summary:
+Save a report to the file path stored in an environment variable. This is
+useful for CI systems where the output location is provided as an environment
+variable. For example, in GitHub Actions:
 
 ```bash
+# Write Markdown to the job summary
 gatorgrade --report ENV MD GITHUB_STEP_SUMMARY
-```
 
-Write a JSON report to a GitHub Actions environment variable:
-
-```bash
+# Write JSON to an environment variable file
 gatorgrade --report ENV JSON GITHUB_ENV
 ```
+
+You can also use any custom environment variable:
+
+```bash
+export MY_REPORT="/tmp/report.json"
+gatorgrade --report ENV JSON MY_REPORT
+```
+
+When the destination is `ENV` and the `GITHUB_ENV` variable is set, the full
+JSON report is also appended as `JSON_REPORT=<json>` to that file. This makes
+the report available to downstream steps in GitHub Actions.
+
+For more information about how these environment variables work in GitHub
+Actions, see the documentation for
+[setting an environment variable](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable)
+and
+[adding a job summary](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary).
 
 ## Example Output
 
