@@ -285,6 +285,20 @@ def gatorgrade(  # noqa: PLR0913
         ),
         callback=_validate_report,
     ),
+    github_env: Tuple[str, str] = typer.Option(
+        (None, None),
+        "--github-env",
+        "-g",
+        help=(
+            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
+            f" 1. The format of the data (either JSON or MD){NEWLINE}{NEWLINE}"
+            f" 2. The name of the environment variable to set{NEWLINE}{NEWLINE}"
+            f" (Use [green]json JSON_REPORT[/green] to store JSON data or"
+            f" [green]md MD_REPORT[/green] to store Markdown data in the"
+            f" GITHUB_ENV file for downstream steps)."
+        ),
+        callback=_validate_github_env,
+    ),
     output_limit: int = typer.Option(
         5,
         "--output-limit",
@@ -348,6 +362,7 @@ def gatorgrade(  # noqa: PLR0913
             cli_args = {
                 CONFIG_FLAG: str(filename),
                 REPORT_FLAG: list(report),
+                GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
                 PROGRESS_BAR_FLAG: progress_bar,
@@ -374,6 +389,7 @@ def gatorgrade(  # noqa: PLR0913
                 output_limit,
                 cli_args,
                 version_info,
+                github_env,
             )
         # no checks were created and this means
         # that, most likely, the file was not
