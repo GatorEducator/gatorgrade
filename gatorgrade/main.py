@@ -88,6 +88,7 @@ OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
 CONFIG_ERROR_LABEL = "Configuration Error"
@@ -111,6 +112,9 @@ REPORT_DEST_ERR_FMT = "First report argument must be '{}' or '{}', got '{}'"
 REPORT_TYPE_ERR_FMT = "Second report argument must be '{}' or '{}', got '{}'"
 REPORT_PATH_ERR_FMT = (
     "Cannot write report to '{}': directory '{}' does not exist"
+)
+GITHUB_ENV_TYPE_ERR_FMT = (
+    "First github-env argument must be '{}' or '{}', got '{}'"
 )
 
 
