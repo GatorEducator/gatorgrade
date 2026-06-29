@@ -291,7 +291,7 @@ def gatorgrade(  # noqa: PLR0913
         help="Show the GatorGrade version and exit.",
     ),
 ) -> None:
-    """Run the GatorGrader checks in the specified gatorgrade.yml file."""
+    """Run the GatorGrader checks in the specified configuration file."""
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode;
     # note that the current implementation of the tool only
