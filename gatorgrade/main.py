@@ -32,7 +32,7 @@ gatorgrade_emoji = Emoji.replace(":crocodile:")
 # --> has a specified help message with an emoji
 app = typer.Typer(
     add_completion=False,
-    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified gatorgrade.yml file.",
+    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified configuration file.",
 )
 
 
