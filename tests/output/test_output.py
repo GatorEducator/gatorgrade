@@ -1213,8 +1213,9 @@ def test_configure_report_file_github_env_always_written(
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    # Use FILE report format -- the old code would NOT have written
-    # GITHUB_ENV here because the append logic was gated on ENV format
+    # use FILE report format as the contents should always be saved
+    # to this environment variable as long as it is set; this is
+    # simulating a case where the tool is run in GitHub Actions
     report_params = ("FILE", "JSON", str(tmp_path / "report.json"))
     report_data = {
         "amount_correct": 1,
