@@ -504,15 +504,18 @@ def configure_report(
                     write_json_or_md_file(
                         report_dest_path, report_type, report_output_data_json
                     )
-        # if running in GitHub Actions, also append the JSON report to the
-        # GITHUB_ENV file so that downstream steps can access it
-        github_env_path = os.getenv(GITHUB_ENV_VAR)
-        if github_env_path is not None:
-            json_string = json_module.dumps(report_output_data_json)
-            with open(
-                github_env_path, "a", encoding=FILE_ENCODING
-            ) as env_file_handle:
-                env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
+    # if running in GitHub Actions, always append the JSON report to the
+    # GITHUB_ENV file so that downstream steps can access it, regardless
+    # of the report format chosen by the user. References:
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/variables
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands
+    github_env_path = os.getenv(GITHUB_ENV_VAR)
+    if github_env_path is not None:
+        json_string = json_module.dumps(report_output_data_json)
+        with open(
+            github_env_path, "a", encoding=FILE_ENCODING
+        ) as env_file_handle:
+            env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
 
 
 def write_json_or_md_file(
