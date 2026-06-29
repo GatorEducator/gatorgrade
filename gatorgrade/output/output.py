@@ -479,10 +479,12 @@ def configure_report(
         )
     # if the user wants the data stored in a file
     if report_format == REPORT_FORMAT_FILE:
+        # save a markdown file for the report
         if report_type == REPORT_TYPE_MD:
             write_json_or_md_file(
                 report_name, report_type, report_output_data_md
             )
+        # save a JSON file for the report
         else:
             write_json_or_md_file(
                 report_name, report_type, report_output_data_json
