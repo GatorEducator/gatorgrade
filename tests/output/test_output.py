@@ -1206,6 +1206,28 @@ def test_configure_report_env_github_env_as_dest_skips_raw_write(
     assert len(lines) == 2  # noqa: PLR2004
 
 
+def test_configure_report_file_github_env_always_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that GITHUB_ENV is always written, even with FILE format."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    # Use FILE report format -- the old code would NOT have written
+    # GITHUB_ENV here because the append logic was gated on ENV format
+    report_params = ("FILE", "JSON", str(tmp_path / "report.json"))
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    output.configure_report(report_params, report_data)
+    env_content = tmp_env_file.read_text()
+    assert "JSON_REPORT=" in env_content, (
+        "GITHUB_ENV should be written for FILE format too"
+    )
+
+
 def test_configure_report_file_json_uppercase() -> None:
     """Test configure_report accepts uppercase FILE and JSON."""
     report_params = ("FILE", "JSON", str(Path("test_report.json")))
