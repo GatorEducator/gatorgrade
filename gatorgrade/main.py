@@ -172,6 +172,28 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
     return value
 
 
+def _validate_github_env(
+    value: Tuple[str, str],
+) -> Tuple[str, str]:
+    """Validate github-env tuple arguments up front.
+
+    Validates that the first argument is JSON or MD
+    (case-insensitive for backwards compatibility).
+
+    """
+    if any(v is not None for v in value):
+        errors = []
+        if value[0] is not None and value[0].upper() not in VALID_REPORT_TYPES:
+            errors.append(
+                GITHUB_ENV_TYPE_ERR_FMT.format(
+                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[0]
+                )
+            )
+        if errors:
+            raise BadParameter(";\n".join(errors))
+    return value
+
+
 def _get_platform_info() -> str:
     """Get the platform information string for any platform."""
     arch = platform.machine() or UNKNOWN_PLATFORM
