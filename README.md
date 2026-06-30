@@ -277,6 +277,12 @@ Run tests with coverage:
 uv run task test-coverage
 ```
 
+Run tests with direct coverage checks:
+
+```bash
+uv run task test-coverage-check-verbose
+```
+
 ### Linting and Formatting
 
 Run all linting checks:
