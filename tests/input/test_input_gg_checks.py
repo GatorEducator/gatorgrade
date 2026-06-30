@@ -179,10 +179,21 @@ def test_parse_config_with_baseline_weight_and_explicit_weight() -> None:
     assert output[1].weight == 2  # noqa: PLR2004
 
 
-def test_parse_config_rejects_invalid_baseline_weight() -> None:
-    """Test parse_config returns error for baseline_weight=0."""
+@pytest.mark.parametrize(
+    "invalid_weight",
+    [
+        0,
+        -1,
+        -5,
+        -100,
+    ],
+)
+def test_parse_config_rejects_invalid_baseline_weight(
+    invalid_weight: int,
+) -> None:
+    """Test parse_config returns error for non-positive baseline_weight."""
     config = Path("tests/test_assignment/gatorgrade.yml")
-    checks, error = parse_config(config, baseline_weight=0)
+    checks, error = parse_config(config, baseline_weight=invalid_weight)
     assert checks == []
     assert error is not None
     assert "baseline_weight" in error
