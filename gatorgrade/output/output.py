@@ -444,10 +444,10 @@ def configure_report(
     and the report is written there. This works for any environment variable,
     including GitHub Actions variables like GITHUB_STEP_SUMMARY.
 
-    Additionally, when the GITHUB_ENV environment variable is set, the full
-    JSON report is always appended as JSON_REPORT=<json> to that file. This
-    behavior is designed for GitHub Actions, where GITHUB_ENV is a special
-    file that sets environment variables for downstream steps.
+    Writing report data to the GITHUB_ENV file for GitHub Actions is now
+    handled by the standalone --github-env CLI flag. See write_github_env()
+    for details. This means that saving data to the GITHUB_ENV is no longer
+    done implicitly and is instead something to which you must opt-in.
 
     Args:
         report_params: The details of what the user wants the report to
