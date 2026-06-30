@@ -700,3 +700,26 @@ def test_os_release_format_property(_: st.DataObject) -> None:
     assert isinstance(info, str)
     if info:
         assert "(" in info and ")" in info
+
+
+@pytest.mark.propertybased
+@given(st.from_regex(r"^[A-Za-z_][A-Za-z0-9_]*$"))
+def test_valid_env_var_names_match_property(value: str) -> None:
+    """Property: valid env var names match the VALID_ENV_VAR_NAME pattern."""
+    assert main.VALID_ENV_VAR_NAME.match(value) is not None
+
+
+@pytest.mark.propertybased
+@given(
+    st.one_of(
+        # names starting with a digit are invalid
+        st.from_regex(r"^[0-9].*$", fullmatch=True),
+        # names containing spaces are invalid
+        st.from_regex(r"^.*\\s+.*$", fullmatch=True),
+        # names containing special characters (not underscore) are invalid
+        st.from_regex(r"^.*[^A-Za-z0-9_].*$", fullmatch=True),
+    )
+)
+def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
+    """Property: invalid env var names do not match the VALID_ENV_VAR_NAME pattern."""
+    assert main.VALID_ENV_VAR_NAME.match(value) is None
