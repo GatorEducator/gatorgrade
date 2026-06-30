@@ -82,7 +82,6 @@ REPORT_FORMAT_FILE = "FILE"
 REPORT_FORMAT_ENV = "ENV"
 GITHUB_STEP_SUMMARY_VAR = "GITHUB_STEP_SUMMARY"
 GITHUB_ENV_VAR = "GITHUB_ENV"
-JSON_REPORT_KEY = "JSON_REPORT"
 
 # file operation constants
 FILE_MODE_WRITE = "w"
@@ -506,18 +505,47 @@ def configure_report(
                     write_json_or_md_file(
                         report_dest_path, report_type, report_output_data_json
                     )
-    # if running in GitHub Actions, always append the JSON report to the
-    # GITHUB_ENV file so that downstream steps can access it, regardless
-    # of the report format chosen by the user. References:
-    # https://docs.github.com/en/actions/reference/workflows-and-actions/variables
-    # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands
+
+
+def write_github_env(
+    github_env: Tuple[str | None, str | None],
+    report_output_data_json: dict,
+) -> None:
+    """Write report data to the GITHUB_ENV environment file.
+
+    When the GITHUB_ENV environment variable is set, this function
+    appends the report data as an environment variable assignment to
+    that file. Single-line content (compact JSON) uses the simple
+    KEY=VALUE format, while multi-line content (Markdown) uses the
+    KEY<<delimiter heredoc syntax understood by GitHub Actions.
+
+    Args:
+        github_env: Tuple of (format, environment variable name).
+            Format is "JSON" or "MD" (case-insensitive).
+        report_output_data_json: The full JSON report data.
+
+    """
     github_env_path = os.getenv(GITHUB_ENV_VAR)
-    if github_env_path is not None:
-        json_string = json_module.dumps(report_output_data_json)
-        with open(
-            github_env_path, "a", encoding=FILE_ENCODING
-        ) as env_file_handle:
-            env_file_handle.write(f"{JSON_REPORT_KEY}={json_string}\n")
+    if github_env_path is None:
+        return
+    # both values are guaranteed non-None by the caller
+    fmt: str = github_env[0] if github_env[0] is not None else ""
+    fmt = fmt.upper()
+    key: str = github_env[1] if github_env[1] is not None else ""
+    if fmt == REPORT_TYPE_MD:
+        content = create_markdown_report_file(report_output_data_json)
+    else:
+        content = json_module.dumps(report_output_data_json)
+    # use multiline delimiter syntax for content with newlines,
+    # simple KEY=VALUE format for single-line content (compact JSON)
+    # reference: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#multiline-strings
+    if NEWLINE in content:
+        delimiter = f"GATORGRADE_{os.urandom(8).hex()}"
+        with open(github_env_path, "a", encoding=FILE_ENCODING) as f:
+            f.write(f"{key}<<{delimiter}\n{content}\n{delimiter}\n")
+    else:
+        with open(github_env_path, "a", encoding=FILE_ENCODING) as f:
+            f.write(f"{key}={content}\n")
 
 
 def write_json_or_md_file(
@@ -547,6 +575,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     output_limit: int | None = None,
     cli_args: dict | None = None,
     version_info: dict | None = None,
+    github_env: Tuple[str | None, str | None] = (None, None),
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -562,6 +591,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             for each check.
         cli_args: The command-line arguments to include in the report.
         version_info: Version and platform information to include in the report.
+        github_env: Optional tuple of (format, key) for writing report data
+            to the GITHUB_ENV file in GitHub Actions.
 
     """
     results: List[CheckResult] = []
@@ -680,9 +711,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         weighted_percent = 0
     else:
         weighted_percent = round(passed_weight / total_weight * 100)
-    # if the report is wanted, create output in line with their specifications
+    # if the report or github-env is wanted, create the JSON report data
     report_display_name = None
-    if all(report):
+    need_report_data = all(report) or all(github_env)
+    if need_report_data:
         report_output_data = create_report_json(
             passed_count,
             results,
@@ -691,11 +723,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             cli_args,
             version_info,
         )
+    if all(report):
         configure_report(report, report_output_data)
         if report[0].upper() == REPORT_FORMAT_FILE:
             report_display_name = _elide_report_path(report[2])
         else:
             report_display_name = report[2]
+    if all(github_env):
+        write_github_env(github_env, report_output_data)
     # compute the summary color based on pass/fail status
     summary_color = "green" if passed_count == len(results) else "bright_red"
     # print failures list if there are failures to print
