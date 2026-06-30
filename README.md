@@ -1,5 +1,5 @@
 <div align="center">
-  <img alt="GatorGrade logo" src=".github/logo/GatorGrade.png" width="90%">
+  <img alt="GatorGrade logo" src="https://raw.githubusercontent.com/GatorEducator/gatorgrade/main/.github/logo/GatorGrade.png" width="90%">
 </div>
 
 # GatorGrade
