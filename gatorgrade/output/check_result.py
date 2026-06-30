@@ -82,19 +82,14 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"outputlimit={self.outputlimit})"
         )
 
-    def __str__(self, show_diagnostic: bool = False) -> str:
-        """Return check's passed or failed status, description, and, optionally, diagnostic message.
+    def __str__(self) -> str:
+        """Return check's passed or failed status and description.
 
-        If no diagnostic message is available, then the output will
-        say so.
-
-        Args:
-            show_diagnostic: If true, show the diagnostic message if
-                the check has failed. Defaults to false.
+        Does not include diagnostic details. Use display_result() or
+        print() with show_diagnostic=True to see diagnostic output.
 
         """
-        message = self.display_result(show_diagnostic)
-        return message
+        return self.display_result()
 
     def print(self, show_diagnostic: bool = False) -> None:
         """Print check's passed or failed status, description, and, optionally, diagnostic message.
