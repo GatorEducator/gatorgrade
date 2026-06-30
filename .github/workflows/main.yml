@@ -1,14 +1,15 @@
 # This GitHub Actions workflow contains six jobs:
-# -- First, Lint Code runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
-# check the code for formatting and linting defects using the uv lint task.
-# -- Second, Type Check runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
-# check for type errors using the uv typecheck task (mypy, ty, pyrefly,
-# symbex).
+# -- First, Lint Code runs on Ubuntu with Python 3.11, 3.12, 3.13, and 3.14
+# to check the code for formatting and linting defects using the uv lint
+# task.
+# -- Second, Type Check runs on Ubuntu with Python 3.11, 3.12, 3.13, and
+# 3.14 to check for type errors using the uv typecheck task (mypy, ty,
+# pyrefly, symbex).
 # -- Third, Test uses a strategy matrix to test the code with different
-# operating systems (Ubuntu, macOS, Windows) and Python versions (3.12, 3.13,
-# 3.14), using the uv test task.
-# -- Fourth, Test Coverage runs on Ubuntu with Python 3.12, 3.13, and 3.14 to
-# check that test coverage meets the minimum threshold of 85%.
+# operating systems (Ubuntu, macOS, Windows) and Python versions (3.11,
+# 3.12, 3.13, 3.14), using the uv test task.
+# -- Fourth, Test Coverage runs on Ubuntu with Python 3.11, 3.12, 3.13, and
+# 3.14 to check that test coverage meets the minimum threshold of 85%.
 # -- Fifth, Lint Markdown uses the latest Ubuntu image and markdownlint to
 # check markdown files for defects.
 # -- Sixth, Check Spelling uses the latest Ubuntu image and cspell to check
@@ -25,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -48,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -72,14 +73,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         include:
+          - os: macos-latest
+            python-version: "3.11"
           - os: macos-latest
             python-version: "3.12"
           - os: macos-latest
             python-version: "3.13"
           - os: macos-latest
             python-version: "3.14"
+          - os: windows-latest
+            python-version: "3.11"
           - os: windows-latest
             python-version: "3.12"
           - os: windows-latest
@@ -113,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
