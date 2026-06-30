@@ -563,7 +563,8 @@ def write_json_or_md_file(
     # normalize content_type to uppercase for case-insensitive matching
     normalized_type = content_type.upper()
     try:
-        # second argument has to be either json or md
+        # second argument, originally stored in the content_type parameter
+        # and now stored in the normalized type, has to be either JSON or MD
         with open(file_name, FILE_MODE_WRITE, encoding=FILE_ENCODING) as file:
             if normalized_type == REPORT_TYPE_JSON:
                 json_module.dump(content, file, indent=INDENT_JSON)
