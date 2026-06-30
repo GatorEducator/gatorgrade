@@ -36,12 +36,32 @@ Run the latest version without installing:
 uvx gatorgrade
 ```
 
+### Using uv tool install
+
+Install globally so `gatorgrade` is available on your `PATH`:
+
+```bash
+uv tool install gatorgrade
+```
+
+After installation, run `gatorgrade` directly without `uvx`:
+
+```bash
+gatorgrade
+```
+
 ### Using pipx
 
 Install globally:
 
 ```bash
 pipx install gatorgrade
+```
+
+After installation, run `gatorgrade` directly without `pipx`:
+
+```bash
+gatorgrade
 ```
 
 ### Installing from Source
