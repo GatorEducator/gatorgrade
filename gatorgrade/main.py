@@ -2,6 +2,7 @@
 
 import importlib.metadata
 import platform
+import re
 import sys
 from pathlib import Path
 from typing import Tuple
@@ -116,6 +117,15 @@ REPORT_PATH_ERR_FMT = (
 GITHUB_ENV_TYPE_ERR_FMT = (
     "First github-env argument must be '{}' or '{}', got '{}'"
 )
+GITHUB_ENV_NAME_ERR_FMT = (
+    "Second github-env argument must be a valid environment variable name, "
+    "got '{}'"
+)
+REPORT_ENV_NAME_ERR_FMT = (
+    "Third report argument must be a valid environment variable name when "
+    "destination is ENV, got '{}'"
+)
+VALID_ENV_VAR_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def _validate_output_limit(value: int | None) -> int | None:
@@ -163,6 +173,9 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
             parent_dir = file_path.resolve().parent
             if not parent_dir.exists():
                 errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
+        elif value[0] is not None and value[2] is not None:
+            if not VALID_ENV_VAR_NAME.match(value[2]):
+                errors.append(REPORT_ENV_NAME_ERR_FMT.format(value[2]))
         # if there are one or more errors, then raise a BadParameter exception
         # with all of the error messages joined by newlines (reporting all
         # of the possible exceptions instead of failing fast with only the
@@ -189,6 +202,8 @@ def _validate_github_env(
                     REPORT_TYPE_JSON, REPORT_TYPE_MD, value[0]
                 )
             )
+        if value[1] is not None and not VALID_ENV_VAR_NAME.match(value[1]):
+            errors.append(GITHUB_ENV_NAME_ERR_FMT.format(value[1]))
         if errors:
             raise BadParameter(";\n".join(errors))
     return value
