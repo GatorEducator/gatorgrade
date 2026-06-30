@@ -54,17 +54,14 @@ Or use `uv sync` if the repository contains a `uv.lock` file:
 uv sync
 ```
 
-## Quick Start
+## Configuration Overview
 
 An assignment must contain a `gatorgrade.yml` file that defines the checks to
-run. Run GatorGrade from the assignment directory:
-
-```bash
-gatorgrade
-```
-
-GatorGrade will run each check and display a summary of passing and failing
-checks along with a weighted score.
+run. If you installed `gatorgrade` with `uv` or `pipx`, then run GatorGrade from
+the assignment directory with the command `gatorgrade`. Alternatively, if you
+use `uvx`, run GatorGrade with the command `uvx gatorgrade`. GatorGrade will run
+each check and display a summary of passing and failing checks along with a
+weighted score and additional diagnostic information.
 
 ## Command-Line Options
 
@@ -78,6 +75,14 @@ The following options control how GatorGrade runs:
   name. Examples:
   - `gatorgrade --report FILE JSON report.json`
   - `gatorgrade --report ENV MD GITHUB_STEP_SUMMARY`
+- `--github-env`, `-g`: Write report data to the `GITHUB_ENV` file in GitHub
+  Actions. Takes two arguments: the format (`JSON` or `MD`) and the name of
+  the environment variable to set. When provided and the `GITHUB_ENV`
+  environment variable is set, the report data is appended to that file for
+  use by downstream workflow steps. This flag is independent of `--report`.
+  Examples:
+  - `gatorgrade --github-env json JSON_REPORT`
+  - `gatorgrade --github-env md MD_REPORT`
 - `--output-limit`, `-o`: Set the maximum number of diagnostic lines to
   display for a failing check. The default is 5. Must be at least 1.
 - `--baseline-weight`, `-b`: Set the default weight for checks that do not
@@ -192,9 +197,6 @@ variable. For example, in GitHub Actions:
 ```bash
 # Write Markdown to the job summary
 gatorgrade --report ENV MD GITHUB_STEP_SUMMARY
-
-# Write JSON to an environment variable file
-gatorgrade --report ENV JSON GITHUB_ENV
 ```
 
 You can also use any custom environment variable:
@@ -204,9 +206,24 @@ export MY_REPORT="/tmp/report.json"
 gatorgrade --report ENV JSON MY_REPORT
 ```
 
-When the destination is `ENV` and the `GITHUB_ENV` variable is set, the full
-JSON report is also appended as `JSON_REPORT=<json>` to that file. This makes
-the report available to downstream steps in GitHub Actions.
+### GitHub Actions Environment Variable (`--github-env`)
+
+When running in GitHub Actions, the `--github-env` flag writes report data
+to the `GITHUB_ENV` file, making it available to downstream workflow steps
+as an environment variable. This flag is independent of `--report`.
+
+```bash
+# Append JSON_REPORT=<json> to the GITHUB_ENV file
+gatorgrade --github-env json JSON_REPORT
+
+# Append MD_REPORT=<markdown> to the GITHUB_ENV file
+gatorgrade --github-env md MD_REPORT
+```
+
+The first argument is the format (`JSON` or `MD`). The second argument is the
+name of the environment variable to set. If the `GITHUB_ENV` environment
+variable is not set (i.e., not running in GitHub Actions), the flag is
+silently ignored.
 
 For more information about how these environment variables work in GitHub
 Actions, see the documentation for
@@ -300,4 +317,4 @@ For information about mutation testing with GatorGrade, see
 If you would like to contribute to GatorGrade, please refer to the
 [GatorGrade Wiki] for contributing guidelines.
 
-[GatorGrade Wiki]: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines
+[gatorgrade wiki]: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines
