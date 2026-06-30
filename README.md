@@ -8,6 +8,18 @@ computes weighted scores, and can generate reports in JSON or Markdown format.
 This tool is the Python-based successor to
 [GatorGradle](https://github.com/GatorEducator/gatorgradle).
 
+## Quick Start
+
+Navigate to a directory containing a `gatorgrade.yml` file and run:
+
+```bash
+uvx gatorgrade
+```
+
+GatorGrade runs all checks and displays a summary. See
+[Command-Line Options](#command-line-options) and [Reports](#reports) for
+detailed usage.
+
 ## Installation
 
 GatorGrade requires Python 3.10 or later.
