@@ -559,7 +559,7 @@ def write_json_or_md_file(
     file_name: Union[str, Path], content_type: str, content: Any
 ) -> bool:
     """Write a Markdown or JSON file."""
-    # try to store content in a file with user chosen format
+    # try to store content in a file with the user's chosen format
     # normalize content_type to uppercase for case-insensitive matching
     normalized_type = content_type.upper()
     try:
