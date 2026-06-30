@@ -793,6 +793,30 @@ def test_run_checks_with_report_file_json(
     assert data["percentage_score"] == expected_percentage
 
 
+def test_run_checks_with_github_env(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks writes to GITHUB_ENV when github_env is provided."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    report = ("FILE", "JSON", str(tmp_path / "unused.json"))
+    github_env = ("JSON", "JSON_REPORT")
+    output.run_checks(checks, report, github_env=github_env)
+    capsys.readouterr()
+    env_content = tmp_env_file.read_text()
+    assert "JSON_REPORT=" in env_content
+
+
 def test_run_gg_check_extracts_correct_file_path() -> None:
     """Test that _run_gg_check correctly extracts file path from GatorGrader arguments."""
     check = GatorGraderCheck(
