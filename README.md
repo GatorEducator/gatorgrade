@@ -1,3 +1,10 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/logo/GatorGrade.svg">
+    <img alt="GatorGrade logo" src=".github/logo/GatorGrade.svg" width="120">
+  </picture>
+</div>
+
 # GatorGrade
 
 GatorGrade is a Python tool that automates the assessment of student
