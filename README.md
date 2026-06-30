@@ -1,8 +1,5 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/logo/GatorGrade.png">
-    <img alt="GatorGrade logo" src=".github/logo/GatorGrade.png" width="90%">
-  </picture>
+  <img alt="GatorGrade logo" src=".github/logo/GatorGrade.png" width="90%">
 </div>
 
 # GatorGrade
