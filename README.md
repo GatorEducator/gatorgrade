@@ -22,7 +22,7 @@ detailed usage.
 
 ## Installation
 
-GatorGrade requires Python 3.10 or later.
+GatorGrade requires Python 3.11 or later.
 
 ### Using uvx
 
