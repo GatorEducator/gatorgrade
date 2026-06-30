@@ -216,6 +216,26 @@ def test_gatorgrade_with_report_invalid_file_path(
     assert result.exit_code != 0
 
 
+def test_gatorgrade_with_github_env_invalid_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env format is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_valid_json(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that valid github-env format passes validation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
 def test_gatorgrade_with_progress_bar_default(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
