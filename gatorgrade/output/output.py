@@ -511,24 +511,29 @@ def configure_report(
 def write_github_env(
     github_env: Tuple[str | None, str | None],
     report_output_data_json: dict,
-) -> None:
+) -> bool:
     """Write report data to the GITHUB_ENV environment file.
 
     When the GITHUB_ENV environment variable is set, this function
     appends the report data as an environment variable assignment to
-    that file. Single-line content (compact JSON) uses the simple
-    KEY=VALUE format, while multi-line content (Markdown) uses the
-    KEY<<delimiter heredoc syntax understood by GitHub Actions.
+    that file and returns True. Single-line content (i.e., compact JSON)
+    uses the simple KEY=VALUE format, while multi-line content
+    (i.e., Markdown) uses the KEY<<delimiter heredoc syntax
+    understood by GitHub Actions.
 
     Args:
         github_env: Tuple of (format, environment variable name).
             Format is "JSON" or "MD" (case-insensitive).
         report_output_data_json: The full JSON report data.
 
+    Returns:
+        True if data was written to GITHUB_ENV, False if skipped
+        because GITHUB_ENV was not set.
+
     """
     github_env_path = os.getenv(GITHUB_ENV_VAR)
     if github_env_path is None:
-        return
+        return False
     # both values are guaranteed non-None by the caller
     fmt: str = github_env[0] if github_env[0] is not None else ""
     fmt = fmt.upper()
@@ -547,6 +552,7 @@ def write_github_env(
     else:
         with open(github_env_path, "a", encoding=FILE_ENCODING) as f:
             f.write(f"{key}={content}\n")
+    return True
 
 
 def write_json_or_md_file(
@@ -724,14 +730,26 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             cli_args,
             version_info,
         )
+    # track report format for summary display
+    report_type_str = None
     if all(report):
         configure_report(report, report_output_data)
+        report_type_str = report[1].upper()
         if report[0].upper() == REPORT_FORMAT_FILE:
             report_display_name = _elide_report_path(report[2])
         else:
             report_display_name = report[2]
+    # track github-env details for summary display
+    github_env_written = False
+    github_env_type_str = None
+    github_env_key = None
     if all(github_env):
-        write_github_env(github_env, report_output_data)
+        # both values are guaranteed non-None by the all() check
+        assert github_env[0] is not None
+        assert github_env[1] is not None
+        github_env_written = write_github_env(github_env, report_output_data)
+        github_env_type_str = github_env[0].upper()
+        github_env_key = github_env[1]
     # compute the summary color based on pass/fail status
     summary_color = "green" if passed_count == len(results) else "bright_red"
     # print failures list if there are failures to print
@@ -774,8 +792,16 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
-        if report_display_name is not None:
-            rich.print(f"[bold]- {REPORT_LABEL}:[/] {report_display_name}")
+        if report_display_name is not None and report_type_str is not None:
+            rich.print(
+                f"[bold]- {REPORT_LABEL}:[/] "
+                f"{report_display_name} ({report_type_str})"
+            )
+        if github_env_written:
+            rich.print(
+                f"[bold]- {GITHUB_ENV_LABEL}:[/] "
+                f"{github_env_key} ({github_env_type_str})"
+            )
         rich.print(EMPTY)
         rich.print(Rule(style="bright_red"))
     # all of the checks passed and thus the color highlights
@@ -792,8 +818,16 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
-        if report_display_name is not None:
-            rich.print(f"[bold]- {REPORT_LABEL}:[/] {report_display_name}")
+        if report_display_name is not None and report_type_str is not None:
+            rich.print(
+                f"[bold]- {REPORT_LABEL}:[/] "
+                f"{report_display_name} in {report_type_str} format"
+            )
+        if github_env_written:
+            rich.print(
+                f"[bold]- {GITHUB_ENV_LABEL}:[/] "
+                f"{github_env_key} in {github_env_type_str} format"
+            )
         # close the running checks section with an outcome-colored rule
         rich.print()
         rich.print(Rule(style=summary_color))
