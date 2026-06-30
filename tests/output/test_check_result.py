@@ -27,7 +27,7 @@ def test_check_result_str_method_with_diagnostic() -> None:
         json_info={"check": "test"},
         diagnostic="This is a diagnostic message",
     )
-    result_str = check_result.__str__(show_diagnostic=True)
+    result_str = check_result.display_result(show_diagnostic=True)
     assert "✕" in result_str
     assert "Test failed" in result_str
     assert "This is a diagnostic message" in result_str
