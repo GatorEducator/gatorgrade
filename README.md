@@ -341,10 +341,3 @@ uv run task all
 
 For information about mutation testing with GatorGrade, see
 [MUTATION.md](scripts/MUTATION.md).
-
-## Contributing
-
-If you would like to contribute to GatorGrade, please refer to the
-[GatorGrade Wiki] for contributing guidelines.
-
-[gatorgrade wiki]: https://github.com/GatorEducator/gatorgrade/wiki/Contributing-Guidelines
