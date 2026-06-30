@@ -479,41 +479,39 @@ def test_configure_report_env_github_step_summary_json(
     assert tmp_file.exists()
 
 
-def test_configure_report_env_github_env(
+def test_write_github_env_writes_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test configure_report with GITHUB_ENV environment variable."""
+    """Test write_github_env writes JSON content to GITHUB_ENV."""
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
-    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
     report_data = {
         "amount_correct": 1,
         "percentage_score": 100,
         "checks": [{"status": True, "description": "Test passed"}],
     }
-    output.configure_report(report_params, report_data)
+    github_env = ("JSON", "JSON_REPORT")
+    output.write_github_env(github_env, report_data)
     env_content = tmp_env_file.read_text()
-    assert "JSON_REPORT=" in env_content
+    assert env_content.startswith("JSON_REPORT=")
 
 
-def test_configure_report_env_github_env_writes_valid_json(
+def test_write_github_env_writes_valid_json(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test that GITHUB_ENV receives valid JSON after the JSON_REPORT key."""
+    """Test write_github_env writes valid JSON with correct data."""
     expected_percentage = 100
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
-    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
     report_data = {
         "amount_correct": 1,
         "percentage_score": expected_percentage,
         "checks": [{"status": True, "description": "Test passed"}],
     }
-    output.configure_report(report_params, report_data)
+    github_env = ("JSON", "JSON_REPORT")
+    output.write_github_env(github_env, report_data)
     env_content = tmp_env_file.read_text()
     json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
     parsed = json.loads(json_value)
@@ -523,24 +521,23 @@ def test_configure_report_env_github_env_writes_valid_json(
     assert parsed["checks"][0]["status"] is True
 
 
-def test_configure_report_env_github_env_appends_not_overwrites(
+def test_write_github_env_appends_not_overwrites(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test that GITHUB_ENV file content is preserved when appending."""
+    """Test write_github_env appends without overwriting existing content."""
     tmp_env_file = tmp_path / "github_env"
-    existing_content = "EXISTING_VAR=existing_value\n"
-    tmp_env_file.write_text(existing_content)
+    pre_existing = "EXISTING_VAR=existing_value\n"
+    tmp_env_file.write_text(pre_existing)
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
-    report_params = ("env", "md", "GITHUB_STEP_SUMMARY")
     report_data = {
         "amount_correct": 1,
         "percentage_score": 100,
         "checks": [{"status": True, "description": "Test passed"}],
     }
-    output.configure_report(report_params, report_data)
+    github_env = ("JSON", "JSON_REPORT")
+    output.write_github_env(github_env, report_data)
     env_content = tmp_env_file.read_text()
-    assert env_content.startswith(existing_content)
+    assert env_content.startswith(pre_existing)
     assert "JSON_REPORT=" in env_content
 
 
@@ -652,10 +649,8 @@ def test_configure_report_env_json_type(
     """Test configure_report with env format and json type."""
     expected_amount = 2
     expected_percentage = 100
-    tmp_env_file = tmp_path / "github_env"
-    tmp_env_file.write_text("")
-    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary.md"))
+    tmp_file = tmp_path / "summary.json"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_file))
     report_params = ("env", "json", "GITHUB_STEP_SUMMARY")
     report_data = {
         "amount_correct": expected_amount,
@@ -666,11 +661,7 @@ def test_configure_report_env_json_type(
         ],
     }
     output.configure_report(report_params, report_data)
-    env_content = tmp_env_file.read_text()
-    assert "JSON_REPORT=" in env_content
-    json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
-    parsed = json.loads(json_value)
-    assert parsed["amount_correct"] == expected_amount
+    assert tmp_file.exists()
 
 
 def test_write_json_or_md_file_creates_md_file(tmp_path: Path) -> None:
@@ -1082,10 +1073,9 @@ def test_create_markdown_report_no_version_info_omits_section() -> None:
 def test_configure_report_env_not_github_step_summary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test that GITHUB_ENV is written when report_name is not GITHUB_STEP_SUMMARY."""
-    tmp_env_file = tmp_path / "github_env"
-    tmp_env_file.write_text("")
-    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    """Test configure_report with ENV JSON when report_name is not GITHUB_STEP_SUMMARY."""
+    tmp_file = tmp_path / "custom.json"
+    monkeypatch.setenv("OTHER_VAR", str(tmp_file))
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     report_params = ("env", "json", "OTHER_VAR")
     report_data = {
@@ -1094,11 +1084,7 @@ def test_configure_report_env_not_github_step_summary(
         "checks": [{"status": True, "description": "Test passed"}],
     }
     output.configure_report(report_params, report_data)
-    env_content = tmp_env_file.read_text()
-    assert "JSON_REPORT=" in env_content
-    json_value = env_content.split("JSON_REPORT=", 1)[1].strip()
-    parsed = json.loads(json_value)
-    assert parsed["amount_correct"] == 1
+    assert tmp_file.exists()
 
 
 def test_configure_report_env_custom_var_json(
@@ -1196,37 +1182,45 @@ def test_configure_report_env_github_env_as_dest_skips_raw_write(
         "checks": [{"status": True, "description": "Test passed"}],
     }
     output.configure_report(report_params, report_data)
-    env_content = tmp_env_file.read_text()
     # the raw JSON should NOT be written to the GITHUB_ENV file
-    # only the JSON_REPORT key should be appended
-    assert env_content.startswith("EXISTING=1\n")
-    assert "JSON_REPORT=" in env_content
-    # count the number of lines to verify there is no extra raw JSON
-    lines = env_content.strip().splitlines()
-    assert len(lines) == 2  # noqa: PLR2004
+    env_content = tmp_env_file.read_text()
+    assert env_content == "EXISTING=1\n", (
+        "Raw JSON should not be written when report_name is GITHUB_ENV"
+    )
 
 
-def test_configure_report_file_github_env_always_written(
+def test_write_github_env_with_markdown(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test that GITHUB_ENV is always written, even with FILE format."""
+    """Test write_github_env writes Markdown content to GITHUB_ENV."""
     tmp_env_file = tmp_path / "github_env"
     tmp_env_file.write_text("")
     monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
-    # use FILE report format as the contents should always be saved
-    # to this environment variable as long as it is set; this is
-    # simulating a case where the tool is run in GitHub Actions
-    report_params = ("FILE", "JSON", str(tmp_path / "report.json"))
     report_data = {
         "amount_correct": 1,
         "percentage_score": 100,
         "checks": [{"status": True, "description": "Test passed"}],
     }
-    output.configure_report(report_params, report_data)
+    github_env = ("MD", "MD_REPORT")
+    output.write_github_env(github_env, report_data)
     env_content = tmp_env_file.read_text()
-    assert "JSON_REPORT=" in env_content, (
-        "GITHUB_ENV should be written for FILE format too"
-    )
+    assert env_content.startswith("MD_REPORT")
+    assert "Test passed" in env_content
+
+
+def test_write_github_env_skips_when_not_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test write_github_env is a no-op when GITHUB_ENV is not set."""
+    monkeypatch.delenv("GITHUB_ENV", raising=False)
+    report_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test passed"}],
+    }
+    github_env = ("JSON", "JSON_REPORT")
+    # should not raise any exception
+    output.write_github_env(github_env, report_data)
 
 
 def test_configure_report_file_json_uppercase() -> None:
@@ -1452,9 +1446,8 @@ def test_run_checks_env_json_uppercase_other_var(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test run_checks with uppercase ENV JSON and a non-GITHUB_STEP_SUMMARY variable."""
-    tmp_env_file = tmp_path / "github_env"
-    tmp_env_file.write_text("")
-    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    tmp_file = tmp_path / "summary.json"
+    monkeypatch.setenv("MY_CUSTOM_VAR", str(tmp_file))
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(
@@ -1466,8 +1459,7 @@ def test_run_checks_env_json_uppercase_other_var(
     report = ("ENV", "JSON", "MY_CUSTOM_VAR")
     output.run_checks(checks, report)
     capsys.readouterr()
-    env_content = tmp_env_file.read_text()
-    assert "JSON_REPORT=" in env_content
+    assert tmp_file.exists()
 
 
 def test_run_checks_env_md_uppercase_other_var(
