@@ -12,6 +12,7 @@
         "typecheck",
         "mypy",
         "pyrefly",
+        "srcset",
         "symbex",
         "Docstrings",
         "docstrings",
