@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/logo/GatorGrade.svg">
-    <img alt="GatorGrade logo" src=".github/logo/GatorGrade.svg" width="60%">
+    <source media="(prefers-color-scheme: dark)" srcset=".github/logo/GatorGrade.png">
+    <img alt="GatorGrade logo" src=".github/logo/GatorGrade.png" width="90%">
   </picture>
 </div>
 
