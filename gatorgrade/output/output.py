@@ -108,6 +108,12 @@ MD_DIAG_OPEN = "````text"
 MD_DIAG_CLOSE = "````"
 MD_CLI_ARGS_HEADING = "Command-Line Arguments"
 MD_VERSION_INFO_HEADING = "Version Information"
+MD_PROJECT_NAME_LABEL = "**Project Name:**"
+MD_AMOUNT_CORRECT_LABEL = "**Amount Correct:**"
+MD_POINTS_LABEL = "**Points:**"
+MD_REPORT_TIME_LABEL = "**Report Time:**"
+MD_OPTIONS_LABEL = "**options:**"
+MD_DIAGNOSTIC_LABEL = "**diagnostic:**"
 
 # error message strings
 FILE_WRITE_ERR = (
@@ -351,7 +357,7 @@ def create_markdown_report_file(  # noqa: PLR0912
         project_name: optional custom project name from the config file
 
     """
-    markdown_contents = ""
+    markdown_contents = EMPTY
     display_project_name = project_name or Path.cwd().name
     passing_checks: list[dict] = []
     failing_checks: list[dict] = []
@@ -362,16 +368,16 @@ def create_markdown_report_file(  # noqa: PLR0912
     weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
         f"{MD_HEADER}"
-        f"- **Project Name:** {display_project_name}{NEWLINE}"
-        f"- **Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
+        f"- {MD_PROJECT_NAME_LABEL} {display_project_name}{NEWLINE}"
+        f"- {MD_AMOUNT_CORRECT_LABEL} {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
         f"({json.get(PERCENTAGE_SCORE_KEY)}%){NEWLINE}"
-        f"- **Points:** {weighted_amount}/{weighted_total} "
+        f"- {MD_POINTS_LABEL} {weighted_amount}/{weighted_total} "
         f"({weighted_score}%){NEWLINE}"
     )
     # report time
     if REPORT_TIME_KEY in json:
         markdown_contents += (
-            f"- **Report Time:** {json[REPORT_TIME_KEY]}{NEWLINE}"
+            f"- {MD_REPORT_TIME_LABEL} {json[REPORT_TIME_KEY]}{NEWLINE}"
         )
     # fenced code block for cli arguments
     cli_args = json.get(CLI_ARGS_KEY, {})
@@ -416,7 +422,9 @@ def create_markdown_report_file(  # noqa: PLR0912
             if key in (STATUS_KEY, DESCRIPTION_KEY, CHECK_KEY):
                 continue
             if key == OPTIONS_KEY and value:
-                markdown_contents += f"{NEWLINE}{MD_LIST_INDENT}- **options:**"
+                markdown_contents += (
+                    f"{NEWLINE}{MD_LIST_INDENT}- {MD_OPTIONS_LABEL}"
+                )
                 for opt_key, opt_val in value.items():
                     markdown_contents += (
                         f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
@@ -424,7 +432,7 @@ def create_markdown_report_file(  # noqa: PLR0912
                     )
             elif key == DIAGNOSTIC_KEY:
                 markdown_contents += (
-                    f"{NEWLINE}{MD_LIST_INDENT}- **diagnostic:**"
+                    f"{NEWLINE}{MD_LIST_INDENT}- {MD_DIAGNOSTIC_LABEL}"
                     f"{NEWLINE}{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
                     f"{MD_DIAG_OPEN}{NEWLINE}"
                 )
@@ -555,9 +563,9 @@ def write_github_env(
     if github_env_path is None:
         return False
     # both values are guaranteed non-None by the caller
-    fmt: str = github_env[0] if github_env[0] is not None else ""
+    fmt: str = github_env[0] if github_env[0] is not None else EMPTY
     fmt = fmt.upper()
-    key: str = github_env[1] if github_env[1] is not None else ""
+    key: str = github_env[1] if github_env[1] is not None else EMPTY
     if fmt == REPORT_TYPE_MD:
         content = create_markdown_report_file(
             report_output_data_json, project_name
