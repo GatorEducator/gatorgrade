@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.in_file_path import reformat_yaml_data
-from gatorgrade.input.parse_config import parse_config
+from gatorgrade.input.parse_config import get_project_name, parse_config
 
 
 def test_parse_config_returns_error_for_invalid_yaml(tmp_path: Path) -> None:
@@ -226,3 +226,41 @@ def test_reformat_yaml_data_with_empty_list() -> None:
     """Test reformat_yaml_data raises IndexError with an empty list."""
     with pytest.raises(IndexError):
         reformat_yaml_data([])
+
+
+def test_get_project_name_returns_name_when_specified(tmp_path: Path) -> None:
+    """Test get_project_name returns the name from the config front matter."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'name: "Custom Project Name"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_project_name(config_file)
+    assert result == "Custom Project Name"
+
+
+def test_get_project_name_returns_none_when_missing(tmp_path: Path) -> None:
+    """Test get_project_name returns None when no name field."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_project_name(config_file)
+    assert result is None
+
+
+def test_get_project_name_returns_none_when_file_missing(
+    tmp_path: Path,
+) -> None:
+    """Test get_project_name returns None when the file does not exist."""
+    missing_file = tmp_path / "nonexistent.yml"
+    result = get_project_name(missing_file)
+    assert result is None
