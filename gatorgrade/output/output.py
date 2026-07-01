@@ -660,7 +660,7 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
     if minutes > 0 and days == 0:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
     if not parts:
-        parts.append("less than 1 minute")
+        parts.append("Less than 1 minute")
     time_str = ", ".join(parts)
     return f"{OVERDUE_LABEL} by {time_str}", "red"
 
