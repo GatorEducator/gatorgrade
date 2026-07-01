@@ -611,6 +611,60 @@ def write_json_or_md_file(
         raise ValueError(FILE_WRITE_ERR) from e
 
 
+def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
+    """Format the time remaining until (or past) a due date.
+
+    Args:
+        due_date: The due date and time.
+
+    Returns:
+        A tuple of (formatted_string, color_name). The color is "green"
+        when there is plenty of time, "yellow" when less than 24 hours
+        remain, and "red" when the due date has passed.
+
+    """
+    now = datetime.datetime.now()
+    days = (due_date - now).days
+    seconds = int((due_date - now).total_seconds())
+    if seconds >= 0:
+        remaining = datetime.timedelta(seconds=seconds)
+        days = remaining.days
+        hours = remaining.seconds // 3600
+        minutes = (remaining.seconds % 3600) // 60
+        parts = []
+        if days > 0:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+        if hours > 0:
+            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+        if minutes > 0 and days == 0:
+            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+        if not parts:
+            parts.append("Less than 1 minute")
+        time_str = ", ".join(parts)
+        if days > 0:
+            color = "green"
+        elif hours > 0:
+            color = "yellow"
+        else:
+            color = "bright_yellow"
+        return f"{time_str} remaining", color
+    overdue = datetime.timedelta(seconds=-seconds)
+    days = overdue.days
+    hours = overdue.seconds // 3600
+    minutes = (overdue.seconds % 3600) // 60
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes > 0 and days == 0:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if not parts:
+        parts.append("less than 1 minute")
+    time_str = ", ".join(parts)
+    return f"{OVERDUE_LABEL} by {time_str}", "red"
+
+
 def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
@@ -621,6 +675,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     version_info: dict | None = None,
     github_env: Tuple[str | None, str | None] = (None, None),
     project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -640,6 +695,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             to the GITHUB_ENV file in GitHub Actions.
         project_name: Optional custom project name from the config file.
             If not provided, the current directory name is used.
+        due_date: Optional due date from the config file for deadline display.
 
     """
     results: List[CheckResult] = []
@@ -828,6 +884,13 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                     )
         rich.print("")
         rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        if due_date is not None:
+            due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+            time_str, time_color = _format_remaining_time(due_date)
+            rich.print(
+                f"[bold]- {DUE_DATE_LABEL}:[/] "
+                f"{due_date_str} [{time_color}]({time_str})[/]"
+            )
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
@@ -854,6 +917,13 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     else:
         rich.print("")
         rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        if due_date is not None:
+            due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+            time_str, time_color = _format_remaining_time(due_date)
+            rich.print(
+                f"[bold]- {DUE_DATE_LABEL}:[/] "
+                f"{due_date_str} ([{time_color}]{time_str}[/])"
+            )
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
