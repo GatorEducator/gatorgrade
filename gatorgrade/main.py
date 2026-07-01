@@ -14,7 +14,7 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
-from gatorgrade.input.parse_config import parse_config
+from gatorgrade.input.parse_config import get_project_name, parse_config
 from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
@@ -356,6 +356,8 @@ def gatorgrade(  # noqa: PLR0913
     if ctx.invoked_subcommand is None:
         # parse the provided configuration file
         checks, parse_error = parse_config(filename, baseline_weight)
+        # extract the optional project name from the config file
+        project_name = get_project_name(filename)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -405,6 +407,7 @@ def gatorgrade(  # noqa: PLR0913
                 cli_args,
                 version_info,
                 github_env,
+                project_name,
             )
         # no checks were created and this means
         # that, most likely, the file was not
