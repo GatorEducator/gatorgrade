@@ -119,7 +119,7 @@ EMPTY_CLI_ARGS: dict = {}
 
 
 def _elide_report_path(path_str: str) -> str:
-    """Elide the middle of a long path, keeping the start and filename."""
+    """Elide the middle of a long file/directory path, keeping the start and filename."""
     if len(path_str) <= MAX_REPORT_PATH_LENGTH:
         return path_str
     path = Path(path_str)
