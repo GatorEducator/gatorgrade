@@ -55,7 +55,8 @@ def add_checks_to_list(
     reformatted_data: List[CheckData],
 ) -> None:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
-    current_path = path  # saves the current path to keep track of the location
+    # saves the current path to keep track of the location
+    current_path = path
     for ddict in data_list:
         for item in ddict:
             if isinstance(
@@ -65,11 +66,11 @@ def add_checks_to_list(
                     path = item
                 else:
                     path = f"{path}/{item}"
-                add_checks_to_list(
-                    path, ddict[item], reformatted_data
-                )  # runs this same function on the list inside of a dictionary
+                # runs this same function on the list inside of a dictionary
+                add_checks_to_list(path, ddict[item], reformatted_data)
                 path = current_path
-            else:  # adds the current check to the reformatted data list
+            # adds the current check to the reformatted data list
+            else:
                 reformatted_data.append(
                     CheckData(file_context=path, check=ddict)
                 )
