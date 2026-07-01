@@ -14,7 +14,7 @@ from gatorgrade.input.in_file_path import (
     reformat_yaml_data,
 )
 
-# IMPORTANT: note that the ordering of the front-matter field
+# importantly, note that the ordering of the front-matter field
 # names inside of the DUE_DATE_ALIASES tuple is important because
 # the first alias to match is the one that will be extracted;
 # using the due_date alias first means that it will be the
