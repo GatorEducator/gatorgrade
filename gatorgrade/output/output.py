@@ -412,7 +412,7 @@ def create_markdown_report_file(  # noqa: PLR0912
     markdown_contents += MD_FAILING_HEADER
     # for each failing check, print out all related information
     for check in failing_checks:
-        # for each key val pair in the check dictionary
+        # for each key-value pair in the check dictionary
         if DESCRIPTION_KEY in check:
             markdown_contents += MD_FAILING_ITEM.format(check[DESCRIPTION_KEY])
         else:
