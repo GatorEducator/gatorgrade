@@ -171,6 +171,7 @@ def _run_shell_check(
         The result of running the shell check as a CheckResult.
 
     """
+    # run the shell command and capture its output and return code
     result = subprocess.run(
         check.command,
         shell=True,
@@ -184,14 +185,19 @@ def _run_shell_check(
     passed = result.returncode == 0
     # add spaces after each newline to indent all lines of diagnostic
     raw_diagnostic = (
-        ""
+        EMPTY
         if passed
-        else result.stdout.decode().strip().replace("\n", DIAGNOSTIC_INDENT)
+        else result.stdout.decode().strip().replace(NEWLINE, DIAGNOSTIC_INDENT)
     )
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
     )
+    # truncate the diagnostic message if it is too long (note that this
+    # limit can be specified on a per-check basis or, alternatively, it
+    # can be provided by the person running gatorgrade on the command-line)
     diagnostic = _truncate_diagnostic(raw_diagnostic, limit)
+    # create and return the CheckResult arising from the
+    # execution of the shell check
     return CheckResult(
         passed=passed,
         description=check.description,
