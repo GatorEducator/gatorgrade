@@ -198,7 +198,7 @@ def test_check_result_print_does_not_crash(
     st.builds(
         CheckResult,
         passed=st.just(True),
-        description=st.text(max_size=100),
+        description=st.text(max_size=100).filter(lambda s: "\u2715" not in s),
         json_info=st.one_of(
             st.none(), st.text(max_size=100), st.just({"check": "test"})
         ),
