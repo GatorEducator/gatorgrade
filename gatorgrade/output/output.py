@@ -620,9 +620,13 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
     Returns:
         A tuple of (formatted_string, color_name). The color is "green"
         when there is plenty of time, "yellow" when less than 24 hours
-        remain, and "red" when the due date has passed.
+        remain, and "red" when the due date has passed. Importantly, all
+        of these colors are specified using rich and only defined in the
+        terminal window of the person who ran the gatorgrade tool.
 
     """
+    # determine the current time and then produce a diagnostic based
+    # on the connection between the due date and the current time
     now = datetime.datetime.now()
     days = (due_date - now).days
     seconds = int((due_date - now).total_seconds())
