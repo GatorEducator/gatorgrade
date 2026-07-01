@@ -4,6 +4,15 @@ from typing import Any, Dict, Optional, Union
 
 import rich
 
+NEWLINE = "\n"
+EMPTY = ""
+CHECK_MARK = "\u2713"
+CROSS_MARK = "\u2715"
+PASS_COLOR = "green"
+FAIL_COLOR = "red"
+DIAGNOSTIC_LABEL = "Diagnostic"
+HINT_LABEL = "Hint"
+
 
 class CheckResult:  # pylint: disable=too-few-public-methods
     """Represent the result of running a check."""
@@ -41,7 +50,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.json_info = json_info
         self.diagnostic = diagnostic
         self.path = path
-        self.run_command = ""
+        self.run_command = EMPTY
         self.weight = weight
         self.outputlimit = outputlimit
         self.hint = hint
@@ -57,21 +66,19 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 the check has failed. Defaults to false.
 
         """
-        icon = "✓" if self.passed else "✕"
-        icon_color = "green" if self.passed else "red"
+        icon = CHECK_MARK if self.passed else CROSS_MARK
+        icon_color = PASS_COLOR if self.passed else FAIL_COLOR
         message = f"[{icon_color}]{icon}[/]  {self.description}"
         if not self.passed and show_diagnostic:
-            if "\n" in self.diagnostic:
+            if NEWLINE in self.diagnostic:
                 message += (
-                    f"\n[blue]   → Diagnostic:[/]\n"
+                    f"\n[blue]   → {DIAGNOSTIC_LABEL}:[/]\n"
                     f"     [yellow]{self.diagnostic}[/]"
                 )
             else:
-                message += (
-                    f"\n[blue]   → Diagnostic:[yellow] {self.diagnostic}[/]"
-                )
+                message += f"\n[blue]   → {DIAGNOSTIC_LABEL}:[yellow] {self.diagnostic}[/]"
             if self.hint:
-                message += f"\n[blue]   → Hint:[green] {self.hint}[/]"
+                message += f"\n[blue]   → {HINT_LABEL}:[green] {self.hint}[/]"
         return message
 
     def __repr__(self) -> str:
