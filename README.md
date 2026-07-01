@@ -173,6 +173,26 @@ setup: |
 The `setup` section runs shell commands before the checks. If a setup command
 fails, GatorGrade exits immediately.
 
+### Due Date
+
+An optional due date field in the front matter shows a countdown in the
+summary output. The field can be named `due_date` (recommended),
+`duedate`, `due`, or `date`. The format is `YYYY-MM-DD` (midnight) or
+`YYYY-MM-DDTHH:MM:SS` (ISO 8601). If more than one of the approved names
+for the due date field is found, the deadline associated with the attribute
+`due_date` is used and `gatorgrade` outputs a warning message.
+
+```yaml
+due_date: "2026-12-15T23:59:00"
+setup: |
+  uv sync --dev --no-install-project
+---
+```
+
+Using the colors defined by the terminal window, when the due date is
+approaching (i.e., within 24 hours) the countdown is shown in yellow.
+Otherwise, when the assignment is overdue, it is shown in red.
+
 ### File Context Checks
 
 Checks nested under a file path run in that file's context. The path is
