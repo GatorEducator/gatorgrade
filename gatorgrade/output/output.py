@@ -332,14 +332,19 @@ def create_report_json(  # noqa: PLR0913
     return overall_dict
 
 
-def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
+def create_markdown_report_file(  # noqa: PLR0912
+    json: dict,
+    project_name: str | None = None,
+) -> str:
     """Create a markdown file using the created json to use in GitHub actions summary, among other places.
 
     Args:
         json: a dictionary containing the json that should be converted to markdown
+        project_name: optional custom project name from the config file
 
     """
     markdown_contents = ""
+    display_project_name = project_name or Path.cwd().name
     passing_checks: list[dict] = []
     failing_checks: list[dict] = []
     num_checks = len(json.get(CHECKS_KEY))  # type: ignore
@@ -349,7 +354,7 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
         f"{MD_HEADER}"
-        f"- **Project Name:** {Path.cwd().name}{NEWLINE}"
+        f"- **Project Name:** {display_project_name}{NEWLINE}"
         f"- **Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
         f"({json.get(PERCENTAGE_SCORE_KEY)}%){NEWLINE}"
         f"- **Points:** {weighted_amount}/{weighted_total} "
@@ -432,7 +437,9 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
 
 
 def configure_report(
-    report_params: Tuple[str, str, str], report_output_data_json: dict
+    report_params: Tuple[str, str, str],
+    report_output_data_json: dict,
+    project_name: str | None = None,
 ) -> None:
     """Write the report based on the user's destination and format.
 
@@ -457,6 +464,7 @@ def configure_report(
             report_params[2]: name of the file or environment variable
         report_output_data_json: The JSON dictionary that will be used
             or converted to markdown.
+        project_name: Optional custom project name from the config file.
 
     """
     # normalize to uppercase for case-insensitive matching
@@ -475,7 +483,7 @@ def configure_report(
     # if the user wants markdown, get markdown content based on json
     if report_type == REPORT_TYPE_MD:
         report_output_data_md = create_markdown_report_file(
-            report_output_data_json
+            report_output_data_json, project_name
         )
     # if the user wants the data stored in a file
     if report_format == REPORT_FORMAT_FILE:
@@ -511,6 +519,7 @@ def configure_report(
 def write_github_env(
     github_env: Tuple[str | None, str | None],
     report_output_data_json: dict,
+    project_name: str | None = None,
 ) -> bool:
     """Write report data to the GITHUB_ENV environment file.
 
@@ -526,6 +535,9 @@ def write_github_env(
             Format is "JSON" or "MD" (case-insensitive).
         report_output_data_json: The full JSON report data.
 
+    Args:
+        project_name: Optional custom project name from the config file.
+
     Returns:
         True if data was written to GITHUB_ENV, False if skipped
         because GITHUB_ENV was not set.
@@ -539,7 +551,9 @@ def write_github_env(
     fmt = fmt.upper()
     key: str = github_env[1] if github_env[1] is not None else ""
     if fmt == REPORT_TYPE_MD:
-        content = create_markdown_report_file(report_output_data_json)
+        content = create_markdown_report_file(
+            report_output_data_json, project_name
+        )
     else:
         content = json_module.dumps(report_output_data_json)
     # use multiline delimiter syntax for content with newlines,
@@ -588,6 +602,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     cli_args: dict | None = None,
     version_info: dict | None = None,
     github_env: Tuple[str | None, str | None] = (None, None),
+    project_name: str | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -605,9 +620,13 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         version_info: Version and platform information to include in the report.
         github_env: Optional tuple of (format, key) for writing report data
             to the GITHUB_ENV file in GitHub Actions.
+        project_name: Optional custom project name from the config file.
+            If not provided, the current directory name is used.
 
     """
     results: List[CheckResult] = []
+    # use the configured project name, falling back to directory name
+    display_project_name = project_name or Path.cwd().name
     # run each of the checks
     # check how many tests are being ran
     total_checks = len(checks)
@@ -738,7 +757,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # track report format for summary display
     report_type_str = None
     if all(report):
-        configure_report(report, report_output_data)
+        configure_report(report, report_output_data, display_project_name)
         report_type_str = report[1].upper()
         if report[0].upper() == REPORT_FORMAT_FILE:
             report_display_name = _elide_report_path(report[2])
@@ -752,7 +771,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         # both values are guaranteed non-None by the all() check
         assert github_env[0] is not None
         assert github_env[1] is not None
-        github_env_written = write_github_env(github_env, report_output_data)
+        github_env_written = write_github_env(
+            github_env, report_output_data, display_project_name
+        )
         github_env_type_str = github_env[0].upper()
         github_env_key = github_env[1]
     # compute the summary color based on pass/fail status
@@ -788,7 +809,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                         f"[blue]   → {RUN_COMMAND_LABEL}: [green]{result.run_command}"
                     )
         rich.print("")
-        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
@@ -814,7 +835,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # scores are displayed as in the failure case
     else:
         rich.print("")
-        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
