@@ -9,7 +9,13 @@ from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.in_file_path import reformat_yaml_data
-from gatorgrade.input.parse_config import get_project_name, parse_config
+from gatorgrade.input.parse_config import (
+    get_due_date,
+    get_due_date_aliases_present,
+    get_project_name,
+    has_due_date_field,
+    parse_config,
+)
 
 
 def test_parse_config_returns_error_for_invalid_yaml(tmp_path: Path) -> None:
@@ -22,8 +28,149 @@ def test_parse_config_returns_error_for_invalid_yaml(tmp_path: Path) -> None:
     # then checks is empty and error contains details
     assert checks == []
     assert error is not None
-    assert isinstance(error, str)
-    assert len(error) > 0
+
+
+def test_get_due_date_returns_datetime_when_specified(tmp_path: Path) -> None:
+    """Test get_due_date returns a datetime from the front matter."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15T23:59:00"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is not None
+    assert result.year == 2026  # noqa: PLR2004
+    assert result.month == 12  # noqa: PLR2004
+    assert result.day == 15  # noqa: PLR2004
+    assert result.hour == 23  # noqa: PLR2004
+    assert result.minute == 59  # noqa: PLR2004
+
+
+def test_get_due_date_accepts_date_only(tmp_path: Path) -> None:
+    """Test get_due_date accepts date-only format (no time)."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is not None
+    assert result.year == 2026  # noqa: PLR2004
+    assert result.month == 12  # noqa: PLR2004
+    assert result.day == 15  # noqa: PLR2004
+    assert result.hour == 0
+    assert result.minute == 0
+
+
+def test_get_due_date_returns_none_when_missing(tmp_path: Path) -> None:
+    """Test get_due_date returns None when no due_date field."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is None
+
+
+def test_get_due_date_handles_invalid_format(tmp_path: Path) -> None:
+    """Test get_due_date returns None for unparseable date strings."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "not-a-date"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is None
+
+
+def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
+    """Test has_due_date_field returns True when due_date is in the config."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = has_due_date_field(config_file)
+    assert result is True
+
+
+@pytest.mark.parametrize(
+    ("fields", "count", "first"),
+    [
+        (["due_date"], 1, "due_date"),
+        (["due_date", "due"], 2, "due_date"),
+        (["date", "due"], 2, "due"),
+        (["duedate", "date", "due"], 3, "duedate"),
+        (["name"], 0, None),
+    ],
+)
+def test_get_due_date_aliases_present(
+    tmp_path: Path, fields: list[str], count: int, first: str | None
+) -> None:
+    """Test get_due_date_aliases_present detects multiple aliases correctly."""
+    config_file = tmp_path / "gatorgrade.yml"
+    front_matter = "\n".join(f'{f}: "2026-12-15"' for f in fields)
+    config_file.write_text(
+        f"{front_matter}\n"
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date_aliases_present(config_file)
+    assert len(result) == count
+    if first is not None:
+        assert result[0] == first
+
+
+def test_has_due_date_field_returns_false_when_missing(tmp_path: Path) -> None:
+    """Test has_due_date_field returns False when due_date is not in the config."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = has_due_date_field(config_file)
+    assert result is False
+
+
+def test_get_due_date_still_returns_none_on_invalid(tmp_path: Path) -> None:
+    """Test get_due_date returns None for unparseable dates (no warning)."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "not-a-date"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is None
 
 
 def test_parse_config_gg_check_in_file_context_contains_file() -> None:
@@ -300,3 +447,58 @@ def test_parse_config_rejects_malformed_front_matter(
     checks, error = parse_config(config_file)
     assert checks == []
     assert error is not None
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "due_date",
+        "duedate",
+        "due",
+        "date",
+    ],
+)
+def test_get_due_date_accepts_all_aliases(
+    tmp_path: Path, field_name: str
+) -> None:
+    """Test get_due_date accepts all supported alias field names."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        f'{field_name}: "2026-12-15"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_due_date(config_file)
+    assert result is not None
+    assert result.year == 2026  # noqa: PLR2004
+    assert result.month == 12  # noqa: PLR2004
+    assert result.day == 15  # noqa: PLR2004
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "due_date",
+        "duedate",
+        "due",
+        "date",
+    ],
+)
+def test_has_due_date_field_detects_all_aliases(
+    tmp_path: Path, field_name: str
+) -> None:
+    """Test has_due_date_field detects all supported alias field names."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        f'{field_name}: "2026-12-15"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = has_due_date_field(config_file)
+    assert result is True

@@ -5,7 +5,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, List, Union
+from typing import Any, List, Tuple, Union
 from unittest.mock import patch
 
 import pytest
@@ -845,6 +845,59 @@ def test_run_checks_with_report_file_json(
         data = json.load(f)
     assert data["amount_correct"] == 1
     assert data["percentage_score"] == expected_percentage
+
+
+def test_run_checks_with_due_date_passing(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test run_checks displays due date in summary with a future date."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+    ]
+    future = datetime.datetime.now() + datetime.timedelta(days=30)
+    report: Tuple[str, str, str] = ("", "", "")
+    output.run_checks(checks, report, due_date=future)
+    out, _ = capsys.readouterr()
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Due Date" in plain_stdout
+    assert "remaining" in plain_stdout
+
+
+def test_run_checks_with_due_date_and_github_env(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test run_checks with due date and github_env (failing path)."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(
+            description='Echo "Hello!"',
+            command='echo "hello"',
+            json_info={"description": "test", "command": 'echo "hello"'},
+        ),
+        ShellCheck(
+            description="Failing",
+            command=FAILING_CMD,
+        ),
+    ]
+    past = datetime.datetime.now() - datetime.timedelta(days=5)
+    report: Tuple[str, str, str] = ("", "", "")
+    github_env = ("JSON", "JSON_REPORT")
+    result = output.run_checks(
+        checks, report, github_env=github_env, due_date=past
+    )
+    assert result is False
+    out, _ = capsys.readouterr()
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Due Date" in plain_stdout
+    assert "GitHub Environment" in plain_stdout
 
 
 def test_run_checks_with_github_env(
@@ -2368,3 +2421,31 @@ def test_create_report_json_expected_keys_present_property(
         "checks",
     }
     assert expected_keys.issubset(result.keys())
+
+
+def test_format_remaining_time_future_days() -> None:
+    """Test _format_remaining_time returns green when due date is days away."""
+    future = datetime.datetime.now() + datetime.timedelta(days=5, hours=3)
+    time_str, color = output._format_remaining_time(future)
+    assert "remaining" in time_str
+    assert "5 days" in time_str
+    assert color == "green"
+
+
+def test_format_remaining_time_future_hours() -> None:
+    """Test _format_remaining_time returns yellow when due date is hours away."""
+    future = datetime.datetime.now() + datetime.timedelta(hours=6)
+    time_str, color = output._format_remaining_time(future)
+    assert "remaining" in time_str
+    assert "hour" in time_str
+    assert "remaining" in time_str
+    assert color == "yellow"
+
+
+def test_format_remaining_time_overdue() -> None:
+    """Test _format_remaining_time returns red when due date has passed."""
+    past = datetime.datetime.now() - datetime.timedelta(days=2, hours=5)
+    time_str, color = output._format_remaining_time(past)
+    assert "Overdue" in time_str
+    assert "2 days" in time_str
+    assert color == "red"

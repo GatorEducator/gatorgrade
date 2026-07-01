@@ -246,6 +246,45 @@ def test_gatorgrade_with_github_env_invalid_name(
     assert result.exit_code != 0
 
 
+def test_gatorgrade_with_invalid_due_date_format(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test gatorgrade warns about an unparseable due_date in the config."""
+    config = Path("bad_due_date.yml")
+    config.write_text(
+        'due_date: "not-a-date"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert "Invalid Due Date Configuration" in result.output
+
+
+def test_gatorgrade_with_multiple_due_date_aliases(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Test gatorgrade warns when multiple due date fields are present."""
+    config = Path("multi_due_date.yml")
+    config.write_text(
+        'due_date: "2026-12-15"\n'
+        'due: "2026-12-20"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert "Multiple Due Date Fields" in result.output
+
+
 def test_gatorgrade_with_report_env_invalid_name(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
