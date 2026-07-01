@@ -455,6 +455,7 @@ def gatorgrade(  # noqa: PLR0913
                 version_info,
                 github_env,
                 project_name,
+                due_date,
             )
         # no checks were created and this means
         # that, most likely, the file was not
