@@ -60,11 +60,19 @@ def _get_date_str(front_matter: dict) -> tuple[str | None, str | None]:
         is found. The first matching alias in DUE_DATE_ALIASES is used.
 
     """
+    # search through each of the due date aliases
     for alias in DUE_DATE_ALIASES:
+        # if one of the due date aliases is found,
+        # then extract it and the due date
         if alias in front_matter:
             value = front_matter[alias]
             if isinstance(value, str):
                 return value, alias
+    # there were no due dates found inside of the
+    # front matter and thus no checking for due
+    # dates will occur and no diagnostics will appear
+    # at the end of the output to highlight project status
+    # from the perspective of the due date
     return None, None
 
 
