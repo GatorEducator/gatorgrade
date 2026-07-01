@@ -9,7 +9,7 @@ import yaml
 from gatorgrade.input.set_up_shell import run_setup
 
 # represent data for a check from the configuration file.
-# every check will have data (`check`) and some may also have a `file_context`,
+# every check will have data (i.e., "check") and some may also have a "file_context",
 # which is a file path associated with the check to be used when running the check.
 CheckData = namedtuple("CheckData", ["file_context", "check"])
 
