@@ -124,7 +124,11 @@ def get_due_date(file: Path) -> datetime.datetime | None:
 
     Both ISO 8601 datetime strings ("2026-12-15T23:59:00") and date-only
     strings ("2026-12-15") are accepted. Date-only strings are treated as
-    midnight on that date.
+    midnight on that date. If there is more than one of the approved fields
+    in the front matter about the due date, then the one called "due_date"
+    is used and a warning message is displayed. This warning message is
+    largely for the benefit of instructors who do not create the due date
+    in the front matter using the approved approach for due dates.
 
     Args:
         file: Path to the gatorgrade YAML configuration file.
