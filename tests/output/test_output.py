@@ -541,6 +541,60 @@ def test_write_github_env_appends_not_overwrites(
     assert "JSON_REPORT=" in env_content
 
 
+def test_write_github_env_delimiter_collision_avoided(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that write_github_env avoids delimiters that appear in content."""
+    tmp_env_file = tmp_path / "github_env"
+    tmp_env_file.write_text("")
+    monkeypatch.setenv("GITHUB_ENV", str(tmp_env_file))
+    # os.urandom(8) returns 8 bytes; hex of b'\x00' * 8 is "0000000000000000"
+    collision_hex = "0000000000000000"
+    colliding_delimiter = f"GATORGRADE_{collision_hex}"
+    safe_bytes = os.urandom(8)
+    # mock create_markdown_report_file to return content containing the
+    # colliding delimiter, forcing the while loop to regenerate
+    mock_content = (
+        f"Some markdown content\n{colliding_delimiter}\non its own line\n"
+    )
+    with patch(
+        "gatorgrade.output.output.create_markdown_report_file",
+        return_value=mock_content,
+    ):
+        # mock os.urandom to return \x00*8 (hex "0000000000000000")
+        # on the first call (causing a collision), then safe bytes
+        call_state = [0]
+
+        def counting_urandom(n: int) -> bytes:
+            del n  # n is unused, provided to match the os.urandom signature
+            call_state[0] += 1
+            if call_state[0] == 1:
+                return b"\x00" * 8
+            return safe_bytes
+
+        monkeypatch.setattr(os, "urandom", counting_urandom)
+        report_data: dict[str, Any] = {
+            "amount_correct": 1,
+            "percentage_score": 100,
+            "checks": [{"status": True, "description": "Test passed"}],
+        }
+        github_env = ("MD", "MD_REPORT")
+        result = output.write_github_env(github_env, report_data)
+    assert result is True
+    env_content = tmp_env_file.read_text()
+    assert "MD_REPORT" in env_content
+    # extract the actual delimiter used in the heredoc (after <<)
+    heredoc_line = env_content.splitlines()[0]
+    used_delimiter = heredoc_line.split("<<", 1)[1]
+    assert used_delimiter != colliding_delimiter, (
+        "Should have regenerated delimiter instead of using colliding one"
+    )
+    # the colliding delimiter should still be in the content body
+    assert colliding_delimiter in env_content, (
+        "Colliding delimiter is part of the mock content"
+    )
+
+
 def test_configure_report_env_missing_env_vars(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
