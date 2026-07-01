@@ -89,16 +89,23 @@ def get_due_date_aliases_present(file: Path) -> list[str]:
     """
     result: list[str] = []
     try:
+        # parse the YAML file using parse_yaml_file provided by gatorgrade
         parsed_yaml_file = parse_yaml_file(file)
+        # if there were no due dates, then return the
+        # empty result list, meaning that no due date
+        # display and details will appear in the output
         if not (
             len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH
             and isinstance(parsed_yaml_file[0], dict)
         ):
             return result
+        # check for each of the due date aliases and add them to the result list
         for alias in DUE_DATE_ALIASES:
             if alias in parsed_yaml_file[0]:
                 result.append(alias)
         return result
+    # if there was a parsing exception, then return the
+    # current state of the list, which should be empty
     except Exception:
         return result
 
