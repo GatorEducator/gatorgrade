@@ -23,6 +23,7 @@ OUTPUTLIMIT_KEY = "outputlimit"
 COMMAND_KEY = "command"
 CHECK_KEY = "check"
 OPTIONS_KEY = "options"
+HINT_KEY = "hint"
 
 CONFIG_ERROR_FMT = "- Configuration error in check '{}': {}{}{}"
 
@@ -80,6 +81,7 @@ def generate_checks(  # noqa: PLR0912
                     json_info=check_data.check,
                     weight=weight,
                     outputlimit=outputlimit,
+                    hint=check_data.check.get(HINT_KEY),
                 )
             )
         # otherwise, it is a GatorGrader check, which means that it
@@ -118,6 +120,7 @@ def generate_checks(  # noqa: PLR0912
                     json_info=check_data.check,
                     weight=weight,
                     outputlimit=outputlimit,
+                    hint=check_data.check.get(HINT_KEY),
                 )
             )
     return checks
