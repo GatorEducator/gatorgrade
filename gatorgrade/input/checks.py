@@ -31,13 +31,14 @@ def validate_positive_nonzero_int(value: int, name: str) -> str | None:
 class ShellCheck:  # pylint: disable=too-few-public-methods
     """Represent a shell check."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         command: str,
         description: str | None = None,
         json_info: dict[str, Any] | str | None = None,
         weight: int = 1,
         outputlimit: int | None = None,
+        hint: str | None = None,
     ):
         """Construct a ShellCheck.
 
@@ -49,6 +50,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
                 If none is given, command is used
             weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
+            hint: An optional hint message shown when the check fails.
 
         """
         # validate the weight and the outputlimit so that they
@@ -73,6 +75,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         self.json_info = json_info
         self.weight = weight
         self.outputlimit = outputlimit
+        self.hint = hint
 
 
 class GatorGraderCheck:  # pylint: disable=too-few-public-methods
@@ -84,6 +87,7 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
         json_info: dict[str, Any] | str,
         weight: int = 1,
         outputlimit: int | None = None,
+        hint: str | None = None,
     ):
         """Construct a GatorGraderCheck.
 
@@ -92,6 +96,7 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
             json_info: The all-encompassing check information to include in json output.
             weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
+            hint: An optional hint message shown when the check fails.
 
         """
         errors = []
@@ -113,3 +118,4 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
         self.json_info = json_info
         self.weight = weight
         self.outputlimit = outputlimit
+        self.hint = hint
