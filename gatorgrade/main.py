@@ -174,7 +174,7 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
             if not parent_dir.exists():
                 errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
         elif value[0] is not None and value[2] is not None:
-            if not VALID_ENV_VAR_NAME.match(value[2]):
+            if not VALID_ENV_VAR_NAME.fullmatch(value[2]):
                 errors.append(REPORT_ENV_NAME_ERR_FMT.format(value[2]))
         # if there are one or more errors, then raise a BadParameter exception
         # with all of the error messages joined by newlines (reporting all
@@ -202,7 +202,7 @@ def _validate_github_env(
                     REPORT_TYPE_JSON, REPORT_TYPE_MD, value[0]
                 )
             )
-        if value[1] is not None and not VALID_ENV_VAR_NAME.match(value[1]):
+        if value[1] is not None and not VALID_ENV_VAR_NAME.fullmatch(value[1]):
             errors.append(GITHUB_ENV_NAME_ERR_FMT.format(value[1]))
         if errors:
             raise BadParameter(";\n".join(errors))
