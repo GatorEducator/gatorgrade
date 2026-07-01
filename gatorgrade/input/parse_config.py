@@ -145,6 +145,9 @@ def get_due_date(file: Path) -> datetime.datetime | None:
         present or if the date cannot be parsed.
 
     """
+    # try to parse the YAML file and extract the due date from
+    # the YAML front matter; this assumes that the date must be
+    # in the standard ISO 8601 format for specifying dates
     try:
         parsed_yaml_file = parse_yaml_file(file)
         if not (
@@ -178,6 +181,8 @@ def has_due_date_field(file: Path) -> bool:
         True if any due date alias is present, False otherwise.
 
     """
+    # determine whether or not there is any type of due
+    # date inside of the front matter of the YAML file
     try:
         parsed_yaml_file = parse_yaml_file(file)
         if not (
