@@ -272,3 +272,42 @@ def test_check_result_str_matches_display_result_property(
     assert str(check_result) == check_result.display_result(
         show_diagnostic=False
     )
+
+
+def test_check_result_failing_displays_hint() -> None:
+    """Test hint is displayed when a failing check shows diagnostics."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test failed",
+        json_info={"check": "test"},
+        diagnostic="Something went wrong",
+        hint="Try checking your input carefully",
+    )
+    result = check_result.display_result(show_diagnostic=True)
+    assert "Hint:" in result
+    assert "Try checking your input carefully" in result
+
+
+def test_check_result_failing_without_hint_shows_no_hint() -> None:
+    """Test that no hint line appears when hint is not provided."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test failed",
+        json_info={"check": "test"},
+        diagnostic="Something went wrong",
+    )
+    result = check_result.display_result(show_diagnostic=True)
+    assert "Hint" not in result
+
+
+def test_check_result_passing_hint_not_shown() -> None:
+    """Test hint is not shown for a passing check even if provided."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+        diagnostic="",
+        hint="This should not appear",
+    )
+    result = check_result.display_result(show_diagnostic=True)
+    assert "This should not appear" not in result
