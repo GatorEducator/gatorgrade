@@ -14,7 +14,13 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
-from gatorgrade.input.parse_config import get_project_name, parse_config
+from gatorgrade.input.parse_config import (
+    get_due_date,
+    get_due_date_aliases_present,
+    get_project_name,
+    has_due_date_field,
+    parse_config,
+)
 from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
@@ -354,6 +360,47 @@ def gatorgrade(  # noqa: PLR0913
     # also note that the output of the tool is now segmented
     # into sections that are demarcated by horizintal rules
     if ctx.invoked_subcommand is None:
+        # check the due date before parsing config so warnings appear before setup
+        due_date = get_due_date(filename)
+        if has_due_date_field(filename) and due_date is None:
+            console.print()
+            console.print(
+                Rule(
+                    Text("Invalid Due Date Configuration"),
+                    style="bright_yellow",
+                )
+            )
+            console.print()
+            console.print(
+                "Ignoring the due date in the configuration file as it could not be parsed."
+            )
+            console.print(
+                "Expected an ISO 8601 format such as '2026-12-15' "
+                "or '2026-12-15T23:59:00'."
+            )
+            console.print()
+            console.print(Rule(style="bright_yellow"))
+        # warn if multiple due date aliases are present
+        aliases_present = get_due_date_aliases_present(filename)
+        if len(aliases_present) > 1:
+            chosen = aliases_present[0]
+            ignored = ", ".join(aliases_present[1:])
+            console.print()
+            console.print(
+                Rule(
+                    Text("Multiple Due Date Fields"),
+                    style="bright_yellow",
+                )
+            )
+            console.print()
+            console.print(
+                f"Multiple due date fields found: "
+                f"{', '.join(aliases_present)}."
+            )
+            console.print(f"Using '{chosen}' and ignoring {ignored}.")
+            console.print("Use only one due date field.")
+            console.print()
+            console.print(Rule(style="bright_yellow"))
         # parse the provided configuration file
         checks, parse_error = parse_config(filename, baseline_weight)
         # extract the optional project name from the config file
