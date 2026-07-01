@@ -547,6 +547,10 @@ def write_github_env(
     # reference: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#multiline-strings
     if NEWLINE in content:
         delimiter = f"GATORGRADE_{os.urandom(8).hex()}"
+        # keep randomly generating a new delimeter for the
+        # content if the delimeter is found inside of the content
+        while delimiter in content:
+            delimiter = f"GATORGRADE_{os.urandom(8).hex()}"
         with open(github_env_path, "a", encoding=FILE_ENCODING) as f:
             f.write(f"{key}<<{delimiter}\n{content}\n{delimiter}\n")
     else:
