@@ -91,7 +91,7 @@ def get_due_date_aliases_present(file: Path) -> list[str]:
 
     Returns:
         A list of field names found (e.g. ["due_date", "due"]), or an
-        empty list if none are present.
+        empty list if none are present in the front matter of the YAML file.
 
     """
     result: list[str] = []
