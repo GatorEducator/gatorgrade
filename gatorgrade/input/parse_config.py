@@ -1,5 +1,6 @@
 """Returns the list of commands to be run through gatorgrader."""
 
+import datetime
 from pathlib import Path
 from typing import Any, List, Tuple
 
@@ -14,6 +15,8 @@ from gatorgrade.input.in_file_path import (
 )
 
 NAME_FIELD = "name"
+DUE_DATE_FIELD = "due_date"
+DUE_DATE_ALIASES = ("due_date", "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
 
 
@@ -44,6 +47,122 @@ def get_project_name(file: Path) -> str | None:
     except Exception:
         pass
     return None
+
+
+def _get_date_str(front_matter: dict) -> tuple[str | None, str | None]:
+    """Find the due date string from the front matter, trying all aliases.
+
+    Args:
+        front_matter: The YAML front matter dictionary.
+
+    Returns:
+        A tuple of (date_string, field_name) or (None, None) if no alias
+        is found. The first matching alias in DUE_DATE_ALIASES is used.
+
+    """
+    for alias in DUE_DATE_ALIASES:
+        if alias in front_matter:
+            value = front_matter[alias]
+            if isinstance(value, str):
+                return value, alias
+    return None, None
+
+
+def get_due_date_aliases_present(file: Path) -> list[str]:
+    """Return all due date alias field names found in the front matter.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        A list of field names found (e.g. ["due_date", "due"]), or an
+        empty list if none are present.
+
+    """
+    result: list[str] = []
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if not (
+            len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH
+            and isinstance(parsed_yaml_file[0], dict)
+        ):
+            return result
+        for alias in DUE_DATE_ALIASES:
+            if alias in parsed_yaml_file[0]:
+                result.append(alias)
+        return result
+    except Exception:
+        return result
+
+
+def get_due_date(file: Path) -> datetime.datetime | None:
+    """Extract the optional due date from a gatorgrade YAML config file.
+
+    The due date can be specified with any of these field names:
+    due_date (recommended), duedate, due, or date.
+
+        due_date: "2026-12-15T23:59:00"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    Both ISO 8601 datetime strings ("2026-12-15T23:59:00") and date-only
+    strings ("2026-12-15") are accepted. Date-only strings are treated as
+    midnight on that date.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        A datetime object if a valid due date is found, or None if not
+        present or if the date cannot be parsed.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if not (
+            len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH
+            and isinstance(parsed_yaml_file[0], dict)
+        ):
+            return None
+        date_str, _ = _get_date_str(parsed_yaml_file[0])
+        if date_str is None:
+            return None
+        try:
+            return datetime.datetime.fromisoformat(date_str)
+        except ValueError:
+            try:
+                return datetime.datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                return None
+    except Exception:
+        return None
+
+
+def has_due_date_field(file: Path) -> bool:
+    """Check whether the YAML front matter contains a due date field.
+
+    The accepted field names are: due_date, duedate, due, and date.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        True if any due date alias is present, False otherwise.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if not (
+            len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH
+            and isinstance(parsed_yaml_file[0], dict)
+        ):
+            return False
+        date_str, _ = _get_date_str(parsed_yaml_file[0])
+        return date_str is not None
+    except Exception:
+        return False
 
 
 def parse_config(
