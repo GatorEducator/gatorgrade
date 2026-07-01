@@ -32,6 +32,14 @@ PROJECT_LABEL = "Project"
 REPORT_LABEL = "Report"
 GITHUB_ENV_LABEL = "GitHub Environment"
 DUE_DATE_LABEL = "Due Date"
+REMAINING_LABEL = "remaining"
+LESS_THAN_ONE_MINUTE = "Less than 1 minute"
+SECONDS_PER_HOUR = 3600
+SECONDS_PER_MINUTE = 60
+TIME_REMAINING_GREEN = "green"
+TIME_REMAINING_YELLOW = "yellow"
+TIME_REMAINING_SOON = "bright_yellow"
+TIME_REMAINING_OVERDUE = "red"
 RUNNING_CHECKS_LABEL = "Running checks"
 RUNNING_CHECKS_RULE_LABEL = "Running Check(s)"
 WEIGHT_LABEL = "Weight"
@@ -633,8 +641,8 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
     if seconds >= 0:
         remaining = datetime.timedelta(seconds=seconds)
         days = remaining.days
-        hours = remaining.seconds // 3600
-        minutes = (remaining.seconds % 3600) // 60
+        hours = remaining.seconds // SECONDS_PER_HOUR
+        minutes = (remaining.seconds % SECONDS_PER_HOUR) // SECONDS_PER_MINUTE
         parts = []
         if days > 0:
             parts.append(f"{days} day{'s' if days != 1 else ''}")
@@ -643,19 +651,19 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
         if minutes > 0 and days == 0:
             parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
         if not parts:
-            parts.append("Less than 1 minute")
+            parts.append(LESS_THAN_ONE_MINUTE)
         time_str = ", ".join(parts)
         if days > 0:
-            color = "green"
+            color = TIME_REMAINING_GREEN
         elif hours > 0:
-            color = "yellow"
+            color = TIME_REMAINING_YELLOW
         else:
-            color = "bright_yellow"
-        return f"{time_str} remaining", color
+            color = TIME_REMAINING_SOON
+        return f"{time_str} {REMAINING_LABEL}", color
     overdue = datetime.timedelta(seconds=-seconds)
     days = overdue.days
-    hours = overdue.seconds // 3600
-    minutes = (overdue.seconds % 3600) // 60
+    hours = overdue.seconds // SECONDS_PER_HOUR
+    minutes = (overdue.seconds % SECONDS_PER_HOUR) // SECONDS_PER_MINUTE
     parts = []
     if days > 0:
         parts.append(f"{days} day{'s' if days != 1 else ''}")
@@ -664,9 +672,9 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
     if minutes > 0 and days == 0:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
     if not parts:
-        parts.append("Less than 1 minute")
+        parts.append(LESS_THAN_ONE_MINUTE)
     time_str = ", ".join(parts)
-    return f"{OVERDUE_LABEL} by {time_str}", "red"
+    return f"{OVERDUE_LABEL} by {time_str}", TIME_REMAINING_OVERDUE
 
 
 def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
