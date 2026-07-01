@@ -199,6 +199,7 @@ def _run_shell_check(
         diagnostic=diagnostic,
         weight=check.weight,
         outputlimit=limit,
+        hint=check.hint,
     )
 
 
@@ -255,6 +256,7 @@ def _run_gg_check(
         path=file_path,
         weight=check.weight,
         outputlimit=limit,
+        hint=check.hint,
     )
 
 
