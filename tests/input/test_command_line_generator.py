@@ -1,5 +1,9 @@
 """Test suite for command_line_generator.py."""
 
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import CheckData
@@ -174,6 +178,97 @@ def test_generate_checks_empty_list() -> None:
     assert checks == []
 
 
+def test_generate_checks_with_shell_check_weight() -> None:
+    """Test generate_checks parses weight for shell check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "command": "echo 'hello'",
+            "description": "Echo hello",
+            "weight": 10,
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].weight == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_gatorgrader_check_weight() -> None:
+    """Test generate_checks parses weight for GatorGrader check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "check": "MatchFileFragment",
+            "description": "Check fragment",
+            "weight": 5,
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].weight == 5  # noqa: PLR2004
+
+
+def test_generate_checks_with_default_weight() -> None:
+    """Test generate_checks defaults weight to 1 when not specified."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data])
+    assert checks[0].weight == 1
+
+
+def test_generate_checks_with_invalid_weight_zero() -> None:
+    """Test generate_checks raises ValueError for weight of 0."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": 0},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
+
+
+def test_generate_checks_with_invalid_weight_negative() -> None:
+    """Test generate_checks raises ValueError for negative weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": -2},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
+
+
+def test_generate_checks_with_invalid_outputlimit_zero() -> None:
+    """Test generate_checks raises ValueError for outputlimit of 0."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "outputlimit": 0},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
+
+
+def test_generate_checks_with_invalid_outputlimit_negative() -> None:
+    """Test generate_checks raises ValueError for negative outputlimit."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "outputlimit": -5},
+    )
+    with pytest.raises(ValueError) as exc_info:
+        generate_checks([check_data])
+    assert "Configuration error" in str(exc_info.value)
+    assert "positive, non-zero integer" in str(exc_info.value)
+
+
 def test_generate_checks_with_string_count_option() -> None:
     """Test generate_checks converts numeric option values to strings."""
     check_data = CheckData(
@@ -189,3 +284,223 @@ def test_generate_checks_with_string_count_option() -> None:
     assert "--count" in checks[0].gg_args
     count_index = checks[0].gg_args.index("--count")
     assert checks[0].gg_args[count_index + 1] == "5"
+
+
+def test_generate_checks_with_shell_check_outputlimit() -> None:
+    """Test generate_checks parses outputlimit for shell check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "command": "echo 'hello'",
+            "outputlimit": 25,
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    assert checks[0].outputlimit == 25  # noqa: PLR2004
+
+
+def test_generate_checks_with_gatorgrader_check_outputlimit() -> None:
+    """Test generate_checks parses outputlimit for GatorGrader check."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "check": "MatchFileFragment",
+            "outputlimit": 10,
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].outputlimit == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_default_outputlimit() -> None:
+    """Test generate_checks defaults outputlimit to None when not specified."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data])
+    assert checks[0].outputlimit is None
+
+
+def test_generate_checks_with_baseline_weight() -> None:
+    """Test generate_checks uses baseline_weight when check has no explicit weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'"},
+    )
+    checks = generate_checks([check_data], baseline_weight=5)
+    assert len(checks) == 1
+    assert checks[0].weight == 5  # noqa: PLR2004
+
+
+def test_generate_checks_with_baseline_weight_and_explicit_weight() -> None:
+    """Test generate_checks uses explicit weight over baseline_weight."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'hello'", "weight": 10},
+    )
+    checks = generate_checks([check_data], baseline_weight=5)
+    assert len(checks) == 1
+    assert checks[0].weight == 10  # noqa: PLR2004
+
+
+def test_generate_checks_with_baseline_weight_for_gg_check() -> None:
+    """Test generate_checks uses baseline_weight for GatorGrader checks."""
+    check_data = CheckData(
+        file_context=None,
+        check={"check": "CountCommits", "options": {"count": 5}},
+    )
+    checks = generate_checks([check_data], baseline_weight=3)
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    assert checks[0].weight == 3  # noqa: PLR2004
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=0, max_value=10))
+def test_generate_checks_empty_list_property(_: int) -> None:
+    """Property: empty check data list always returns an empty list."""
+    result = generate_checks([])
+    assert result == []
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.none(),
+            check=st.fixed_dictionaries(
+                {
+                    "command": st.text(min_size=1, max_size=50),
+                    st.one_of(
+                        st.just("description"), st.just("weight")
+                    ): st.one_of(st.none(), st.text(max_size=50)),
+                },
+                optional={
+                    "weight": st.integers(min_value=1, max_value=100),
+                },
+            ),
+        ),
+        min_size=1,
+        max_size=5,
+    )
+)
+def test_generate_checks_with_command_yields_shell_check_property(
+    check_data_list: list,
+) -> None:
+    """Property: every check with a 'command' key produces a ShellCheck."""
+    checks = generate_checks(check_data_list)
+    assert len(checks) == len(check_data_list)
+    for check in checks:
+        assert isinstance(check, ShellCheck)
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.none(),
+            check=st.fixed_dictionaries(
+                {
+                    "check": st.text(min_size=1, max_size=50),
+                    st.one_of(
+                        st.just("options"), st.just("description")
+                    ): st.one_of(st.none(), st.text(max_size=50)),
+                },
+                optional={
+                    "weight": st.integers(min_value=1, max_value=100),
+                },
+            ),
+        ),
+        min_size=1,
+        max_size=5,
+    )
+)
+def test_generate_checks_without_command_yields_gg_check_property(
+    check_data_list: list,
+) -> None:
+    """Property: every check without a 'command' key but with 'check' produces GatorGraderCheck."""
+    checks = generate_checks(check_data_list)
+    assert len(checks) == len(check_data_list)
+    for check in checks:
+        assert isinstance(check, GatorGraderCheck)
+
+
+@pytest.mark.propertybased
+@given(
+    st.lists(
+        st.builds(
+            CheckData,
+            file_context=st.one_of(st.none(), st.text(max_size=30)),
+            check=st.dictionaries(
+                st.text(min_size=1, max_size=20),
+                st.one_of(
+                    st.text(max_size=50),
+                    st.integers(),
+                    st.booleans(),
+                    st.none(),
+                ),
+                min_size=1,
+                max_size=5,
+            ),
+        ),
+        min_size=0,
+        max_size=5,
+    ).filter(
+        lambda lst: all(
+            (
+                "weight" not in cd.check
+                or (
+                    isinstance(cd.check["weight"], int)
+                    and not isinstance(cd.check["weight"], bool)
+                )
+            )
+            and (
+                "outputlimit" not in cd.check
+                or (
+                    isinstance(cd.check["outputlimit"], int)
+                    and not isinstance(cd.check["outputlimit"], bool)
+                )
+            )
+            and (
+                "options" not in cd.check
+                or isinstance(cd.check["options"], dict)
+            )
+            for cd in lst
+        )
+    )
+)
+def test_generate_checks_count_matches_input_property(
+    check_data_list: list,
+) -> None:
+    """Property: number of generated checks always matches the input list length."""
+    try:
+        checks = generate_checks(check_data_list)
+        assert len(checks) == len(check_data_list)
+    except ValueError:
+        assert any(
+            (
+                "weight" in cd.check
+                and (
+                    not isinstance(cd.check["weight"], int)
+                    or isinstance(cd.check["weight"], bool)
+                    or cd.check["weight"] <= 0
+                )
+            )
+            or (
+                "outputlimit" in cd.check
+                and (
+                    not isinstance(cd.check["outputlimit"], int)
+                    or isinstance(cd.check["outputlimit"], bool)
+                    or cd.check["outputlimit"] <= 0
+                )
+            )
+            for cd in check_data_list
+        )

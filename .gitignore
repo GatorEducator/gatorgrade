@@ -143,3 +143,6 @@ tests/test_assignment/json
 
 # AST cache files
 .ast-cache/
+
+# Treesitter analysis files
+tsc.json

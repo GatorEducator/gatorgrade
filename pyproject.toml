@@ -1,6 +1,6 @@
 [project]
 name = "gatorgrade"
-version = "0.8.4"
+version = "0.9.0"
 description = "GatorGrade executes GatorGrader checks!"
 authors = [
     { name = "Michael Abraham" },
@@ -61,6 +61,8 @@ dev = [
     "tree-sitter-python>=0.25.0",
     "rumdl>=0.2.4",
     "types-toml>=0.10.8.20260518",
+    "hypothesis>=6.155.2",
+    "tree-sitter-analyzer[popular]>=0.4.0",
 ]
 
 [build-system]
@@ -69,29 +71,32 @@ build-backend = "hatchling.build"
 
 [tool.taskipy.variables]
 project = "gatorgrade"
+scripts = "scripts"
 tests = "tests"
-ruff-check-command = { var = "ruff check {project} {tests}", recursive = true }
-coverage-test-command = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=98 --cov-report=term-missing tests/"
+coveragefailunder = "98"
+directtestedfailunder = "75"
+ruff-check-command = { var = "ruff check {project} {tests} {scripts}", recursive = true }
+coverage-test-command = { var = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=98 --cov-report=term-missing tests/", recursive = true }
 coverage-test-command-silent = "pytest -x --show-capture=no --cov-report term-missing --cov-report json --cov --cov-branch"
 developer-test-command = "pytest -x -s"
 developer-test-silent-command = "pytest -x --show-capture=no"
-ruff-fixformat-command = { var = "ruff format {project} {tests}", recursive = true }
-ruff-format-command = { var = "ruff format --check {project} {tests}", recursive = true }
-symbex-typed-command = {var = "symbex -s --untyped -d {project} -d {tests} --check", recursive = true}
-symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {tests} --check", recursive = true}
-mypy-command = {var = "mypy {project}", recursive = true}
-ty-command = {var = "ty check {project} {tests}", recursive = true}
-pyrefly-command = {var = "pyrefly check {project} {tests}", recursive = true}
+ruff-fixformat-command = { var = "ruff format {project} {tests} {scripts}", recursive = true }
+ruff-format-command = { var = "ruff format --check {project} {tests} {scripts}", recursive = true }
+symbex-typed-command = {var = "symbex -s --untyped -d {project} -d {tests} -d {scripts} --check", recursive = true}
+symbex-documented-command = {var = "symbex -s --undocumented -d {project} -d {tests} -d {scripts} --check", recursive = true}
+mypy-command = {var = "mypy {project} {scripts}", recursive = true}
+ty-command = {var = "ty check {project} {tests} {scripts}", recursive = true}
+pyrefly-command = {var = "pyrefly check {project} {tests} {scripts}", recursive = true}
 rumdl-command = {var = "rumdl check", recursive = true}
 rumdl-command-fix = {var = "rumdl fmt", recursive = true}
-zuban-command = {var = "zuban check {project} {tests}", recursive = true}
+zuban-command = {var = "zuban check {project} {tests} {scripts}", recursive = true}
 cosmic-ray-init-command = "cosmic-ray init cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-exec-command = "cosmic-ray exec cosmic-ray.toml cosmic-ray.sqlite"
 cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
 cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 
 [tool.taskipy.tasks]
-all = "task check && task test"
+all = "task check && task test && task test-coverage-check"
 check = "task lint && task typecheck"
 lint = "task ruff-format && task ruff-check && task comments-check && task vsc && task rumdl-check"
 typecheck = "task mypy && task ty && task pyrefly && task zuban && task symbex"
@@ -109,14 +114,17 @@ symbex-typed = { cmd = "{symbex-typed-command}", help = "Run symbex for fully ty
 symbex-documented = { cmd = "{symbex-documented-command}", help = "Run symbex for documentation", use_vars = true }
 format = { cmd = "{ruff-format-command}", help = "Run the ruff formatter to check source code", use_vars = true }
 format-fix = { cmd = "{ruff-fixformat-command}", help = "Run the ruff formatter to fix source code", use_vars = true }
-comments-check = { cmd = "uv run -m scripts.ccl check", help = "Check that comments start with lowercase letters using Tree-sitter" }
-comments-fix = { cmd = "uv run -m scripts.ccl fix", help = "Auto-fix comments that start with uppercase letters" }
-vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml" }
+comments-check = { cmd = "uv run -m scripts.ccl check {project} {tests} {scripts}", help = "Check that comments start with lowercase letters using Tree-sitter", use_vars = true }
+comments-fix = { cmd = "uv run -m scripts.ccl fix {project} {tests} {scripts}", help = "Auto-fix comments that start with uppercase letters", use_vars = true }
+vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml", use_vars = true }
+test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested", use_vars = true }
+test-coverage-check-verbose = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder} --verbose", help = "Check function coverage with detailed analysis output", use_vars = true }
 test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
-test-silent-not-randomly = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
-test-coverage = { cmd = "{coverage-test-command}", help = "Run the pytest test suite with coverage tracking", use_vars = true }
-test-not-property = { cmd = "pytest -x -s -vv -m 'not property'", help = "Run the pytest test suite without property-based tests" }
+test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
+test-coverage = { cmd = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under={coveragefailunder} --cov-report=term-missing tests/", help = "Run the pytest test suite with coverage tracking", use_vars = true }
+test-not-propertybased = { cmd = "pytest -x -s -vv -m 'not propertybased'", help = "Run the pytest test suite without property-based tests" }
+test-propertybased = { cmd = "pytest -x -s -vv -m propertybased", help = "Run only the property-based tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
 test-flaky = { cmd = "pytest -x -s -vv --flakefighters", help = "Run the pytest test suite with flakefighters enabled" }
 test-flaky-suppress = { cmd = "pytest -x -s -vv --flakefighters --suppress-flaky-failures-exit-code", help = "Run the pytest test suite with flakefighters suppressing flaky failure exit codes" }
@@ -143,6 +151,11 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "propertybased: property-based tests using hypothesis",
 ]
 
 [tool.ruff]

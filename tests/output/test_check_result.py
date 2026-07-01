@@ -1,6 +1,8 @@
 """Test suite for check_result.py."""
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.output.check_result import CheckResult
 
@@ -25,7 +27,7 @@ def test_check_result_str_method_with_diagnostic() -> None:
         json_info={"check": "test"},
         diagnostic="This is a diagnostic message",
     )
-    result_str = check_result.__str__(show_diagnostic=True)
+    result_str = check_result.display_result(show_diagnostic=True)
     assert "✕" in result_str
     assert "Test failed" in result_str
     assert "This is a diagnostic message" in result_str
@@ -143,6 +145,40 @@ def test_check_result_with_explicit_empty_diagnostic() -> None:
     assert "Test failed" in result
 
 
+def test_check_result_with_outputlimit_default() -> None:
+    """Test CheckResult with default outputlimit (None)."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+    )
+    assert check_result.outputlimit is None
+
+
+def test_check_result_with_explicit_outputlimit() -> None:
+    """Test CheckResult with an explicit outputlimit value."""
+    expected_limit = 10
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+        outputlimit=expected_limit,
+    )
+    assert check_result.outputlimit == expected_limit
+
+
+def test_check_result_repr_includes_outputlimit() -> None:
+    """Test that __repr__ includes outputlimit field."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test",
+        json_info={"check": "test"},
+        outputlimit=5,
+    )
+    repr_str = repr(check_result)
+    assert "outputlimit=5" in repr_str
+
+
 def test_check_result_print_does_not_crash(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -155,3 +191,84 @@ def test_check_result_print_does_not_crash(
     check_result.print()
     out, _ = capsys.readouterr()
     assert "Test passed" in out
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.just(True),
+        description=st.text(max_size=100).filter(lambda s: "\u2715" not in s),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_passing_never_shows_diagnostic_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: a passing check never includes diagnostic in its display string."""
+    result = check_result.display_result(show_diagnostic=True)
+    assert "\u2713" in result  # checkmark
+    assert "\u2715" not in result  # not a cross mark
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.just(False),
+        description=st.text(max_size=100),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_failing_diagnostic_respects_flag_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: for failing checks, diagnostic appears iff show_diagnostic is True."""
+    result_with = check_result.display_result(show_diagnostic=True)
+    result_without = check_result.display_result(show_diagnostic=False)
+    assert "\u2715" in result_with  # cross mark present
+    assert (
+        "\u2715" in result_without
+    )  # cross mark present even without diagnostic
+    if check_result.diagnostic:
+        assert "Diagnostic:" in result_with
+        assert "Diagnostic:" not in result_without
+
+
+@pytest.mark.propertybased
+@given(
+    st.builds(
+        CheckResult,
+        passed=st.booleans(),
+        description=st.text(max_size=100),
+        json_info=st.one_of(
+            st.none(), st.text(max_size=100), st.just({"check": "test"})
+        ),
+        diagnostic=st.text(max_size=200),
+        weight=st.integers(min_value=1, max_value=100),
+        outputlimit=st.one_of(
+            st.none(), st.integers(min_value=1, max_value=50)
+        ),
+    )
+)
+def test_check_result_str_matches_display_result_property(
+    check_result: CheckResult,
+) -> None:
+    """Property: __str__ without args equals display_result with show_diagnostic=False."""
+    assert str(check_result) == check_result.display_result(
+        show_diagnostic=False
+    )

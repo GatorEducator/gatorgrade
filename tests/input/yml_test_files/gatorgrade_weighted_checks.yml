@@ -1,0 +1,10 @@
+- description: Weighted check
+  check: MatchFileFragment
+  weight: 10
+  options:
+    fragment: TODO
+    count: 0
+    exact: true
+- description: Normal shell check
+  command: echo hello
+  weight: 5

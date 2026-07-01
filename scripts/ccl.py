@@ -41,6 +41,8 @@ PROPER_NOUNS = frozenset(
 
 PY_LANGUAGE = Language(tspython.language())
 
+DEFAULT_DIRS = ["gatorgrade", "tests", "scripts"]
+
 console = Console(stderr=True)
 err_console = Console(stderr=True)
 
@@ -69,6 +71,13 @@ class CommentError:
 
 
 def _find_errors(filepath: Path, parser: Parser) -> list[CommentError]:
+    """Find comment-case errors in a Python file.
+
+    Walks the Tree-sitter CST looking for comment nodes, then checks
+    whether each non-empty comment starts with a lowercase letter
+    (allowing proper nouns).
+
+    """
     errors = []
     source = filepath.read_bytes()
     tree = parser.parse(source)
@@ -98,15 +107,32 @@ def _find_errors(filepath: Path, parser: Parser) -> list[CommentError]:
 def _scan_files(
     paths: list[Path] | None = None,
 ) -> tuple[list[Path], list[CommentError]]:
+    """Scan Python files for comment-case errors.
+
+    Finds all .py files under the given paths (or the
+    default directories gatorgrade/, tests/, scripts/),
+    then checks each one for comments that start with
+    an uppercase letter.
+
+    Returns a tuple of (all_matched_files, errors_found).
+
+    """
     parser = Parser(PY_LANGUAGE)
     root = Path(".")
     if paths:
-        py_files = sorted(paths)
-    else:
-        py_files = sorted(root.glob("gatorgrade/**/*.py")) + sorted(
-            root.glob("tests/**/*.py")
+        py_files = sorted(
+            f
+            for p in paths
+            for f in (p.glob("**/*.py") if p.is_dir() else [p])
+            if "__pycache__" not in str(f)
         )
-        py_files = [f for f in py_files if "__pycache__" not in str(f)]
+    else:
+        py_files = sorted(
+            f
+            for d in DEFAULT_DIRS
+            for f in root.glob(f"{d}/**/*.py")
+            if "__pycache__" not in str(f)
+        )
     all_errors = []
     for py_file in py_files:
         all_errors.extend(_find_errors(py_file, parser))
@@ -116,7 +142,8 @@ def _scan_files(
 @app.command()
 def check(
     paths: list[Path] | None = typer.Argument(
-        None, help="Paths to scan. Defaults to gatorgrade/ and tests/."
+        None,
+        help="Paths to scan. Defaults to gatorgrade/, tests/, and scripts/.",
     ),
 ) -> None:
     """Check that comments start with a lowercase letter."""
@@ -166,18 +193,26 @@ def _fix_comment_text(text: str) -> str:
 @app.command()
 def fix(
     paths: list[Path] | None = typer.Argument(
-        None, help="Paths to fix. Defaults to gatorgrade/ and tests/."
+        None,
+        help="Paths to fix. Defaults to gatorgrade/, tests/, and scripts/.",
     ),
 ) -> None:
     """Auto-fix comments that start with an uppercase letter."""
     root = Path(".")
     if paths:
-        py_files = sorted(paths)
-    else:
-        py_files = sorted(root.glob("gatorgrade/**/*.py")) + sorted(
-            root.glob("tests/**/*.py")
+        py_files = sorted(
+            f
+            for p in paths
+            for f in (p.glob("**/*.py") if p.is_dir() else [p])
+            if "__pycache__" not in str(f)
         )
-        py_files = [f for f in py_files if "__pycache__" not in str(f)]
+    else:
+        py_files = sorted(
+            f
+            for d in DEFAULT_DIRS
+            for f in root.glob(f"{d}/**/*.py")
+            if "__pycache__" not in str(f)
+        )
     total_fixed = 0
     files_fixed = 0
     for py_file in py_files:

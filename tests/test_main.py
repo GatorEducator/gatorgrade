@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any, Callable, Generator, List
 
 import pytest
+from click import BadParameter
+from hypothesis import given
+from hypothesis import strategies as st
 from typer.testing import CliRunner
 
 from gatorgrade import main
@@ -60,7 +63,7 @@ def cleanup_files(
     monkeypatch.setattr(io, "open", patch_open(io.open, files))
     yield
     for file in files:
-        os.remove(file)
+        Path(file).unlink(missing_ok=True)
 
 
 @pytest.mark.parametrize(
@@ -73,7 +76,9 @@ def cleanup_files(
                 ("Use an if statement", 1),
                 ("✓", 3),
                 ("✕", 0),
-                ("Passed 3/3 (100%) of checks", 1),
+                ("- Project: test_assignment", 1),
+                ("- Checks: 3/3 (100%)", 1),
+                ("- Points: 3/3 (100%)", 1),
             ],
         )
     ],
@@ -96,8 +101,9 @@ def test_full_integration_creates_valid_output(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     for output, freq in expected_output_and_freqs:
-        assert result.stdout.count(output) == freq
+        assert plain_stdout.count(output) == freq
 
 
 def test_gatorgrade_with_nonexistent_file(
@@ -110,7 +116,7 @@ def test_gatorgrade_with_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
-    assert "Exiting now!" in result.stdout
+    assert "Fix these error(s) before running gatorgrade." in result.stdout
 
 
 def test_gatorgrade_with_invalid_config_file(
@@ -139,7 +145,9 @@ def test_gatorgrade_with_custom_config_name(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_report_option(
@@ -157,16 +165,109 @@ def test_gatorgrade_with_report_option(
     assert report_file.exists()
 
 
-def test_gatorgrade_with_status_bar(
+def test_gatorgrade_with_report_invalid_destination(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test that gatorgrade works with status bar enabled."""
+    """Test that an invalid report destination is rejected up front."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--status-bar"])
+    result = runner.invoke(
+        main.app, ["--report", "FILe111", "json", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_invalid_type(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report type is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "file", "html", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_uppercase_valid(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that uppercase FILE/JSON is accepted."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "FILE", "JSON", str(report_file)]
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_file_path(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a report file path with a non-existent directory is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--report", "file", "json", "nonexistent_dir/report.json"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_invalid_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env format is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_valid_json(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that valid github-env format passes validation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_github_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env key name is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid env var name in --report ENV is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_progress_bar_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade shows progress bar by default."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_no_status_bar(
@@ -174,11 +275,13 @@ def test_gatorgrade_with_no_status_bar(
 ) -> None:
     """Test that gatorgrade works with no status bar."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-status-bar"])
+    result = runner.invoke(main.app, ["--no-progress-bar"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    assert "Passed 3/3 (100%) of checks" in result.stdout
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
 
 
 def test_gatorgrade_with_version_flag(
@@ -417,3 +520,226 @@ def test_gatorgrade_get_os_release_linux_no_release(
     monkeypatch.setattr(main.platform, "system", lambda: "Linux")
     monkeypatch.setattr(main.platform, "release", lambda: "")
     assert main._get_os_release() == ""
+
+
+def test_gatorgrade_with_output_limit_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative output limit is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "-5"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_one(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of one is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_output_limit_valid(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a valid output limit is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative baseline weight is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "-2"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of 1 is accepted and shows correct points."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_custom(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a custom baseline weight affects the points calculation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 15/15 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_show_diagnostics_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that show diagnostics is the default and runs successfully."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_show_diagnostics_explicit(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --show-diagnostics flag is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_no_show_diagnostics(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --no-show-diagnostics hides diagnostic output."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000))
+def test_validate_output_limit_valid_property(value: int) -> None:
+    """Property: positive ints pass through validation unchanged."""
+    result = main._validate_output_limit(value)
+    assert result == value
+
+
+@pytest.mark.propertybased
+@given(st.integers(max_value=0))
+def test_validate_output_limit_invalid_property(value: int) -> None:
+    """Property: non-positive ints cause BadParameter."""
+    with pytest.raises(BadParameter):
+        main._validate_output_limit(value)
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000))
+def test_validate_baseline_weight_valid_property(value: int) -> None:
+    """Property: positive ints pass through validation unchanged."""
+    result = main._validate_baseline_weight(value)
+    assert result == value
+
+
+@pytest.mark.propertybased
+@given(st.integers(max_value=0))
+def test_validate_baseline_weight_invalid_property(value: int) -> None:
+    """Property: non-positive ints cause BadParameter."""
+    with pytest.raises(BadParameter):
+        main._validate_baseline_weight(value)
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_platform_info_format_property(_: st.DataObject) -> None:
+    """Property: platform info is a non-empty string with at least one dash."""
+    info = main._get_platform_info()
+    assert isinstance(info, str)
+    assert len(info) > 0
+    assert "-" in info
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_python_info_starts_with_python_property(_: st.DataObject) -> None:
+    """Property: python info starts with 'Python'."""
+    info = main._get_python_info()
+    assert info.startswith("Python")
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_gatorgrade_info_contains_gatorgrader_property(
+    _: st.DataObject,
+) -> None:
+    """Property: gatorgrade info contains 'GatorGrader'."""
+    info = main._get_gatorgrade_info()
+    assert "GatorGrader" in info
+
+
+@pytest.mark.propertybased
+@given(st.data())
+def test_os_release_format_property(_: st.DataObject) -> None:
+    """Property: os release is non-empty with parens or empty string."""
+    info = main._get_os_release()
+    assert isinstance(info, str)
+    if info:
+        assert "(" in info and ")" in info
+
+
+@pytest.mark.propertybased
+@given(st.from_regex(r"^[A-Za-z_][A-Za-z0-9_]*$"))
+def test_valid_env_var_names_match_property(value: str) -> None:
+    """Property: valid env var names match the VALID_ENV_VAR_NAME pattern."""
+    assert main.VALID_ENV_VAR_NAME.match(value) is not None
+
+
+@pytest.mark.propertybased
+@given(
+    st.one_of(
+        # names starting with a digit are invalid
+        st.from_regex(r"^[0-9].*$", fullmatch=True),
+        # names containing spaces are invalid
+        st.from_regex(r"^.*\\s+.*$", fullmatch=True),
+        # names containing special characters (not underscore) are invalid
+        st.from_regex(r"^.*[^A-Za-z0-9_].*$", fullmatch=True),
+    )
+)
+def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
+    """Property: invalid env var names do not match the VALID_ENV_VAR_NAME pattern."""
+    assert main.VALID_ENV_VAR_NAME.match(value) is None
