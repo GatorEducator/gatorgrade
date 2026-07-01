@@ -264,3 +264,39 @@ def test_get_project_name_returns_none_when_file_missing(
     missing_file = tmp_path / "nonexistent.yml"
     result = get_project_name(missing_file)
     assert result is None
+
+
+def test_get_project_name_handles_malformed_front_matter(
+    tmp_path: Path,
+) -> None:
+    """Test get_project_name returns None for YAML with a missing closing quote."""
+    config_file = tmp_path / "gatorgrade.yml"
+    # name value starts with a double-quote but has no closing quote
+    config_file.write_text(
+        'name: "unclosed string\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_project_name(config_file)
+    assert result is None
+
+
+def test_parse_config_rejects_malformed_front_matter(
+    tmp_path: Path,
+) -> None:
+    """Test parse_config returns error for YAML with a missing closing quote."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'name: "unclosed string\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    checks, error = parse_config(config_file)
+    assert checks == []
+    assert error is not None
