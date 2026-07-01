@@ -488,7 +488,7 @@ def configure_report(
     # as in "JSON" or "MD". With that said, a prior version of the
     # tool also supported lowercase versions of these fields
     # as in "json" or "md". The command-line interface only
-    # advertisies the capitalized versions, but lowercasing them
+    # advertisies the capitalized versions, but uppercasing them
     # here will ensure that this is backwards compatible
     report_format = report_params[0].upper()
     report_type = report_params[1].upper()
