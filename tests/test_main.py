@@ -236,6 +236,26 @@ def test_gatorgrade_with_github_env_valid_json(
     assert result.exit_code == 0
 
 
+def test_gatorgrade_with_github_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env key name is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid env var name in --report ENV is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
 def test_gatorgrade_with_progress_bar_default(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
