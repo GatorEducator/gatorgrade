@@ -7,9 +7,43 @@ import yaml
 
 from gatorgrade.input.checks import validate_positive_nonzero_int
 from gatorgrade.input.command_line_generator import generate_checks
-from gatorgrade.input.in_file_path import parse_yaml_file, reformat_yaml_data
+from gatorgrade.input.in_file_path import (
+    DATA_WITH_SETUP_LENGTH,
+    parse_yaml_file,
+    reformat_yaml_data,
+)
 
+NAME_FIELD = "name"
 BASELINE_WEIGHT_FIELD = "baseline_weight"
+
+
+def get_project_name(file: Path) -> str | None:
+    """Extract the optional project name from a gatorgrade YAML config file.
+
+    The project name is specified in the front matter of the YAML file as:
+
+        name: "Theory of Computation Final Examination"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The project name string if specified, or None if not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(NAME_FIELD, None)
+    except Exception:
+        pass
+    return None
 
 
 def parse_config(
