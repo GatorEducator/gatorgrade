@@ -963,7 +963,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             time_str, time_color = _format_remaining_time(due_date)
             rich.print(
                 f"[bold]- {DUE_DATE_LABEL}:[/] "
-                f"{due_date_str} ([{time_color}]{time_str}[/])"
+                f"{due_date_str} [{time_color}]({time_str})[/]"
             )
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
