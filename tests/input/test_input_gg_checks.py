@@ -41,7 +41,7 @@ def test_get_due_date_returns_datetime_when_specified(tmp_path: Path) -> None:
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is not None
     assert result.year == 2026  # noqa: PLR2004
     assert result.month == 12  # noqa: PLR2004
@@ -61,7 +61,7 @@ def test_get_due_date_accepts_date_only(tmp_path: Path) -> None:
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is not None
     assert result.year == 2026  # noqa: PLR2004
     assert result.month == 12  # noqa: PLR2004
@@ -80,7 +80,7 @@ def test_get_due_date_returns_none_when_missing(tmp_path: Path) -> None:
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is None
 
 
@@ -95,7 +95,7 @@ def test_get_due_date_handles_invalid_format(tmp_path: Path) -> None:
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is None
 
 
@@ -112,6 +112,114 @@ def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
     )
     result = has_due_date_field(config_file)
     assert result is True
+
+
+def test_get_due_date_handles_os_error(tmp_path: Path) -> None:
+    """Test get_due_date returns an error when the path is a directory."""
+    result, error = get_due_date(tmp_path)
+    # tmp_path is a directory, so opening it as a file raises an error
+    assert result is None
+    assert error is not None
+    assert "Could not read" in error or "Could not parse" in error
+
+
+def test_get_due_date_handles_yaml_error(tmp_path: Path) -> None:
+    """Test get_due_date returns an error for invalid YAML content."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text("*invalid: yaml: [content")
+    result, error = get_due_date(config_file)
+    assert result is None
+    assert error is not None
+    assert "Could not parse" in error
+
+
+def test_get_due_date_accepts_timezone_aware(tmp_path: Path) -> None:
+    """Test get_due_date handles timezone-aware ISO 8601 strings."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15T23:59:00-05:00"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result, _ = get_due_date(config_file)
+    assert result is not None
+    # should be converted to naive local time (no tzinfo)
+    assert result.tzinfo is None
+
+
+def test_get_project_name_returns_none_on_unreadable(tmp_path: Path) -> None:
+    """Test get_project_name returns None when the file cannot be read."""
+    missing_file = tmp_path / "nonexistent.yml"
+    result = get_project_name(missing_file)
+    assert result is None
+
+
+def test_get_project_name_with_yaml_error(tmp_path: Path) -> None:
+    """Test get_project_name returns None for invalid YAML content."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text("*invalid: yaml: [content")
+    result = get_project_name(config_file)
+    assert result is None
+
+
+def test_get_due_date_with_unquoted_yaml_date(tmp_path: Path) -> None:
+    """Test get_due_date accepts an unquoted YAML date value."""
+    config_file = tmp_path / "gatorgrade.yml"
+    # an unquoted YAML date is parsed as a datetime.date object
+    config_file.write_text(
+        "due_date: 2026-12-15\n"
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result, _ = get_due_date(config_file)
+    assert result is not None
+    assert result.year == 2026  # noqa: PLR2004
+    assert result.month == 12  # noqa: PLR2004
+    assert result.day == 15  # noqa: PLR2004
+
+
+def test_get_due_date_with_non_string_value(tmp_path: Path) -> None:
+    """Test get_due_date returns error for non-string, non-date values."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "due_date: 12345\n"
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result, error = get_due_date(config_file)
+    assert result is None
+    assert error is not None
+    assert "Unsupported due date type" in error
+
+
+def test_get_due_date_with_unquoted_yaml_datetime(tmp_path: Path) -> None:
+    """Test get_due_date accepts an unquoted YAML datetime value."""
+    config_file = tmp_path / "gatorgrade.yml"
+    # unquoted ISO datetime is parsed by PyYAML as datetime.datetime
+    config_file.write_text(
+        "due_date: 2026-12-15T23:59:00\n"
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result, _ = get_due_date(config_file)
+    assert result is not None
+    assert result.year == 2026  # noqa: PLR2004
+    assert result.month == 12  # noqa: PLR2004
+    assert result.day == 15  # noqa: PLR2004
+    assert result.hour == 23  # noqa: PLR2004
+    assert result.minute == 59  # noqa: PLR2004
 
 
 @pytest.mark.parametrize(
@@ -169,7 +277,7 @@ def test_get_due_date_still_returns_none_on_invalid(tmp_path: Path) -> None:
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is None
 
 
@@ -471,7 +579,7 @@ def test_get_due_date_accepts_all_aliases(
         "- description: test\n"
         "  command: echo hello\n"
     )
-    result = get_due_date(config_file)
+    result, _ = get_due_date(config_file)
     assert result is not None
     assert result.year == 2026  # noqa: PLR2004
     assert result.month == 12  # noqa: PLR2004
