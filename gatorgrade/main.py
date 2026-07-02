@@ -287,7 +287,7 @@ def _version_callback(value: bool) -> None:
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0913
+def gatorgrade(  # noqa: PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -360,8 +360,10 @@ def gatorgrade(  # noqa: PLR0913
     # also note that the output of the tool is now segmented
     # into sections that are demarcated by horizintal rules
     if ctx.invoked_subcommand is None:
-        # check the due date before parsing config so warnings appear before setup
-        due_date = get_due_date(filename)
+        # check the due date before parsing config so warnings appear before setup;
+        # this returns both the due date and any errors that might have arisen
+        # when parsing the due date (i.e., due to an incorrect time/date format)
+        due_date, due_date_error = get_due_date(filename)
         if has_due_date_field(filename) and due_date is None:
             console.print()
             console.print(
@@ -371,9 +373,20 @@ def gatorgrade(  # noqa: PLR0913
                 )
             )
             console.print()
-            console.print(
-                "Ignoring the due date in the configuration file as it could not be parsed."
-            )
+            # display the specific due date parsing error
+            if due_date_error:
+                console.print(due_date_error)
+            # if there is some other type of error, then
+            # display a generic message about due date parsing
+            else:
+                console.print(
+                    "Ignoring the due date in the configuration file "
+                    "as it could not be parsed."
+                )
+            # display a message about the required format for the
+            # due date as a reminder (note that this is the type of
+            # message that would prove most helpful to instructors
+            # who are creating an assignment and not to students)
             console.print(
                 "Expected an ISO 8601 format such as '2026-12-15' "
                 "or '2026-12-15T23:59:00'."
@@ -381,6 +394,9 @@ def gatorgrade(  # noqa: PLR0913
             console.print()
             console.print(Rule(style="bright_yellow"))
         # warn if multiple due date aliases are present
+        # (there are multiple ways to specify a due date,
+        # in terms of the keys that are accepted in the front
+        # matter, include both "due_date" and "duedate")
         aliases_present = get_due_date_aliases_present(filename)
         if len(aliases_present) > 1:
             chosen = aliases_present[0]
