@@ -9,7 +9,7 @@ import yaml
 from gatorgrade.input.set_up_shell import run_setup
 
 # represent data for a check from the configuration file.
-# every check will have data (`check`) and some may also have a `file_context`,
+# every check will have data (i.e., "check") and some may also have a "file_context",
 # which is a file path associated with the check to be used when running the check.
 CheckData = namedtuple("CheckData", ["file_context", "check"])
 
@@ -42,7 +42,8 @@ def reformat_yaml_data(data: List[Any]) -> List[CheckData]:
     """Reformat the raw data from a YAML file into a list of tuples."""
     reformatted_data: List[CheckData] = []
     if len(data) == DATA_WITH_SETUP_LENGTH:
-        setup_commands = data.pop(0)  # removes the setup commands
+        # removes the setup commands
+        setup_commands = data.pop(0)
         run_setup(setup_commands)
     add_checks_to_list(None, data[0], reformatted_data)
     return reformatted_data
@@ -54,7 +55,8 @@ def add_checks_to_list(
     reformatted_data: List[CheckData],
 ) -> None:
     """Recursively loop through the data and add checks that are found to the reformatted list."""
-    current_path = path  # saves the current path to keep track of the location
+    # saves the current path to keep track of the location
+    current_path = path
     for ddict in data_list:
         for item in ddict:
             if isinstance(
@@ -64,11 +66,11 @@ def add_checks_to_list(
                     path = item
                 else:
                     path = f"{path}/{item}"
-                add_checks_to_list(
-                    path, ddict[item], reformatted_data
-                )  # runs this same function on the list inside of a dictionary
+                # runs this same function on the list inside of a dictionary
+                add_checks_to_list(path, ddict[item], reformatted_data)
                 path = current_path
-            else:  # adds the current check to the reformatted data list
+            # adds the current check to the reformatted data list
+            else:
                 reformatted_data.append(
                     CheckData(file_context=path, check=ddict)
                 )

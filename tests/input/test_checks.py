@@ -334,3 +334,43 @@ def test_validate_positive_nonzero_int_rejects_false() -> None:
     result = validate_positive_nonzero_int(False, "outputlimit")
     assert result is not None
     assert "False" in result
+
+
+def test_shell_check_stores_hint() -> None:
+    """Test ShellCheck stores an optional hint."""
+    check = ShellCheck(
+        command="echo 'test'",
+        description="Test with hint",
+        json_info={"command": "echo 'test'"},
+        hint="Try checking the test output",
+    )
+    assert check.hint == "Try checking the test output"
+
+
+def test_shell_check_default_hint_is_none() -> None:
+    """Test ShellCheck hint defaults to None."""
+    check = ShellCheck(
+        command="echo 'test'",
+        description="Test without hint",
+        json_info={"command": "echo 'test'"},
+    )
+    assert check.hint is None
+
+
+def test_gatorgrader_check_stores_hint() -> None:
+    """Test GatorGraderCheck stores an optional hint."""
+    check = GatorGraderCheck(
+        gg_args=["TestCheck"],
+        json_info={"check": "TestCheck"},
+        hint="Make sure the function is defined correctly",
+    )
+    assert check.hint == "Make sure the function is defined correctly"
+
+
+def test_gatorgrader_check_default_hint_is_none() -> None:
+    """Test GatorGraderCheck hint defaults to None."""
+    check = GatorGraderCheck(
+        gg_args=["TestCheck"],
+        json_info={"check": "TestCheck"},
+    )
+    assert check.hint is None

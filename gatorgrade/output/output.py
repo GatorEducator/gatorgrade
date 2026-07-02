@@ -26,10 +26,20 @@ SPACE = " "
 # output labels
 CHECKS_LABEL = "Checks"
 FAILING_CHECKS_LABEL = "Failing Check(s)"
+OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
 REPORT_LABEL = "Report"
 GITHUB_ENV_LABEL = "GitHub Environment"
+DUE_DATE_LABEL = "Due Date"
+REMAINING_LABEL = "remaining"
+LESS_THAN_ONE_MINUTE = "Less than 1 minute"
+SECONDS_PER_HOUR = 3600
+SECONDS_PER_MINUTE = 60
+TIME_REMAINING_GREEN = "green"
+TIME_REMAINING_YELLOW = "yellow"
+TIME_REMAINING_SOON = "bright_yellow"
+TIME_REMAINING_OVERDUE = "red"
 RUNNING_CHECKS_LABEL = "Running checks"
 RUNNING_CHECKS_RULE_LABEL = "Running Check(s)"
 WEIGHT_LABEL = "Weight"
@@ -55,10 +65,13 @@ WEIGHTED_PERCENTAGE_KEY = "weighted_percentage_score"
 CLI_ARGS_KEY = "cli_args"
 VERSION_INFO_KEY = "version_info"
 REPORT_TIME_KEY = "report_time"
+PROJECT_NAME_KEY = "project_name"
+DUE_DATE_KEY = "due_date"
 CHECKS_KEY = "checks"
 STATUS_KEY = "status"
 PATH_KEY = "path"
 DIAGNOSTIC_KEY = "diagnostic"
+HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -108,6 +121,13 @@ MD_DIAG_OPEN = "````text"
 MD_DIAG_CLOSE = "````"
 MD_CLI_ARGS_HEADING = "Command-Line Arguments"
 MD_VERSION_INFO_HEADING = "Version Information"
+MD_PROJECT_NAME_LABEL = "**Project Name:**"
+MD_AMOUNT_CORRECT_LABEL = "**Amount Correct:**"
+MD_POINTS_LABEL = "**Points:**"
+MD_REPORT_TIME_LABEL = "**Report Time:**"
+MD_OPTIONS_LABEL = "**options:**"
+MD_DIAGNOSTIC_LABEL = "**diagnostic:**"
+MD_DUE_DATE_LABEL = "**Due Date:**"
 
 # error message strings
 FILE_WRITE_ERR = (
@@ -119,7 +139,7 @@ EMPTY_CLI_ARGS: dict = {}
 
 
 def _elide_report_path(path_str: str) -> str:
-    """Elide the middle of a long path, keeping the start and filename."""
+    """Elide the middle of a long file/directory path, keeping the start and filename."""
     if len(path_str) <= MAX_REPORT_PATH_LENGTH:
         return path_str
     path = Path(path_str)
@@ -171,6 +191,7 @@ def _run_shell_check(
         The result of running the shell check as a CheckResult.
 
     """
+    # run the shell command and capture its output and return code
     result = subprocess.run(
         check.command,
         shell=True,
@@ -184,14 +205,19 @@ def _run_shell_check(
     passed = result.returncode == 0
     # add spaces after each newline to indent all lines of diagnostic
     raw_diagnostic = (
-        ""
+        EMPTY
         if passed
-        else result.stdout.decode().strip().replace("\n", DIAGNOSTIC_INDENT)
+        else result.stdout.decode().strip().replace(NEWLINE, DIAGNOSTIC_INDENT)
     )
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
     )
+    # truncate the diagnostic message if it is too long (note that this
+    # limit can be specified on a per-check basis or, alternatively, it
+    # can be provided by the person running gatorgrade on the command-line)
     diagnostic = _truncate_diagnostic(raw_diagnostic, limit)
+    # create and return the CheckResult arising from the
+    # execution of the shell check
     return CheckResult(
         passed=passed,
         description=check.description,
@@ -199,6 +225,7 @@ def _run_shell_check(
         diagnostic=diagnostic,
         weight=check.weight,
         outputlimit=limit,
+        hint=check.hint,
     )
 
 
@@ -255,6 +282,7 @@ def _run_gg_check(
         path=file_path,
         weight=check.weight,
         outputlimit=limit,
+        hint=check.hint,
     )
 
 
@@ -265,6 +293,8 @@ def create_report_json(  # noqa: PLR0913
     weighted_percent: int = 0,
     cli_args: dict | None = None,
     version_info: dict | None = None,
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
@@ -275,6 +305,8 @@ def create_report_json(  # noqa: PLR0913
         weighted_percent: the weighted percentage of checks that passed
         cli_args: the command-line arguments to include in the report
         version_info: the version and platform information to include in the report
+        project_name: optional custom project name from the config file
+        due_date: optional due date from the config file
 
     """
     # compute weighted totals from check results
@@ -288,6 +320,8 @@ def create_report_json(  # noqa: PLR0913
         WEIGHTED_AMOUNT_CORRECT_KEY,
         WEIGHTED_TOTAL_KEY,
         WEIGHTED_PERCENTAGE_KEY,
+        PROJECT_NAME_KEY,
+        DUE_DATE_KEY,
         CLI_ARGS_KEY,
         VERSION_INFO_KEY,
         REPORT_TIME_KEY,
@@ -311,6 +345,8 @@ def create_report_json(  # noqa: PLR0913
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
                 results_json[DIAGNOSTIC_KEY] = checkResults[i].diagnostic
+            if checkResults[i].hint:
+                results_json[HINT_KEY] = checkResults[i].hint
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -322,6 +358,10 @@ def create_report_json(  # noqa: PLR0913
                 passed_weight,
                 total_weight,
                 weighted_percent,
+                project_name if project_name is not None else EMPTY,
+                due_date.strftime("%Y-%m-%d %H:%M")
+                if due_date is not None
+                else EMPTY,
                 cli_args if cli_args is not None else EMPTY_CLI_ARGS,
                 version_info if version_info is not None else EMPTY_CLI_ARGS,
                 formatted_time,
@@ -332,14 +372,21 @@ def create_report_json(  # noqa: PLR0913
     return overall_dict
 
 
-def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
+def create_markdown_report_file(  # noqa: PLR0912, PLR0915
+    json: dict,
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
+) -> str:
     """Create a markdown file using the created json to use in GitHub actions summary, among other places.
 
     Args:
         json: a dictionary containing the json that should be converted to markdown
+        project_name: optional custom project name from the config file
+        due_date: optional due date from the config file
 
     """
-    markdown_contents = ""
+    markdown_contents = EMPTY
+    display_project_name = project_name or Path.cwd().name
     passing_checks: list[dict] = []
     failing_checks: list[dict] = []
     num_checks = len(json.get(CHECKS_KEY))  # type: ignore
@@ -348,17 +395,24 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     weighted_amount = json.get(WEIGHTED_AMOUNT_CORRECT_KEY, 0)
     weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
-        f"{MD_HEADER}"
-        f"- **Project Name:** {Path.cwd().name}{NEWLINE}"
-        f"- **Amount Correct:** {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
+        f"{MD_HEADER}- {MD_PROJECT_NAME_LABEL} {display_project_name}{NEWLINE}"
+    )
+    if due_date is not None:
+        due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+        time_str, _ = _format_remaining_time(due_date)
+        markdown_contents += (
+            f"- {MD_DUE_DATE_LABEL} {due_date_str} ({time_str}){NEWLINE}"
+        )
+    markdown_contents += (
+        f"- {MD_AMOUNT_CORRECT_LABEL} {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
         f"({json.get(PERCENTAGE_SCORE_KEY)}%){NEWLINE}"
-        f"- **Points:** {weighted_amount}/{weighted_total} "
+        f"- {MD_POINTS_LABEL} {weighted_amount}/{weighted_total} "
         f"({weighted_score}%){NEWLINE}"
     )
     # report time
     if REPORT_TIME_KEY in json:
         markdown_contents += (
-            f"- **Report Time:** {json[REPORT_TIME_KEY]}{NEWLINE}"
+            f"- {MD_REPORT_TIME_LABEL} {json[REPORT_TIME_KEY]}{NEWLINE}"
         )
     # fenced code block for cli arguments
     cli_args = json.get(CLI_ARGS_KEY, {})
@@ -393,7 +447,7 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
     markdown_contents += MD_FAILING_HEADER
     # for each failing check, print out all related information
     for check in failing_checks:
-        # for each key val pair in the check dictionary
+        # for each key-value pair in the check dictionary
         if DESCRIPTION_KEY in check:
             markdown_contents += MD_FAILING_ITEM.format(check[DESCRIPTION_KEY])
         else:
@@ -403,7 +457,9 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
             if key in (STATUS_KEY, DESCRIPTION_KEY, CHECK_KEY):
                 continue
             if key == OPTIONS_KEY and value:
-                markdown_contents += f"{NEWLINE}{MD_LIST_INDENT}- **options:**"
+                markdown_contents += (
+                    f"{NEWLINE}{MD_LIST_INDENT}- {MD_OPTIONS_LABEL}"
+                )
                 for opt_key, opt_val in value.items():
                     markdown_contents += (
                         f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
@@ -411,7 +467,7 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
                     )
             elif key == DIAGNOSTIC_KEY:
                 markdown_contents += (
-                    f"{NEWLINE}{MD_LIST_INDENT}- **diagnostic:**"
+                    f"{NEWLINE}{MD_LIST_INDENT}- {MD_DIAGNOSTIC_LABEL}"
                     f"{NEWLINE}{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
                     f"{MD_DIAG_OPEN}{NEWLINE}"
                 )
@@ -432,7 +488,10 @@ def create_markdown_report_file(json: dict) -> str:  # noqa: PLR0912
 
 
 def configure_report(
-    report_params: Tuple[str, str, str], report_output_data_json: dict
+    report_params: Tuple[str, str, str],
+    report_output_data_json: dict,
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> None:
     """Write the report based on the user's destination and format.
 
@@ -446,8 +505,7 @@ def configure_report(
 
     Writing report data to the GITHUB_ENV file for GitHub Actions is now
     handled by the standalone --github-env CLI flag. See write_github_env()
-    for details. This means that saving data to the GITHUB_ENV is no longer
-    done implicitly and is instead something to which you must opt-in.
+    for details.
 
     Args:
         report_params: The details of what the user wants the report to
@@ -457,6 +515,8 @@ def configure_report(
             report_params[2]: name of the file or environment variable
         report_output_data_json: The JSON dictionary that will be used
             or converted to markdown.
+        project_name: Optional custom project name from the config file.
+        due_date: Optional due date from the config file.
 
     """
     # normalize to uppercase for case-insensitive matching
@@ -464,7 +524,7 @@ def configure_report(
     # as in "JSON" or "MD". With that said, a prior version of the
     # tool also supported lowercase versions of these fields
     # as in "json" or "md". The command-line interface only
-    # advertisies the capitalized versions, but lowercasing them
+    # advertisies the capitalized versions, but uppercasing them
     # here will ensure that this is backwards compatible
     report_format = report_params[0].upper()
     report_type = report_params[1].upper()
@@ -475,7 +535,7 @@ def configure_report(
     # if the user wants markdown, get markdown content based on json
     if report_type == REPORT_TYPE_MD:
         report_output_data_md = create_markdown_report_file(
-            report_output_data_json
+            report_output_data_json, project_name, due_date
         )
     # if the user wants the data stored in a file
     if report_format == REPORT_FORMAT_FILE:
@@ -511,20 +571,21 @@ def configure_report(
 def write_github_env(
     github_env: Tuple[str | None, str | None],
     report_output_data_json: dict,
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> bool:
     """Write report data to the GITHUB_ENV environment file.
 
     When the GITHUB_ENV environment variable is set, this function
     appends the report data as an environment variable assignment to
-    that file and returns True. Single-line content (i.e., compact JSON)
-    uses the simple KEY=VALUE format, while multi-line content
-    (i.e., Markdown) uses the KEY<<delimiter heredoc syntax
-    understood by GitHub Actions.
+    that file and returns True.
 
     Args:
         github_env: Tuple of (format, environment variable name).
             Format is "JSON" or "MD" (case-insensitive).
         report_output_data_json: The full JSON report data.
+        project_name: Optional custom project name from the config file.
+        due_date: Optional due date from the config file.
 
     Returns:
         True if data was written to GITHUB_ENV, False if skipped
@@ -535,11 +596,13 @@ def write_github_env(
     if github_env_path is None:
         return False
     # both values are guaranteed non-None by the caller
-    fmt: str = github_env[0] if github_env[0] is not None else ""
+    fmt: str = github_env[0] if github_env[0] is not None else EMPTY
     fmt = fmt.upper()
-    key: str = github_env[1] if github_env[1] is not None else ""
+    key: str = github_env[1] if github_env[1] is not None else EMPTY
     if fmt == REPORT_TYPE_MD:
-        content = create_markdown_report_file(report_output_data_json)
+        content = create_markdown_report_file(
+            report_output_data_json, project_name, due_date
+        )
     else:
         content = json_module.dumps(report_output_data_json)
     # use multiline delimiter syntax for content with newlines,
@@ -579,6 +642,63 @@ def write_json_or_md_file(
         raise ValueError(FILE_WRITE_ERR) from e
 
 
+def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
+    """Format the time remaining until (or past) a due date.
+
+    Args:
+        due_date: The due date and time.
+
+    Returns:
+        A tuple of (formatted_string, color_name). The color is "green"
+        when there is plenty of time, "yellow" when less than 24 hours
+        remain, and "red" when the due date has passed. Importantly, all
+        of these colors are specified using rich and only defined in the
+        terminal window of the person who ran the gatorgrade tool.
+
+    """
+    # determine the current time and then produce a diagnostic based
+    # on the connection between the due date and the current time
+    now = datetime.datetime.now()
+    seconds = int((due_date - now).total_seconds())
+    if seconds >= 0:
+        remaining = datetime.timedelta(seconds=seconds)
+        days = remaining.days
+        hours = remaining.seconds // SECONDS_PER_HOUR
+        minutes = (remaining.seconds % SECONDS_PER_HOUR) // SECONDS_PER_MINUTE
+        parts = []
+        if days > 0:
+            parts.append(f"{days} day{'s' if days != 1 else ''}")
+        if hours > 0:
+            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+        if minutes > 0 and days == 0:
+            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+        if not parts:
+            parts.append(LESS_THAN_ONE_MINUTE)
+        time_str = ", ".join(parts)
+        if days > 0:
+            color = TIME_REMAINING_GREEN
+        elif hours > 0:
+            color = TIME_REMAINING_YELLOW
+        else:
+            color = TIME_REMAINING_SOON
+        return f"{time_str} {REMAINING_LABEL}", color
+    overdue = datetime.timedelta(seconds=-seconds)
+    days = overdue.days
+    hours = overdue.seconds // SECONDS_PER_HOUR
+    minutes = (overdue.seconds % SECONDS_PER_HOUR) // SECONDS_PER_MINUTE
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes > 0 and days == 0:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if not parts:
+        parts.append(LESS_THAN_ONE_MINUTE)
+    time_str = ", ".join(parts)
+    return f"{OVERDUE_LABEL} by {time_str}", TIME_REMAINING_OVERDUE
+
+
 def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     checks: List[Union[ShellCheck, GatorGraderCheck]],
     report: Tuple[str, str, str],
@@ -588,6 +708,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     cli_args: dict | None = None,
     version_info: dict | None = None,
     github_env: Tuple[str | None, str | None] = (None, None),
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -605,9 +727,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         version_info: Version and platform information to include in the report.
         github_env: Optional tuple of (format, key) for writing report data
             to the GITHUB_ENV file in GitHub Actions.
+        project_name: Optional custom project name from the config file.
+            If not provided, the current directory name is used.
+        due_date: Optional due date from the config file for deadline display.
 
     """
     results: List[CheckResult] = []
+    # use the configured project name, falling back to directory name
+    display_project_name = project_name or Path.cwd().name
     # run each of the checks
     # check how many tests are being ran
     total_checks = len(checks)
@@ -734,11 +861,18 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             weighted_percent,
             cli_args,
             version_info,
+            display_project_name,
+            due_date,
         )
     # track report format for summary display
     report_type_str = None
     if all(report):
-        configure_report(report, report_output_data)
+        # pass along all relevent details for the report so as
+        # to ensure that when content is displayed or saved that
+        # there is enough information to debug the failing checks
+        configure_report(
+            report, report_output_data, display_project_name, due_date
+        )
         report_type_str = report[1].upper()
         if report[0].upper() == REPORT_FORMAT_FILE:
             report_display_name = _elide_report_path(report[2])
@@ -752,7 +886,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         # both values are guaranteed non-None by the all() check
         assert github_env[0] is not None
         assert github_env[1] is not None
-        github_env_written = write_github_env(github_env, report_output_data)
+        github_env_written = write_github_env(
+            github_env, report_output_data, display_project_name, due_date
+        )
         github_env_type_str = github_env[0].upper()
         github_env_key = github_env[1]
     # compute the summary color based on pass/fail status
@@ -788,7 +924,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                         f"[blue]   → {RUN_COMMAND_LABEL}: [green]{result.run_command}"
                     )
         rich.print("")
-        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        if due_date is not None:
+            due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+            time_str, time_color = _format_remaining_time(due_date)
+            rich.print(
+                f"[bold]- {DUE_DATE_LABEL}:[/] "
+                f"{due_date_str} [{time_color}]({time_str})[/]"
+            )
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
@@ -814,7 +957,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     # scores are displayed as in the failure case
     else:
         rich.print("")
-        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {Path.cwd().name}")
+        rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        if due_date is not None:
+            due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+            time_str, time_color = _format_remaining_time(due_date)
+            rich.print(
+                f"[bold]- {DUE_DATE_LABEL}:[/] "
+                f"{due_date_str} [{time_color}]({time_str})[/]"
+            )
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
