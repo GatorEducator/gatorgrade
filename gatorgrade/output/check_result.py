@@ -91,7 +91,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"diagnostic='{self.diagnostic}', "
             f"run_command='{self.run_command}', "
             f"weight={self.weight}, "
-            f"outputlimit={self.outputlimit})"
+            f"outputlimit={self.outputlimit}, "
+            f"hint={self.hint})"
         )
 
     def __str__(self) -> str:
