@@ -36,6 +36,13 @@ dependencies = [
     "click>=8.3.0,<9",
 ]
 
+[project.optional-dependencies]
+auto-hint = [
+    "litert-lm-api",
+    "huggingface-hub",
+    "platformdirs",
+]
+
 [project.scripts]
 gatorgrade = "gatorgrade.main:app"
 
