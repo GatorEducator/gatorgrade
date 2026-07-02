@@ -2449,3 +2449,48 @@ def test_format_remaining_time_overdue() -> None:
     assert "Overdue" in time_str
     assert "2 days" in time_str
     assert color == "red"
+
+
+def test_create_markdown_report_file_with_due_date() -> None:
+    """Test markdown report includes due date when provided."""
+    json_data = {
+        "amount_correct": 1,
+        "percentage_score": 100,
+        "checks": [{"status": True, "description": "Test"}],
+    }
+    future = datetime.datetime.now() + datetime.timedelta(days=10)
+    markdown = output.create_markdown_report_file(json_data, due_date=future)
+    assert "**Due Date:**" in markdown
+    assert "remaining" in markdown
+
+
+def test_create_report_json_with_project_name_and_due_date() -> None:
+    """Test create_report_json includes project_name and due_date."""
+    future = datetime.datetime.now() + datetime.timedelta(days=5)
+    result = output.create_report_json(
+        1, [], 100, project_name="My Project", due_date=future
+    )
+    assert result["project_name"] == "My Project"
+    assert "due_date" in result
+    assert result["due_date"] != ""
+
+
+def test_create_report_json_without_project_name_and_due_date() -> None:
+    """Test create_report_json has empty defaults when not provided."""
+    result = output.create_report_json(1, [], 100)
+    assert result["project_name"] == ""
+    assert result["due_date"] == ""
+
+
+def test_create_report_json_includes_hint_in_failing_check() -> None:
+    """Test create_report_json includes hint for failing checks."""
+    failed = CheckResult(
+        passed=False,
+        description="Failed test",
+        json_info={"check": "test"},
+        diagnostic="Something went wrong",
+        hint="Try checking your input",
+    )
+    result = output.create_report_json(0, [failed], 0)
+    check_data = result["checks"][0]
+    assert check_data["hint"] == "Try checking your input"
