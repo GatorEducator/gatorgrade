@@ -23,7 +23,7 @@ from gatorgrade.input.in_file_path import (
 
 NAME_FIELD = "name"
 DUE_DATE_FIELD = "due_date"
-DUE_DATE_ALIASES = ("due_date", "duedate", "due", "date")
+DUE_DATE_ALIASES = (DUE_DATE_FIELD, "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
 
 
