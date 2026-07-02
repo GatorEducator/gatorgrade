@@ -65,10 +65,13 @@ WEIGHTED_PERCENTAGE_KEY = "weighted_percentage_score"
 CLI_ARGS_KEY = "cli_args"
 VERSION_INFO_KEY = "version_info"
 REPORT_TIME_KEY = "report_time"
+PROJECT_NAME_KEY = "project_name"
+DUE_DATE_KEY = "due_date"
 CHECKS_KEY = "checks"
 STATUS_KEY = "status"
 PATH_KEY = "path"
 DIAGNOSTIC_KEY = "diagnostic"
+HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -124,6 +127,7 @@ MD_POINTS_LABEL = "**Points:**"
 MD_REPORT_TIME_LABEL = "**Report Time:**"
 MD_OPTIONS_LABEL = "**options:**"
 MD_DIAGNOSTIC_LABEL = "**diagnostic:**"
+MD_DUE_DATE_LABEL = "**Due Date:**"
 
 # error message strings
 FILE_WRITE_ERR = (
@@ -289,6 +293,8 @@ def create_report_json(  # noqa: PLR0913
     weighted_percent: int = 0,
     cli_args: dict | None = None,
     version_info: dict | None = None,
+    project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> dict:
     """Take checks and put them into json format in a dictionary.
 
@@ -299,6 +305,8 @@ def create_report_json(  # noqa: PLR0913
         weighted_percent: the weighted percentage of checks that passed
         cli_args: the command-line arguments to include in the report
         version_info: the version and platform information to include in the report
+        project_name: optional custom project name from the config file
+        due_date: optional due date from the config file
 
     """
     # compute weighted totals from check results
@@ -312,6 +320,8 @@ def create_report_json(  # noqa: PLR0913
         WEIGHTED_AMOUNT_CORRECT_KEY,
         WEIGHTED_TOTAL_KEY,
         WEIGHTED_PERCENTAGE_KEY,
+        PROJECT_NAME_KEY,
+        DUE_DATE_KEY,
         CLI_ARGS_KEY,
         VERSION_INFO_KEY,
         REPORT_TIME_KEY,
@@ -335,6 +345,8 @@ def create_report_json(  # noqa: PLR0913
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
                 results_json[DIAGNOSTIC_KEY] = checkResults[i].diagnostic
+            if checkResults[i].hint:
+                results_json[HINT_KEY] = checkResults[i].hint
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -346,6 +358,10 @@ def create_report_json(  # noqa: PLR0913
                 passed_weight,
                 total_weight,
                 weighted_percent,
+                project_name if project_name is not None else EMPTY,
+                due_date.strftime("%Y-%m-%d %H:%M")
+                if due_date is not None
+                else EMPTY,
                 cli_args if cli_args is not None else EMPTY_CLI_ARGS,
                 version_info if version_info is not None else EMPTY_CLI_ARGS,
                 formatted_time,
@@ -356,15 +372,17 @@ def create_report_json(  # noqa: PLR0913
     return overall_dict
 
 
-def create_markdown_report_file(  # noqa: PLR0912
+def create_markdown_report_file(  # noqa: PLR0912, PLR0915
     json: dict,
     project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> str:
     """Create a markdown file using the created json to use in GitHub actions summary, among other places.
 
     Args:
         json: a dictionary containing the json that should be converted to markdown
         project_name: optional custom project name from the config file
+        due_date: optional due date from the config file
 
     """
     markdown_contents = EMPTY
@@ -377,8 +395,15 @@ def create_markdown_report_file(  # noqa: PLR0912
     weighted_amount = json.get(WEIGHTED_AMOUNT_CORRECT_KEY, 0)
     weighted_total = json.get(WEIGHTED_TOTAL_KEY, 0)
     markdown_contents += (
-        f"{MD_HEADER}"
-        f"- {MD_PROJECT_NAME_LABEL} {display_project_name}{NEWLINE}"
+        f"{MD_HEADER}- {MD_PROJECT_NAME_LABEL} {display_project_name}{NEWLINE}"
+    )
+    if due_date is not None:
+        due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
+        time_str, _ = _format_remaining_time(due_date)
+        markdown_contents += (
+            f"- {MD_DUE_DATE_LABEL} {due_date_str} ({time_str}){NEWLINE}"
+        )
+    markdown_contents += (
         f"- {MD_AMOUNT_CORRECT_LABEL} {json.get(AMOUNT_CORRECT_KEY)}/{num_checks} "
         f"({json.get(PERCENTAGE_SCORE_KEY)}%){NEWLINE}"
         f"- {MD_POINTS_LABEL} {weighted_amount}/{weighted_total} "
@@ -466,6 +491,7 @@ def configure_report(
     report_params: Tuple[str, str, str],
     report_output_data_json: dict,
     project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> None:
     """Write the report based on the user's destination and format.
 
@@ -479,8 +505,7 @@ def configure_report(
 
     Writing report data to the GITHUB_ENV file for GitHub Actions is now
     handled by the standalone --github-env CLI flag. See write_github_env()
-    for details. This means that saving data to the GITHUB_ENV is no longer
-    done implicitly and is instead something to which you must opt-in.
+    for details.
 
     Args:
         report_params: The details of what the user wants the report to
@@ -491,6 +516,7 @@ def configure_report(
         report_output_data_json: The JSON dictionary that will be used
             or converted to markdown.
         project_name: Optional custom project name from the config file.
+        due_date: Optional due date from the config file.
 
     """
     # normalize to uppercase for case-insensitive matching
@@ -509,7 +535,7 @@ def configure_report(
     # if the user wants markdown, get markdown content based on json
     if report_type == REPORT_TYPE_MD:
         report_output_data_md = create_markdown_report_file(
-            report_output_data_json, project_name
+            report_output_data_json, project_name, due_date
         )
     # if the user wants the data stored in a file
     if report_format == REPORT_FORMAT_FILE:
@@ -546,23 +572,20 @@ def write_github_env(
     github_env: Tuple[str | None, str | None],
     report_output_data_json: dict,
     project_name: str | None = None,
+    due_date: datetime.datetime | None = None,
 ) -> bool:
     """Write report data to the GITHUB_ENV environment file.
 
     When the GITHUB_ENV environment variable is set, this function
     appends the report data as an environment variable assignment to
-    that file and returns True. Single-line content (i.e., compact JSON)
-    uses the simple KEY=VALUE format, while multi-line content
-    (i.e., Markdown) uses the KEY<<delimiter heredoc syntax
-    understood by GitHub Actions.
+    that file and returns True.
 
     Args:
         github_env: Tuple of (format, environment variable name).
             Format is "JSON" or "MD" (case-insensitive).
         report_output_data_json: The full JSON report data.
-
-    Args:
         project_name: Optional custom project name from the config file.
+        due_date: Optional due date from the config file.
 
     Returns:
         True if data was written to GITHUB_ENV, False if skipped
@@ -578,7 +601,7 @@ def write_github_env(
     key: str = github_env[1] if github_env[1] is not None else EMPTY
     if fmt == REPORT_TYPE_MD:
         content = create_markdown_report_file(
-            report_output_data_json, project_name
+            report_output_data_json, project_name, due_date
         )
     else:
         content = json_module.dumps(report_output_data_json)
@@ -838,11 +861,18 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             weighted_percent,
             cli_args,
             version_info,
+            display_project_name,
+            due_date,
         )
     # track report format for summary display
     report_type_str = None
     if all(report):
-        configure_report(report, report_output_data, display_project_name)
+        # pass along all relevent details for the report so as
+        # to ensure that when content is displayed or saved that
+        # there is enough information to debug the failing checks
+        configure_report(
+            report, report_output_data, display_project_name, due_date
+        )
         report_type_str = report[1].upper()
         if report[0].upper() == REPORT_FORMAT_FILE:
             report_display_name = _elide_report_path(report[2])
@@ -857,7 +887,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         assert github_env[0] is not None
         assert github_env[1] is not None
         github_env_written = write_github_env(
-            github_env, report_output_data, display_project_name
+            github_env, report_output_data, display_project_name, due_date
         )
         github_env_type_str = github_env[0].upper()
         github_env_key = github_env[1]
