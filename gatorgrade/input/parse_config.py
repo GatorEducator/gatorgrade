@@ -51,19 +51,59 @@ def get_project_name(file: Path) -> str | None:
             parsed_yaml_file[0], dict
         ):
             return parsed_yaml_file[0].get(NAME_FIELD, None)
-    except Exception:
+    except (yaml.YAMLError, OSError):
         pass
     return None
 
 
-def _get_date_str(front_matter: dict) -> tuple[str | None, str | None]:
-    """Find the due date string from the front matter, trying all aliases.
+def _parse_due_date_value(
+    value: Any,
+) -> tuple[datetime.datetime | None, str | None]:
+    """Parse a due date value from the YAML front matter.
+
+    Supports quoted strings in ISO 8601 format, unquoted YAML datetime
+    objects, and unquoted YAML date objects. Timezone-aware datetimes
+    are converted to naive local time on computer running gatorgrade.
+
+    Args:
+        value: The raw value from the YAML front matter.
+
+    Returns:
+        A tuple of (datetime, None) on success, or (None, error_message)
+        if the value could not be parsed.
+
+    """
+    try:
+        if isinstance(value, str):
+            dt = datetime.datetime.fromisoformat(value)
+        elif isinstance(value, datetime.datetime):
+            dt = value
+        elif isinstance(value, datetime.date):
+            dt = datetime.datetime.combine(value, datetime.time.min)
+        else:
+            return None, (f"Unsupported due date type: {type(value).__name__}")
+    except ValueError as e:
+        return None, f"Could not parse due date: {e}"
+    # convert timezone-aware datetimes to naive local time; note that
+    # if this conversion is not done and the creator of the gatorgrade
+    # configuration file has used a datetime with a timezeone, then
+    # the program will crash if two different types of datetime
+    # objects (they are different types) are compared to each other
+    if dt.tzinfo is not None:
+        dt = dt.astimezone().replace(tzinfo=None)
+    return dt, None
+
+
+def _get_due_date_value(
+    front_matter: dict,
+) -> tuple[Any | None, str | None]:
+    """Find the due date value from the front matter, trying all aliases.
 
     Args:
         front_matter: The YAML front matter dictionary.
 
     Returns:
-        A tuple of (date_string, field_name) or (None, None) if no alias
+        A tuple of (raw_value, field_name) or (None, None) if no alias
         is found. The first matching alias in DUE_DATE_ALIASES is used.
 
     """
@@ -72,9 +112,7 @@ def _get_date_str(front_matter: dict) -> tuple[str | None, str | None]:
         # if one of the due date aliases is found,
         # then extract it and the due date
         if alias in front_matter:
-            value = front_matter[alias]
-            if isinstance(value, str):
-                return value, alias
+            return front_matter[alias], alias
     # there were no due dates found inside of the
     # front matter and thus no checking for due
     # dates will occur and no diagnostics will appear
@@ -113,11 +151,13 @@ def get_due_date_aliases_present(file: Path) -> list[str]:
         return result
     # if there was a parsing exception, then return the
     # current state of the list, which should be empty
-    except Exception:
+    except (yaml.YAMLError, OSError):
         return result
 
 
-def get_due_date(file: Path) -> datetime.datetime | None:
+def get_due_date(
+    file: Path,
+) -> tuple[datetime.datetime | None, str | None]:
     """Extract the optional due date from a gatorgrade YAML config file.
 
     The due date can be specified with any of these field names:
@@ -131,7 +171,8 @@ def get_due_date(file: Path) -> datetime.datetime | None:
 
     Both ISO 8601 datetime strings ("2026-12-15T23:59:00") and date-only
     strings ("2026-12-15") are accepted. Date-only strings are treated as
-    midnight on that date. If there is more than one of the approved fields
+    midnight on that date. Timezone-aware datetime strings are converted
+    to naive local time. If there is more than one of the approved fields
     in the front matter about the due date, then the one called "due_date"
     is used and a warning message is displayed. This warning message is
     largely for the benefit of instructors who do not create the due date
@@ -141,8 +182,8 @@ def get_due_date(file: Path) -> datetime.datetime | None:
         file: Path to the gatorgrade YAML configuration file.
 
     Returns:
-        A datetime object if a valid due date is found, or None if not
-        present or if the date cannot be parsed.
+        A tuple of (datetime, None) on success, (None, error_message) on
+        parse failure, or (None, None) if no due date is present.
 
     """
     # try to parse the YAML file and extract the due date from
@@ -154,19 +195,18 @@ def get_due_date(file: Path) -> datetime.datetime | None:
             len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH
             and isinstance(parsed_yaml_file[0], dict)
         ):
-            return None
-        date_str, _ = _get_date_str(parsed_yaml_file[0])
-        if date_str is None:
-            return None
-        try:
-            return datetime.datetime.fromisoformat(date_str)
-        except ValueError:
-            try:
-                return datetime.datetime.strptime(date_str, "%Y-%m-%d")
-            except ValueError:
-                return None
-    except Exception:
-        return None
+            return None, None
+        value, alias = _get_due_date_value(parsed_yaml_file[0])
+        if value is None:
+            return None, None
+        due_date, parse_error = _parse_due_date_value(value)
+        if parse_error:
+            return None, f"Invalid value for '{alias}': {parse_error}"
+        return due_date, None
+    except yaml.YAMLError as e:
+        return None, f"Could not parse YAML front matter: {e}"
+    except OSError as e:
+        return None, f"Could not read configuration file: {e}"
 
 
 def has_due_date_field(file: Path) -> bool:
@@ -190,9 +230,8 @@ def has_due_date_field(file: Path) -> bool:
             and isinstance(parsed_yaml_file[0], dict)
         ):
             return False
-        date_str, _ = _get_date_str(parsed_yaml_file[0])
-        return date_str is not None
-    except Exception:
+        return any(alias in parsed_yaml_file[0] for alias in DUE_DATE_ALIASES)
+    except (yaml.YAMLError, OSError):
         return False
 
 
