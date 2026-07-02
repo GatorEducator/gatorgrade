@@ -86,7 +86,7 @@ def _parse_due_date_value(
         return None, f"Could not parse due date: {e}"
     # convert timezone-aware datetimes to naive local time; note that
     # if this conversion is not done and the creator of the gatorgrade
-    # configuration file has used a datetime with a timezeone, then
+    # configuration file has used a datetime with a timezone, then
     # the program will crash if two different types of datetime
     # objects (they are different types) are compared to each other
     if dt.tzinfo is not None:
