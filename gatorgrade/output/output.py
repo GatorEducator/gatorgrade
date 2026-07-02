@@ -636,7 +636,6 @@ def _format_remaining_time(due_date: datetime.datetime) -> tuple[str, str]:
     # determine the current time and then produce a diagnostic based
     # on the connection between the due date and the current time
     now = datetime.datetime.now()
-    days = (due_date - now).days
     seconds = int((due_date - now).total_seconds())
     if seconds >= 0:
         remaining = datetime.timedelta(seconds=seconds)
