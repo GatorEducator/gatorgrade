@@ -61,6 +61,7 @@ FAILURE = 1
 UNKNOWN_PLATFORM = "unknown"
 GATORGRADER_DEPENDENCY = "gatorgrader"
 
+# define constants related to platform details
 LIBC_GNU = "gnu"
 LIBC_MUSL = "musl"
 LIBC_NONE = "none"
@@ -478,11 +479,18 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 PLATFORM_INFO_KEY: _get_platform_info(),
                 OS_RELEASE_KEY: _get_os_release(),
             }
-            # auto-hint engine: try to create it if --auto-hint is passed.
+            # at the outset, there is no auto-hinting engine
+            # unless the person using gatorgrade has explicitly
+            # opted in to using auto-hinting both through the
+            # command line and through running the tool with
+            # the optional dependencies installed (auto-hinting
+            # relies on local transformers, which we do not
+            # want to load unless the opt-in was made)
             auto_hint_engine = None
+            # auto-hint engine: try to create it if --auto-hint is passed
             if auto_hint:
                 # resolve model ID: CLI flag takes precedence, then YAML
-                # front-matter field, then the default model.
+                # front-matter field, then the default model
                 try:
                     model_id = DEFAULT_MODEL_ID
                     if auto_hint_model is not None and auto_hint_model.strip():
