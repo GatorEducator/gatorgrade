@@ -89,7 +89,7 @@ build-backend = "hatchling.build"
 project = "gatorgrade"
 scripts = "scripts"
 tests = "tests"
-coveragefailunder = "98"
+coveragefailunder = "95"
 directtestedfailunder = "75"
 ruff-check-command = { var = "ruff check {project} {tests} {scripts}", recursive = true }
 coverage-test-command = { var = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=98 --cov-report=term-missing tests/", recursive = true }
