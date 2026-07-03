@@ -27,6 +27,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         weight: int = 1,
         outputlimit: int | None = None,
         hint: str | None = None,
+        raw_diagnostic: str | None = None,
     ):
         """Construct a CheckResult.
 
@@ -43,17 +44,22 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             outputlimit: The maximum number of diagnostic lines
                 displayed for this check.
             hint: An optional hint shown when the check fails.
+            raw_diagnostic: The un-truncated diagnostic output.
+                When omitted, the truncated ``diagnostic`` value
+                is used.
 
         """
         self.passed = passed
         self.description = description
         self.json_info = json_info
         self.diagnostic = diagnostic
+        self.raw_diagnostic = raw_diagnostic or diagnostic
         self.path = path
         self.run_command = EMPTY
         self.weight = weight
         self.outputlimit = outputlimit
         self.hint = hint
+        self.is_auto_hint = False
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
