@@ -25,7 +25,7 @@ from gatorgrade.output.output import run_checks
 
 # define the version of gatorgrade; this is used in the --version option
 # and must always match the value in the pyproject.toml file
-GATORGRADE_VERSION = "0.10.0"
+GATORGRADE_VERSION = "0.11.0"
 
 # create an app for the Typer-based CLI
 
