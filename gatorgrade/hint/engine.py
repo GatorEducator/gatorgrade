@@ -358,6 +358,7 @@ class AutoHintEngine:
             "- ALWAYS explain what is incorrect in the STUDENT's source code.\n"
             "- ALWAYS suggest running the command that produced the diagnostic output to verify the fix.\n\n"
             "- ALWAYS end every hint with a period.\n\n"
+            "- NEVER use single quotes (e.g., ') or backticks (e.g., `) in your response.\n"
             "- NEVER suggest modifying tests, test assertions, or expected results.\n"
             "- NEVER write fenced source code blocks in your hint.\n"
             "- NEVER use the words 'student', 'you should', or 'you might'. "
