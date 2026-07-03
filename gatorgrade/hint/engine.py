@@ -156,8 +156,6 @@ class AutoHintEngine:
         """Whether the model has been downloaded and loaded into memory."""
         return self._pipe is not None
 
-    # -- lazy initialisation ----------------------------------------------
-
     def _ensure_loaded(self) -> None:
         """Download (if needed) and load the model into memory.
 
@@ -170,11 +168,9 @@ class AutoHintEngine:
         """
         if self._pipe is not None:
             return
-
         # ensure the cache directory exists.
         cache_dir = self.cache_dir
         cache_dir.mkdir(parents=True, exist_ok=True)
-
         # lazily import the optional dependency.
         try:
             from transformers import AutoConfig, pipeline  # noqa: PLC0415
@@ -186,13 +182,11 @@ class AutoHintEngine:
                 "  uvx --from 'gatorgrade[auto-hint]' gatorgrade --auto-hint\n"
                 "  pip install 'gatorgrade[auto-hint]'\n"
             ) from e
-
         # suppress the chatty "Device set to use cpu" message that
         # transformers prints to stderr and would garble our progress bar.
         import transformers as _tf_mod  # noqa: PLC0415
 
         _tf_mod.logging.set_verbosity_error()
-
         # inspect the model config before downloading weights; this only
         # fetches the small config.json file and lets us pick the right
         # loader for multimodal checkpoints such as Gemma 4.
