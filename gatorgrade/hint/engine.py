@@ -31,12 +31,6 @@ TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
 CACHE_DIR_KEY = "cache_dir"
 ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
 
-GEMMA4_MODEL_TYPE = "gemma4"
-GEMMA4_TRANSFORMERS_ERROR = (
-    "Model '{model_id}' requires transformers >= 5.x, which supports the "
-    "'gemma4' architecture. Upgrade with: uv pip install -U transformers"
-)
-
 
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
     """Return the gatorgrade-specific directory where models are cached.
@@ -173,7 +167,7 @@ class AutoHintEngine:
         cache_dir.mkdir(parents=True, exist_ok=True)
         # lazily import the optional dependency.
         try:
-            from transformers import AutoConfig, pipeline  # noqa: PLC0415
+            from transformers import pipeline  # noqa: PLC0415
         except ImportError as e:
             raise ImportError(
                 "The 'auto-hint' extra is required to generate hints.\n\n"
@@ -187,32 +181,12 @@ class AutoHintEngine:
         import transformers as _tf_mod  # noqa: PLC0415
 
         _tf_mod.logging.set_verbosity_error()
-        # inspect the model config before downloading weights; this only
-        # fetches the small config.json file and lets us pick the right
-        # loader for multimodal checkpoints such as Gemma 4.
-        try:
-            config = AutoConfig.from_pretrained(
-                self._model_id, **{CACHE_DIR_KEY: str(cache_dir)}
-            )
-            model_type = getattr(config, "model_type", None)
-        except ValueError as exc:
-            # transformers < 5.x does not know the gemma4 architecture,
-            # so surface a clear, actionable message instead of the raw
-            # "architecture not recognized" error.
-            if GEMMA4_MODEL_TYPE in str(exc).lower():
-                raise RuntimeError(
-                    GEMMA4_TRANSFORMERS_ERROR.format(model_id=self._model_id)
-                ) from exc
-            raise
         pipe_kwargs: dict[str, Any] = {
             "model_kwargs": {CACHE_DIR_KEY: str(cache_dir)}
         }
-        if model_type == GEMMA4_MODEL_TYPE:
-            # gemma 4 checkpoints are multimodal and require the
-            # trust_remote_code flag for the text-generation pipeline.
-            pipe_kwargs["trust_remote_code"] = True
-        # download and load the model via the text-generation pipeline.
-        # (model is cached after first download — subsequent runs are fast.)
+        # download and load the model via the text-generation pipeline;
+        # model is cached after first download, with the subsequent runs
+        # being fast because they will use the cached model
         self._pipe = pipeline(
             TEXT_GENERATION_TASK,
             model=self._model_id,
@@ -224,8 +198,7 @@ class AutoHintEngine:
         """Check if a generated hint violates the rules.
 
         Returns False if the hint suggests modifying tests, test assertions,
-        or expected results.  Uses fuzzy matching to catch near-matches
-        (e.g. "Update the `assert` statement ...").
+        or expected results.
 
         Args:
             hint: The generated hint text.
