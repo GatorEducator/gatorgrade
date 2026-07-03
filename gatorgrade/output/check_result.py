@@ -28,6 +28,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         outputlimit: int | None = None,
         hint: str | None = None,
         raw_diagnostic: str | None = None,
+        is_low_quality: bool = False,
     ):
         """Construct a CheckResult.
 
@@ -47,6 +48,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             raw_diagnostic: The un-truncated diagnostic output.
                 When omitted, the truncated ``diagnostic`` value
                 is used.
+            is_low_quality: Whether this hint was flagged as
+                suggesting test changes (shown in dimmed style).
 
         """
         self.passed = passed
@@ -60,6 +63,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.outputlimit = outputlimit
         self.hint = hint
         self.is_auto_hint = False
+        self.is_low_quality = is_low_quality
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
@@ -84,7 +88,15 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             else:
                 message += f"\n[blue]   → {DIAGNOSTIC_LABEL}:[yellow] {self.diagnostic}[/]"
             if self.hint:
-                message += f"\n[blue]   → {HINT_LABEL}:[green] {self.hint}[/]"
+                if self.is_low_quality:
+                    message += (
+                        f"\n[blue]   → {HINT_LABEL}:[/]"
+                        f"[dim][italic][grey] {self.hint}[/][/]"
+                    )
+                else:
+                    message += (
+                        f"\n[blue]   → {HINT_LABEL}:[green] {self.hint}[/]"
+                    )
         return message
 
     def __repr__(self) -> str:
