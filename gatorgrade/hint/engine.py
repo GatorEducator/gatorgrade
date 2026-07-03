@@ -8,54 +8,34 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
+# default model for auto-hinting (note that these
+# names are the same as those provided on Hugging Face)
 DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
-"""Small capable instruct model (~500M params, ~990 MB on disk)."""
 
+# default values for running the local LLMs
+# with the transformers package
 HINT_MAX_TOKENS = 80
-"""Maximum tokens for generated hint text (allows two sentences)."""
-
 HINT_TEMPERATURE = 0.1
-"""Temperature for hint generation (very low = focused/deterministic)."""
-
 HINT_DIAG_TRUNCATE = 2000
-"""Max characters of diagnostic text shown to the model."""
-
 HINT_FILE_LINES = 20
-"""Max lines of file content shown to the model."""
-
 HINT_REPETITION_PENALTY = 1.2
-"""Penalty for repetitive token generation (1.0 = no penalty)."""
-
 HINT_TOP_P = 0.9
-"""Nucleus sampling threshold (lower = more focused)."""
 
 HINT_SUPPRESSED_MESSAGE = (
     "Auto-hint suppressed: the generated hint suggested modifying tests, "
     "assertions, or expected results and was not displayed."
 )
-"""Message returned when the generated hint violates the testing rules."""
 
 TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
-"""Pipeline task used for causal / text-only chat models."""
 
 CACHE_DIR_KEY = "cache_dir"
-"""Keyword argument name used for the model cache directory."""
+ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
 
 GEMMA4_MODEL_TYPE = "gemma4"
-"""Model type identifier for Gemma 4 checkpoints."""
-
 GEMMA4_TRANSFORMERS_ERROR = (
     "Model '{model_id}' requires transformers >= 5.x, which supports the "
     "'gemma4' architecture. Upgrade with: uv pip install -U transformers"
 )
-"""Error message shown when Gemma 4 is requested on an old transformers version."""
-
-# ---------------------------------------------------------------------------
-# cache directory helpers
-# ---------------------------------------------------------------------------
-
-ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
-"""Environment variable that overrides the model download location."""
 
 
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
