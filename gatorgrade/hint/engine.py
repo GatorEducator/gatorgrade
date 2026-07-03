@@ -66,11 +66,6 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     return Path.home() / ".cache" / "gatorgrade" / "models"
 
 
-# ---------------------------------------------------------------------------
-# core engine
-# ---------------------------------------------------------------------------
-
-
 class AutoHintEngine:
     """Lazy-loading engine that generates hints for failing checks.
 
@@ -112,8 +107,6 @@ class AutoHintEngine:
         # path to the cached model directory (set after loading).
         self._model_path: Optional[Path] = None
 
-    # -- dependency check (eager, cheap) ------------------------------------
-
     @staticmethod
     def check_deps() -> None:
         """Verify that ``transformers`` and ``torch`` are importable.
@@ -142,14 +135,7 @@ class AutoHintEngine:
             raise ImportError(
                 f"The 'auto-hint' extra is required to generate hints "
                 f"({names} not found).\n\n"
-                "Run this command from your project directory:\n\n"
-                "  uv add --dev gatorgrade[auto-hint]\n\n"
-                "If you are using an editable install, also run:\n\n"
-                "  uv pip install torch "
-                "--index-url https://download.pytorch.org/whl/cpu\n"
             ) from None
-
-    # -- public helpers ---------------------------------------------------
 
     @property
     def model_id(self) -> str:
