@@ -38,18 +38,23 @@ dependencies = [
 
 [project.optional-dependencies]
 auto-hint = [
-    "transformers>=4.44.0",
-    "torch>=2.0.0",
     "platformdirs",
+    "transformers>=5.13.0",
+    "torch>=2.11.0",
 ]
-
-[tool.uv.sources]
-torch = { index = "pytorch-cpu" }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+torchvision = [
+  { index = "pytorch-cpu" },
+]
 
 [project.scripts]
 gatorgrade = "gatorgrade.main:app"
