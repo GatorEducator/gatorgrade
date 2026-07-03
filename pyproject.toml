@@ -38,10 +38,19 @@ dependencies = [
 
 [project.optional-dependencies]
 auto-hint = [
-    "litert-lm-api",
-    "huggingface-hub",
+    "transformers>=4.44.0",
+    "torch>=2.0.0",
     "platformdirs",
+    "thefuzz>=0.19.0,<0.21",
 ]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [project.scripts]
 gatorgrade = "gatorgrade.main:app"
