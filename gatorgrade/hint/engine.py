@@ -204,6 +204,8 @@ class AutoHintEngine:
         """
         hint_lower = hint.lower()
         # phrases that suggest modifying the test itself
+        # or other types of modifications that will not
+        # yield and improvement in learning objectives
         forbidden_phrases = [
             "test incorrectly",
             "test is wrong",
