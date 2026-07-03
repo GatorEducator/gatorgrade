@@ -1011,7 +1011,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             if any(r.is_low_quality for r in failed_results):
                 rich.print(
                     "[dim]  Hints shown in "
-                    "[dim][italic][grey]dimmed, grey, italic[/][/]"
+                    "[dim][italic][bright_black]dimmed, grey, italic[/][/]"
                     "[dim] text may be of lower quality. "
                     "Use your judgment when following them![/]"
                 )
