@@ -10,7 +10,6 @@ from gatorgrade.hint.engine import (
     HINT_DIAG_TRUNCATE,
     HINT_FILE_LINES,
     HINT_REPETITION_PENALTY,
-    HINT_SUPPRESSED_MESSAGE,
     HINT_TOP_P,
     AutoHintEngine,
     _model_cache_dir,
@@ -74,13 +73,14 @@ class TestAutoHintEngineGenerateHint:
         ]
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(
+        hint, is_low_quality = engine.generate_hint(
             description="Check that hello.py exists",
             diagnostic="File not found",
             command="ls hello.py",
         )
 
         assert hint == "Check your file path and try again."
+        assert not is_low_quality
         mock_pipe.assert_called_once()
 
     def test_generate_hint_passes_correct_messages(self) -> None:
@@ -107,7 +107,7 @@ class TestAutoHintEngineGenerateHint:
         """Returns safely when engine not loaded — None or a hint string."""
         engine = AutoHintEngine()
         # must not raise regardless of whether deps are installed
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, _ = engine.generate_hint(description="test", diagnostic="error")
         assert hint is None or (isinstance(hint, str) and len(hint) > 0)
 
     def test_generate_hint_returns_none_on_pipeline_exception(self) -> None:
@@ -117,7 +117,7 @@ class TestAutoHintEngineGenerateHint:
         mock_pipe.side_effect = RuntimeError("OOM")
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, _ = engine.generate_hint(description="test", diagnostic="error")
         assert hint is None
 
     def test_generate_hint_returns_none_for_empty_reply(self) -> None:
@@ -127,7 +127,7 @@ class TestAutoHintEngineGenerateHint:
         mock_pipe.return_value = [{"generated_text": "   "}]
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, _ = engine.generate_hint(description="test", diagnostic="error")
         assert hint is None
 
     def test_generate_hint_returns_none_for_empty_list(self) -> None:
@@ -137,7 +137,7 @@ class TestAutoHintEngineGenerateHint:
         mock_pipe.return_value = []
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, _ = engine.generate_hint(description="test", diagnostic="error")
         assert hint is None
 
     def test_generate_hint_uses_repetition_penalty(self) -> None:
@@ -165,10 +165,12 @@ class TestAutoHintEngineGenerateHint:
         assert call_kwargs["top_p"] == HINT_TOP_P
 
     def test_generate_hint_handles_hint_suggesting_test_change(self) -> None:
-        """Return a suppression message when the hint suggests modifying tests.
+        """Return the hint flagged as low quality when it suggests modifying tests.
 
-        When the generated hint suggests modifying tests, a suppression
-        message is returned instead of the model's output.
+        When the generated hint suggests modifying tests, the hint is
+        still returned but flagged as low quality so the caller can
+        decide how to display it.
+
         """
         engine = AutoHintEngine()
         mock_pipe = MagicMock()
@@ -177,8 +179,11 @@ class TestAutoHintEngineGenerateHint:
         ]
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(description="test", diagnostic="error")
-        assert hint == HINT_SUPPRESSED_MESSAGE
+        hint, is_low_quality = engine.generate_hint(
+            description="test", diagnostic="error"
+        )
+        assert hint == "The test incorrectly asserts equality."
+        assert is_low_quality
 
     def test_generate_hint_accepts_valid_hint(self) -> None:
         """Returns the hint when it correctly describes a code fix."""
@@ -191,8 +196,11 @@ class TestAutoHintEngineGenerateHint:
         ]
         engine._pipe = mock_pipe
 
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, is_low_quality = engine.generate_hint(
+            description="test", diagnostic="error"
+        )
         assert hint is not None
+        assert not is_low_quality
         assert "count returns 1" in hint
 
 
@@ -263,7 +271,9 @@ class TestAutoHintEngineLazyLoading:
             "_ensure_loaded",
             side_effect=RuntimeError("boom"),
         ):
-            hint = engine.generate_hint(description="test", diagnostic="error")
+            hint, _ = engine.generate_hint(
+                description="test", diagnostic="error"
+            )
         assert hint is None
 
 
@@ -355,18 +365,23 @@ class TestAutoHintEngineGracefulDegradation:
         assert not engine.is_loaded
 
     def test_generate_hint_never_crashes(self) -> None:
-        """generate_hint never crashes — returns None or a string.
+        """generate_hint never crashes — returns (None, False) or (hint, bool).
 
         When the optional deps are not installed, generate_hint
-        returns None.  When they are installed, it returns a hint
-        string.  Either way it must not raise.
+        returns (None, False).  When they are installed, it returns
+        a hint string with a quality flag.  Either way it must not
+        raise.
 
         """
         engine = AutoHintEngine()
         # this must not raise even when deps are missing.
-        hint = engine.generate_hint(description="test", diagnostic="error")
+        hint, is_low_quality = engine.generate_hint(
+            description="test", diagnostic="error"
+        )
         # either None (graceful degradation) or a non-empty string
-        assert hint is None or (isinstance(hint, str) and len(hint) > 0)
+        if hint is not None:
+            assert isinstance(hint, str) and len(hint) > 0
+            assert isinstance(is_low_quality, bool)
 
 
 class TestAutoHintEngineCacheDir:
