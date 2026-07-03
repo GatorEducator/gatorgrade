@@ -385,10 +385,6 @@ class AutoHintEngine:
             "INSTEAD say:\n"
             "- 'The function X returns Y but the test expects Z; check...'\n"
             "- 'The implementation does not handle...; add logic to...'\n\n"
-            # "Examples:\n"
-            # "- 'The test test_run_machine_max_steps expects 10 steps but the program produces 9; check the loop counter in the max_steps function.'\n"
-            # "- 'The function count_punctuation returns 1 for \"Hello, world!\" but the test expects 2; ensure both comma and exclamation mark are counted.'\n"
-            # "- 'The test test_calculate_average expects 5.0 but got ZeroDivisionError; check that calculate_average handles an empty list before dividing.'"
         )
 
         user_parts = [f"Check: {description}"]
