@@ -6,7 +6,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any, List, Tuple, Union
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from hypothesis import given
@@ -2494,3 +2494,44 @@ def test_create_report_json_includes_hint_in_failing_check() -> None:
     result = output.create_report_json(0, [failed], 0)
     check_data = result["checks"][0]
     assert check_data["hint"] == "Try checking your input"
+
+
+def test_run_checks_generates_auto_hint_for_failing_check() -> None:
+    """The auto-hint engine is called when a check fails."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.generate_hint.return_value = "Add the missing file."
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_called_once()
+    call_kwargs = mock_engine.generate_hint.call_args[1]
+    assert call_kwargs["description"] == "fail"
+    assert call_kwargs["command"] == FAILING_CMD
+
+
+def test_run_checks_skips_auto_hint_for_passing_check() -> None:
+    """The auto-hint engine is not called when all checks pass."""
+    check = ShellCheck(
+        description="pass",
+        command="python -c 'print(\"ok\")'",
+    )
+    mock_engine = MagicMock()
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_not_called()
+
+
+def test_run_checks_preserves_explicit_hint() -> None:
+    """An explicit hint from the config is not overwritten by auto-hints."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+        hint="Explicit hint",
+    )
+    mock_engine = MagicMock()
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_not_called()

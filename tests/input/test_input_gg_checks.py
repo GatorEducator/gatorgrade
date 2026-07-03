@@ -10,6 +10,7 @@ from hypothesis import strategies as st
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.in_file_path import reformat_yaml_data
 from gatorgrade.input.parse_config import (
+    get_auto_hint_model,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
@@ -112,6 +113,35 @@ def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
     )
     result = has_due_date_field(config_file)
     assert result is True
+
+
+def test_get_auto_hint_model_returns_model_id(tmp_path: Path) -> None:
+    """Return the auto_hint_model value from the config front matter."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'auto_hint_model: "custom/model"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_auto_hint_model(config_file)
+    assert result == "custom/model"
+
+
+def test_get_auto_hint_model_returns_none_when_missing(tmp_path: Path) -> None:
+    """Return None when the config front matter has no auto_hint_model."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        "  command: echo hello\n"
+    )
+    result = get_auto_hint_model(config_file)
+    assert result is None
 
 
 def test_get_due_date_handles_os_error(tmp_path: Path) -> None:
