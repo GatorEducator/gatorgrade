@@ -25,6 +25,7 @@ NAME_FIELD = "name"
 DUE_DATE_FIELD = "due_date"
 DUE_DATE_ALIASES = (DUE_DATE_FIELD, "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
+AUTO_HINT_MODEL_FIELD = "auto_hint_model"
 
 
 def get_project_name(file: Path) -> str | None:
@@ -51,6 +52,35 @@ def get_project_name(file: Path) -> str | None:
             parsed_yaml_file[0], dict
         ):
             return parsed_yaml_file[0].get(NAME_FIELD, None)
+    except (yaml.YAMLError, OSError):
+        pass
+    return None
+
+
+def get_auto_hint_model(file: Path) -> str | None:
+    """Extract the optional auto-hint model spec from a gatorgrade YAML config file.
+
+    The model is specified in the front matter of the YAML file as:
+
+        auto_hint_model: "litert-community/SmolLM2-135M-Instruct:SmolLM2_135M_Instruct.litertlm"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The model spec string if specified, or None if not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(AUTO_HINT_MODEL_FIELD, None)
     except (yaml.YAMLError, OSError):
         pass
     return None
