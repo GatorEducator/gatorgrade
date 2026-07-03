@@ -8,10 +8,6 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
-# ---------------------------------------------------------------------------
-# public constants
-# ---------------------------------------------------------------------------
-
 DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 """Small capable instruct model (~500M params, ~990 MB on disk)."""
 
