@@ -204,7 +204,6 @@ class AutoHintEngine:
                     GEMMA4_TRANSFORMERS_ERROR.format(model_id=self._model_id)
                 ) from exc
             raise
-
         pipe_kwargs: dict[str, Any] = {
             "model_kwargs": {CACHE_DIR_KEY: str(cache_dir)}
         }
@@ -212,7 +211,6 @@ class AutoHintEngine:
             # gemma 4 checkpoints are multimodal and require the
             # trust_remote_code flag for the text-generation pipeline.
             pipe_kwargs["trust_remote_code"] = True
-
         # download and load the model via the text-generation pipeline.
         # (model is cached after first download — subsequent runs are fast.)
         self._pipe = pipeline(
@@ -220,8 +218,6 @@ class AutoHintEngine:
             model=self._model_id,
             **pipe_kwargs,
         )
-
-    # -- hint generation --------------------------------------------------
 
     @staticmethod
     def _is_valid_hint(hint: str) -> bool:
@@ -304,7 +300,6 @@ class AutoHintEngine:
                 file=__import__("sys").stderr,
             )
             return None
-
         messages = self._build_messages(
             description, diagnostic, command, file_content
         )
@@ -343,8 +338,6 @@ class AutoHintEngine:
             )
             return None
 
-    # -- message building -------------------------------------------------
-
     def _build_messages(
         self,
         description: str,
@@ -371,7 +364,7 @@ class AutoHintEngine:
         if file_content:
             lines = file_content.split("\n")
             truncated_file = "\n".join(lines[:HINT_FILE_LINES])
-
+        # define the system prompt that will influence the hint generation
         system = (
             "You give short, direct hints for fixing code. "
             "CRITICAL RULES:\n"
