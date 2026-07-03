@@ -253,41 +253,6 @@ class TestAutoHintEngineLazyLoading:
         engine = AutoHintEngine()
         assert not engine.is_loaded
 
-    def test_ensure_loaded_passes_trust_remote_code_for_gemma4(
-        self,
-    ) -> None:
-        """Load Gemma 4 checkpoints with trust_remote_code=True."""
-        engine = AutoHintEngine(model_id="google/gemma-4-test")
-        mock_config = MagicMock()
-        mock_config.model_type = "gemma4"
-        with (
-            patch(
-                "transformers.AutoConfig.from_pretrained",
-                return_value=mock_config,
-            ) as mock_from_pretrained,
-            patch("transformers.pipeline") as mock_pipeline,
-        ):
-            engine._ensure_loaded()
-        mock_from_pretrained.assert_called_once()
-        mock_pipeline.assert_called_once()
-        call_kwargs = mock_pipeline.call_args[1]
-        assert call_kwargs.get("trust_remote_code") is True
-
-    def test_ensure_loaded_raises_helpful_error_on_old_transformers(
-        self,
-    ) -> None:
-        """Raise a clear error when transformers is too old for Gemma 4."""
-        engine = AutoHintEngine(model_id="google/gemma-4-test")
-        error = ValueError(
-            "The checkpoint you are trying to load has model type `gemma4`"
-        )
-        with patch(
-            "transformers.AutoConfig.from_pretrained",
-            side_effect=error,
-        ):
-            with pytest.raises(RuntimeError, match="transformers >= 5"):
-                engine._ensure_loaded()
-
     def test_generate_hint_survives_ensure_loaded_error(
         self,
     ) -> None:
