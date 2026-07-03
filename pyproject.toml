@@ -141,6 +141,8 @@ test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", h
 test-coverage = { cmd = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under={coveragefailunder} --cov-report=term-missing tests/", help = "Run the pytest test suite with coverage tracking", use_vars = true }
 test-not-propertybased = { cmd = "pytest -x -s -vv -m 'not propertybased'", help = "Run the pytest test suite without property-based tests" }
 test-propertybased = { cmd = "pytest -x -s -vv -m propertybased", help = "Run only the property-based tests" }
+test-not-autohint = { cmd = "pytest -x -s -vv -m 'not autohint'", help = "Run the pytest test suite without auto-hint tests" }
+test-autohint = { cmd = "pytest -x -s -vv -m autohint", help = "Run only the auto-hint tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
 test-flaky = { cmd = "pytest -x -s -vv --flakefighters", help = "Run the pytest test suite with flakefighters enabled" }
 test-flaky-suppress = { cmd = "pytest -x -s -vv --flakefighters --suppress-flaky-failures-exit-code", help = "Run the pytest test suite with flakefighters suppressing flaky failure exit codes" }
@@ -172,6 +174,7 @@ exclude_lines = [
 [tool.pytest.ini_options]
 markers = [
     "propertybased: property-based tests using hypothesis",
+    "autohint: tests that exercise the optional auto-hint extra",
 ]
 
 [tool.ruff]
