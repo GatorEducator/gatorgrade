@@ -14,7 +14,9 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
+from gatorgrade.hint.engine import DEFAULT_MODEL_ID, AutoHintEngine
 from gatorgrade.input.parse_config import (
+    get_auto_hint_model,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
@@ -95,6 +97,8 @@ OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+AUTO_HINT_FLAG = "--auto-hint"
+AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -287,7 +291,7 @@ def _version_callback(value: bool) -> None:
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0913, PLR0915
+def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -343,6 +347,19 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         True,
         "--show-diagnostics/--no-show-diagnostics",
         help="Show or hide diagnostic details for failing checks.",
+    ),
+    auto_hint: bool = typer.Option(
+        False,
+        "--auto-hint",
+        help="Automatically generate hints for failing checks using a local LLM.",
+    ),
+    auto_hint_model: str | None = typer.Option(
+        None,
+        "--auto-hint-model",
+        help=(
+            "Hugging Face model ID for auto-hint generation "
+            "(requires --auto-hint)."
+        ),
     ),
     _version: bool = typer.Option(
         False,
@@ -447,6 +464,10 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 BASELINE_WEIGHT_FLAG: baseline_weight,
                 PROGRESS_BAR_FLAG: progress_bar,
                 SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
+                AUTO_HINT_FLAG: auto_hint,
+                AUTO_HINT_MODEL_FLAG: auto_hint_model
+                if auto_hint_model
+                else None,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -457,6 +478,22 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 PLATFORM_INFO_KEY: _get_platform_info(),
                 OS_RELEASE_KEY: _get_os_release(),
             }
+            # auto-hint engine: try to create it if --auto-hint is passed.
+            auto_hint_engine = None
+            if auto_hint:
+                # resolve model ID: CLI flag takes precedence, then YAML
+                # front-matter field, then the default model.
+                try:
+                    model_id = DEFAULT_MODEL_ID
+                    if auto_hint_model is not None and auto_hint_model.strip():
+                        model_id = auto_hint_model.strip()
+                    else:
+                        config_model = get_auto_hint_model(filename)
+                        if config_model:
+                            model_id = config_model
+                    auto_hint_engine = AutoHintEngine(model_id=model_id)
+                except Exception:
+                    auto_hint_engine = None
             # run the checks that were specified in a way
             # that adheres to the configuration both in
             # the command-line arguments and also in the
@@ -472,6 +509,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 github_env,
                 project_name,
                 due_date,
+                auto_hint_engine=auto_hint_engine,
             )
         # no checks were created and this means
         # that, most likely, the file was not
