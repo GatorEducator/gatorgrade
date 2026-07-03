@@ -21,11 +21,6 @@ HINT_FILE_LINES = 20
 HINT_REPETITION_PENALTY = 1.2
 HINT_TOP_P = 0.9
 
-HINT_SUPPRESSED_MESSAGE = (
-    "Auto-hint suppressed: the generated hint suggested modifying tests, "
-    "assertions, or expected results and was not displayed."
-)
-
 TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
 
 CACHE_DIR_KEY = "cache_dir"
