@@ -207,6 +207,8 @@ class AutoHintEngine:
         # or other types of modifications that will not
         # yield and improvement in learning objectives
         forbidden_phrases = [
+            "`",
+            "'",
             "test incorrectly",
             "test is wrong",
             "test should be",
