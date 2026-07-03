@@ -86,12 +86,12 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                     f"     [yellow]{self.diagnostic}[/]"
                 )
             else:
-                message += f"\n[blue]   → {DIAGNOSTIC_LABEL}:[yellow] {self.diagnostic}[/]"
+                message += f"\n[blue]   → {DIAGNOSTIC_LABEL}:[/][yellow] {self.diagnostic}[/]"
             if self.hint:
                 if self.is_low_quality:
                     message += (
                         f"\n[blue]   → {HINT_LABEL}:[/]"
-                        f"[dim][italic][grey] {self.hint}[/][/]"
+                        f"[dim][italic][bright_black] {self.hint}[/][/]"
                     )
                 else:
                     message += (
