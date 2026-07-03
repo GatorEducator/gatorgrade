@@ -237,46 +237,54 @@ class AutoHintEngine:
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
-    ) -> Optional[str]:
+    ) -> tuple[Optional[str], bool]:
         """Generate a short hint for a failing check.
 
-        Safe to call even when ``transformers`` is missing — returns
-        ``None`` (graceful degradation).
+        Safe to call even when transformers is missing; in this
+        case it will return (None, False) as a means of
+        supporting graceful degradation.
 
         Args:
             description: Human-readable description of the check.
             diagnostic: Diagnostic output from the failing check.
-                May be truncated to ``HINT_DIAG_TRUNCATE`` characters.
+                May be truncated to HINT_DIAG_TRUNCATE characters.
             command: The shell / GatorGrader command that was run, if
                 available.
             file_content: The contents of the source file being
-                checked, if available. Truncated to ``HINT_FILE_LINES``
+                checked, if available. Truncated to HINT_FILE_LINES
                 lines.
 
         Returns:
-            A short hint string, or ``None`` if generation failed or
-            ``transformers`` is not installed.
+            A tuple (hint, is_low_quality):
+
+            - hint: The generated hint string, or None if
+              generation failed or transformers is not installed;
+              (note that transformers is only installed when
+              the extra auto-hinting dependency is installed).
+            - is_low_quality: True when the generated hint
+              suggests modifying tests/assertions (it is still returned
+              so the caller can decide how to present it).
 
         """
         try:
             self._ensure_loaded()
         except ImportError:
-            return None
+            return None, False
         except Exception as exc:  # pylint: disable=broad-except
             print(
                 f"   → Auto-hint error (loading): {exc}",
                 file=__import__("sys").stderr,
             )
-            return None
+            return None, False
         messages = self._build_messages(
             description, diagnostic, command, file_content
         )
 
         try:
             # the pipeline applies the model's chat template internally,
-            # formats the messages, and generates the assistant's reply.
+            # formats the messages, and generates the assistant's reply;
             # with return_full_text=False we get back *only* the newly
-            # generated text (the hint) as a plain string.
+            # generated text (the hint) as a plain string
             result = self._pipe(
                 messages,
                 max_new_tokens=HINT_MAX_TOKENS,
@@ -286,25 +294,29 @@ class AutoHintEngine:
                 do_sample=True,
                 return_full_text=False,
             )
-            # result is a list of dicts, one per conversation.
-            # each dict has a "generated_text" key with the raw string.
+            # result is a list of dicts, one per conversation;
+            # each dict has a "generated_text" key with the raw string
             if not result:
-                return None
+                return None, False
+            # extract the generated hint that will be displayed
+            # as the auto-hint near the failing check's details
             hint = str(result[0]["generated_text"]).strip()
             if not hint:
-                return None
-            # validate the hint does not suggest modifying tests
+                return None, False
+            # validate the hint does not suggest, for instance,
+            # modifying tests, or other types of changes that
+            # are not connected to achieving learning objectives;
+            # still return the hint so the caller can choose how to
+            # display it (e.g., dimmed with a quality warning)
             if not self._is_valid_hint(hint):
-                # return a friendly suppression message so the CLI displays
-                # an informative placeholder instead of the model's output.
-                return HINT_SUPPRESSED_MESSAGE
-            return hint
+                return hint, True
+            return hint, False
         except Exception as exc:  # pylint: disable=broad-except
             print(
                 f"   → Auto-hint error (generation): {exc}",
                 file=__import__("sys").stderr,
             )
-            return None
+            return None, False
 
     def _build_messages(
         self,
