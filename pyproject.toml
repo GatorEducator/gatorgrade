@@ -153,6 +153,7 @@ cosmic-ray-exec = { cmd = "{cosmic-ray-exec-command}", help = "Execute cosmic-ra
 cosmic-ray-report = { cmd = "{cosmic-ray-report-command}", help = "Generate cosmic-ray mutation testing report (JSON)", use_vars = true }
 
 [tool.coverage.run]
+core = "sysmon"
 source = ["gatorgrade"]
 branch = true
 omit = ["tests/*", "**/__init__.py"]
