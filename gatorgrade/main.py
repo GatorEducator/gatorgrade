@@ -523,7 +523,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             "URL of an OpenAI-compatible API server for remote hint "
             "generation (requires --auto-hint). When provided, the "
             "remote model is used instead of a local model. Falls "
-            "back to the local model on connection errors."
+            "back to default local model on connection errors."
         ),
     ),
     auto_hint_api_key: Optional[str] = typer.Option(
