@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
-# type-checking-only import that is never executed at runtime
+from gatorgrade.hint.support import build_hint_messages, is_valid_hint
+
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
@@ -219,48 +220,16 @@ class AutoHintEngine:
     def _is_valid_hint(hint: str) -> bool:
         """Check if a generated hint violates the rules.
 
-        Returns False if the hint suggests modifying tests, test assertions,
-        or expected results.
+        Delegates to the shared implementation.
 
         Args:
             hint: The generated hint text.
 
         Returns:
-            True if the hint is valid, False if it violates the rules.
+            True if the hint is valid, False if it violates.
 
         """
-        hint_lower = hint.lower()
-        # phrases that suggest modifying the test itself
-        # or other types of modifications that will not
-        # yield and improvement in learning objectives
-        forbidden_phrases = [
-            "`",
-            "'",
-            "test incorrectly",
-            "test is wrong",
-            "test should be",
-            "modify the test",
-            "change the test",
-            "fix the test",
-            "update the test",
-            "the assertion is wrong",
-            "the assertion incorrectly",
-            "incorrectly asserts",
-            "wrong assertion",
-            "change the assertion",
-            "modify the assertion",
-            "change the assert",
-            "update the assert",
-            "fix the assertion",
-            "change the expected",
-            "modify the expected",
-            "we need",
-            "we should",
-            "wrong expected",
-            "expected result is wrong",
-            "expected value is wrong",
-        ]
-        return not any(phrase in hint_lower for phrase in forbidden_phrases)
+        return is_valid_hint(hint)
 
     def generate_hint(  # noqa: PLR0911
         self,
@@ -358,60 +327,22 @@ class AutoHintEngine:
     ) -> list[dict[str, str]]:
         """Build a structured message list for the chat pipeline.
 
+        Delegates to the shared implementation.
+
         Args:
             description: Check description.
             diagnostic: Diagnostic output (truncated internally).
             command: Command that was run.
-            file_content: Source file content (truncated to HINT_FILE_LINES lines).
+            file_content: Source file content (truncated to
+                HINT_FILE_LINES lines).
 
         Returns:
-            A list of dicts suitable for
-            transformers pipeline's chat template handling.
+            A list of dicts suitable for the chat pipeline.
 
         """
-        truncated_diag = diagnostic[:HINT_DIAG_TRUNCATE] if diagnostic else ""
-        # truncate file content to HINT_FILE_LINES complete lines
-        truncated_file = ""
-        if file_content:
-            lines = file_content.split("\n")
-            truncated_file = "\n".join(lines[:HINT_FILE_LINES])
-        # define the system prompt that will influence the hint generation
-        system = (
-            "You give short, direct hints for fixing code. "
-            "CRITICAL RULES:\n"
-            "- The test suite is provided by the instructor and is ALWAYS correct.\n"
-            "- ALWAYS mention what test or command failed.\n"
-            "- ALWAYS describe what to change in the student's implementation.\n"
-            "- ALWAYS explain what is incorrect in the STUDENT's source code.\n"
-            "- ALWAYS suggest running the command that produced the diagnostic output to verify the fix.\n\n"
-            "- ALWAYS end every hint with a period.\n\n"
-            "- NEVER use single quotes (e.g., ') or backticks (e.g., `) in your response.\n"
-            "- NEVER suggest modifying tests, test assertions, or expected results.\n"
-            "- NEVER write fenced source code blocks in your hint.\n"
-            "- NEVER use the words 'student', 'you should', or 'you might'. "
-            "NEVER say:\n"
-            "- 'The test incorrectly asserts <...>'\n"
-            "- 'Modify the test to <...>'\n"
-            "- 'The assertion is wrong because <...>'\n"
-            "- 'Change the expected result <...>'\n\n"
-            "INSTEAD say:\n"
-            "- 'The function X returns Y but the test expects Z; check...'\n"
-            "- 'The implementation does not handle...; add logic to...'\n\n"
+        return build_hint_messages(
+            description=description,
+            diagnostic=diagnostic,
+            command=command,
+            file_content=file_content,
         )
-
-        user_parts = [f"Check: {description}"]
-        if command:
-            user_parts.append(f"Command: {command}")
-        if truncated_file:
-            user_parts.append("Code:\n```\n" + truncated_file + "\n```")
-        if truncated_diag:
-            user_parts.append(f"Diagnostic:\n```\n{truncated_diag}\n```")
-        user_parts.append(
-            "What to do (1-2 sentences, mention the specific "
-            "failing test if available):"
-        )
-
-        return [
-            {"role": "system", "content": system},
-            {"role": "user", "content": "\n\n".join(user_parts)},
-        ]
