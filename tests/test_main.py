@@ -894,11 +894,11 @@ class TestRemoteEngineAdapter:
         assert adapter.is_loaded is True
 
     @pytest.mark.autohint
-    def test_model_id_returns_remote_prefix(self) -> None:
-        """model_id returns the model identifier with remote: prefix."""
+    def test_model_id_returns_model_id_without_prefix(self) -> None:
+        """model_id returns the raw model identifier without prefix."""
         remote = RemoteHintEngine(base_url="http://test.url:4160")
         adapter = main.RemoteEngineAdapter(remote, "Qwen-3.6-35B-A3B")
-        assert adapter.model_id == "remote:Qwen-3.6-35B-A3B"
+        assert adapter.model_id == "Qwen-3.6-35B-A3B"
 
     @pytest.mark.autohint
     def test_ensure_loaded_is_noop(self) -> None:
