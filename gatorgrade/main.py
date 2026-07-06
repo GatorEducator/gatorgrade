@@ -21,11 +21,13 @@ from gatorgrade.hint.remote_engine import (
 )
 from gatorgrade.input.parse_config import (
     get_auto_hint_model,
+    get_config_dir,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
     has_due_date_field,
     parse_config,
+    resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
 
@@ -95,8 +97,12 @@ NEWLINE = "\n"
 # exit message
 EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
+# default config directory computed at module load time for display in help
+DEFAULT_CONFIG_DIR = str(get_config_dir())
+
 # cli flag names used in the report
 CONFIG_FLAG = "--config"
+CONFIG_DIR_FLAG = "--config-dir"
 REPORT_FLAG = "--report"
 OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
@@ -450,6 +456,16 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
     ),
+    config_dir: Optional[Path] = typer.Option(
+        None,
+        "--config-dir",
+        "-C",
+        help=(
+            "Directory for configuration files including the"
+            " gatorgrade.yml file, models, and other settings."
+        ),
+        show_default=DEFAULT_CONFIG_DIR,
+    ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
         "--report",
@@ -543,6 +559,17 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""
+    # resolve the config directory and configuration file path;
+    # the precedence for looking for the gatorgrade.yml file is:
+    # 1. the specified filename in the current working directory;
+    # 2. the specified filename inside the --config-dir directory
+    #    (either the user-specified value for this directory
+    #    or the default platformdirs config directory);
+    # 3. if the file is not found in either location, the filename
+    #    itself is returned so that the downstream code can report
+    #    a clear "file not found" error for that specified file
+    resolved_config_dir: Path | None = config_dir
+    resolved_filename = resolve_config_path(filename, resolved_config_dir)
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode;
     # note that the current implementation of the tool only
@@ -553,8 +580,8 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         # check the due date before parsing config so warnings appear before setup;
         # this returns both the due date and any errors that might have arisen
         # when parsing the due date (i.e., due to an incorrect time/date format)
-        due_date, due_date_error = get_due_date(filename)
-        if has_due_date_field(filename) and due_date is None:
+        due_date, due_date_error = get_due_date(resolved_filename)
+        if has_due_date_field(resolved_filename) and due_date is None:
             console.print()
             console.print(
                 Rule(
@@ -587,7 +614,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         # (there are multiple ways to specify a due date,
         # in terms of the keys that are accepted in the front
         # matter, include both "due_date" and "duedate")
-        aliases_present = get_due_date_aliases_present(filename)
+        aliases_present = get_due_date_aliases_present(resolved_filename)
         if len(aliases_present) > 1:
             chosen = aliases_present[0]
             ignored = ", ".join(aliases_present[1:])
@@ -608,9 +635,9 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             console.print()
             console.print(Rule(style="bright_yellow"))
         # parse the provided configuration file
-        checks, parse_error = parse_config(filename, baseline_weight)
+        checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
-        project_name = get_project_name(filename)
+        project_name = get_project_name(resolved_filename)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -630,7 +657,10 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # create a dictionary of the CLI arguments to pass to the report
             # (this will enable them to be saved inside of a report)
             cli_args = {
-                CONFIG_FLAG: str(filename),
+                CONFIG_FLAG: str(resolved_filename),
+                CONFIG_DIR_FLAG: str(resolved_config_dir)
+                if resolved_config_dir
+                else None,
                 REPORT_FLAG: list(report),
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
@@ -695,7 +725,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # the program falls back to the local engine.
             if auto_hint:
                 auto_hint_engine = _create_auto_hint_engine(
-                    filename,
+                    resolved_filename,
                     auto_hint_model,
                     auto_hint_url,
                     auto_hint_api_key,
@@ -726,9 +756,8 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             console.print(Rule(CONFIG_ERROR_LABEL, style="bright_red"))
             console.print()
             console.print(
-                f"The file {filename} either does not exist or is not valid."
+                f"The file {resolved_filename} either does not exist or is not valid."
             )
-            console.print()
             console.print(Text(EXIT_MESSAGE))
             console.print()
             console.print(Rule(style="bright_red"))
