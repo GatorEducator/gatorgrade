@@ -1,6 +1,5 @@
-"""Remote auto-hint engine using OpenAI-compatible APIs via Pydantic AI."""
+"""Remote auto-hint engine using OpenAI-compatible APIs."""
 
-import re
 from typing import Optional
 
 # constants for the remote hint engine
@@ -15,10 +14,12 @@ REMOTE_HINT_DIAG_TRUNCATE = 2000
 REMOTE_HINT_FILE_LINES = 20
 REMOTE_HINT_TOP_P = 0.9
 REMOTE_HINT_TIMEOUT_MS = 180000
-# thresholds for compacting verbose reasoning output
-HINT_COMPACT_SHORT_THRESHOLD = 300
-HINT_COMPACT_PARAGRAPH_MIN_LEN = 30
-HINT_COMPACT_FALLBACK_MAX = 200
+# extra_body sent to disable visible thinking traces on Qwen
+# reasoning models.  The model still reasons internally but the
+# response contains only the final answer in the content field.
+EXTRA_BODY_DISABLE_THINKING: dict = {
+    "chat_template_kwargs": {"enable_thinking": False},
+}
 
 
 class RemoteHintEngine:
@@ -88,90 +89,6 @@ class RemoteHintEngine:
         """
 
     @staticmethod
-    def _compact_hint(hint: str) -> str:
-        r"""Strip verbose reasoning traces, keeping only the final hint.
-
-        Reasoning models (e.g. Qwen) often output a long thinking
-        process with numbered steps like:\n\n            Here's a thinking process:\n\n            1.  **Analyze User Input:**\n            ...\n            Refined:\n            The test checks...
-
-        This method takes only the last few sentences that
-        represent the actual hint, discarding the reasoning
-        preamble.
-
-        Args:
-            hint: The raw generated text, possibly containing
-                reasoning traces.
-
-        Returns:
-            The compacted hint (last sentences that look like a
-            final answer), or the original hint unchanged if it
-            does not look like reasoning output.
-
-        """
-        # if the hint is short (under 300 chars) it is already
-        # compact and there is nothing to strip
-        if len(hint) < 300:  # noqa: PLR2004
-            return hint
-        # look for the last section that ends with a period.
-        # many reasoning outputs end with something like:
-        # "Final Refined Answer:\nThe test..."
-        # or just have the actual hint in the final paragraph
-        # split into paragraphs and take from the last substantive
-        # one that reads like a hint (at least one sentence ending
-        # with a period, mentions code or test or implementation)
-        paragraphs = [p.strip() for p in hint.split("\n\n") if p.strip()]
-        # try to find the last paragraph that looks like a hint
-        # (contains a period, mentions code/test/implement/check)
-        for para in reversed(paragraphs):
-            clean = para.strip()
-            if len(clean) > 30 and clean.endswith("."):  # noqa: PLR2004
-                # remove any leading label like "Refined:" or
-                # "Final Answer:" or "Draft:"
-                # strip leading labels like "Refined:", "Final Answer:",
-                # "**Hint:**", "Revised Draft:" etc.
-                clean = re.sub(
-                    r"^\*{0,2}"
-                    r"(?:"
-                    r"(?:Final |Refined |Revised )*"
-                    r"(?:Answer|Hint|Draft|Version)"
-                    r"|Refined|Revised|Draft|Final"
-                    r")\s*[:.]\s*\*{0,2}",
-                    "",
-                    clean,
-                ).strip()
-                # if this reads like a hint (not a step heading),
-                # return it
-                if not re.match(
-                    r"^\d+\.\s+\*\*", clean
-                ) and not clean.startswith("Here"):
-                    return clean
-        # fallback: try to extract the last sentence ending in
-        # a period that mentions code
-        sentences = re.findall(r"[A-Z][^.]*\.", hint)
-        for sent in reversed(sentences):
-            sent = sent.strip()  # noqa: PLW2901
-            keywords = [
-                "code",
-                "test",
-                "implement",
-                "function",
-                "add",
-                "check",
-                "file",
-                "command",
-                "run",
-                "fix",
-            ]
-            if any(k in sent.lower() for k in keywords):
-                return sent
-        # last resort: return the original but truncated to the
-        # last 200 characters ending at a sentence boundary
-        if len(hint) > 200:  # noqa: PLR2004
-            last_period = hint.rfind(".", 0, -1)
-            if last_period > len(hint) // 2:
-                return hint[last_period + 1 :].strip()
-        return hint
-
     @staticmethod
     def _is_valid_hint(hint: str) -> bool:
         """Check if a generated hint violates the rules.
@@ -368,6 +285,7 @@ class RemoteHintEngine:
                 temperature=REMOTE_HINT_TEMPERATURE,
                 top_p=REMOTE_HINT_TOP_P,
                 timeout=REMOTE_HINT_TIMEOUT_MS / 1000,
+                extra_body=EXTRA_BODY_DISABLE_THINKING,
             )
             # extract the content from the response — for reasoning
             # models this may be empty and the actual answer may be
@@ -376,16 +294,13 @@ class RemoteHintEngine:
             msg = choice.message
             hint = (msg.content or "").strip()
             if not hint:
-                # reasoning model: check reasoning_content as fallback
+                # note: with enable_thinking=False the model should
+                # produce content directly. however, some servers
+                # may still put the answer in reasoning_content,
+                # so fall back to that.
                 rc = getattr(msg, "reasoning_content", None)
                 if rc:
                     hint = rc.strip()
-            if not hint:
-                return None, False
-            # strip verbose reasoning traces from reasoning models
-            # (e.g. Qwen) that output a full thinking-process
-            # document instead of a concise hint
-            hint = self._compact_hint(hint)
             if not hint:
                 return None, False
             if not self._is_valid_hint(hint):

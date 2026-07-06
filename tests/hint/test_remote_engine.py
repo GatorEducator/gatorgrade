@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from gatorgrade.hint.remote_engine import (
+    EXTRA_BODY_DISABLE_THINKING,
     REMOTE_HINT_DIAG_TRUNCATE,
     REMOTE_HINT_FILE_LINES,
     REMOTE_HINT_MAX_TOKENS,
@@ -215,6 +216,8 @@ class TestRemoteHintEngineGenerateHint:
         assert call_kwargs["max_tokens"] == REMOTE_HINT_MAX_TOKENS
         assert call_kwargs["temperature"] == REMOTE_HINT_TEMPERATURE
         assert call_kwargs["top_p"] == REMOTE_HINT_TOP_P
+        assert "extra_body" in call_kwargs
+        assert call_kwargs["extra_body"] == EXTRA_BODY_DISABLE_THINKING
 
     def test_generate_hint_handles_suggesting_test_change(self) -> None:
         """Return hint flagged as low quality when it suggests modifying tests."""
@@ -359,79 +362,6 @@ class TestRemoteHintEngineGracefulDegradation:
         if hint is not None:
             assert isinstance(hint, str) and len(hint) > 0
             assert isinstance(is_low_quality, bool)
-
-
-class TestRemoteHintEngineCompactHint:
-    """Tests for the _compact_hint static method."""
-
-    LONG_PADDING = (
-        "This is the first paragraph of reasoning that is intentionally "
-        "made very long so that the overall input exceeds the 300 "
-        "character threshold that protects short hints. " * 3
-    )
-
-    def test_short_hint_unchanged(self) -> None:
-        """Short hints under 300 chars are returned unchanged."""
-        hint = "Add an if statement to handle the condition."
-        assert RemoteHintEngine._compact_hint(hint) == hint
-
-    def test_takes_last_paragraph(self) -> None:
-        """Takes the last substantive paragraph from reasoning output."""
-        verbose = (
-            self.LONG_PADDING + "\n\n"
-            "Here's a thinking process:\n\n"
-            "1.  **Analyze User Input:**\n"
-            "   - The diagnostic shows zero matches.\n\n"
-            "2.  **Formulate Hint:**\n"
-            "   The test checks for an if statement.\n\n"
-            "The check for an if statement in hello-world.py "
-            "failed because no conditional was found. "
-            "Add an if statement and run the command again."
-        )
-        result = RemoteHintEngine._compact_hint(verbose)
-        assert len(result) < 300  # noqa: PLR2004
-        assert "if statement" in result
-        assert "Here" not in result
-        assert "1." not in result
-
-    def test_takes_last_sentence_fallback(self) -> None:
-        """Falls back to last sentence containing a keyword."""
-        verbose = (
-            self.LONG_PADDING + "\n\n"
-            "Step 1: Do something.\n\n"
-            "Step 2: Do more things.\n\n"
-            "The implementation does not handle the case. "
-            "Add logic to handle it correctly. "
-            "Run the test command to verify."
-        )
-        result = RemoteHintEngine._compact_hint(verbose)
-        assert len(result) > 0
-        assert len(result) < 300  # noqa: PLR2004
-
-    def test_strips_label_prefix(self) -> None:
-        """Strips labels like 'Refined:' from the final hint."""
-        verbose = (
-            self.LONG_PADDING + "\n\n"
-            "Some reasoning steps.\n\n"
-            "Refined: The function returns the wrong value. "
-            "Check the return statement."
-        )
-        result = RemoteHintEngine._compact_hint(verbose)
-        assert not result.startswith("Refined")
-        assert "function returns" in result
-
-    def test_rejects_step_headings(self) -> None:
-        """Does not return numbered step headings as the hint."""
-        verbose = (
-            self.LONG_PADDING + "\n\n"
-            "1.  **Analyze User Input:**\n"
-            "   - The diagnostic shows an error.\n\n"
-            "The test failed because hello.py does not exist. "
-            "Create the file and run the command again."
-        )
-        result = RemoteHintEngine._compact_hint(verbose)
-        assert "test failed" in result
-        assert "1." not in result.split("\n")[0]
 
 
 class TestRemoteHintEngineHintValidation:
