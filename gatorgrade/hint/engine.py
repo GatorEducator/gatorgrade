@@ -21,8 +21,10 @@ HINT_FILE_LINES = 20
 HINT_REPETITION_PENALTY = 1.2
 HINT_TOP_P = 0.9
 
+# default task for the local LLM
 TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
 
+# default locations in the file system
 CACHE_DIR_KEY = "cache_dir"
 ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
 
