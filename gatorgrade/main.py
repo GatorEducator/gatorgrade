@@ -318,7 +318,7 @@ def _create_auto_hint_engine(
     to a local AutoHintEngine.
 
     When no URL is provided, a local AutoHintEngine is created
-    directly.
+    directly, using the default configuration for auto-hinting.
 
     Args:
         filename: Path to the config file (for reading
@@ -341,7 +341,6 @@ def _create_auto_hint_engine(
     ):
         config_model = get_auto_hint_model(filename)
         model_id = config_model or DEFAULT_MODEL_ID
-
     if auto_hint_url:
         # attempt the remote engine first
         engine = _try_create_remote_engine(
