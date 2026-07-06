@@ -103,15 +103,26 @@ def _parse_due_date_value(
         if the value could not be parsed.
 
     """
+    # convert the value to a datetime object, handling different
+    # types of input that are permitted in the YAML front matter
     try:
+        # if the value is a string, parse it as an ISO 8601 datetime string
         if isinstance(value, str):
             dt = datetime.datetime.fromisoformat(value)
+        # if it could not be extracted as a string, it could
+        # could be a datetime object and thus can be assigned
         elif isinstance(value, datetime.datetime):
             dt = value
+        # otherwise, it could be handled as a date object,
+        # and could be assigned to it directly
         elif isinstance(value, datetime.date):
             dt = datetime.datetime.combine(value, datetime.time.min)
+        # some aspect of parsing did not work and thus
+        # the value could not be parsed, so return an error message
         else:
             return None, (f"Unsupported due date type: {type(value).__name__}")
+    # the value could not be parsed by any supported means,
+    # so return an error message indicating that parsing failed
     except ValueError as e:
         return None, f"Could not parse due date: {e}"
     # convert timezone-aware datetimes to naive local time; note that
