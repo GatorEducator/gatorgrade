@@ -54,6 +54,7 @@ class RemoteHintEngine:
         base_url: str,
         api_key: str = REMOTE_API_KEY_DEFAULT,
         model_id: str = REMOTE_MODEL_DEFAULT,
+        system_prompt: str | None = None,
     ) -> None:
         """Initialise the remote hint engine.
 
@@ -62,11 +63,14 @@ class RemoteHintEngine:
                 The /v1 path suffix is appended by the provider.
             api_key: API key for the server, if required.
             model_id: Name of the model exposed at the server.
+            system_prompt: Optional custom system prompt.
+                If provided, this replaces the built-in default.
 
         """
         self._base_url = base_url
         self._api_key = api_key
         self._model_id = model_id
+        self._system_prompt = system_prompt
 
     @property
     def model_id(self) -> str:
@@ -112,6 +116,7 @@ class RemoteHintEngine:
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
+        system_prompt: str | None = None,
     ) -> list[dict[str, str]]:
         """Build a structured message list for the chat completions API.
 
@@ -123,6 +128,7 @@ class RemoteHintEngine:
             command: Command that was run.
             file_content: Source file content (truncated to
                 HINT_FILE_LINES lines).
+            system_prompt: Optional custom system prompt.
 
         Returns:
             A list of dicts suitable for chat-based inference.
@@ -133,6 +139,7 @@ class RemoteHintEngine:
             diagnostic=diagnostic,
             command=command,
             file_content=file_content,
+            system_prompt=system_prompt,
         )
 
     @staticmethod
@@ -159,6 +166,7 @@ class RemoteHintEngine:
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
+        system_prompt: str | None = None,
     ) -> tuple[Optional[str], bool]:
         """Generate a short hint by calling the remote OpenAI-compatible API.
 
@@ -171,6 +179,7 @@ class RemoteHintEngine:
             command: The shell / GatorGrader command that was run.
             file_content: The contents of the source file being
                 checked, if available.
+            system_prompt: Optional custom system prompt.
 
         Returns:
             A tuple (hint, is_low_quality) where:
@@ -192,8 +201,15 @@ class RemoteHintEngine:
         except ImportError:
             return None, False
 
+        # use the per-call system_prompt if provided, otherwise
+        # fall back to the engine-level prompt or the built-in default
+        effective_prompt = system_prompt or self._system_prompt
         messages = self._build_messages(
-            description, diagnostic, command, file_content
+            description,
+            diagnostic,
+            command,
+            file_content,
+            system_prompt=effective_prompt,
         )
 
         try:
