@@ -14,7 +14,7 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
-from gatorgrade.hint.engine import DEFAULT_MODEL_ID, AutoHintEngine
+from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID, AutoHintEngine
 from gatorgrade.hint.remote_engine import (
     REMOTE_API_KEY_DEFAULT,
     RemoteHintEngine,
