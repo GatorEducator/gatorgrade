@@ -7,6 +7,7 @@ import platform
 import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
+from unittest.mock import patch
 
 import pytest
 from click import BadParameter
@@ -15,6 +16,7 @@ from hypothesis import strategies as st
 from typer.testing import CliRunner
 
 from gatorgrade import main
+from gatorgrade.hint.remote_engine import RemoteHintEngine
 
 runner = CliRunner()
 
@@ -840,3 +842,82 @@ def test_gatorgrade_with_auto_hint_creates_engine(
     # should succeed (engine creation failure is caught by the except
     # clause, but the engine is optional)
     assert result.exit_code == 0
+
+
+@pytest.mark.autohint
+def test_create_auto_hint_engine_default_model(chdir: Any) -> None:
+    """_create_auto_hint_engine uses default model when sentinel is passed."""
+    chdir("tests/test_assignment")
+    engine = main._create_auto_hint_engine(
+        filename=Path("gatorgrade.yml"),
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url=None,
+        auto_hint_api_key=None,
+    )
+    assert engine is not None
+
+
+@pytest.mark.autohint
+def test_create_auto_hint_engine_with_remote_url_falls_back(
+    chdir: Any,
+) -> None:
+    """Falls back to local engine when remote URL is unreachable."""
+    chdir("tests/test_assignment")
+    engine = main._create_auto_hint_engine(
+        filename=Path("gatorgrade.yml"),
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url="http://localhost:99999",
+        auto_hint_api_key=None,
+    )
+    assert engine is not None
+
+
+@pytest.mark.autohint
+def test_try_create_remote_engine_returns_adapter() -> None:
+    """Returns a RemoteEngineAdapter even with a bad URL (lazy connect)."""
+    engine = main._try_create_remote_engine(
+        url="http://localhost:99999",
+        api_key=None,
+        model_id="test-model",
+    )
+    assert isinstance(engine, main.RemoteEngineAdapter)
+
+
+class TestRemoteEngineAdapter:
+    """Direct tests for RemoteEngineAdapter."""
+
+    @pytest.mark.autohint
+    def test_is_loaded_returns_true(self) -> None:
+        """is_loaded always returns True."""
+        remote = RemoteHintEngine(base_url="http://test.url:4160")
+        adapter = main.RemoteEngineAdapter(remote, "test-model")
+        assert adapter.is_loaded is True
+
+    @pytest.mark.autohint
+    def test_model_id_returns_remote_prefix(self) -> None:
+        """model_id returns the model identifier with remote: prefix."""
+        remote = RemoteHintEngine(base_url="http://test.url:4160")
+        adapter = main.RemoteEngineAdapter(remote, "Qwen-3.6-35B-A3B")
+        assert adapter.model_id == "remote:Qwen-3.6-35B-A3B"
+
+    @pytest.mark.autohint
+    def test_ensure_loaded_is_noop(self) -> None:
+        """ensure_loaded does not raise."""
+        remote = RemoteHintEngine(base_url="http://test.url:4160")
+        adapter = main.RemoteEngineAdapter(remote, "test-model")
+        adapter.ensure_loaded()  # must not raise
+
+    @pytest.mark.autohint
+    def test_generate_hint_with_mocked_remote(self) -> None:
+        """generate_hint delegates to the remote engine."""
+        remote = RemoteHintEngine(base_url="http://test.url:4160")
+        adapter = main.RemoteEngineAdapter(remote, "test-model")
+        with patch(
+            "gatorgrade.hint.remote_engine.RemoteHintEngine.generate_hint",
+            return_value=("A useful hint.", False),
+        ):
+            hint, is_low = adapter.generate_hint(
+                description="test", diagnostic="error"
+            )
+        assert hint == "A useful hint."
+        assert not is_low
