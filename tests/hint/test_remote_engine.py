@@ -90,13 +90,29 @@ class TestRemoteHintEngineGenerateHint:
 
         """
         import sys  # noqa: PLC0415
+        import types  # noqa: PLC0415
+        from typing import Any  # noqa: PLC0415
 
-        fake_openai = MagicMock()
+        # build a real module hierarchy so the import
+        # ``from openai.types.chat import ChatCompletionMessageParam``
+        # succeeds inside generate_hint.
+        fake_openai: Any = types.ModuleType("openai")
+        fake_openai.__path__ = []  # make it a package
+        types_mod: Any = types.ModuleType("openai.types")
+        types_mod.__path__ = []
+        chat_mod: Any = types.ModuleType("openai.types.chat")
+        fake_openai.types = types_mod
+        fake_openai.types.chat = chat_mod
+        fake_openai.types.chat.ChatCompletionMessageParam = dict
+        fake_openai.OpenAI = MagicMock()
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.choices = [mock_choice]
         mock_client.chat.completions.create.return_value = mock_response
         fake_openai.OpenAI.return_value = mock_client
+        # register submodules so python's import machinery finds them
+        sys.modules["openai.types"] = types_mod
+        sys.modules["openai.types.chat"] = chat_mod
 
         was_present = "openai" in sys.modules
         old_module = sys.modules.get("openai")
@@ -107,9 +123,13 @@ class TestRemoteHintEngineGenerateHint:
             )
         finally:
             if was_present:
+                assert old_module is not None
                 sys.modules["openai"] = old_module
             else:
                 del sys.modules["openai"]
+            # clean up submodule entries we injected
+            for sub in ("openai.types", "openai.types.chat"):
+                sys.modules.pop(sub, None)
         return hint, is_low_quality, mock_client
 
     def test_generate_hint_returns_content(self) -> None:
@@ -185,8 +205,8 @@ class TestRemoteHintEngineGenerateHint:
             )
         finally:
             if was_present:
+                assert old_module is not None
                 sys.modules["openai"] = old_module
-            else:
                 del sys.modules["openai"]
 
         assert hint is None
@@ -339,8 +359,8 @@ class TestRemoteHintEngineDepCheck:
             RemoteHintEngine.check_deps()  # should not raise
         finally:
             if was_present:
+                assert old_module is not None
                 sys.modules["openai"] = old_module
-            else:
                 del sys.modules["openai"]
 
 
