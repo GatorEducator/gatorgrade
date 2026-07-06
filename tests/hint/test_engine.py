@@ -1,11 +1,11 @@
-"""Test suite for the auto-hint engine (gatorgrade/hint/engine.py)."""
+"""Test suite for the locally-driven auto-hint engine (i.e., gatorgrade/hint/local_engine.py)."""
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gatorgrade.hint.engine import (
+from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
     HINT_DIAG_TRUNCATE,
     HINT_FILE_LINES,
