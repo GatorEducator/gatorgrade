@@ -14,12 +14,19 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
-from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID, AutoHintEngine
+from gatorgrade.hint.local_engine import (
+    DEFAULT_MODEL_ID,
+    ENV_CACHE_DIR,
+    AutoHintEngine,
+    _platform_model_cache_dir,
+)
 from gatorgrade.hint.remote_engine import (
     REMOTE_API_KEY_DEFAULT,
     RemoteHintEngine,
 )
 from gatorgrade.input.parse_config import (
+    ENV_CONFIG_DIR,
+    _platform_config_dir,
     get_auto_hint_model,
     get_config_dir,
     get_due_date,
@@ -298,14 +305,41 @@ def _get_os_release() -> str:
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        lines = [
-            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
-            _get_python_info(),
-        ]
+        console.print(
+            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})"
+        )
+        console.print(_get_python_info())
         os_release = _get_os_release()
         if os_release:
-            lines.append(os_release)
-        console.print(NEWLINE.join(lines))
+            console.print(os_release)
+        # show the path-related environment variables and resolved
+        # defaults so users know which paths affect gatorgrade
+        import os  # noqa: PLC0415
+
+        models_override = os.environ.get(ENV_CACHE_DIR)
+        config_override = os.environ.get(ENV_CONFIG_DIR)
+        models_default = str(_platform_model_cache_dir())
+        config_default = str(_platform_config_dir())
+
+        def _fmt_env(name: str, override: str | None, default: str) -> Text:
+            """Format a single environment variable line for display."""
+            result = Text()
+            result.append(f"{name} is ")
+            result.append(
+                override if override else "(unset with",
+                style="" if override else "dim",
+            )
+            result.append(
+                f" default: {default})",
+                style="dim",
+            )
+            return result
+
+        for env_line in [
+            _fmt_env(ENV_CACHE_DIR, models_override, models_default),
+            _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
+        ]:
+            console.print(env_line)
         raise typer.Exit()
 
 
