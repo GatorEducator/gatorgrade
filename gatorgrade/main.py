@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import typer
 from click import BadParameter
@@ -156,7 +156,9 @@ def _validate_baseline_weight(value: int) -> int:
     return value
 
 
-def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
+def _validate_report(
+    value: Tuple[Optional[str], Optional[str], Optional[str]],
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """Validate report tuple arguments up front to avoid crashes later.
 
     Validates that:
@@ -183,6 +185,7 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
                 )
             )
         if value[0] is not None and value[0].upper() != REPORT_DEST_ENV:
+            assert value[2] is not None  # validated earlier
             file_path = Path(value[2])
             parent_dir = file_path.resolve().parent
             if not parent_dir.exists():
@@ -200,8 +203,8 @@ def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
 
 
 def _validate_github_env(
-    value: Tuple[str, str],
-) -> Tuple[str, str]:
+    value: Tuple[Optional[str], Optional[str]],
+) -> Tuple[Optional[str], Optional[str]]:
     """Validate github-env tuple arguments up front.
 
     Validates that the first argument is JSON or MD
