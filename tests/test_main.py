@@ -782,3 +782,39 @@ def test_valid_env_var_names_match_property(value: str) -> None:
 def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
     """Property: invalid env var names do not match the VALID_ENV_VAR_NAME pattern."""
     assert main.VALID_ENV_VAR_NAME.match(value) is None
+
+
+def test_validate_report_passes_for_invalid_destination() -> None:
+    """_validate_report rejects an invalid destination."""
+    with pytest.raises(BadParameter, match="First report argument"):
+        main._validate_report(("html", "json", "report.json"))
+
+
+def test_validate_report_passes_for_invalid_type() -> None:
+    """_validate_report rejects an invalid report type."""
+    with pytest.raises(BadParameter, match="Second report argument"):
+        main._validate_report(("file", "html", "report.json"))
+
+
+def test_validate_github_env_passes_for_invalid_format() -> None:
+    """_validate_github_env rejects an invalid format."""
+    with pytest.raises(BadParameter, match="First github-env argument"):
+        main._validate_github_env(("html", "JSON_REPORT"))
+
+
+def test_validate_github_env_passes_for_invalid_name() -> None:
+    """_validate_github_env rejects an invalid environment variable name."""
+    with pytest.raises(BadParameter, match="Second github-env argument"):
+        main._validate_github_env(("json", "1invalid!"))
+
+
+def test_validate_github_env_passes_for_none_values() -> None:
+    """_validate_github_env passes through None values."""
+    result = main._validate_github_env((None, None))
+    assert result == (None, None)
+
+
+def test_validate_report_passes_for_none_values() -> None:
+    """_validate_report passes through None values."""
+    result = main._validate_report((None, None, None))
+    assert result == (None, None, None)
