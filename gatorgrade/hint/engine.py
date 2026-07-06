@@ -1,4 +1,4 @@
-"""Auto-hint engine using Hugging Face transformers for local hint generation."""
+"""Auto-hint engine for generating hints with local transformers models."""
 
 import os
 from pathlib import Path
@@ -37,7 +37,7 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     1. override parameter
     2. $GATORGRADE_MODELS_DIR environment variable
     3. platformdirs.user_cache_dir("gatorgrade") / "models"
-    4. ~/.cache/gatorgrade/models/`` (fallback)
+    4. ~/.cache/gatorgrade/models/ (fallback)
 
     """
     if override is not None:
@@ -60,10 +60,10 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
 class AutoHintEngine:
     """Lazy-loading engine that generates hints for failing checks.
 
-    The model is **not** downloaded or loaded when the engine is
-    constructed — that happens on the first call to
-    :meth:`generate_hint`.  If ``transformers`` is missing,
-    :meth:`generate_hint` returns ``None`` (graceful degradation).
+    The model is not downloaded or loaded when the engine is
+    constructed.  That happens on the first call to
+    generate_hint.  If transformers is missing,
+    generate_hint returns None (graceful degradation).
 
     Usage::
 
@@ -85,10 +85,9 @@ class AutoHintEngine:
         """Initialize the engine.
 
         Args:
-            model_id: Hugging Face model ID (e.g.
-                ``HuggingFaceTB/SmolLM2-135M-Instruct``).
+            model_id: Hugging Face model ID.
             cache_dir: Optional path for the model cache.
-                Can also be set via ``$GATORGRADE_MODELS_DIR``.
+                Can also be set via $GATORGRADE_MODELS_DIR.
 
         """
         self._model_id = model_id
@@ -100,14 +99,14 @@ class AutoHintEngine:
 
     @staticmethod
     def check_deps() -> None:
-        """Verify that ``transformers`` and ``torch`` are importable.
+        """Verify that transformers and torch are importable.
 
-        This is an **eager** check (no model download) so callers
+        This is an eager check (no model download) so callers
         can give the user a clear error message right away instead
         of discovering the missing dependency silently later.
 
         Raises:
-            ImportError: If ``transformers`` or ``torch`` is not
+            ImportError: If transformers or torch is not
                 installed.
 
         """
@@ -137,7 +136,7 @@ class AutoHintEngine:
     def cache_dir(self) -> Path:
         """Return the gatorgrade-specific directory for caching models.
 
-        Uses ``platformdirs.user_cache_dir("gatorgrade") / "models"``
+        Uses platformdirs.user_cache_dir("gatorgrade") / "models"
         so models live in the standard per-user cache location.
         """
         return _model_cache_dir(override=self._cache_dir_override)
@@ -152,14 +151,13 @@ class AutoHintEngine:
 
         This is the public entry point for loading the model, with
         all chatty Hugging Face progress bars and diagnostic output
-        suppressed.  Safe to call multiple times — subsequent calls
+        suppressed.  Safe to call multiple times.  Subsequent calls
         are a no-op once the model is already loaded.
 
         Raises:
-            ImportError: If ``transformers`` is not installed.
+            ImportError: If transformers is not installed.
             Exception: Any exception from the download or load process
-                (caught by :meth:`generate_hint` and turned into
-                ``None``).
+                (caught by generate_hint and turned into None).
 
         """
         if self._pipe is not None:
@@ -209,10 +207,10 @@ class AutoHintEngine:
             os.close(devnull_fd)
 
     def _ensure_loaded(self) -> None:
-        """Delegate to the public :meth:`ensure_loaded` method.
+        """Delegate to the public ensure_loaded method.
 
         Kept for backward compatibility; new code should call
-        :meth:`ensure_loaded` directly.
+        ensure_loaded directly.
 
         """
         self.ensure_loaded()
@@ -367,8 +365,8 @@ class AutoHintEngine:
             file_content: Source file content (truncated to HINT_FILE_LINES lines).
 
         Returns:
-            A list of ``{"role": …, "content": …}`` dicts suitable for
-            ``transformers`` pipeline's chat template handling.
+            A list of dicts suitable for
+            transformers pipeline's chat template handling.
 
         """
         truncated_diag = diagnostic[:HINT_DIAG_TRUNCATE] if diagnostic else ""
