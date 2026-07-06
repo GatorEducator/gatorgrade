@@ -244,6 +244,7 @@ def get_due_date(
         if parse_error:
             return None, f"Invalid value for '{alias}': {parse_error}"
         return due_date, None
+    # report the error(s) that occurred when parsing the YAML file
     except yaml.YAMLError as e:
         return None, f"Could not parse YAML front matter: {e}"
     except OSError as e:
@@ -298,6 +299,8 @@ def parse_config(
     error = validate_positive_nonzero_int(
         baseline_weight, BASELINE_WEIGHT_FIELD
     )
+    # the baseline weight was not valid and thus this function
+    # should return early with an error message
     if error:
         return [], error
     try:
