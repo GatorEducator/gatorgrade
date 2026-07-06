@@ -921,3 +921,97 @@ class TestRemoteEngineAdapter:
             )
         assert hint == "A useful hint."
         assert not is_low
+
+
+def test_gatorgrade_with_config_dir_no_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with a file in the config dir should work."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file = config_dir / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_and_explicit_config(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with --config pointing to a file in the config dir."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file = config_dir / "custom.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(
+        main.app,
+        ["--config-dir", str(config_dir), "--config", "custom.yml"],
+    )
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_cwd_takes_precedence(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """A file in the CWD takes precedence over a file in --config-dir."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file_config = config_dir / "gatorgrade.yml"
+    config_file_config.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: from_config_dir\n"
+        '  command: "echo wrong"\n'
+    )
+    config_file_cwd = tmp_path / "gatorgrade.yml"
+    config_file_cwd.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: from_cwd\n"
+        '  command: "echo correct"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_nonexistent_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with a nonexistent config returns error."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 1
+    assert "either does not exist or is not valid" in result.stdout

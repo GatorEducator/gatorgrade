@@ -73,7 +73,7 @@ def build_hint_messages(
     if truncated_diag:
         user_parts.append("Diagnostic:\n```\n" + truncated_diag + "\n```")
     user_parts.append(
-        "What to do (1-2 sentences, mention the specific "
+        "What to do (1-5 sentences, mention the specific "
         "failing test if available):"
     )
 

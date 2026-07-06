@@ -432,7 +432,7 @@ class RemoteEngineAdapter:
     @property
     def model_id(self) -> str:
         """Return the model identifier for display."""
-        return f"remote:{self._model_id}"
+        return f"{self._model_id}"
 
     def generate_hint(
         self,
@@ -746,6 +746,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 project_name,
                 due_date,
                 auto_hint_engine=auto_hint_engine,
+                auto_hint_url=auto_hint_url,
             )
         # no checks were created and this means
         # that, most likely, the file was not

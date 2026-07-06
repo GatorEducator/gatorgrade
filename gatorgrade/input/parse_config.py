@@ -27,6 +27,74 @@ DUE_DATE_ALIASES = (DUE_DATE_FIELD, "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
 AUTO_HINT_MODEL_FIELD = "auto_hint_model"
 
+# environment variable that can override the default config directory
+ENV_CONFIG_DIR = "GATORGRADE_CONFIG_DIR"
+
+
+def get_config_dir() -> Path:
+    """Return the gatorgrade configuration directory.
+
+    This is the platformdirs user config directory for gatorgrade,
+    used as the default base for model storage and configuration
+    files. The precedence is:
+
+    1. $GATORGRADE_CONFIG_DIR environment variable
+    2. platformdirs.user_config_dir("gatorgrade")
+    3. ~/.config/gatorgrade/ (fallback)
+
+    Returns:
+        The configuration directory path.
+
+    """
+    env_dir = __import__("os").environ.get(ENV_CONFIG_DIR)
+    if env_dir:
+        return Path(env_dir)
+    try:
+        import platformdirs  # noqa: PLC0415
+
+        return Path(
+            platformdirs.user_config_dir("gatorgrade", appauthor=False)
+        )
+    except ImportError:
+        pass
+    return Path.home() / ".config" / "gatorgrade"
+
+
+def resolve_config_path(
+    filename: Path, config_dir: Path | None = None
+) -> Path:
+    """Resolve the actual gatorgrade.yml path using the search order.
+
+    Search order:
+    1. The specified filename in the current working directory.
+    2. The specified filename inside --config-dir (if provided, or
+       the default platformdirs-based config directory).
+
+    If the filename is an absolute path, it is returned as-is.
+    If the file is not found in either location, the original
+    filename is returned so the caller can report a clear error.
+
+    Args:
+        filename: The config filename (from --config).
+        config_dir: The config directory (from --config-dir), or None
+            to use the default platformdirs-based directory.
+
+    Returns:
+        The resolved Path to the configuration file.
+
+    """
+    if filename.is_absolute():
+        return filename
+    # check the current working directory first
+    if filename.exists():
+        return filename
+    # fall back to the config directory
+    resolved = (config_dir or get_config_dir()) / filename
+    if resolved.exists():
+        return resolved
+    # not found in either location; return the original name
+    return filename
+
 
 def get_project_name(file: Path) -> str | None:
     """Extract the optional project name from a gatorgrade YAML config file.

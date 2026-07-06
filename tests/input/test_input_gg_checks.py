@@ -11,11 +11,13 @@ from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.in_file_path import reformat_yaml_data
 from gatorgrade.input.parse_config import (
     get_auto_hint_model,
+    get_config_dir,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
     has_due_date_field,
     parse_config,
+    resolve_config_path,
 )
 
 
@@ -113,6 +115,105 @@ def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
     )
     result = has_due_date_field(config_file)
     assert result is True
+
+
+class TestGetConfigDir:
+    """Tests for the get_config_dir function."""
+
+    def test_returns_path(self) -> None:
+        """get_config_dir always returns a Path."""
+        result = get_config_dir()
+        assert isinstance(result, Path)
+
+    def test_env_var_overrides(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """$GATORGRADE_CONFIG_DIR overrides the default config dir."""
+        monkeypatch.setenv("GATORGRADE_CONFIG_DIR", "/tmp/my-config")
+        result = get_config_dir()
+        assert result == Path("/tmp/my-config")
+
+    def test_fallback_without_platformdirs(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Falls back to ~/.config/gatorgrade when platformdirs is missing."""
+        monkeypatch.setattr(
+            "sys.modules", {"platformdirs": None}, raising=False
+        )
+        monkeypatch.setattr(
+            "gatorgrade.input.parse_config.platformdirs",
+            None,
+            raising=False,
+        )
+        # also unset env var so it doesn't interfere
+        monkeypatch.delenv("GATORGRADE_CONFIG_DIR", raising=False)
+        result = get_config_dir()
+        assert result == Path.home() / ".config" / "gatorgrade"
+
+
+class TestResolveConfigPath:
+    """Tests for the resolve_config_path function."""
+
+    def test_absolute_path_returned_as_is(self) -> None:
+        """Absolute paths are returned unchanged."""
+        result = resolve_config_path(Path("/etc/gatorgrade.yml"))
+        assert result == Path("/etc/gatorgrade.yml")
+
+    def test_file_in_cwd_is_found(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When the file exists in the CWD, it is returned."""
+        config_file = tmp_path / "gatorgrade.yml"
+        config_file.write_text("name: test\n")
+        monkeypatch.chdir(tmp_path)
+        name = Path("gatorgrade.yml")
+        result = resolve_config_path(name)
+        assert result == name
+        assert result.resolve() == config_file.resolve()
+
+    def test_file_in_config_dir_is_found(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When the file exists in the config dir, it is returned."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        config_file = config_dir / "gatorgrade.yml"
+        config_file.write_text("name: test\n")
+        monkeypatch.chdir(tmp_path)
+        result = resolve_config_path(Path("gatorgrade.yml"), config_dir)
+        assert result == config_file
+
+    def test_cwd_takes_precedence_over_config_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A file in the CWD takes precedence over the config dir."""
+        cwd_file = tmp_path / "gatorgrade.yml"
+        cwd_file.write_text("name: cwd\n")
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        config_file = config_dir / "gatorgrade.yml"
+        config_file.write_text("name: config\n")
+        monkeypatch.chdir(tmp_path)
+        name = Path("gatorgrade.yml")
+        result = resolve_config_path(name, config_dir)
+        assert result == name
+        assert result.resolve() == cwd_file.resolve()
+
+    def test_file_not_found_returns_original(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When the file is not found anywhere, the original name is returned."""
+        monkeypatch.chdir(tmp_path)
+        result = resolve_config_path(Path("nonexistent.yml"))
+        assert result == Path("nonexistent.yml")
+
+    def test_file_not_found_in_cwd_or_config_dir_returns_original(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Returns original when not in CWD or config dir."""
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        monkeypatch.chdir(tmp_path)
+        result = resolve_config_path(Path("nonexistent.yml"), config_dir)
+        assert result == Path("nonexistent.yml")
 
 
 def test_get_auto_hint_model_returns_model_id(tmp_path: Path) -> None:
