@@ -354,8 +354,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--auto-hint",
         help="Automatically generate hints for failing checks using a local LLM.",
     ),
-    auto_hint_model: str | None = typer.Option(
-        None,
+    auto_hint_model: str = typer.Option(
+        DEFAULT_MODEL_ID,
         "--auto-hint-model",
         help=(
             "Hugging Face model ID for auto-hint generation "
