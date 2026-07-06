@@ -131,23 +131,6 @@ class TestGetConfigDir:
         result = get_config_dir()
         assert result == Path("/tmp/my-config")
 
-    def test_fallback_without_platformdirs(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Falls back to ~/.config/gatorgrade when platformdirs is missing."""
-        monkeypatch.setattr(
-            "sys.modules", {"platformdirs": None}, raising=False
-        )
-        monkeypatch.setattr(
-            "gatorgrade.input.parse_config.platformdirs",
-            None,
-            raising=False,
-        )
-        # also unset env var so it doesn't interfere
-        monkeypatch.delenv("GATORGRADE_CONFIG_DIR", raising=False)
-        result = get_config_dir()
-        assert result == Path.home() / ".config" / "gatorgrade"
-
 
 class TestResolveConfigPath:
     """Tests for the resolve_config_path function."""

@@ -38,7 +38,6 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     1. override parameter
     2. $GATORGRADE_MODELS_DIR environment variable
     3. platformdirs.user_cache_dir("gatorgrade") / "models"
-    4. ~/.cache/gatorgrade/models/ (fallback)
 
     """
     if override is not None:
@@ -46,16 +45,12 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     env_dir = os.environ.get(ENV_CACHE_DIR)
     if env_dir:
         return Path(env_dir)
-    try:
-        import platformdirs  # noqa: PLC0415
+    import platformdirs  # noqa: PLC0415
 
-        return (
-            Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
-            / "models"
-        )
-    except ImportError:
-        pass
-    return Path.home() / ".cache" / "gatorgrade" / "models"
+    return (
+        Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
+        / "models"
+    )
 
 
 def _platform_model_cache_dir() -> Path:
@@ -71,16 +66,12 @@ def _platform_model_cache_dir() -> Path:
         The platform-level default model cache directory path.
 
     """
-    try:
-        import platformdirs  # noqa: PLC0415
+    import platformdirs  # noqa: PLC0415
 
-        return (
-            Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
-            / "models"
-        )
-    except ImportError:
-        pass
-    return Path.home() / ".cache" / "gatorgrade" / "models"
+    return (
+        Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
+        / "models"
+    )
 
 
 class AutoHintEngine:

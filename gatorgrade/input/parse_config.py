@@ -41,7 +41,6 @@ def get_config_dir() -> Path:
 
     1. $GATORGRADE_CONFIG_DIR environment variable
     2. platformdirs.user_config_dir("gatorgrade")
-    3. ~/.config/gatorgrade/ (fallback)
 
     Returns:
         The configuration directory path.
@@ -50,15 +49,9 @@ def get_config_dir() -> Path:
     env_dir = __import__("os").environ.get(ENV_CONFIG_DIR)
     if env_dir:
         return Path(env_dir)
-    try:
-        import platformdirs  # noqa: PLC0415
+    import platformdirs  # noqa: PLC0415
 
-        return Path(
-            platformdirs.user_config_dir("gatorgrade", appauthor=False)
-        )
-    except ImportError:
-        pass
-    return Path.home() / ".config" / "gatorgrade"
+    return Path(platformdirs.user_config_dir("gatorgrade", appauthor=False))
 
 
 def _platform_config_dir() -> Path:
@@ -74,15 +67,9 @@ def _platform_config_dir() -> Path:
         The platform-level default config directory path.
 
     """
-    try:
-        import platformdirs  # noqa: PLC0415
+    import platformdirs  # noqa: PLC0415
 
-        return Path(
-            platformdirs.user_config_dir("gatorgrade", appauthor=False)
-        )
-    except ImportError:
-        pass
-    return Path.home() / ".config" / "gatorgrade"
+    return Path(platformdirs.user_config_dir("gatorgrade", appauthor=False))
 
 
 def resolve_config_path(

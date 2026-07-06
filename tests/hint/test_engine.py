@@ -424,13 +424,6 @@ class TestAutoHintEngineCacheDir:
 class TestModelCacheDirFallback:
     """Tests for the _model_cache_dir fallback path."""
 
-    def test_fallback_when_platformdirs_missing(self) -> None:
-        """_model_cache_dir falls back when platformdirs is not available."""
-        with patch.dict("sys.modules", {"platformdirs": None}, clear=False):
-            result = _model_cache_dir()
-        assert "gatorgrade" in str(result)
-        assert result.name == "models"
-
     def test_env_var_override(self, tmp_path: Path) -> None:
         """$GATORGRADE_MODELS_DIR overrides the cache dir."""
         with patch.dict(
