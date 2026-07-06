@@ -9,7 +9,13 @@ from typing import Any, List, Tuple, Union
 
 import gator
 import rich
-from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
@@ -864,17 +870,31 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                             index_of_new_command
                         ]
                 # there were results from running checks
-                # and thus they must be displayed
+                # and thus they must be displayed; use the progress
+                # bar's print method so each check appears above
+                # the progress bar as it completes
                 if result is not None:
-                    result.print()
                     results.append(result)
-                # update progress for every check
+                    progress.print(result.display_result())
                 if result:
                     progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
     # generate auto-hints for failing checks with a progress bar
     if auto_hint_engine is not None and failed_results:
+        # if the model has not been loaded yet, show a dedicated
+        # progress bar for the download / load phase so the user
+        # understands why the first hint is taking longer
+        if not auto_hint_engine.is_loaded:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+            ) as load_progress:
+                load_progress.add_task(
+                    "[green]Downloading and loading model for auto-hinting...",
+                    total=None,
+                )
+                auto_hint_engine.ensure_loaded()
         with Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(
