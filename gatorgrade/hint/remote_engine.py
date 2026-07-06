@@ -5,7 +5,8 @@ from typing import Optional
 # constants for the remote hint engine
 REMOTE_MODEL_DEFAULT = "Qwen-3.6-35B-A3B"
 REMOTE_API_KEY_DEFAULT = "not-needed"
-# NOTE: the openai Python library rejects an empty api_key,
+
+# the openai Python library rejects an empty api_key,
 # so the default is a placeholder string.  The server at
 # kairos.netbird.cloud does not actually authenticate.
 REMOTE_HINT_MAX_TOKENS = 1200
@@ -14,6 +15,7 @@ REMOTE_HINT_DIAG_TRUNCATE = 2000
 REMOTE_HINT_FILE_LINES = 20
 REMOTE_HINT_TOP_P = 0.9
 REMOTE_HINT_TIMEOUT_MS = 180000
+
 # extra_body sent to disable visible thinking traces on Qwen
 # reasoning models.  The model still reasons internally but the
 # response contains only the final answer in the content field.
