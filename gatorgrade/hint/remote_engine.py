@@ -1,14 +1,16 @@
 """Remote auto-hint engine using OpenAI-compatible APIs."""
 
-from typing import Optional
+from typing import Optional, cast
+
+from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 
 # constants for the remote hint engine
 REMOTE_MODEL_DEFAULT = "Qwen-3.6-35B-A3B"
 REMOTE_API_KEY_DEFAULT = "not-needed"
 
-# the openai Python library rejects an empty api_key,
-# so the default is a placeholder string.  The server at
-# kairos.netbird.cloud does not actually authenticate.
+# the openai Python library rejects an empty api_key, so
+# the default is a placeholder string for servers that do
+# not require authentication.
 REMOTE_HINT_MAX_TOKENS = 1200
 REMOTE_HINT_TEMPERATURE = 0.1
 REMOTE_HINT_DIAG_TRUNCATE = 2000
@@ -56,9 +58,8 @@ class RemoteHintEngine:
         """Initialise the remote hint engine.
 
         Args:
-            base_url: Base URL of the OpenAI-compatible API server
-                (e.g. ``http://kairos.netbird.cloud:4160``). The
-                ``/v1`` path suffix is appended by the provider.
+            base_url: Base URL of an OpenAI-compatible API server.
+                The /v1 path suffix is appended by the provider.
             api_key: API key for the server, if required.
             model_id: Name of the model exposed at the server.
 
@@ -91,49 +92,19 @@ class RemoteHintEngine:
         """
 
     @staticmethod
-    @staticmethod
     def _is_valid_hint(hint: str) -> bool:
         """Check if a generated hint violates the rules.
 
-        Returns False if the hint suggests modifying tests, test
-        assertions, or expected results.
+        Delegates to the shared implementation.
 
         Args:
             hint: The generated hint text.
 
         Returns:
-            True if the hint is valid, False if it violates the rules.
+            True if the hint is valid, False if it violates.
 
         """
-        hint_lower = hint.lower()
-        forbidden_phrases = [
-            "`",
-            "'",
-            "test incorrectly",
-            "test is wrong",
-            "test should be",
-            "modify the test",
-            "change the test",
-            "fix the test",
-            "update the test",
-            "the assertion is wrong",
-            "the assertion incorrectly",
-            "incorrectly asserts",
-            "wrong assertion",
-            "change the assertion",
-            "modify the assertion",
-            "change the assert",
-            "update the assert",
-            "fix the assertion",
-            "change the expected",
-            "modify the expected",
-            "we need",
-            "we should",
-            "wrong expected",
-            "expected result is wrong",
-            "expected value is wrong",
-        ]
-        return not any(phrase in hint_lower for phrase in forbidden_phrases)
+        return is_valid_hint(hint)
 
     def _build_messages(
         self,
@@ -144,6 +115,8 @@ class RemoteHintEngine:
     ) -> list[dict[str, str]]:
         """Build a structured message list for the chat completions API.
 
+        Delegates to the shared implementation.
+
         Args:
             description: Check description.
             diagnostic: Diagnostic output (truncated internally).
@@ -152,63 +125,15 @@ class RemoteHintEngine:
                 HINT_FILE_LINES lines).
 
         Returns:
-            A list of dicts suitable for Pydantic AI's chat messages.
+            A list of dicts suitable for chat-based inference.
 
         """
-        truncated_diag = (
-            diagnostic[:REMOTE_HINT_DIAG_TRUNCATE] if diagnostic else ""
+        return build_hint_messages(
+            description=description,
+            diagnostic=diagnostic,
+            command=command,
+            file_content=file_content,
         )
-        truncated_file = ""
-        if file_content:
-            lines = file_content.split("\n")
-            truncated_file = "\n".join(lines[:REMOTE_HINT_FILE_LINES])
-        system = (
-            "You give short, direct hints for fixing code. "
-            "CRITICAL RULES:\n"
-            "- The test suite is provided by the instructor and is "
-            "ALWAYS correct.\n"
-            "- ALWAYS mention what test or command failed.\n"
-            "- ALWAYS describe what to change in the student's "
-            "implementation.\n"
-            "- ALWAYS explain what is incorrect in the STUDENT's "
-            "source code.\n"
-            "- ALWAYS suggest running the command that produced the "
-            "diagnostic output to verify the fix.\n\n"
-            "- ALWAYS end every hint with a period.\n\n"
-            "- NEVER use single quotes (e.g., ') or backticks (e.g., `) "
-            "in your response.\n"
-            "- NEVER suggest modifying tests, test assertions, or "
-            "expected results.\n"
-            "- NEVER write fenced source code blocks in your hint.\n"
-            "- NEVER use the words 'student', 'you should', or "
-            "'you might'. NEVER say:\n"
-            "- 'The test incorrectly asserts <...>'\n"
-            "- 'Modify the test to <...>'\n"
-            "- 'The assertion is wrong because <...>'\n"
-            "- 'Change the expected result <...>'\n\n"
-            "INSTEAD say:\n"
-            "- 'The function X returns Y but the test expects Z; "
-            "check...'\n"
-            "- 'The implementation does not handle...; add logic "
-            "to...'\n\n"
-        )
-
-        user_parts = [f"Check: {description}"]
-        if command:
-            user_parts.append(f"Command: {command}")
-        if truncated_file:
-            user_parts.append("Code:\n```\n" + truncated_file + "\n```")
-        if truncated_diag:
-            user_parts.append("Diagnostic:\n```\n" + truncated_diag + "\n```")
-        user_parts.append(
-            "What to do (1-2 sentences, mention the specific "
-            "failing test if available):"
-        )
-
-        return [
-            {"role": "system", "content": system},
-            {"role": "user", "content": "\n\n".join(user_parts)},
-        ]
 
     @staticmethod
     def check_deps() -> None:
@@ -280,9 +205,16 @@ class RemoteHintEngine:
                 base_url=self._base_url,
                 api_key=self._api_key,
             )
+            from openai.types.chat import (  # noqa: PLC0415
+                ChatCompletionMessageParam,
+            )
+
+            typed_messages: list[ChatCompletionMessageParam] = cast(
+                list[ChatCompletionMessageParam], messages
+            )
             response = client.chat.completions.create(
                 model=self._model_id,
-                messages=messages,  # type: ignore[arg-type]
+                messages=typed_messages,
                 max_tokens=REMOTE_HINT_MAX_TOKENS,
                 temperature=REMOTE_HINT_TEMPERATURE,
                 top_p=REMOTE_HINT_TOP_P,
