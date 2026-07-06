@@ -4,6 +4,8 @@ import datetime
 import json as json_module
 import os
 import subprocess
+import threading
+import time
 from pathlib import Path
 from typing import Any, List, Tuple, Union
 
@@ -12,7 +14,6 @@ import rich
 from rich.progress import (
     BarColumn,
     Progress,
-    SpinnerColumn,
     TextColumn,
     TimeElapsedColumn,
 )
@@ -142,6 +143,11 @@ FILE_WRITE_ERR = (
 
 # empty dict for CLI args default
 EMPTY_CLI_ARGS: dict = {}
+
+# default value for the auto-hint generation
+# maximum step value (used to mimic other progress bars)
+AUTO_HINT_STEPS = 100
+AUTO_HINT_SLEEP_TIME = 0.15
 
 
 def _elide_report_path(path_str: str) -> str:
@@ -887,14 +893,36 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         # understands why the first hint is taking longer
         if not auto_hint_engine.is_loaded:
             with Progress(
-                SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
+                BarColumn(
+                    bar_width=40,
+                    style="red",
+                    complete_style="green",
+                    finished_style="green",
+                ),
+                TimeElapsedColumn(),
             ) as load_progress:
-                load_progress.add_task(
-                    "[green]Downloading and loading model for auto-hinting...",
-                    total=None,
+                task_id = load_progress.add_task(
+                    "[green]Loading auto-hinters",
+                    total=AUTO_HINT_STEPS,
                 )
+                load_progress.update(
+                    task_id,
+                    completed=0,
+                )
+
+                # use a daemon thread to advance the bar so it animates
+                # while the model is being loaded, then mark it complete
+                # in green once loading finishes
+                def _advance_bar() -> None:
+                    for _ in range(AUTO_HINT_STEPS - 1):
+                        time.sleep(AUTO_HINT_SLEEP_TIME)
+                        load_progress.update(task_id, advance=1)
+
+                thread = threading.Thread(target=_advance_bar, daemon=True)
+                thread.start()
                 auto_hint_engine.ensure_loaded()
+                load_progress.update(task_id, completed=100)
         with Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(
