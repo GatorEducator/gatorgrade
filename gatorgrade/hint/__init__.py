@@ -1,6 +1,6 @@
 """Auto-hint feature using local or remote LLMs for hint generation."""
 
-from gatorgrade.hint.engine import (
+from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
     ENV_CACHE_DIR,
     HINT_FILE_LINES,
