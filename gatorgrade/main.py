@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import typer
 from click import BadParameter
@@ -308,11 +308,11 @@ def _create_auto_hint_engine(
     auto_hint_model: str,
     auto_hint_url: Optional[str],
     auto_hint_api_key: Optional[str],
-) -> Optional[AutoHintEngine]:
+) -> Any:
     """Create the appropriate auto-hint engine based on CLI arguments.
 
     When --auto-hint-url is provided, a RemoteHintEngine is
-    attempted first.  If it succeeds, it is returned.  If it
+    attempted first. If it succeeds, it is returned. If it
     fails (e.g. the URL is unreachable or pydantic_ai is not
     installed), a warning is printed and the engine falls back
     to a local AutoHintEngine.
@@ -370,7 +370,7 @@ def _try_create_remote_engine(
     url: str,
     api_key: Optional[str],
     model_id: str,
-) -> Optional[AutoHintEngine]:
+) -> Any:
     """Attempt to create and verify a RemoteHintEngine.
 
     Returns the engine wrapped in an adapter that unifies the
