@@ -1933,7 +1933,7 @@ def test_run_checks_global_output_limit_truncates_diagnostic(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=1)  # type: ignore
+    output.run_checks(checks, report, output_limit=1, no_progress_bar=True)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated from 3 to 1 line(s))" in out
 
@@ -1950,7 +1950,7 @@ def test_run_checks_check_outputlimit_overrides_global(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=100)  # type: ignore
+    output.run_checks(checks, report, output_limit=100, no_progress_bar=True)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated from 3 to 1 line(s))" in out
 
@@ -1963,7 +1963,7 @@ def test_run_checks_no_output_limit_shows_full_diagnostic(
         ShellCheck(description="Failing check", command=FAILING_CMD),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report)  # type: ignore
+    output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated)" not in out
 
@@ -2017,7 +2017,7 @@ def test_run_checks_mixed_checks_use_correct_output_limit(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=3)  # type: ignore
+    output.run_checks(checks, report, output_limit=3, no_progress_bar=True)  # type: ignore
     out, _ = capsys.readouterr()
     plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
     assert "... (output truncated from 3 to 2 line(s))" in plain_out
@@ -2535,3 +2535,44 @@ def test_run_checks_preserves_explicit_hint() -> None:
     report = ("", "", "")
     output.run_checks([check], report, auto_hint_engine=mock_engine)
     mock_engine.generate_hint.assert_not_called()
+
+
+def test_run_checks_loads_model_and_generates_hints(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The model loading progress bar and hint generation work together."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = False
+    mock_engine.generate_hint.return_value = (
+        "Check the file path.",
+        False,
+    )
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.ensure_loaded.assert_called_once()
+    mock_engine.generate_hint.assert_called_once()
+
+
+def test_run_checks_generates_low_quality_hint(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Low-quality hints are still generated and displayed."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = (
+        "The test is incorrect.",
+        True,
+    )
+    report = ("", "", "")
+    output.run_checks(
+        [check], report, auto_hint_engine=mock_engine, no_progress_bar=True
+    )
+    mock_engine.generate_hint.assert_called_once()

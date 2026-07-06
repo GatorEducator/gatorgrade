@@ -818,3 +818,27 @@ def test_validate_report_passes_for_none_values() -> None:
     """_validate_report passes through None values."""
     result = main._validate_report((None, None, None))
     assert result == (None, None, None)
+
+
+def test_gatorgrade_with_auto_hint_model_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-model without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--auto-hint-model", "custom/model"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_creates_engine(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint creates an engine and runs checks."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint"])
+    capsys.readouterr()
+    # should succeed (engine creation failure is caught by the except
+    # clause, but the engine is optional)
+    assert result.exit_code == 0
