@@ -98,8 +98,6 @@ def is_valid_hint(hint: str) -> bool:
     """
     hint_lower = hint.lower()
     forbidden_phrases = [
-        "`",
-        "'",
         "test incorrectly",
         "test is wrong",
         "test should be",
