@@ -32,6 +32,7 @@ from gatorgrade.input.parse_config import (
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
+    get_system_prompt_file,
     has_due_date_field,
     parse_config,
     resolve_config_path,
@@ -324,13 +325,13 @@ def _version_callback(value: bool) -> None:
         def _fmt_env(name: str, override: str | None, default: str) -> Text:
             """Format a single environment variable line for display."""
             result = Text()
-            result.append(f"{name} is ")
+            result.append(f"{name}=")
             result.append(
-                override if override else "(unset with",
+                override if override else "(unset)",
                 style="" if override else "dim",
             )
             result.append(
-                f" default: {default})",
+                f" (default: {default})",
                 style="dim",
             )
             return result
@@ -343,11 +344,53 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _resolve_system_prompt(
+    config_path: Path, config_dir: Optional[Path]
+) -> Optional[str]:
+    """Read the system prompt file if specified in the config front matter.
+
+    The filename is read from the ``system_prompt_file`` field in
+    the YAML front matter, then resolved in this search order:
+
+    1. Current working directory
+    2. Alongside the configuration file itself
+    3. The ``--config-dir`` directory (or the default platformdirs-
+       based config directory)
+
+    Args:
+        config_path: Path to the resolved gatorgrade configuration
+            file.
+        config_dir: The config directory (from ``--config-dir``),
+            or None to use the default.
+
+    Returns:
+        The contents of the system prompt file, or None if not
+        specified or not found.
+
+    """
+    prompt_filename = get_system_prompt_file(config_path)
+    if not prompt_filename:
+        return None
+    # search order: cwd, alongside config file, config dir
+    for candidate in [
+        Path(prompt_filename),
+        config_path.parent / prompt_filename,
+        (config_dir or get_config_dir()) / prompt_filename,
+    ]:
+        if candidate.exists():
+            try:
+                return candidate.read_text(encoding="utf-8")
+            except OSError:
+                return None
+    return None
+
+
 def _create_auto_hint_engine(
     filename: Path,
     auto_hint_model: str,
     auto_hint_url: Optional[str],
     auto_hint_api_key: Optional[str],
+    system_prompt: str | None = None,
 ) -> Any:
     """Create the appropriate auto-hint engine based on CLI arguments.
 
@@ -367,6 +410,8 @@ def _create_auto_hint_engine(
             default value.
         auto_hint_url: URL of the remote API server, or None.
         auto_hint_api_key: API key for the remote server.
+        system_prompt: Optional custom system prompt.
+            If provided, this replaces the built-in default.
 
     Returns:
         An AutoHintEngine instance, or None if creation fails.
@@ -387,6 +432,7 @@ def _create_auto_hint_engine(
             auto_hint_url,
             auto_hint_api_key,
             model_id,
+            system_prompt=system_prompt,
         )
         if engine is not None:
             return engine
@@ -400,7 +446,7 @@ def _create_auto_hint_engine(
         console.print()
     # fall back to the local engine
     try:
-        return AutoHintEngine(model_id=model_id)
+        return AutoHintEngine(model_id=model_id, system_prompt=system_prompt)
     except Exception:
         return None
 
@@ -409,6 +455,7 @@ def _try_create_remote_engine(
     url: str,
     api_key: Optional[str],
     model_id: str,
+    system_prompt: str | None = None,
 ) -> Any:
     """Attempt to create and verify a RemoteHintEngine.
 
@@ -425,6 +472,7 @@ def _try_create_remote_engine(
             base_url=url,
             api_key=api_key or REMOTE_API_KEY_DEFAULT,
             model_id=model_id,
+            system_prompt=system_prompt,
         )
         return RemoteEngineAdapter(remote, model_id)
     except Exception:
@@ -474,6 +522,7 @@ class RemoteEngineAdapter:
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
+        system_prompt: str | None = None,
     ) -> tuple[Optional[str], bool]:
         """Delegate hint generation to the remote engine."""
         return self._remote.generate_hint(
@@ -481,6 +530,7 @@ class RemoteEngineAdapter:
             diagnostic=diagnostic,
             command=command,
             file_content=file_content,
+            system_prompt=system_prompt,
         )
 
 
@@ -493,10 +543,10 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
     config_dir: Optional[Path] = typer.Option(
         None,
         "--config-dir",
-        "-C",
+        "-d",
         help=(
             "Directory for configuration files including the"
-            " gatorgrade.yml file, models, and other settings."
+            " gatorgrade.yml file and other configuration files."
         ),
         show_default=DEFAULT_CONFIG_DIR,
     ),
@@ -757,12 +807,17 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # huggingface transformers model (when no URL is provided).
             # remote engine fails to initialise or returns None for a hint,
             # the program falls back to the local engine.
+            # resolve the system prompt if specified in the config front matter
+            system_prompt = _resolve_system_prompt(
+                resolved_filename, resolved_config_dir
+            )
             if auto_hint:
                 auto_hint_engine = _create_auto_hint_engine(
                     resolved_filename,
                     auto_hint_model,
                     auto_hint_url,
                     auto_hint_api_key,
+                    system_prompt=system_prompt,
                 )
             # run the checks that were specified in a way
             # that adheres to the configuration both in
