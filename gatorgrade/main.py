@@ -361,10 +361,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         AUTO_HINT_MODEL_DEFAULT,
         "--auto-hint-model",
         help=(
-            f"Hugging Face model identifier for auto-hint generation "
-            f"(requires --auto-hint; default: {DEFAULT_MODEL_ID})."
+            "Hugging Face model identifier for auto-hint generation "
+            "(requires --auto-hint)."
         ),
-        show_default=False,
+        show_default=DEFAULT_MODEL_ID,
     ),
     _version: bool = typer.Option(
         False,
