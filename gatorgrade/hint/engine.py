@@ -1,4 +1,4 @@
-"""Auto-hint engine using Hugging Face ``transformers`` for local hint generation."""
+"""Auto-hint engine using Hugging Face transformers for local hint generation."""
 
 import os
 from pathlib import Path
