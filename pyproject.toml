@@ -34,11 +34,11 @@ dependencies = [
     "rich>=13.8.1,<14",
     "gatorgrader>=1.1.2,<2",
     "click>=8.3.0,<9",
+    "platformdirs>=4.10.0",
 ]
 
 [project.optional-dependencies]
 auto-hint = [
-    "platformdirs",
     "transformers>=5.13.0",
     "torch>=2.11.0",
 ]
