@@ -100,6 +100,9 @@ PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
 AUTO_HINT_FLAG = "--auto-hint"
 AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
+AUTO_HINT_MODEL_DEFAULT = (
+    "__default_model__"  # sentinel to detect if flag was explicitly passed
+)
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -355,12 +358,13 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help="Automatically generate hints for failing checks.",
     ),
     auto_hint_model: str = typer.Option(
-        DEFAULT_MODEL_ID,
+        AUTO_HINT_MODEL_DEFAULT,
         "--auto-hint-model",
         help=(
-            "Hugging Face model ID for auto-hint generation "
-            "(requires --auto-hint)."
+            f"Hugging Face model identifier for auto-hint generation "
+            f"(requires --auto-hint; default: {DEFAULT_MODEL_ID})."
         ),
+        show_default=False,
     ),
     _version: bool = typer.Option(
         False,
@@ -487,18 +491,42 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # relies on local transformers, which we do not
             # want to load unless the opt-in was made)
             auto_hint_engine = None
-            # auto-hint engine: try to create it if --auto-hint is passed
+            # validate that --auto-hint-model is only used with --auto-hint;
+            # the sentinel default catches the case when the user did not
+            # explicitly pass the flag
+            if not auto_hint and auto_hint_model != AUTO_HINT_MODEL_DEFAULT:
+                checks_status = False
+                console.print()
+                console.print(
+                    Rule(
+                        CONFIG_ERROR_LABEL,
+                        style="bright_red",
+                    )
+                )
+                console.print()
+                console.print(
+                    f"The {AUTO_HINT_MODEL_FLAG} requires {AUTO_HINT_FLAG} "
+                    f"to be enabled for auto-hint generation."
+                )
+                # console.print()
+                console.print(Text(EXIT_MESSAGE))
+                console.print()
+                console.print(Rule(style="bright_red"))
+                sys.exit(FAILURE)
+            # auto-hint engine: try to create it if --auto-hint is passed;
+            # the model ID defaults to the default model, but the user
+            # can override it with --auto-hint-model on the CLI or
+            # set auto_hint_model in the YAML front matter
             if auto_hint:
-                # resolve model ID: CLI flag takes precedence, then YAML
-                # front-matter field, then the default model
                 try:
-                    model_id = DEFAULT_MODEL_ID
-                    if auto_hint_model is not None and auto_hint_model.strip():
-                        model_id = auto_hint_model.strip()
-                    else:
+                    model_id = auto_hint_model
+                    if (
+                        not model_id
+                        or not model_id.strip()
+                        or model_id == AUTO_HINT_MODEL_DEFAULT
+                    ):
                         config_model = get_auto_hint_model(filename)
-                        if config_model:
-                            model_id = config_model
+                        model_id = config_model or DEFAULT_MODEL_ID
                     auto_hint_engine = AutoHintEngine(model_id=model_id)
                 except Exception:
                     auto_hint_engine = None
