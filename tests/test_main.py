@@ -825,9 +825,7 @@ def test_gatorgrade_with_auto_hint_model_requires_auto_hint(
 ) -> None:
     """Using --auto-hint-model without --auto-hint exits with an error."""
     chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app, ["--auto-hint-model", "custom/model"]
-    )
+    result = runner.invoke(main.app, ["--auto-hint-model", "custom/model"])
     capsys.readouterr()
     assert result.exit_code != 0
 
