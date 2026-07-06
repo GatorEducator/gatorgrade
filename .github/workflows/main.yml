@@ -133,10 +133,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --dev --extra auto-hint
       - name: Run tests with coverage
-        # sys.monitoring is not available on Python < 3.12, so use
-        # the default coverage core (no-sysmon) on those versions
-        env:
-          COVERAGE_CORE: ${{ matrix.python-version == '3.11' && 'default' || 'sysmon' }}
         run: uv run task test-coverage
 
   spelling:
