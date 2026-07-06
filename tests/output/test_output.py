@@ -1933,7 +1933,7 @@ def test_run_checks_global_output_limit_truncates_diagnostic(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=1, no_progress_bar=True)  # type: ignore
+    output.run_checks(checks, report, output_limit=1)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated from 3 to 1 line(s))" in out
 
@@ -1950,7 +1950,7 @@ def test_run_checks_check_outputlimit_overrides_global(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=100, no_progress_bar=True)  # type: ignore
+    output.run_checks(checks, report, output_limit=100)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated from 3 to 1 line(s))" in out
 
@@ -2017,7 +2017,7 @@ def test_run_checks_mixed_checks_use_correct_output_limit(
         ),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report, output_limit=3, no_progress_bar=True)  # type: ignore
+    output.run_checks(checks, report, output_limit=3)  # type: ignore
     out, _ = capsys.readouterr()
     plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
     assert "... (output truncated from 3 to 2 line(s))" in plain_out
