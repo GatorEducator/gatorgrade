@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
-# type-checking-only import — never executed at runtime.
+# type-checking-only import that is never executed at runtime
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
@@ -30,12 +30,12 @@ ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
     """Return the gatorgrade-specific directory where models are cached.
 
-    Precedence:
+    Precedence for the gatorgrade-specific directory:
 
-    1. ``override`` parameter
-    2. ``$GATORGRADE_MODELS_DIR`` environment variable
-    3. ``platformdirs.user_cache_dir("gatorgrade") / "models"``
-    4. ``~/.cache/gatorgrade/models/`` (fallback)
+    1. override parameter
+    2. $GATORGRADE_MODELS_DIR environment variable
+    3. platformdirs.user_cache_dir("gatorgrade") / "models"
+    4. ~/.cache/gatorgrade/models/`` (fallback)
 
     """
     if override is not None:
@@ -145,8 +145,13 @@ class AutoHintEngine:
         """Whether the model has been downloaded and loaded into memory."""
         return self._pipe is not None
 
-    def _ensure_loaded(self) -> None:
+    def ensure_loaded(self) -> None:
         """Download (if needed) and load the model into memory.
+
+        This is the public entry point for loading the model, with
+        all chatty Hugging Face progress bars and diagnostic output
+        suppressed.  Safe to call multiple times — subsequent calls
+        are a no-op once the model is already loaded.
 
         Raises:
             ImportError: If ``transformers`` is not installed.
@@ -171,22 +176,44 @@ class AutoHintEngine:
                 "  uvx --from 'gatorgrade[auto-hint]' gatorgrade --auto-hint\n"
                 "  pip install 'gatorgrade[auto-hint]'\n"
             ) from e
-        # suppress the chatty "Device set to use cpu" message that
-        # transformers prints to stderr and would garble our progress bar.
+        # suppress all chatty Hugging Face output: logging messages,
+        # progress bars for downloading, and progress bars for loading
+        # weights — these would appear inline during gatorgrade output
+        # and confuse students
         import transformers as _tf_mod  # noqa: PLC0415
 
         _tf_mod.logging.set_verbosity_error()
+        _tf_mod.logging.disable_progress_bar()
+        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        # also suppress any stray output that prints to stderr
+        # during the pipeline construction (e.g."Device set to use
+        # cpu" messages or other low-level diagnostics)
         pipe_kwargs: dict[str, Any] = {
             "model_kwargs": {CACHE_DIR_KEY: str(cache_dir)}
         }
-        # download and load the model via the text-generation pipeline;
-        # model is cached after first download, with the subsequent runs
-        # being fast because they will use the cached model
-        self._pipe = pipeline(
-            TEXT_GENERATION_TASK,
-            model=self._model_id,
-            **pipe_kwargs,
-        )
+        devnull_fd = os.open(os.devnull, os.O_WRONLY)
+        old_stderr = os.dup(2)
+        os.dup2(devnull_fd, 2)
+        try:
+            # download and load the model via the text-generation pipeline
+            self._pipe = pipeline(
+                TEXT_GENERATION_TASK,
+                model=self._model_id,
+                **pipe_kwargs,
+            )
+        finally:
+            os.dup2(old_stderr, 2)
+            os.close(old_stderr)
+            os.close(devnull_fd)
+
+    def _ensure_loaded(self) -> None:
+        """Delegate to the public :meth:`ensure_loaded` method.
+
+        Kept for backward compatibility; new code should call
+        :meth:`ensure_loaded` directly.
+
+        """
+        self.ensure_loaded()
 
     @staticmethod
     def _is_valid_hint(hint: str) -> bool:
