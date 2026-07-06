@@ -60,6 +60,30 @@ def get_config_dir() -> Path:
     return Path.home() / ".config" / "gatorgrade"
 
 
+def _platform_config_dir() -> Path:
+    """Return the platform-level default config directory.
+
+    Unlike get_config_dir, this ignores the $GATORGRADE_CONFIG_DIR
+    environment variable and always returns the platformdirs-based
+    default. This is useful for display purposes (e.g., --version)
+    so users can see the underlying default even when an override is
+    active.
+
+    Returns:
+        The platform-level default config directory path.
+
+    """
+    try:
+        import platformdirs  # noqa: PLC0415
+
+        return Path(
+            platformdirs.user_config_dir("gatorgrade", appauthor=False)
+        )
+    except ImportError:
+        pass
+    return Path.home() / ".config" / "gatorgrade"
+
+
 def resolve_config_path(
     filename: Path, config_dir: Path | None = None
 ) -> Path:

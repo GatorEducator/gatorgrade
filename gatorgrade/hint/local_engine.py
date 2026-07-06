@@ -58,6 +58,31 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     return Path.home() / ".cache" / "gatorgrade" / "models"
 
 
+def _platform_model_cache_dir() -> Path:
+    """Return the platform-level default model cache directory.
+
+    Unlike _model_cache_dir, this ignores the $GATORGRADE_MODELS_DIR
+    environment variable and always returns the platformdirs-based
+    default. This is useful for display purposes (e.g., --version)
+    so users can see the underlying default even when an override is
+    active.
+
+    Returns:
+        The platform-level default model cache directory path.
+
+    """
+    try:
+        import platformdirs  # noqa: PLC0415
+
+        return (
+            Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
+            / "models"
+        )
+    except ImportError:
+        pass
+    return Path.home() / ".cache" / "gatorgrade" / "models"
+
+
 class AutoHintEngine:
     """Lazy-loading engine that generates hints for failing checks.
 
