@@ -717,6 +717,7 @@ source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "gatorgrader" },
+    { name = "platformdirs" },
     { name = "pyyaml" },
     { name = "rich" },
     { name = "typer" },
@@ -724,7 +725,6 @@ dependencies = [
 
 [package.optional-dependencies]
 auto-hint = [
-    { name = "platformdirs" },
     { name = "torch", version = "2.12.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "python_full_version < '3.15' and sys_platform == 'darwin'" },
     { name = "torch", version = "2.12.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "python_full_version >= '3.15' or sys_platform != 'darwin'" },
     { name = "transformers" },
@@ -760,7 +760,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.3.0,<9" },
     { name = "gatorgrader", specifier = ">=1.1.2,<2" },
-    { name = "platformdirs", marker = "extra == 'auto-hint'" },
+    { name = "platformdirs", specifier = ">=4.10.0" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
     { name = "rich", specifier = ">=13.8.1,<14" },
     { name = "torch", marker = "extra == 'auto-hint'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cpu" },
