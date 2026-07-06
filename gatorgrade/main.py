@@ -15,6 +15,10 @@ from rich.rule import Rule
 from rich.text import Text
 
 from gatorgrade.hint.engine import DEFAULT_MODEL_ID, AutoHintEngine
+from gatorgrade.hint.remote_engine import (
+    REMOTE_API_KEY_DEFAULT,
+    RemoteHintEngine,
+)
 from gatorgrade.input.parse_config import (
     get_auto_hint_model,
     get_due_date,
@@ -103,6 +107,8 @@ AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_MODEL_DEFAULT = (
     "__default_model__"  # sentinel to detect if flag was explicitly passed
 )
+AUTO_HINT_URL_FLAG = "--auto-hint-url"
+AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -297,8 +303,150 @@ def _version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def _create_auto_hint_engine(
+    filename: Path,
+    auto_hint_model: str,
+    auto_hint_url: Optional[str],
+    auto_hint_api_key: Optional[str],
+) -> Optional[AutoHintEngine]:
+    """Create the appropriate auto-hint engine based on CLI arguments.
+
+    When --auto-hint-url is provided, a RemoteHintEngine is
+    attempted first.  If it succeeds, it is returned.  If it
+    fails (e.g. the URL is unreachable or pydantic_ai is not
+    installed), a warning is printed and the engine falls back
+    to a local AutoHintEngine.
+
+    When no URL is provided, a local AutoHintEngine is created
+    directly.
+
+    Args:
+        filename: Path to the config file (for reading
+            auto_hint_model from front matter).
+        auto_hint_model: Model ID from the CLI, or a sentinel
+            default value.
+        auto_hint_url: URL of the remote API server, or None.
+        auto_hint_api_key: API key for the remote server.
+
+    Returns:
+        An AutoHintEngine instance, or None if creation fails.
+
+    """
+    # resolve the model ID from the CLI, config file, or default
+    model_id = auto_hint_model
+    if (
+        not model_id
+        or not model_id.strip()
+        or model_id == AUTO_HINT_MODEL_DEFAULT
+    ):
+        config_model = get_auto_hint_model(filename)
+        model_id = config_model or DEFAULT_MODEL_ID
+
+    if auto_hint_url:
+        # attempt the remote engine first
+        engine = _try_create_remote_engine(
+            auto_hint_url,
+            auto_hint_api_key,
+            model_id,
+        )
+        if engine is not None:
+            return engine
+        # remote failed; warn and fall through to the local engine
+        console.print()
+        console.print(
+            "[yellow]Warning: Could not reach remote hint server at"
+            f" {auto_hint_url}. Falling back to local model"
+            f" ({model_id}).[/]"
+        )
+        console.print()
+    # fall back to the local engine
+    try:
+        return AutoHintEngine(model_id=model_id)
+    except Exception:
+        return None
+
+
+def _try_create_remote_engine(
+    url: str,
+    api_key: Optional[str],
+    model_id: str,
+) -> Optional[AutoHintEngine]:
+    """Attempt to create and verify a RemoteHintEngine.
+
+    Returns the engine wrapped in an adapter that unifies the
+    RemoteHintEngine interface (is_loaded, ensure_loaded, model_id,
+    generate_hint) with the existing AutoHintEngine interface.
+
+    Returns None if the engine cannot be created (missing deps,
+    connection error, etc.).
+
+    """
+    try:
+        remote = RemoteHintEngine(
+            base_url=url,
+            api_key=api_key or REMOTE_API_KEY_DEFAULT,
+            model_id=model_id,
+        )
+        return RemoteEngineAdapter(remote, model_id)
+    except Exception:
+        return None
+
+
+class RemoteEngineAdapter:
+    """Adapter for wrapping RemoteHintEngine with the AutoHintEngine interface.
+
+    The display logic in output.py calls:
+    - engine.is_loaded
+    - engine.ensure_loaded()
+    - engine.model_id
+    - engine.generate_hint(...)
+
+    All of these are forwarded to the wrapped remote engine.
+
+    """
+
+    def __init__(self, remote_engine: RemoteHintEngine, model_id: str):
+        """Initialise the adapter.
+
+        Args:
+            remote_engine: The RemoteHintEngine instance to wrap.
+            model_id: The model identifier string for display.
+
+        """
+        self._remote = remote_engine
+        self._model_id = model_id
+
+    @property
+    def is_loaded(self) -> bool:
+        """The remote engine is always considered loaded."""
+        return True
+
+    def ensure_loaded(self) -> None:
+        """No-op for the remote engine."""
+
+    @property
+    def model_id(self) -> str:
+        """Return the model identifier for display."""
+        return f"remote:{self._model_id}"
+
+    def generate_hint(
+        self,
+        description: str,
+        diagnostic: str = "",
+        command: str = "",
+        file_content: str = "",
+    ) -> tuple[Optional[str], bool]:
+        """Delegate hint generation to the remote engine."""
+        return self._remote.generate_hint(
+            description=description,
+            diagnostic=diagnostic,
+            command=command,
+            file_content=file_content,
+        )
+
+
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
+def gatorgrade(  # noqa: PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE, "--config", "-c", help="Name of the yml file."
@@ -368,6 +516,24 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "(requires --auto-hint)."
         ),
         show_default=DEFAULT_MODEL_ID,
+    ),
+    auto_hint_url: Optional[str] = typer.Option(
+        None,
+        "--auto-hint-url",
+        help=(
+            "URL of an OpenAI-compatible API server for remote hint "
+            "generation (requires --auto-hint). When provided, the "
+            "remote model is used instead of a local model. Falls "
+            "back to the local model on connection errors."
+        ),
+    ),
+    auto_hint_api_key: Optional[str] = typer.Option(
+        None,
+        "--auto-hint-api-key",
+        help=(
+            "API key for the remote auto-hint server "
+            "(requires --auto-hint-url)."
+        ),
     ),
     _version: bool = typer.Option(
         False,
@@ -476,6 +642,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 AUTO_HINT_MODEL_FLAG: auto_hint_model
                 if auto_hint_model
                 else None,
+                AUTO_HINT_URL_FLAG: str(auto_hint_url)
+                if auto_hint_url
+                else None,
+                AUTO_HINT_API_KEY_FLAG: str(auto_hint_api_key)
+                if auto_hint_api_key
+                else None,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -517,22 +689,18 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 console.print(Rule(style="bright_red"))
                 sys.exit(FAILURE)
             # auto-hint engine: try to create it if --auto-hint is passed;
-            # the model ID defaults to the default model, but the user
-            # can override it with --auto-hint-model on the CLI or
-            # set auto_hint_model in the YAML front matter
+            # the engine sources hints from a remote OpenAI-compatible API
+            # (when --auto-hint-url is provided) or from a local
+            # huggingface transformers model (when no URL is provided).
+            # remote engine fails to initialise or returns None for a hint,
+            # the program falls back to the local engine.
             if auto_hint:
-                try:
-                    model_id = auto_hint_model
-                    if (
-                        not model_id
-                        or not model_id.strip()
-                        or model_id == AUTO_HINT_MODEL_DEFAULT
-                    ):
-                        config_model = get_auto_hint_model(filename)
-                        model_id = config_model or DEFAULT_MODEL_ID
-                    auto_hint_engine = AutoHintEngine(model_id=model_id)
-                except Exception:
-                    auto_hint_engine = None
+                auto_hint_engine = _create_auto_hint_engine(
+                    filename,
+                    auto_hint_model,
+                    auto_hint_url,
+                    auto_hint_api_key,
+                )
             # run the checks that were specified in a way
             # that adheres to the configuration both in
             # the command-line arguments and also in the

@@ -1,4 +1,4 @@
-"""Auto-hint feature using Hugging Face transformers for local hint generation."""
+"""Auto-hint feature using local or remote LLMs for hint generation."""
 
 from gatorgrade.hint.engine import (
     DEFAULT_MODEL_ID,
@@ -10,6 +10,17 @@ from gatorgrade.hint.engine import (
     HINT_TOP_P,
     AutoHintEngine,
 )
+from gatorgrade.hint.remote_engine import (
+    REMOTE_API_KEY_DEFAULT,
+    REMOTE_HINT_DIAG_TRUNCATE,
+    REMOTE_HINT_FILE_LINES,
+    REMOTE_HINT_MAX_TOKENS,
+    REMOTE_HINT_TEMPERATURE,
+    REMOTE_HINT_TIMEOUT_MS,
+    REMOTE_HINT_TOP_P,
+    REMOTE_MODEL_DEFAULT,
+    RemoteHintEngine,
+)
 
 __all__ = [
     "DEFAULT_MODEL_ID",
@@ -19,5 +30,14 @@ __all__ = [
     "HINT_REPETITION_PENALTY",
     "HINT_TEMPERATURE",
     "HINT_TOP_P",
+    "REMOTE_API_KEY_DEFAULT",
+    "REMOTE_HINT_DIAG_TRUNCATE",
+    "REMOTE_HINT_FILE_LINES",
+    "REMOTE_HINT_MAX_TOKENS",
+    "REMOTE_HINT_TEMPERATURE",
+    "REMOTE_HINT_TIMEOUT_MS",
+    "REMOTE_HINT_TOP_P",
+    "REMOTE_MODEL_DEFAULT",
     "AutoHintEngine",
+    "RemoteHintEngine",
 ]

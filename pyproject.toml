@@ -39,8 +39,9 @@ dependencies = [
 
 [project.optional-dependencies]
 auto-hint = [
+    "openai>=2.44.0",
+    "torch>=2.12.1",
     "transformers>=5.13.0",
-    "torch>=2.11.0",
 ]
 
 [[tool.uv.index]]
@@ -49,9 +50,6 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.uv.sources]
-torch = [
-  { index = "pytorch-cpu" },
-]
 torchvision = [
   { index = "pytorch-cpu" },
 ]
@@ -157,10 +155,6 @@ cosmic-ray-exec = { cmd = "{cosmic-ray-exec-command}", help = "Execute cosmic-ra
 cosmic-ray-report = { cmd = "{cosmic-ray-report-command}", help = "Generate cosmic-ray mutation testing report (JSON)", use_vars = true }
 
 [tool.coverage.run]
-# sysmon is only available on Python 3.12+ and only fully supports
-# branch coverage on Python 3.14+.  On older Pythons we fall back to
-# the default core (ctrace on 3.11, no-sysmon on 3.12-3.13) via the
-# COVERAGE_CORE environment variable set in CI.
 source = ["gatorgrade"]
 branch = true
 omit = ["tests/*", "**/__init__.py"]
