@@ -1,4 +1,4 @@
-"""Shared utilities for hint engines (local and remote)."""
+"""Shared utilities for all auto-hinting engines (e.g., local and remote)."""
 
 # truncation limits for diagnostic output and file content
 HINT_DIAG_TRUNCATE = 2000
