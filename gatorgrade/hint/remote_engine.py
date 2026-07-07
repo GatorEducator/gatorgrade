@@ -21,22 +21,29 @@ REMOTE_HINT_TIMEOUT_MS = 180000
 # extra_body sent to disable visible thinking traces on Qwen
 # reasoning models; the model still reasons internally but the
 # response contains only the final answer in the content field.
-EXTRA_BODY_DISABLE_THINKING: dict = {
-    "chat_template_kwargs": {"enable_thinking": False},
+ENABLE_THINKING_KEYWORD = "enable_thinking"
+CHAT_TEMPLATE_KWARGS_KEYWORD = "chat_template_kwargs"
+THINKING_DEFAULT_VALUE = False
+ENABLE_THINKING_DEFAULT = {
+    CHAT_TEMPLATE_KWARGS_KEYWORD: {
+        ENABLE_THINKING_KEYWORD: THINKING_DEFAULT_VALUE
+    }
 }
 
 
 class RemoteHintEngine:
     """Engine that generates hints via an OpenAI-compatible remote API.
 
-    Uses Pydantic AI's OpenAIChatModel to talk to any server that
+    Uses the OpenAI package to talk to any server that
     exposes an OpenAI-compatible chat completions endpoint.
 
     Wraps the call in a try/except so failures (connection refused,
     timeout, etc.) are surfaced to the caller, which can then fall
-    back to the local engine.
+    back to the local engine. That is, if the remote engine does
+    not work, this information is logged and displayed and then there
+    is an attempt to automatically generate the hints with a local model.
 
-    Usage::
+    Usage:
 
         engine = RemoteHintEngine(
             base_url="http://<server name>:<port>",
@@ -259,7 +266,7 @@ class RemoteHintEngine:
                 temperature=REMOTE_HINT_TEMPERATURE,
                 top_p=REMOTE_HINT_TOP_P,
                 timeout=REMOTE_HINT_TIMEOUT_MS / 1000,
-                extra_body=EXTRA_BODY_DISABLE_THINKING,
+                extra_body=ENABLE_THINKING_DEFAULT,
             )
             # extract the content from the response — for reasoning
             # models this may be empty and the actual answer may be
