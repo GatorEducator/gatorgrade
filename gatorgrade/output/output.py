@@ -62,6 +62,7 @@ GG_COMMAND_ARG = "--command"
 GG_PATH_SEPARATOR = "/"
 INVALID_GG_CHECK_FMT = 'Invalid GatorGrader check: "{}"'
 GG_ERROR_FMT = '"{}" thrown by GatorGrader'
+GG_DETAILS_FMT = "check: {}{}"
 
 # JSON report key constants
 AMOUNT_CORRECT_KEY = "amount_correct"
@@ -242,6 +243,41 @@ def _run_shell_check(
     )
 
 
+def _build_gg_check_details(check: GatorGraderCheck) -> str:
+    """Build a details string from the check's configuration.
+
+    Extracts the check name and options from ``json_info`` and
+    formats them into a compact, readable string that is appended
+    to the diagnostic output.
+
+    Args:
+        check: The GatorGrader check to extract details from.
+
+    Returns:
+        A formatted details string, or an empty string if no
+        options are present.
+
+    """
+    info = check.json_info
+    if not isinstance(info, dict):
+        return EMPTY
+    check_name = info.get("check", "")
+    options = info.get("options", {})
+    if not isinstance(options, dict) or not options:
+        return EMPTY
+    # skip the command key since it is already displayed as a
+    # separate "Run this command" line for shell-style checks
+    parts = []
+    for key, value in options.items():
+        if key == COMMAND_KEY:
+            continue
+        parts.append(f"{key}: {value}")
+    opts_str = ", ".join(parts)
+    return GG_DETAILS_FMT.format(
+        check_name, ": " + opts_str if opts_str else EMPTY
+    )
+
+
 def _run_gg_check(
     check: GatorGraderCheck, output_limit: int | None = None
 ) -> CheckResult:
@@ -287,6 +323,8 @@ def _run_gg_check(
         check.outputlimit if check.outputlimit is not None else output_limit
     )
     raw_diagnostic = diagnostic
+    # extract the structured check details for GatorGrader checks
+    details = _build_gg_check_details(check)
     diagnostic = _truncate_diagnostic(diagnostic, limit)
     return CheckResult(
         passed=passed,
@@ -298,6 +336,7 @@ def _run_gg_check(
         outputlimit=limit,
         hint=check.hint,
         raw_diagnostic=raw_diagnostic,
+        details=details,
     )
 
 
@@ -779,6 +818,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             diagnostic=result.raw_diagnostic,
             command=result.run_command,
             file_content=file_content,
+            details=result.details,
         )
         if hint is not None:
             result.hint = hint
