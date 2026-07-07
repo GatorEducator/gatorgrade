@@ -1,8 +1,11 @@
 """Remote auto-hint engine using OpenAI-compatible APIs."""
 
-from typing import Optional, cast
+from typing import Any, Optional, cast
 
 from gatorgrade.hint.support import build_hint_messages, is_valid_hint
+
+# basic constants
+EMPTY = ""
 
 # constants for the remote hint engine
 REMOTE_MODEL_DEFAULT = "Qwen/Qwen3.6-35B-A3B"
@@ -83,6 +86,7 @@ class RemoteHintEngine:
         self._model_id = model_id
         self._system_prompt = system_prompt
         self._validation_rules = validation_rules
+        self.last_error: str | None = None
 
     @property
     def model_id(self) -> str:
@@ -248,32 +252,43 @@ class RemoteHintEngine:
                 api_key=self._api_key,
             )
             from openai.types.chat import (  # noqa: PLC0415
+                ChatCompletion,
                 ChatCompletionMessageParam,
             )
 
             typed_messages: list[ChatCompletionMessageParam] = cast(
                 list[ChatCompletionMessageParam], messages
             )
-            response = client.chat.completions.create(
-                model=self._model_id,
-                messages=typed_messages,
-                max_tokens=REMOTE_HINT_MAX_TOKENS,
-                temperature=REMOTE_HINT_TEMPERATURE,
-                top_p=REMOTE_HINT_TOP_P,
-                timeout=REMOTE_HINT_TIMEOUT_MS / 1000,
-                extra_body=ENABLE_THINKING_DEFAULT,
+            completions_kwargs: dict[str, Any] = {
+                "model": self._model_id,
+                "messages": typed_messages,
+                "max_tokens": REMOTE_HINT_MAX_TOKENS,
+                "temperature": REMOTE_HINT_TEMPERATURE,
+                "timeout": REMOTE_HINT_TIMEOUT_MS / 1000,
+                "extra_body": ENABLE_THINKING_DEFAULT,
+            }
+            # some servers (e.g., Pi coding agent and pi-gateway
+            # when it is making available LLMs through some type
+            # of subscription or other proxies) do not support top_p,
+            # so only send it when it is explicitly configured
+            # differently from the default approach for LLMs
+            response = cast(
+                ChatCompletion,
+                client.chat.completions.create(
+                    **completions_kwargs,
+                ),
             )
             # extract the content from the response — for reasoning
             # models this may be empty and the actual answer may be
             # in reasoning_content, so fall back to that
             choice = response.choices[0]
             msg = choice.message
-            hint = (msg.content or "").strip()
+            hint = (msg.content or EMPTY).strip()
             if not hint:
                 # note: with enable_thinking=False the model should
                 # produce content directly. however, some servers
                 # may still put the answer in reasoning_content,
-                # so fall back to that.
+                # so fall back to that, although this is limited
                 rc = getattr(msg, "reasoning_content", None)
                 if rc:
                     hint = rc.strip()
@@ -284,7 +299,9 @@ class RemoteHintEngine:
             ):
                 return hint, True
             return hint, False
-        except Exception:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
+            self.last_error = str(exc)[:300]
             # return None so the caller's fallback engine can
-            # try the local model instead
+            # try the local model instead, using the default
+            # local model which should always install and run
             return None, False
