@@ -28,6 +28,7 @@ TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
 # default locations in the file system
 CACHE_DIR_KEY = "cache_dir"
 ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
+GENERATED_TEXT_KEY = "generated_text"
 
 
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
@@ -348,7 +349,7 @@ class AutoHintEngine:
                 return None, False
             # extract the generated hint that will be displayed
             # as the auto-hint near the failing check's details
-            hint = str(result[0]["generated_text"]).strip()
+            hint = str(result[0][GENERATED_TEXT_KEY]).strip()
             if not hint:
                 return None, False
             # validate the hint does not suggest, for instance,
