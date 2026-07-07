@@ -123,13 +123,14 @@ class RemoteHintEngine:
         """
         return is_valid_hint(hint, custom_rules=custom_rules)
 
-    def _build_messages(
+    def _build_messages(  # noqa: PLR0913
         self,
         description: str,
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
         system_prompt: str | None = None,
+        details: str = "",
     ) -> list[dict[str, str]]:
         """Build a structured message list for the chat completions API.
 
@@ -142,6 +143,8 @@ class RemoteHintEngine:
             file_content: Source file content (truncated to
                 HINT_FILE_LINES lines).
             system_prompt: Optional custom system prompt.
+            details: Structured details about the check
+                configuration.
 
         Returns:
             A list of dicts suitable for chat-based inference.
@@ -153,6 +156,7 @@ class RemoteHintEngine:
             command=command,
             file_content=file_content,
             system_prompt=system_prompt,
+            details=details,
         )
 
     @staticmethod
@@ -173,13 +177,14 @@ class RemoteHintEngine:
                 "  uv add openai\n"
             ) from None
 
-    def generate_hint(
+    def generate_hint(  # noqa: PLR0913
         self,
         description: str,
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
         system_prompt: str | None = None,
+        details: str = "",
     ) -> tuple[Optional[str], bool]:
         """Generate a short hint by calling the remote OpenAI-compatible API.
 
@@ -193,6 +198,8 @@ class RemoteHintEngine:
             file_content: The contents of the source file being
                 checked, if available.
             system_prompt: Optional custom system prompt.
+            details: Structured details about the check
+                configuration (e.g. options and expected values).
 
         Returns:
             A tuple (hint, is_low_quality) where:
@@ -223,6 +230,7 @@ class RemoteHintEngine:
             command,
             file_content,
             system_prompt=effective_prompt,
+            details=details,
         )
 
         try:
