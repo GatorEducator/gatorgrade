@@ -9,8 +9,9 @@ from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
-# default model for auto-hinting (note that these
-# names are the same as those provided on Hugging Face)
+# default model for auto-hinting (note that this names,
+# and those accepted on the command-line, are expected to be
+# the same as those provided on Hugging Face)
 DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 
 # default values for running the local LLMs
