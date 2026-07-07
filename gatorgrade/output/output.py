@@ -62,7 +62,7 @@ GG_COMMAND_ARG = "--command"
 GG_PATH_SEPARATOR = "/"
 INVALID_GG_CHECK_FMT = 'Invalid GatorGrader check: "{}"'
 GG_ERROR_FMT = '"{}" thrown by GatorGrader'
-GG_DETAILS_FMT = "check: {}{}"
+DETAILS_ITEM_FMT = "[italic]{}[/]: {}"
 
 # JSON report key constants
 AMOUNT_CORRECT_KEY = "amount_correct"
@@ -263,19 +263,19 @@ def _build_gg_check_details(check: GatorGraderCheck) -> str:
         return EMPTY
     check_name = info.get("check", "")
     options = info.get("options", {})
-    if not isinstance(options, dict) or not options:
+    if not isinstance(options, dict):
         return EMPTY
-    # skip the command key since it is already displayed as a
-    # separate "Run this command" line for shell-style checks
+    # build a list of labeled items, each with the label in italic
     parts = []
-    for key, value in options.items():
-        if key == COMMAND_KEY:
-            continue
-        parts.append(f"{key}: {value}")
-    opts_str = ", ".join(parts)
-    return GG_DETAILS_FMT.format(
-        check_name, ": " + opts_str if opts_str else EMPTY
-    )
+    if check_name:
+        parts.append(DETAILS_ITEM_FMT.format("check", check_name))
+    if isinstance(options, dict):
+        for key, value in options.items():
+            if key == COMMAND_KEY:
+                # command is already shown as "Run this command"
+                continue
+            parts.append(DETAILS_ITEM_FMT.format(key, value))
+    return ", ".join(parts)
 
 
 def _run_gg_check(
