@@ -57,7 +57,7 @@ class RemoteHintEngine:
         system_prompt: str | None = None,
         validation_rules: dict[str, list[str]] | None = None,
     ) -> None:
-        """Initialise the remote hint engine.
+        """Initialize the remote hint engine.
 
         Args:
             base_url: Base URL of an OpenAI-compatible API server.
