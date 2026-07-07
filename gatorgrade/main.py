@@ -575,13 +575,14 @@ class RemoteEngineAdapter:
         """Return the model identifier for display."""
         return f"{self._model_id}"
 
-    def generate_hint(
+    def generate_hint(  # noqa: PLR0913
         self,
         description: str,
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
         system_prompt: str | None = None,
+        details: str = "",
     ) -> tuple[Optional[str], bool]:
         """Delegate hint generation to the remote engine."""
         return self._remote.generate_hint(
@@ -590,6 +591,7 @@ class RemoteEngineAdapter:
             command=command,
             file_content=file_content,
             system_prompt=system_prompt,
+            details=details,
         )
 
 
