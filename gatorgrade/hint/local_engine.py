@@ -206,8 +206,8 @@ class AutoHintEngine:
             ) from e
         # suppress all chatty Hugging Face output: logging messages,
         # progress bars for downloading, and progress bars for loading
-        # weights — these would appear inline during gatorgrade output
-        # and confuse students
+        # weights; these would appear inline during the standard
+        # gatorgrade output and confuse students
         import transformers as _tf_mod  # noqa: PLC0415
 
         _tf_mod.logging.set_verbosity_error()
