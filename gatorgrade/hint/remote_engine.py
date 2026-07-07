@@ -5,7 +5,7 @@ from typing import Optional, cast
 from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 
 # constants for the remote hint engine
-REMOTE_MODEL_DEFAULT = "Qwen/Qwen-3.6-35B-A3B"
+REMOTE_MODEL_DEFAULT = "Qwen/Qwen3.6-35B-A3B"
 REMOTE_API_KEY_DEFAULT = "not-needed"
 
 # the openai Python library rejects an empty api_key, so
