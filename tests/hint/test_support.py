@@ -84,7 +84,7 @@ class TestIsValidHint:
     def test_valid_hint_accepted(self) -> None:
         """A hint describing a code fix is accepted."""
         hint = (
-            "The function returns 1 but the test expects 2; check the logic."
+            "Your function returns 1 but the test expects 2; check your logic."
         )
         assert is_valid_hint(hint)
 

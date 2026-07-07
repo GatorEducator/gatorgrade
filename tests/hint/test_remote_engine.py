@@ -159,12 +159,12 @@ class TestRemoteHintEngineGenerateHint:
         )
         mock_choice = self._mock_choice(
             content="",
-            reasoning_content="The hint derived from reasoning.",
+            reasoning_content="The hint derived from your reasoning.",
         )
         hint, is_low_quality, _ = self._run_with_fake_openai(
             engine, mock_choice
         )
-        assert hint == "The hint derived from reasoning."
+        assert hint == "The hint derived from your reasoning."
         assert not is_low_quality
 
     def test_generate_hint_returns_none_on_import_error(self) -> None:
@@ -344,7 +344,7 @@ class TestRemoteHintEngineDepCheck:
             {"openai": None},
             clear=False,
         ):
-            with pytest.raises(ImportError, match="openai"):
+            with pytest.raises(ImportError, match="auto-hint"):
                 RemoteHintEngine.check_deps()
 
     def test_check_deps_succeeds_when_present(self) -> None:
@@ -390,7 +390,7 @@ class TestRemoteHintEngineHintValidation:
     def test_valid_hint_accepted(self) -> None:
         """A hint describing a code fix is accepted."""
         hint = (
-            "The function returns 1 but the test expects 2; check the logic."
+            "Your function returns 1 but the test expects 2; check your logic."
         )
         assert RemoteHintEngine._is_valid_hint(hint)
 
@@ -422,7 +422,7 @@ class TestRemoteHintEngineHintValidation:
     def test_mentioning_test_name_is_ok(self) -> None:
         """Mentioning a test name without criticizing it is accepted."""
         hint = (
-            "The test test_count_punctuation expects 2 but got 1; "
-            "check the counting logic in count_punctuation."
+            "Your test test_count_punctuation expects 2 but got 1; "
+            "check your counting logic in count_punctuation."
         )
         assert RemoteHintEngine._is_valid_hint(hint)
