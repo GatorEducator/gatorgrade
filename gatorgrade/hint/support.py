@@ -65,30 +65,35 @@ USER_QUESTION = (
     "failing test/command/check if available."
 )
 
-# built-in validation phrases for the cannot_contain check
-PHRASE_TEST_INCORRECTLY = "test incorrectly"
-PHRASE_TEST_IS_WRONG = "test is wrong"
-PHRASE_TEST_SHOULD_BE = "test should be"
-PHRASE_MODIFY_TEST = "modify the test"
-PHRASE_CHANGE_TEST = "change the test"
-PHRASE_FIX_TEST = "fix the test"
-PHRASE_UPDATE_TEST = "update the test"
-PHRASE_ASSERTION_WRONG = "the assertion is wrong"
-PHRASE_ASSERTION_INCORRECTLY = "the assertion incorrectly"
-PHRASE_INCORRECTLY_ASSERTS = "incorrectly asserts"
-PHRASE_WRONG_ASSERTION = "wrong assertion"
-PHRASE_CHANGE_ASSERTION = "change the assertion"
-PHRASE_MODIFY_ASSERTION = "modify the assertion"
-PHRASE_CHANGE_ASSERT = "change the assert"
-PHRASE_UPDATE_ASSERT = "update the assert"
-PHRASE_FIX_ASSERTION = "fix the assertion"
-PHRASE_CHANGE_EXPECTED = "change the expected"
-PHRASE_MODIFY_EXPECTED = "modify the expected"
-PHRASE_WE_NEED = "we need"
-PHRASE_WE_SHOULD = "we should"
-PHRASE_WRONG_EXPECTED = "wrong expected"
-PHRASE_EXPECTED_WRONG = "expected result is wrong"
-PHRASE_EXPECTED_VALUE_WRONG = "expected value is wrong"
+# built-in validation phrases for the cannot_contain check;
+# these are the default phrases that should not appear inside
+# automatically generated hints
+BUILTIN_CANNOT_CONTAIN = [
+    "```",
+    "test incorrectly",
+    "test is wrong",
+    "test should be",
+    "modify the test",
+    "change the test",
+    "fix the test",
+    "update the test",
+    "the assertion is wrong",
+    "the assertion incorrectly",
+    "incorrectly asserts",
+    "wrong assertion",
+    "change the assertion",
+    "modify the assertion",
+    "change the assert",
+    "update the assert",
+    "fix the assertion",
+    "change the expected",
+    "modify the expected",
+    "we need",
+    "we should",
+    "wrong expected",
+    "expected result is wrong",
+    "expected value is wrong",
+]
 
 
 def build_hint_messages(  # noqa: PLR0913
@@ -209,34 +214,7 @@ def is_valid_hint(
     # checking list, but there is the option for the person using
     # gatorgrade to specify a list of phrases that must be specified
     must_contain: list[str] = []
-    # these are the default phrases that should not be inside of the
-    # automatically generated hints; if one of these phrases is found
-    # then this means that the hint will be highlighted as invalid
-    cannot_contain = [
-        PHRASE_TEST_INCORRECTLY,
-        PHRASE_TEST_IS_WRONG,
-        PHRASE_TEST_SHOULD_BE,
-        PHRASE_MODIFY_TEST,
-        PHRASE_CHANGE_TEST,
-        PHRASE_FIX_TEST,
-        PHRASE_UPDATE_TEST,
-        PHRASE_ASSERTION_WRONG,
-        PHRASE_ASSERTION_INCORRECTLY,
-        PHRASE_INCORRECTLY_ASSERTS,
-        PHRASE_WRONG_ASSERTION,
-        PHRASE_CHANGE_ASSERTION,
-        PHRASE_MODIFY_ASSERTION,
-        PHRASE_CHANGE_ASSERT,
-        PHRASE_UPDATE_ASSERT,
-        PHRASE_FIX_ASSERTION,
-        PHRASE_CHANGE_EXPECTED,
-        PHRASE_MODIFY_EXPECTED,
-        PHRASE_WE_NEED,
-        PHRASE_WE_SHOULD,
-        PHRASE_WRONG_EXPECTED,
-        PHRASE_EXPECTED_WRONG,
-        PHRASE_EXPECTED_VALUE_WRONG,
-    ]
+    cannot_contain = list(BUILTIN_CANNOT_CONTAIN)
     # custom rules completely replace built-in defaults
     if custom_rules is not None:
         # there is a must contain rule replacement
