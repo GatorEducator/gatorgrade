@@ -531,9 +531,27 @@ class FallbackHintEngine:
 
     @property
     def model_id(self) -> str:
-        """Return the model identifier from the remote engine."""
-        result: str = self._remote.model_id
-        return result
+        """Return the model identifier.
+
+        Returns the remote model ID normally, or the local model
+        ID once a fallback has occurred. Note that fallbacks occur
+        when there is any problem with the remote model.
+        """
+        if self._fallback_warned:
+            local_result: str = self._local.model_id
+            return local_result
+        remote_result: str = self._remote.model_id
+        return remote_result
+
+    @property
+    def has_fallback(self) -> bool:
+        """Whether a fallback to the local engine has occurred."""
+        return self._fallback_warned
+
+    @property
+    def remote_url(self) -> str:
+        """The remote URL that was attempted."""
+        return self._remote_url
 
     @property
     def is_loaded(self) -> bool:
