@@ -19,12 +19,17 @@ CODE_LABEL = "Code"
 DIAGNOSTIC_LABEL = "Diagnostic"
 DETAILS_LABEL = "Details"
 
+# basic string constants
+EMPTY = ""
+NEWLINE = "\n"
+DOUBLE_NEWLINE = "\n\n"
+
 # formatting constants
 CODE_BLOCK_OPEN = "Code:\n```\n"
 CODE_BLOCK_CLOSE = "\n```"
 DIAG_BLOCK_OPEN = "Diagnostic:\n```\n"
 DIAG_BLOCK_CLOSE = "\n```"
-USER_SEPARATOR = "\n\n"
+USER_SEPARATOR = DOUBLE_NEWLINE
 
 # default system prompt constants
 SYS_INTRO = "You give short, direct hints for fixing code. "
@@ -130,11 +135,11 @@ def build_hint_messages(  # noqa: PLR0913
         suitable for chat-based inference.
 
     """
-    truncated_diag = diagnostic[:HINT_DIAG_TRUNCATE] if diagnostic else ""
-    truncated_file = ""
+    truncated_diag = diagnostic[:HINT_DIAG_TRUNCATE] if diagnostic else EMPTY
+    truncated_file = EMPTY
     if file_content:
-        lines = file_content.split("\n")
-        truncated_file = "\n".join(lines[:HINT_FILE_LINES])
+        lines = file_content.split(NEWLINE)
+        truncated_file = NEWLINE.join(lines[:HINT_FILE_LINES])
     system = (
         system_prompt
         if system_prompt
