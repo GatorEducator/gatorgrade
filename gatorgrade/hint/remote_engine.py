@@ -47,7 +47,7 @@ class RemoteHintEngine:
 
         engine = RemoteHintEngine(
             base_url="http://<server name>:<port>",
-            model_id="Qwen-3.6-35B-A3B",
+            model_id="Qwen/Qwen3.6-35B-A3B",
         )
         hint, is_low = engine.generate_hint(
             description="Check that hello.py exists",
