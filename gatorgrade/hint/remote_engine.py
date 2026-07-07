@@ -39,7 +39,7 @@ class RemoteHintEngine:
     Usage::
 
         engine = RemoteHintEngine(
-            base_url="http://kairos.netbird.cloud:4160",
+            base_url="http://<server name>:<port>",
             model_id="Qwen-3.6-35B-A3B",
         )
         hint, is_low = engine.generate_hint(
@@ -66,8 +66,8 @@ class RemoteHintEngine:
             model_id: Name of the model exposed at the server.
             system_prompt: Optional custom system prompt.
                 If provided, this replaces the built-in default.
-            validation_rules: Optional dict with ``must_contain``
-                and/or ``cannot_contain`` lists of phrases to
+            validation_rules: Optional dict with must_contain
+                and/or cannot_contain lists of phrases to
                 check, in addition to the built-in quality rules.
 
         """
@@ -108,7 +108,7 @@ class RemoteHintEngine:
         """Check if a generated hint passes the quality rules.
 
         Static so it can be called without an instance (e.g., in
-        tests). Pass ``custom_rules`` to augment the built-in
+        tests). Pass custom_rules to augment the built-in
         rules.
 
         Args:
@@ -239,7 +239,7 @@ class RemoteHintEngine:
         try:
             # call the OpenAI-compatible API directly using the
             # raw Chat Completions format, which handles reasoning
-            # models (e.g. Qwen) that put their response in
+            # models (e.g., Qwen and others) that put their response in
             # reasoning_content rather than content
             client = OpenAI(
                 base_url=self._base_url,
