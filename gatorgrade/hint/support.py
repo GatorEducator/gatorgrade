@@ -8,6 +8,88 @@ HINT_FILE_LINES = 20
 MUST_CONTAIN_KEY = "must_contain"
 CANNOT_CONTAIN_KEY = "cannot_contain"
 
+# message role constants
+ROLE_SYSTEM = "system"
+ROLE_USER = "user"
+
+# user message parts
+CHECK_LABEL = "Check"
+COMMAND_LABEL = "Command"
+CODE_LABEL = "Code"
+DIAGNOSTIC_LABEL = "Diagnostic"
+DETAILS_LABEL = "Details"
+
+# formatting constants
+CODE_BLOCK_OPEN = "Code:\n```\n"
+CODE_BLOCK_CLOSE = "\n```"
+DIAG_BLOCK_OPEN = "Diagnostic:\n```\n"
+DIAG_BLOCK_CLOSE = "\n```"
+USER_SEPARATOR = "\n\n"
+
+# default system prompt constants
+SYS_INTRO = "You give short, direct hints for fixing code. "
+SYS_CRITICAL_HEADER = "CRITICAL RULES:\n"
+SYS_TEST_CORRECT = (
+    "- The test suite is provided by the instructor and is ALWAYS correct.\n"
+)
+SYS_ALWAYS_MENTION = "- ALWAYS mention what test or command failed.\n"
+SYS_ALWAYS_DESCRIBE = (
+    "- ALWAYS describe what to change in the student's implementation.\n"
+)
+SYS_ALWAYS_EXPLAIN = (
+    "- ALWAYS explain what is incorrect in the STUDENT's source code.\n"
+)
+SYS_ALWAYS_SUGGEST = "- ALWAYS suggest running the command that produced the diagnostic output to verify the fix.\n\n"
+SYS_ALWAYS_END_PERIOD = "- ALWAYS end every hint with a period.\n\n"
+SYS_NEVER_QUOTES = "- NEVER use single quotes (for example, ') or backticks (for example, `) in your response.\n"
+SYS_NEVER_MODIFY = (
+    "- NEVER suggest modifying tests, test assertions, or expected results.\n"
+)
+SYS_NEVER_FENCE = "- NEVER write fenced source code blocks in your hint.\n"
+SYS_NEVER_WORDS = "- NEVER use the words 'student', 'you should', or 'you might'. NEVER say:\n"
+SYS_NEVER_SAY_1 = "- 'The test incorrectly asserts <...>'\n"
+SYS_NEVER_SAY_2 = "- 'Modify the test to <...>'\n"
+SYS_NEVER_SAY_3 = "- 'The assertion is wrong because <...>'\n"
+SYS_NEVER_SAY_4 = "- 'Change the expected result <...>'\n\n"
+SYS_INSTEAD_HEADER = "INSTEAD say:\n"
+SYS_INSTEAD_1 = (
+    "- 'The function X returns Y but the test expects Z; check...'\n"
+)
+SYS_INSTEAD_2 = (
+    "- 'The implementation does not handle...; add logic to...'\n\n"
+)
+
+# user message suffix asking the LLM what to do
+USER_QUESTION = (
+    "What to do: Write 3-5 sentences, mentioning the specific "
+    "failing test/command/check if available."
+)
+
+# built-in validation phrases for the cannot_contain check
+PHRASE_TEST_INCORRECTLY = "test incorrectly"
+PHRASE_TEST_IS_WRONG = "test is wrong"
+PHRASE_TEST_SHOULD_BE = "test should be"
+PHRASE_MODIFY_TEST = "modify the test"
+PHRASE_CHANGE_TEST = "change the test"
+PHRASE_FIX_TEST = "fix the test"
+PHRASE_UPDATE_TEST = "update the test"
+PHRASE_ASSERTION_WRONG = "the assertion is wrong"
+PHRASE_ASSERTION_INCORRECTLY = "the assertion incorrectly"
+PHRASE_INCORRECTLY_ASSERTS = "incorrectly asserts"
+PHRASE_WRONG_ASSERTION = "wrong assertion"
+PHRASE_CHANGE_ASSERTION = "change the assertion"
+PHRASE_MODIFY_ASSERTION = "modify the assertion"
+PHRASE_CHANGE_ASSERT = "change the assert"
+PHRASE_UPDATE_ASSERT = "update the assert"
+PHRASE_FIX_ASSERTION = "fix the assertion"
+PHRASE_CHANGE_EXPECTED = "change the expected"
+PHRASE_MODIFY_EXPECTED = "modify the expected"
+PHRASE_WE_NEED = "we need"
+PHRASE_WE_SHOULD = "we should"
+PHRASE_WRONG_EXPECTED = "wrong expected"
+PHRASE_EXPECTED_WRONG = "expected result is wrong"
+PHRASE_EXPECTED_VALUE_WRONG = "expected value is wrong"
+
 
 def build_hint_messages(  # noqa: PLR0913
     description: str,
@@ -52,53 +134,41 @@ def build_hint_messages(  # noqa: PLR0913
         system_prompt
         if system_prompt
         else (
-            "You give short, direct hints for fixing code. "
-            "CRITICAL RULES:\n"
-            "- The test suite is provided by the instructor and is "
-            "ALWAYS correct.\n"
-            "- ALWAYS mention what test or command failed.\n"
-            "- ALWAYS describe what to change in the student's "
-            "implementation.\n"
-            "- ALWAYS explain what is incorrect in the STUDENT's "
-            "source code.\n"
-            "- ALWAYS suggest running the command that produced the "
-            "diagnostic output to verify the fix.\n\n"
-            "- ALWAYS end every hint with a period.\n\n"
-            "- NEVER use single quotes (for example, ') or backticks "
-            "(for example, `) in your response.\n"
-            "- NEVER suggest modifying tests, test assertions, or "
-            "expected results.\n"
-            "- NEVER write fenced source code blocks in your hint.\n"
-            "- NEVER use the words 'student', 'you should', or "
-            "'you might'. NEVER say:\n"
-            "- 'The test incorrectly asserts <...>'\n"
-            "- 'Modify the test to <...>'\n"
-            "- 'The assertion is wrong because <...>'\n"
-            "- 'Change the expected result <...>'\n\n"
-            "INSTEAD say:\n"
-            "- 'The function X returns Y but the test expects Z; "
-            "check...'\n"
-            "- 'The implementation does not handle...; add logic "
-            "to...'\n\n"
+            SYS_INTRO
+            + SYS_CRITICAL_HEADER
+            + SYS_TEST_CORRECT
+            + SYS_ALWAYS_MENTION
+            + SYS_ALWAYS_DESCRIBE
+            + SYS_ALWAYS_EXPLAIN
+            + SYS_ALWAYS_SUGGEST
+            + SYS_ALWAYS_END_PERIOD
+            + SYS_NEVER_QUOTES
+            + SYS_NEVER_MODIFY
+            + SYS_NEVER_FENCE
+            + SYS_NEVER_WORDS
+            + SYS_NEVER_SAY_1
+            + SYS_NEVER_SAY_2
+            + SYS_NEVER_SAY_3
+            + SYS_NEVER_SAY_4
+            + SYS_INSTEAD_HEADER
+            + SYS_INSTEAD_1
+            + SYS_INSTEAD_2
         )
     )
-    user_parts = [f"Check: {description}"]
+    user_parts = [f"{CHECK_LABEL}: {description}"]
     if command:
-        user_parts.append(f"Command: {command}")
+        user_parts.append(f"{COMMAND_LABEL}: {command}")
     if truncated_file:
-        user_parts.append("Code:\n```\n" + truncated_file + "\n```")
+        user_parts.append(CODE_BLOCK_OPEN + truncated_file + CODE_BLOCK_CLOSE)
     if truncated_diag:
-        user_parts.append("Diagnostic:\n```\n" + truncated_diag + "\n```")
+        user_parts.append(DIAG_BLOCK_OPEN + truncated_diag + DIAG_BLOCK_CLOSE)
     if details:
-        user_parts.append(f"Details: {details}")
-    user_parts.append(
-        "What to do: Write 3-5 sentences, mentioning the specific "
-        "failing test/command/check if available:"
-    )
+        user_parts.append(f"{DETAILS_LABEL}: {details}")
+    user_parts.append(USER_QUESTION)
 
     return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": "\n\n".join(user_parts)},
+        {"role": ROLE_SYSTEM, "content": system},
+        {"role": ROLE_USER, "content": USER_SEPARATOR.join(user_parts)},
     ]
 
 
@@ -143,29 +213,29 @@ def is_valid_hint(
     # automatically generated hints; if one of these phrases is found
     # then this means that the hint will be highlighted as invalid
     cannot_contain = [
-        "test incorrectly",
-        "test is wrong",
-        "test should be",
-        "modify the test",
-        "change the test",
-        "fix the test",
-        "update the test",
-        "the assertion is wrong",
-        "the assertion incorrectly",
-        "incorrectly asserts",
-        "wrong assertion",
-        "change the assertion",
-        "modify the assertion",
-        "change the assert",
-        "update the assert",
-        "fix the assertion",
-        "change the expected",
-        "modify the expected",
-        "we need",
-        "we should",
-        "wrong expected",
-        "expected result is wrong",
-        "expected value is wrong",
+        PHRASE_TEST_INCORRECTLY,
+        PHRASE_TEST_IS_WRONG,
+        PHRASE_TEST_SHOULD_BE,
+        PHRASE_MODIFY_TEST,
+        PHRASE_CHANGE_TEST,
+        PHRASE_FIX_TEST,
+        PHRASE_UPDATE_TEST,
+        PHRASE_ASSERTION_WRONG,
+        PHRASE_ASSERTION_INCORRECTLY,
+        PHRASE_INCORRECTLY_ASSERTS,
+        PHRASE_WRONG_ASSERTION,
+        PHRASE_CHANGE_ASSERTION,
+        PHRASE_MODIFY_ASSERTION,
+        PHRASE_CHANGE_ASSERT,
+        PHRASE_UPDATE_ASSERT,
+        PHRASE_FIX_ASSERTION,
+        PHRASE_CHANGE_EXPECTED,
+        PHRASE_MODIFY_EXPECTED,
+        PHRASE_WE_NEED,
+        PHRASE_WE_SHOULD,
+        PHRASE_WRONG_EXPECTED,
+        PHRASE_EXPECTED_WRONG,
+        PHRASE_EXPECTED_VALUE_WRONG,
     ]
     # custom rules completely replace built-in defaults
     if custom_rules is not None:
