@@ -92,8 +92,8 @@ def build_hint_messages(  # noqa: PLR0913
     if details:
         user_parts.append(f"Details: {details}")
     user_parts.append(
-        "What to do (1-5 sentences, mention the specific "
-        "failing test if available):"
+        "What to do: Write 3-5 sentences, mentioning the specific "
+        "failing test/command/check if available:"
     )
 
     return [
