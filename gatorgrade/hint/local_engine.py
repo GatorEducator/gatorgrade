@@ -99,6 +99,7 @@ class AutoHintEngine:
         model_id: str = DEFAULT_MODEL_ID,
         cache_dir: Optional[Path] = None,
         system_prompt: str | None = None,
+        validation_rules: dict[str, list[str]] | None = None,
     ) -> None:
         """Initialize the engine.
 
@@ -108,11 +109,15 @@ class AutoHintEngine:
                 Can also be set via $GATORGRADE_MODELS_DIR.
             system_prompt: Optional custom system prompt.
                 If provided, this replaces the built-in default.
+            validation_rules: Optional dict with ``must_contain``
+                and/or ``cannot_contain`` lists of phrases to
+                check, in addition to the built-in quality rules.
 
         """
         self._model_id = model_id
         self._cache_dir_override = cache_dir
         self._system_prompt = system_prompt
+        self._validation_rules = validation_rules
         # the text-generation pipeline, populated by _ensure_loaded().
         self._pipe: Any = None
         # path to the cached model directory (set after loading).
@@ -237,19 +242,27 @@ class AutoHintEngine:
         self.ensure_loaded()
 
     @staticmethod
-    def _is_valid_hint(hint: str) -> bool:
-        """Check if a generated hint violates the rules.
+    def _is_valid_hint(
+        hint: str,
+        custom_rules: dict[str, list[str]] | None = None,
+    ) -> bool:
+        """Check if a generated hint passes the quality rules.
 
-        Delegates to the shared implementation.
+        Static so it can be called without an instance (e.g., in
+        tests). Pass ``custom_rules`` to augment the built-in
+        rules.
 
         Args:
             hint: The generated hint text.
+            custom_rules: Optional custom rules in addition to
+                the built-in rules.
 
         Returns:
-            True if the hint is valid, False if it violates.
+            True if the hint passes all quality checks, False if
+            it fails any check.
 
         """
-        return is_valid_hint(hint)
+        return is_valid_hint(hint, custom_rules=custom_rules)
 
     def generate_hint(  # noqa: PLR0911
         self,
@@ -339,7 +352,9 @@ class AutoHintEngine:
             # are not connected to achieving learning objectives;
             # still return the hint so the caller can choose how to
             # display it (e.g., dimmed with a quality warning)
-            if not self._is_valid_hint(hint):
+            if not self._is_valid_hint(
+                hint, custom_rules=self._validation_rules
+            ):
                 return hint, True
             return hint, False
         except Exception as exc:  # pylint: disable=broad-except

@@ -33,6 +33,7 @@ from gatorgrade.input.parse_config import (
     get_due_date_aliases_present,
     get_project_name,
     get_system_prompt_file,
+    get_validation_phrases_file,
     has_due_date_field,
     parse_config,
     resolve_config_path,
@@ -385,12 +386,60 @@ def _resolve_system_prompt(
     return None
 
 
-def _create_auto_hint_engine(
+def _resolve_validation_rules(
+    config_path: Path, config_dir: Optional[Path]
+) -> dict[str, list[str]] | None:
+    """Read the validation rules JSON file if specified in the config front matter.
+
+    The filename is read from the ``validation_phrases_file`` field
+    in the YAML front matter. The JSON file must contain an object
+    with optional keys:
+
+    - ``must_contain``: list of phrases that must appear in hints
+    - ``cannot_contain``: list of phrases that must not appear
+
+    The file is resolved in the same search order as the system
+    prompt: CWD, alongside config file, then config dir.
+
+    Args:
+        config_path: Path to the resolved gatorgrade configuration
+            file.
+        config_dir: The config directory (from ``--config-dir``),
+            or None to use the default.
+
+    Returns:
+        The parsed validation rules dict, or None if not specified
+        or not found.
+
+    """
+    import json  # noqa: PLC0415
+
+    filename = get_validation_phrases_file(config_path)
+    if not filename:
+        return None
+    for candidate in [
+        Path(filename),
+        config_path.parent / filename,
+        (config_dir or get_config_dir()) / filename,
+    ]:
+        if candidate.exists():
+            try:
+                data = json.loads(candidate.read_text(encoding="utf-8"))
+                if not isinstance(data, dict):
+                    return None
+                return data
+            except (json.JSONDecodeError, OSError):
+                return None
+    return None
+
+
+def _create_auto_hint_engine(  # noqa: PLR0913
     filename: Path,
     auto_hint_model: str,
     auto_hint_url: Optional[str],
     auto_hint_api_key: Optional[str],
     system_prompt: str | None = None,
+    validation_rules: dict[str, list[str]] | None = None,
 ) -> Any:
     """Create the appropriate auto-hint engine based on CLI arguments.
 
@@ -412,6 +461,9 @@ def _create_auto_hint_engine(
         auto_hint_api_key: API key for the remote server.
         system_prompt: Optional custom system prompt.
             If provided, this replaces the built-in default.
+        validation_rules: Optional dict with ``must_contain``
+            and/or ``cannot_contain`` lists of phrases to
+            check, in addition to the built-in quality rules.
 
     Returns:
         An AutoHintEngine instance, or None if creation fails.
@@ -433,6 +485,7 @@ def _create_auto_hint_engine(
             auto_hint_api_key,
             model_id,
             system_prompt=system_prompt,
+            validation_rules=validation_rules,
         )
         if engine is not None:
             return engine
@@ -446,7 +499,11 @@ def _create_auto_hint_engine(
         console.print()
     # fall back to the local engine
     try:
-        return AutoHintEngine(model_id=model_id, system_prompt=system_prompt)
+        return AutoHintEngine(
+            model_id=model_id,
+            system_prompt=system_prompt,
+            validation_rules=validation_rules,
+        )
     except Exception:
         return None
 
@@ -456,6 +513,7 @@ def _try_create_remote_engine(
     api_key: Optional[str],
     model_id: str,
     system_prompt: str | None = None,
+    validation_rules: dict[str, list[str]] | None = None,
 ) -> Any:
     """Attempt to create and verify a RemoteHintEngine.
 
@@ -473,6 +531,7 @@ def _try_create_remote_engine(
             api_key=api_key or REMOTE_API_KEY_DEFAULT,
             model_id=model_id,
             system_prompt=system_prompt,
+            validation_rules=validation_rules,
         )
         return RemoteEngineAdapter(remote, model_id)
     except Exception:
@@ -807,8 +866,12 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # huggingface transformers model (when no URL is provided).
             # remote engine fails to initialise or returns None for a hint,
             # the program falls back to the local engine.
-            # resolve the system prompt if specified in the config front matter
+            # resolve the system prompt and validation rules if specified
+            # in the config front matter
             system_prompt = _resolve_system_prompt(
+                resolved_filename, resolved_config_dir
+            )
+            validation_rules = _resolve_validation_rules(
                 resolved_filename, resolved_config_dir
             )
             if auto_hint:
@@ -818,6 +881,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                     auto_hint_url,
                     auto_hint_api_key,
                     system_prompt=system_prompt,
+                    validation_rules=validation_rules,
                 )
             # run the checks that were specified in a way
             # that adheres to the configuration both in

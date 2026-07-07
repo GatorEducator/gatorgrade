@@ -55,6 +55,7 @@ class RemoteHintEngine:
         api_key: str = REMOTE_API_KEY_DEFAULT,
         model_id: str = REMOTE_MODEL_DEFAULT,
         system_prompt: str | None = None,
+        validation_rules: dict[str, list[str]] | None = None,
     ) -> None:
         """Initialise the remote hint engine.
 
@@ -65,12 +66,16 @@ class RemoteHintEngine:
             model_id: Name of the model exposed at the server.
             system_prompt: Optional custom system prompt.
                 If provided, this replaces the built-in default.
+            validation_rules: Optional dict with ``must_contain``
+                and/or ``cannot_contain`` lists of phrases to
+                check, in addition to the built-in quality rules.
 
         """
         self._base_url = base_url
         self._api_key = api_key
         self._model_id = model_id
         self._system_prompt = system_prompt
+        self._validation_rules = validation_rules
 
     @property
     def model_id(self) -> str:
@@ -96,19 +101,27 @@ class RemoteHintEngine:
         """
 
     @staticmethod
-    def _is_valid_hint(hint: str) -> bool:
-        """Check if a generated hint violates the rules.
+    def _is_valid_hint(
+        hint: str,
+        custom_rules: dict[str, list[str]] | None = None,
+    ) -> bool:
+        """Check if a generated hint passes the quality rules.
 
-        Delegates to the shared implementation.
+        Static so it can be called without an instance (e.g., in
+        tests). Pass ``custom_rules`` to augment the built-in
+        rules.
 
         Args:
             hint: The generated hint text.
+            custom_rules: Optional custom rules in addition to
+                the built-in rules.
 
         Returns:
-            True if the hint is valid, False if it violates.
+            True if the hint passes all quality checks, False if
+            it fails any check.
 
         """
-        return is_valid_hint(hint)
+        return is_valid_hint(hint, custom_rules=custom_rules)
 
     def _build_messages(
         self,
@@ -253,7 +266,9 @@ class RemoteHintEngine:
                     hint = rc.strip()
             if not hint:
                 return None, False
-            if not self._is_valid_hint(hint):
+            if not self._is_valid_hint(
+                hint, custom_rules=self._validation_rules
+            ):
                 return hint, True
             return hint, False
         except Exception as exc:  # pylint: disable=broad-except

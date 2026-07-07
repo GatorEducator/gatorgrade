@@ -93,21 +93,39 @@ def build_hint_messages(
     ]
 
 
-def is_valid_hint(hint: str) -> bool:
-    """Check if a generated hint violates the rules.
+def is_valid_hint(
+    hint: str,
+    custom_rules: dict[str, list[str]] | None = None,
+) -> bool:
+    """Check if a generated hint passes the quality rules.
 
-    Returns False if the hint suggests modifying tests, test
-    assertions, or expected results.
+    Quality is determined by:
+    - Built-in cannot-contain phrases (always checked).
+    - Optional custom rules from a JSON file with two optional
+      keys:
+        "must_contain": phrases that must appear in the hint at
+                        least once (case-insensitive).
+        "cannot_contain": phrases that must NOT appear in the
+                          hint (case-insensitive).
+
+    A hint is valid when:
+    - All ``must_contain`` phrases are present (if specified).
+    - No ``cannot_contain`` phrase is present (neither built-in
+      nor custom).
 
     Args:
         hint: The generated hint text.
+        custom_rules: Optional dict with ``must_contain`` and/or
+            ``cannot_contain`` lists of phrases. Each phrase is
+            matched case-insensitively as a substring.
 
     Returns:
-        True if the hint is valid, False if it violates the rules.
+        True if the hint passes all quality checks, False if it
+        fails any check.
 
     """
     hint_lower = hint.lower()
-    forbidden_phrases = [
+    builtin_cannot_contain = [
         "test incorrectly",
         "test is wrong",
         "test should be",
@@ -132,4 +150,18 @@ def is_valid_hint(hint: str) -> bool:
         "expected result is wrong",
         "expected value is wrong",
     ]
-    return not any(phrase in hint_lower for phrase in forbidden_phrases)
+    custom = custom_rules or {}
+    cannot_contain = builtin_cannot_contain + (
+        custom.get("cannot_contain", [])
+    )
+    must_contain = custom.get("must_contain", [])
+    # all must-contain phrases must be present
+    if must_contain:
+        for phrase in must_contain:
+            if phrase.lower() not in hint_lower:
+                return False
+    # no cannot-contain phrase may be present
+    for phrase in cannot_contain:
+        if phrase.lower() in hint_lower:
+            return False
+    return True

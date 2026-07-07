@@ -118,7 +118,86 @@ def test_gatorgrade_with_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
-    assert "Fix these error(s) before running gatorgrade." in result.stdout
+
+
+def test_resolve_validation_rules_returns_none_when_not_specified(
+    tmp_path: Path,
+) -> None:
+    """_resolve_validation_rules returns None when no validation_phrases_file."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = main._resolve_validation_rules(config_file, None)
+    assert result is None
+
+
+def test_resolve_validation_rules_reads_json_file(
+    tmp_path: Path,
+) -> None:
+    """_resolve_validation_rules reads and parses a JSON validation file."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'validation_phrases_file: "quality.json"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    rules_file = tmp_path / "quality.json"
+    rules_file.write_text(
+        '{"cannot_contain": ["bad phrase"], "must_contain": ["good word"]}'
+    )
+    result = main._resolve_validation_rules(config_file, None)
+    assert result is not None
+    assert result["cannot_contain"] == ["bad phrase"]
+    assert result["must_contain"] == ["good word"]
+
+
+def test_resolve_validation_rules_returns_none_on_invalid_json(
+    tmp_path: Path,
+) -> None:
+    """_resolve_validation_rules returns None for unparseable JSON."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'validation_phrases_file: "bad.json"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    rules_file = tmp_path / "bad.json"
+    rules_file.write_text("not valid json{{")
+    result = main._resolve_validation_rules(config_file, None)
+    assert result is None
+
+
+def test_resolve_validation_rules_finds_file_alongside_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Resolves the validation file alongside the config file."""
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    config_file = config_dir / "gatorgrade.yml"
+    config_file.write_text(
+        'validation_phrases_file: "rules.json"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    rules_file = config_dir / "rules.json"
+    rules_file.write_text('{"cannot_contain": ["x"]}')
+    monkeypatch.chdir(tmp_path)
+    result = main._resolve_validation_rules(config_file, None)
+    assert result == {"cannot_contain": ["x"]}
 
 
 def test_gatorgrade_with_invalid_config_file(

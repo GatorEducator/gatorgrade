@@ -27,6 +27,7 @@ DUE_DATE_ALIASES = (DUE_DATE_FIELD, "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
 AUTO_HINT_MODEL_FIELD = "auto_hint_model"
 SYSTEM_PROMPT_FILE_FIELD = "system_prompt_file"
+VALIDATION_PHRASES_FILE_FIELD = "validation_phrases_file"
 
 # environment variable that can override the default config directory
 ENV_CONFIG_DIR = "GATORGRADE_CONFIG_DIR"
@@ -195,6 +196,40 @@ def get_system_prompt_file(file: Path) -> str | None:
             parsed_yaml_file[0], dict
         ):
             return parsed_yaml_file[0].get(SYSTEM_PROMPT_FILE_FIELD, None)
+    except (yaml.YAMLError, OSError):
+        pass
+    return None
+
+
+def get_validation_phrases_file(file: Path) -> str | None:
+    """Extract the optional validation phrases filename from a gatorgrade YAML config file.
+
+    The filename is specified in the front matter of the YAML file as:
+
+        validation_phrases_file: "quality_checks.txt"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    The file should contain one phrase per line. Each phrase is
+    checked against generated hints; if any phrase is found, the
+    hint is flagged as low-quality.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The validation phrases filename string if specified, or
+        None if not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(VALIDATION_PHRASES_FILE_FIELD, None)
     except (yaml.YAMLError, OSError):
         pass
     return None

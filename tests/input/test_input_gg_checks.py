@@ -15,6 +15,8 @@ from gatorgrade.input.parse_config import (
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
+    get_system_prompt_file,
+    get_validation_phrases_file,
     has_due_date_field,
     parse_config,
     resolve_config_path,
@@ -115,6 +117,72 @@ def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
     )
     result = has_due_date_field(config_file)
     assert result is True
+
+
+def test_get_system_prompt_file_returns_filename_when_specified(
+    tmp_path: Path,
+) -> None:
+    """get_system_prompt_file returns the filename from the front matter."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'system_prompt_file: "my_prompt.md"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_system_prompt_file(config_file)
+    assert result == "my_prompt.md"
+
+
+def test_get_system_prompt_file_returns_none_when_missing(
+    tmp_path: Path,
+) -> None:
+    """get_system_prompt_file returns None when no system_prompt_file field."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_system_prompt_file(config_file)
+    assert result is None
+
+
+def test_get_validation_phrases_file_returns_filename_when_specified(
+    tmp_path: Path,
+) -> None:
+    """get_validation_phrases_file returns the filename from the front matter."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'validation_phrases_file: "quality.json"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_validation_phrases_file(config_file)
+    assert result == "quality.json"
+
+
+def test_get_validation_phrases_file_returns_none_when_missing(
+    tmp_path: Path,
+) -> None:
+    """get_validation_phrases_file returns None when not specified."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_validation_phrases_file(config_file)
+    assert result is None
 
 
 class TestGetConfigDir:
