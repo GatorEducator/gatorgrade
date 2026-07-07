@@ -4,13 +4,18 @@
 HINT_DIAG_TRUNCATE = 2000
 HINT_FILE_LINES = 20
 
+# keys for custom validation rules in the quality JSON file
+MUST_CONTAIN_KEY = "must_contain"
+CANNOT_CONTAIN_KEY = "cannot_contain"
 
-def build_hint_messages(
+
+def build_hint_messages(  # noqa: PLR0913
     description: str,
     diagnostic: str = "",
     command: str = "",
     file_content: str = "",
     system_prompt: str | None = None,
+    details: str = "",
 ) -> list[dict[str, str]]:
     """Build a structured message list for hint generation.
 
@@ -30,6 +35,8 @@ def build_hint_messages(
             HINT_FILE_LINES lines).
         system_prompt: Optional custom system prompt to use
             instead of the built-in default.
+        details: Structured details about the check
+            configuration (e.g. options and expected values).
 
     Returns:
         A list of dicts with role and content keys,
@@ -82,6 +89,8 @@ def build_hint_messages(
         user_parts.append("Code:\n```\n" + truncated_file + "\n```")
     if truncated_diag:
         user_parts.append("Diagnostic:\n```\n" + truncated_diag + "\n```")
+    if details:
+        user_parts.append(f"Details: {details}")
     user_parts.append(
         "What to do (1-5 sentences, mention the specific "
         "failing test if available):"
@@ -99,25 +108,26 @@ def is_valid_hint(
 ) -> bool:
     """Check if a generated hint passes the quality rules.
 
-    Quality is determined by:
-    - Built-in cannot-contain phrases (always checked).
-    - Optional custom rules from a JSON file with two optional
-      keys:
-        "must_contain": phrases that must appear in the hint at
-                        least once (case-insensitive).
-        "cannot_contain": phrases that must NOT appear in the
-                          hint (case-insensitive).
+    Quality is determined by two categories of phrase checks:
 
-    A hint is valid when:
-    - All ``must_contain`` phrases are present (if specified).
-    - No ``cannot_contain`` phrase is present (neither built-in
-      nor custom).
+    - must_contain: phrases that must appear in the hint
+      (case-insensitive substring match). Every phrase must be
+      present for the hint to be valid.
+    - cannot_contain: phrases that must NOT appear in the
+      hint (case-insensitive substring match). If any phrase is
+      found, the hint is invalid.
+
+    Built-in defaults exist for both categories. When custom
+    rules are provided via a JSON file, they **completely
+    replace** the built-in defaults (matching the override
+    behaviour of system_prompt_file).
 
     Args:
         hint: The generated hint text.
-        custom_rules: Optional dict with ``must_contain`` and/or
-            ``cannot_contain`` lists of phrases. Each phrase is
-            matched case-insensitively as a substring.
+        custom_rules: Optional dict with must_contain and/or
+            cannot_contain lists of phrases. When provided,
+            these replace the built-in rules entirely. Each
+            phrase is matched case-insensitively as a substring.
 
     Returns:
         True if the hint passes all quality checks, False if it
@@ -125,7 +135,14 @@ def is_valid_hint(
 
     """
     hint_lower = hint.lower()
-    builtin_cannot_contain = [
+    # by default, there is nothing specified for the must contain
+    # checking list, but there is the option for the person using
+    # gatorgrade to specify a list of phrases that must be specified
+    must_contain: list[str] = []
+    # these are the default phrases that should not be inside of the
+    # automatically generated hints; if one of these phrases is found
+    # then this means that the hint will be highlighted as invalid
+    cannot_contain = [
         "test incorrectly",
         "test is wrong",
         "test should be",
@@ -150,16 +167,16 @@ def is_valid_hint(
         "expected result is wrong",
         "expected value is wrong",
     ]
-    custom = custom_rules or {}
-    cannot_contain = builtin_cannot_contain + (
-        custom.get("cannot_contain", [])
-    )
-    must_contain = custom.get("must_contain", [])
+    if custom_rules is not None:
+        # custom rules completely replace built-in defaults
+        if MUST_CONTAIN_KEY in custom_rules:
+            must_contain = custom_rules[MUST_CONTAIN_KEY]
+        if CANNOT_CONTAIN_KEY in custom_rules:
+            cannot_contain = custom_rules[CANNOT_CONTAIN_KEY]
     # all must-contain phrases must be present
-    if must_contain:
-        for phrase in must_contain:
-            if phrase.lower() not in hint_lower:
-                return False
+    for phrase in must_contain:
+        if phrase.lower() not in hint_lower:
+            return False
     # no cannot-contain phrase may be present
     for phrase in cannot_contain:
         if phrase.lower() in hint_lower:
