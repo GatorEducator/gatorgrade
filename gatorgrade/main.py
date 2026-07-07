@@ -96,7 +96,7 @@ OS_MACOS = "MacOS"
 OS_WINDOWS = "Windows"
 
 # program and language display names for version output
-GATORGRADE_NAME = "gatorgrade"
+GATORGRADE_NAME = "Gatorgrade"
 GATORGRADER_NAME = "GatorGrader"
 PYTHON_NAME = "Python"
 
