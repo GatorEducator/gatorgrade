@@ -169,13 +169,16 @@ class RemoteHintEngine:
         """
         try:
             import openai as _openai_check  # noqa: PLC0415,F401
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
-                "The 'openai' package is required for remote hint "
-                "generation. Install it with one of these commands:\n\n"
-                "  pip install openai\n"
-                "  uv add openai\n"
-            ) from None
+                "The 'auto-hint' extra is required to generate hints.\n\n"
+                "Install it with one of these commands:\n\n"
+                "  uv tool install --from 'gatorgrade[auto-hint]'"
+                " gatorgrade\n"
+                "  uvx --from 'gatorgrade[auto-hint]'"
+                " gatorgrade --auto-hint\n"
+                "  pip install 'gatorgrade[auto-hint]'\n"
+            ) from e
 
     def generate_hint(  # noqa: PLR0913
         self,
