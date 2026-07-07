@@ -19,7 +19,7 @@ REMOTE_HINT_TOP_P = 0.9
 REMOTE_HINT_TIMEOUT_MS = 180000
 
 # extra_body sent to disable visible thinking traces on Qwen
-# reasoning models.  The model still reasons internally but the
+# reasoning models; the model still reasons internally but the
 # response contains only the final answer in the content field.
 EXTRA_BODY_DISABLE_THINKING: dict = {
     "chat_template_kwargs": {"enable_thinking": False},
