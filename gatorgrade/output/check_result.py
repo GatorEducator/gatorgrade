@@ -11,6 +11,7 @@ CROSS_MARK = "\u2715"
 PASS_COLOR = "green"
 FAIL_COLOR = "red"
 DIAGNOSTIC_LABEL = "Diagnostic"
+DETAILS_LABEL = "Details"
 HINT_LABEL = "Hint"
 
 
@@ -29,6 +30,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         hint: str | None = None,
         raw_diagnostic: str | None = None,
         is_low_quality: bool = False,
+        details: str = "",
     ):
         """Construct a CheckResult.
 
@@ -50,6 +52,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 is used.
             is_low_quality: Whether this hint was flagged as
                 suggesting test changes (shown in dimmed style).
+            details: Optional structured details about the check
+                configuration (e.g. options and expected values).
 
         """
         self.passed = passed
@@ -64,6 +68,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.hint = hint
         self.is_auto_hint = False
         self.is_low_quality = is_low_quality
+        self.details = details
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
@@ -87,6 +92,11 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 )
             else:
                 message += f"\n[blue]   → {DIAGNOSTIC_LABEL}:[/][yellow] {self.diagnostic}[/]"
+            if self.details:
+                message += (
+                    f"\n[blue]   → {DETAILS_LABEL}:[/]"
+                    f"[yellow] {self.details}[/]"
+                )
             if self.hint:
                 if self.is_low_quality:
                     message += (
