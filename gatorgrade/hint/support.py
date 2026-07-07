@@ -193,9 +193,9 @@ def is_valid_hint(
       found, the hint is invalid.
 
     Built-in defaults exist for both categories. When custom
-    rules are provided via a JSON file, they completely
-    replace the built-in defaults (matching the override
-    behaviour of system_prompt_file).
+    rules are provided through a JSON file, they completely
+    replace the built-in defaults (this is same as the override
+    of the behavior of system_prompt_file).
 
     Args:
         hint: The generated hint text.
