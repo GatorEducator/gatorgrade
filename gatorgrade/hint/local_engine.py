@@ -214,7 +214,7 @@ class AutoHintEngine:
         _tf_mod.logging.disable_progress_bar()
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
         # also suppress any stray output that prints to stderr
-        # during the pipeline construction (e.g."Device set to use
+        # during the pipeline construction (e.g., "Device set to use
         # cpu" messages or other low-level diagnostics)
         pipe_kwargs: dict[str, Any] = {
             "model_kwargs": {CACHE_DIR_KEY: str(cache_dir)}
