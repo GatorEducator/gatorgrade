@@ -946,7 +946,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 TimeElapsedColumn(),
             ) as load_progress:
                 task_id = load_progress.add_task(
-                    "[green]Loading auto-hinters",
+                    "[green]Loading auto-hinter",
                     total=AUTO_HINT_STEPS,
                 )
                 load_progress.update(
