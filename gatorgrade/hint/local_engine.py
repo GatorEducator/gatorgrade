@@ -30,6 +30,9 @@ TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
 CACHE_DIR_KEY = "cache_dir"
 ENV_CACHE_DIR = "GATORGRADE_MODELS_DIR"
 GENERATED_TEXT_KEY = "generated_text"
+HF_HUB_DISABLE_PROGRESS_KEY = "HF_HUB_DISABLE_PROGRESS_BARS"
+HF_HUB_DISABLE_PROGRESS_VALUE = "1"
+MODEL_KWARGS_KEY = "model_kwargs"
 
 
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
@@ -212,12 +215,12 @@ class AutoHintEngine:
 
         _tf_mod.logging.set_verbosity_error()
         _tf_mod.logging.disable_progress_bar()
-        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        os.environ[HF_HUB_DISABLE_PROGRESS_KEY] = HF_HUB_DISABLE_PROGRESS_VALUE
         # also suppress any stray output that prints to stderr
         # during the pipeline construction (e.g., "Device set to use
         # cpu" messages or other low-level diagnostics)
         pipe_kwargs: dict[str, Any] = {
-            "model_kwargs": {CACHE_DIR_KEY: str(cache_dir)}
+            MODEL_KWARGS_KEY: {CACHE_DIR_KEY: str(cache_dir)}
         }
         devnull_fd = os.open(os.devnull, os.O_WRONLY)
         old_stderr = os.dup(2)
