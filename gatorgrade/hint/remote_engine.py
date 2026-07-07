@@ -5,7 +5,7 @@ from typing import Optional, cast
 from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 
 # constants for the remote hint engine
-REMOTE_MODEL_DEFAULT = "Qwen-3.6-35B-A3B"
+REMOTE_MODEL_DEFAULT = "Qwen/Qwen-3.6-35B-A3B"
 REMOTE_API_KEY_DEFAULT = "not-needed"
 
 # the openai Python library rejects an empty api_key, so
@@ -289,11 +289,7 @@ class RemoteHintEngine:
             ):
                 return hint, True
             return hint, False
-        except Exception as exc:  # pylint: disable=broad-except
-            # print a useful warning so the caller knows
-            # the remote attempt failed and can fall back
-            print(
-                f"   → Remote hint error: {exc}",
-                file=__import__("sys").stderr,
-            )
+        except Exception:  # pylint: disable=broad-except
+            # return None so the caller's fallback engine can
+            # try the local model instead
             return None, False
