@@ -497,6 +497,99 @@ def _resolve_validation_rules(
     return None
 
 
+class FallbackHintEngine:
+    """Engine that tries remote first, then falls back to local on failure.
+
+    Wraps both a RemoteHintEngine and an AutoHintEngine. On each
+    call to ``generate_hint``, the remote engine is tried first.
+    If it fails (network error, bad model name, etc.), a warning
+    is printed and the local engine is used instead.
+
+    """
+
+    def __init__(
+        self,
+        remote_engine: Any,
+        local_engine: Any,
+        remote_url: str,
+    ) -> None:
+        """Initialise the fallback engine.
+
+        Args:
+            remote_engine: The remote engine to try first.
+            local_engine: The local engine to fall back to.
+            remote_url: The remote URL for display in warnings.
+
+        """
+        self._remote = remote_engine
+        self._local = local_engine
+        self._remote_url = remote_url
+        self._fallback_warned = False
+
+    @property
+    def model_id(self) -> str:
+        """Return the model identifier from the remote engine."""
+        result: str = self._remote.model_id
+        return result
+
+    @property
+    def is_loaded(self) -> bool:
+        """Return whether the primary engine is loaded."""
+        result: bool = self._remote.is_loaded
+        return result
+
+    def ensure_loaded(self) -> None:
+        """Ensure the remote engine is loaded (no-op for remote)."""
+        self._remote.ensure_loaded()
+
+    def generate_hint(  # noqa: PLR0913
+        self,
+        description: str,
+        diagnostic: str = "",
+        command: str = "",
+        file_content: str = "",
+        system_prompt: str | None = None,
+        details: str = "",
+    ) -> tuple[Optional[str], bool]:
+        """Generate a hint, falling back to the local engine on error."""
+        hint: str | None
+        is_low: bool
+        hint, is_low = self._remote.generate_hint(
+            description=description,
+            diagnostic=diagnostic,
+            command=command,
+            file_content=file_content,
+            system_prompt=system_prompt,
+            details=details,
+        )
+        if hint is not None:
+            return hint, is_low
+        # remote failed; warn once and fall back to local
+        if not self._fallback_warned:
+            from rich.console import Console as _Console  # noqa: PLC0415
+
+            _Console().print()
+            _Console().print(
+                "[yellow]Warning: Remote hint server at"
+                f" {self._remote_url} failed."
+                " Falling back to local model."
+                "[/]"
+            )
+            _Console().print()
+            self._fallback_warned = True
+        hint2: str | None
+        is_low2: bool
+        hint2, is_low2 = self._local.generate_hint(
+            description=description,
+            diagnostic=diagnostic,
+            command=command,
+            file_content=file_content,
+            system_prompt=system_prompt,
+            details=details,
+        )
+        return hint2, is_low2
+
+
 def _create_auto_hint_engine(  # noqa: PLR0913
     filename: Path,
     auto_hint_model: str,
@@ -542,34 +635,44 @@ def _create_auto_hint_engine(  # noqa: PLR0913
     ):
         config_model = get_auto_hint_model(filename)
         model_id = config_model or DEFAULT_MODEL_ID
+    # always build a local engine as the safety net
+    try:
+        local_engine = AutoHintEngine(
+            model_id=model_id,
+            system_prompt=system_prompt,
+            validation_rules=validation_rules,
+        )
+    except Exception:
+        local_engine = None
     if auto_hint_url:
-        # attempt the remote engine first
-        engine = _try_create_remote_engine(
+        # attempt to create the remote engine
+        remote_engine = _try_create_remote_engine(
             auto_hint_url,
             auto_hint_api_key,
             model_id,
             system_prompt=system_prompt,
             validation_rules=validation_rules,
         )
-        if engine is not None:
-            return engine
-        # remote failed; warn and fall through to the local engine
-        console.print()
-        console.print(
-            "[yellow]Warning: Could not reach remote hint server at"
-            f" {auto_hint_url}. Falling back to local model"
-            f" ({model_id}).[/]"
-        )
-        console.print()
-    # fall back to the local engine
-    try:
-        return AutoHintEngine(
-            model_id=model_id,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-    except Exception:
-        return None
+        if remote_engine is not None and local_engine is not None:
+            # both engines available: return a fallback wrapper
+            return FallbackHintEngine(
+                remote_engine, local_engine, auto_hint_url
+            )
+        if remote_engine is not None:
+            # only remote available, return it directly
+            return remote_engine
+        # remote failed entirely
+        if local_engine is not None:
+            from rich.console import Console as _Console  # noqa: PLC0415
+
+            _Console().print()
+            _Console().print(
+                "[yellow]Warning: Could not create remote hint engine for"
+                f" {auto_hint_url}. Using local model ({model_id}).[/]"
+            )
+            _Console().print()
+    # return whatever local engine we have, or None
+    return local_engine
 
 
 def _try_create_remote_engine(
