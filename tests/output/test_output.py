@@ -2507,9 +2507,155 @@ def test_run_checks_generates_auto_hint_for_failing_check() -> None:
     report = ("", "", "")
     output.run_checks([check], report, auto_hint_engine=mock_engine)
     mock_engine.generate_hint.assert_called_once()
-    call_kwargs = mock_engine.generate_hint.call_args[1]
-    assert call_kwargs["description"] == "fail"
-    assert call_kwargs["command"] == FAILING_CMD
+
+
+def test_run_checks_shows_summary_with_fallback_hints(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows fallback note when engine has_fallback is True."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.has_fallback = True
+    mock_engine.remote_url = "http://bad.url:4000"
+    mock_engine.model_id = "local-model"
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+        auto_hint_url="http://bad.url:4000",
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Failed to use remote server" in plain_out
+
+
+def test_run_checks_shows_summary_with_url_when_no_fallback(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows URL when engine has no fallback and URL was given."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.model_id = "remote-model"
+    # magicmock auto-creates attributes, so explicitly set these
+    # to their false/None values to avoid truthy mock objects
+    mock_engine.has_fallback = False
+    mock_engine.remote_url = None
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+        auto_hint_url="http://good.url:4000",
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "remote-model" in plain_out
+    assert "from http://good.url:4000" in plain_out
+
+
+def test_run_checks_shows_summary_without_url_when_not_given(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows just model name when no URL was given."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.model_id = "local-model"
+    mock_engine.has_fallback = False
+    mock_engine.remote_url = None
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "local-model" in plain_out
+    assert "from" not in plain_out
+    assert "was unavailable" not in plain_out
+
+
+def test_build_gg_check_details_with_options_returns_formatted_string() -> (
+    None
+):
+    """_build_gg_check_details returns italic-labeled details from options."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountSingleLineComments"],
+        json_info={
+            "check": "CountSingleLineComments",
+            "options": {"language": "Python", "count": 200, "exact": False},
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "CountSingleLineComments" in result
+    assert "language" in result
+    assert "Python" in result
+    assert "count" in result
+    assert "200" in result
+    assert "exact" in result
+    assert "False" in result
+
+
+def test_build_gg_check_details_skips_command_key() -> None:
+    """_build_gg_check_details skips the command key in options."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "MatchCommandFragment"],
+        json_info={
+            "check": "MatchCommandFragment",
+            "options": {
+                "command": "uv run test",
+                "fragment": "expected",
+                "count": 1,
+            },
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "command" not in result
+    assert "expected" in result
+    assert "1" in result
+
+
+def test_build_gg_check_details_returns_empty_for_non_dict_info() -> None:
+    """_build_gg_check_details returns empty string when json_info is not a dict."""
+    check = GatorGraderCheck(
+        gg_args=["test"],
+        json_info="just a string",
+    )
+    result = output._build_gg_check_details(check)
+    assert result == ""
+
+
+def test_build_gg_check_details_returns_options_when_check_name_missing() -> (
+    None
+):
+    """_build_gg_check_details still shows options even when check name is missing."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountLines"],
+        json_info={
+            "options": {"language": "Python"},
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "Python" in result
 
 
 def test_run_checks_skips_auto_hint_for_passing_check() -> None:

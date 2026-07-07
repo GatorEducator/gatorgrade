@@ -119,6 +119,40 @@ def test_has_due_date_field_returns_true_when_present(tmp_path: Path) -> None:
     assert result is True
 
 
+def test_get_system_prompt_file_returns_none_on_yaml_error(
+    tmp_path: Path,
+) -> None:
+    """get_system_prompt_file returns None on YAML parse error."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'name: "unclosed string\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_system_prompt_file(config_file)
+    assert result is None
+
+
+def test_get_validation_phrases_file_returns_none_on_yaml_error(
+    tmp_path: Path,
+) -> None:
+    """get_validation_phrases_file returns None on YAML parse error."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'name: "unclosed string\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = get_validation_phrases_file(config_file)
+    assert result is None
+
+
 def test_get_system_prompt_file_returns_filename_when_specified(
     tmp_path: Path,
 ) -> None:

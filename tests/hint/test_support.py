@@ -77,6 +77,22 @@ class TestBuildHintMessages:
         assert "Error found" in total
         assert "def foo():" in total
 
+    def test_includes_details_when_provided(self) -> None:
+        """User message includes the details when provided."""
+        msgs = build_hint_messages(
+            description="test",
+            details="language: Python, count: 10",
+        )
+        assert "language: Python, count: 10" in msgs[1]["content"]
+
+    def test_uses_custom_system_prompt(self) -> None:
+        """A custom system prompt replaces the built-in one."""
+        msgs = build_hint_messages(
+            description="test",
+            system_prompt="You are a helpful tutor.",
+        )
+        assert msgs[0]["content"] == "You are a helpful tutor."
+
 
 class TestIsValidHint:
     """Direct tests for is_valid_hint."""
@@ -120,3 +136,43 @@ class TestIsValidHint:
             "check the counting logic in count_punctuation."
         )
         assert is_valid_hint(hint)
+
+    def test_custom_must_contain_replaces_builtin(self) -> None:
+        """Custom must_contain rules replace the empty built-in list."""
+        hint = "Check your code and verify the logic."
+        rules = {"must_contain": ["verify"]}
+        assert is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_must_contain_rejects_when_missing(self) -> None:
+        """Custom must_contain rejects a hint missing the required phrase."""
+        hint = "Check your code and fix the logic."
+        rules = {"must_contain": ["verify"]}
+        assert not is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_cannot_contain_replaces_builtin(self) -> None:
+        """Custom cannot_contain replaces the built-in phrases."""
+        hint = "Modify the test to handle edge cases."
+        # with empty custom rules, the built-in would reject this,
+        # but custom rules replace built-ins entirely
+        rules = {"cannot_contain": ["something else"]}
+        assert is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_rules_with_both_keys(self) -> None:
+        """Custom rules with both must_contain and cannot_contain."""
+        hint = (
+            "Your function returns 5 but the test expects 3; check your logic."
+        )
+        rules = {
+            "must_contain": ["your"],
+            "cannot_contain": ["plagiarize"],
+        }
+        assert is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_rules_cannot_contain_rejects(self) -> None:
+        """Custom cannot_contain rejects a hint with the forbidden phrase."""
+        hint = "Your code has a bug; plagiarize a solution."
+        rules = {
+            "must_contain": ["your"],
+            "cannot_contain": ["plagiarize"],
+        }
+        assert not is_valid_hint(hint, custom_rules=rules)

@@ -120,6 +120,52 @@ def test_gatorgrade_with_nonexistent_file(
     assert "either does not exist or is not valid" in result.stdout
 
 
+def test_print_verbose_info_skips_when_not_verbose(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info prints nothing when verbose is False."""
+    main._print_verbose_info(
+        verbose=False,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=False,
+        auto_hint_model="model",
+        auto_hint_url=None,
+        output_limit=5,
+        baseline_weight=1,
+        show_diagnostics=True,
+        progress_bar=True,
+    )
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_print_verbose_info_shows_info_when_verbose(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info prints configuration when verbose is True."""
+    main._print_verbose_info(
+        verbose=True,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=True,
+        auto_hint_model="test-model",
+        auto_hint_url="http://localhost:4000",
+        output_limit=10,
+        baseline_weight=2,
+        show_diagnostics=False,
+        progress_bar=False,
+    )
+    captured = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
+    assert "Verbose Mode Information" in plain_out
+    assert "Config file: test.yml" in plain_out
+    assert "Config dir:  /tmp" in plain_out
+    assert "Auto-hint:   True" in plain_out
+    assert "Output limit:  10" in plain_out
+    assert "Baseline weight: 2" in plain_out
+
+
 def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
     """_resolve_system_prompt reads the system prompt file alongside config."""
     config_file = tmp_path / "gatorgrade.yml"
@@ -212,6 +258,45 @@ class TestFallbackHintEngine:
         # should have tried both
         remote.generate_hint.assert_called_once()
         local.generate_hint.assert_called_once()
+
+    def test_model_id_uses_local_after_fallback(self) -> None:
+        """model_id returns the local model ID after a fallback."""
+        remote = MagicMock()
+        remote.model_id = "remote-model"
+        remote.generate_hint.return_value = (None, False)
+        local = MagicMock()
+        local.model_id = "local-model"
+        local.generate_hint.return_value = ("hint", False)
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        # before fallback
+        assert engine.model_id == "remote-model"
+        assert not engine.has_fallback
+        assert engine.remote_url == "http://test.url"
+        # trigger fallback
+        engine.generate_hint(description="test")
+        # after fallback
+        assert engine.model_id == "local-model"
+        assert engine.has_fallback
+
+    def test_has_fallback_property(self) -> None:
+        """has_fallback returns False initially, True after fallback."""
+        remote = MagicMock()
+        remote.generate_hint.return_value = (None, False)
+        local = MagicMock()
+        local.generate_hint.return_value = ("hint", False)
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        assert not engine.has_fallback
+        engine.generate_hint(description="test")
+        assert engine.has_fallback
+
+    def test_remote_url_property(self) -> None:
+        """remote_url returns the URL passed at construction."""
+        remote = MagicMock()
+        local = MagicMock()
+        engine = main.FallbackHintEngine(
+            remote, local, "http://example.com:4000"
+        )
+        assert engine.remote_url == "http://example.com:4000"
 
 
 def test_resolve_validation_rules_returns_none_when_not_specified(
@@ -562,6 +647,19 @@ def test_gatorgrade_with_version_flag_on_windows(
 def test_gatorgrade_version_callback_with_false() -> None:
     """Test that the version callback does not exit when value is False."""
     main._version_callback(False)
+
+
+def test_print_version_info_outputs_expected_info(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_version_info includes version, Python, and env info."""
+    main._print_version_info()
+    captured = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
+    assert f"Gatorgrade {main.GATORGRADE_VERSION}" in plain_out
+    assert "Python" in plain_out
+    assert "GATORGRADE_MODELS_DIR" in plain_out
+    assert "GATORGRADE_CONFIG_DIR" in plain_out
 
 
 def test_gatorgrade_get_platform_info_format() -> None:

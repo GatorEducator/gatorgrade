@@ -10,7 +10,6 @@ from gatorgrade.hint.remote_engine import (
     REMOTE_HINT_FILE_LINES,
     REMOTE_HINT_MAX_TOKENS,
     REMOTE_HINT_TEMPERATURE,
-    REMOTE_HINT_TOP_P,
     REMOTE_MODEL_DEFAULT,
     RemoteHintEngine,
 )
@@ -104,6 +103,7 @@ class TestRemoteHintEngineGenerateHint:
         fake_openai.types = types_mod
         fake_openai.types.chat = chat_mod
         fake_openai.types.chat.ChatCompletionMessageParam = dict
+        fake_openai.types.chat.ChatCompletion = MagicMock
         fake_openai.OpenAI = MagicMock()
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -235,7 +235,7 @@ class TestRemoteHintEngineGenerateHint:
         assert call_kwargs["model"] == "test-model"
         assert call_kwargs["max_tokens"] == REMOTE_HINT_MAX_TOKENS
         assert call_kwargs["temperature"] == REMOTE_HINT_TEMPERATURE
-        assert call_kwargs["top_p"] == REMOTE_HINT_TOP_P
+        assert "top_p" not in call_kwargs
         assert "extra_body" in call_kwargs
         assert call_kwargs["extra_body"] == ENABLE_THINKING_DEFAULT
 
