@@ -222,11 +222,6 @@ class RemoteHintEngine:
         """
         try:
             # lazily import the openai client only when needed.
-            # pydantic-ai-slim[openai] is NOT a declared project
-            # dependency — users must install it separately if they
-            # want remote hinting.  When it is missing, generate_hint
-            # returns None and the caller falls back to the local
-            # hugging Face engine.
             from openai import OpenAI  # noqa: PLC0415
         except ImportError:
             return None, False
