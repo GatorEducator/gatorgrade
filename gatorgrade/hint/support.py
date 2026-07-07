@@ -188,8 +188,8 @@ def is_valid_hint(
       found, the hint is invalid.
 
     Built-in defaults exist for both categories. When custom
-    rules are provided via a JSON file, they **completely
-    replace** the built-in defaults (matching the override
+    rules are provided via a JSON file, they completely
+    replace the built-in defaults (matching the override
     behaviour of system_prompt_file).
 
     Args:
