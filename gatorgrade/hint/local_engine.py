@@ -249,7 +249,7 @@ class AutoHintEngine:
         """Check if a generated hint passes the quality rules.
 
         Static so it can be called without an instance (e.g., in
-        tests). Pass ``custom_rules`` to augment the built-in
+        tests). Pass custom_rules to augment the built-in
         rules.
 
         Args:
@@ -264,13 +264,14 @@ class AutoHintEngine:
         """
         return is_valid_hint(hint, custom_rules=custom_rules)
 
-    def generate_hint(  # noqa: PLR0911
+    def generate_hint(  # noqa: PLR0911, PLR0913
         self,
         description: str,
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
         system_prompt: str | None = None,
+        details: str = "",
     ) -> tuple[Optional[str], bool]:
         """Generate a short hint for a failing check.
 
@@ -290,6 +291,8 @@ class AutoHintEngine:
             system_prompt: Optional custom system prompt. If
                 provided, overrides both the engine-level default
                 and the built-in prompt.
+            details: Structured details about the check
+                configuration (e.g. options and expected values).
 
         Returns:
             A tuple (hint, is_low_quality):
@@ -322,6 +325,7 @@ class AutoHintEngine:
             command,
             file_content,
             system_prompt=effective_prompt,
+            details=details,
         )
 
         try:
@@ -364,13 +368,14 @@ class AutoHintEngine:
             )
             return None, False
 
-    def _build_messages(
+    def _build_messages(  # noqa: PLR0913
         self,
         description: str,
         diagnostic: str = "",
         command: str = "",
         file_content: str = "",
         system_prompt: str | None = None,
+        details: str = "",
     ) -> list[dict[str, str]]:
         """Build a structured message list for the chat pipeline.
 
@@ -383,6 +388,8 @@ class AutoHintEngine:
             file_content: Source file content (truncated to
                 HINT_FILE_LINES lines).
             system_prompt: Optional custom system prompt.
+            details: Structured details about the check
+                configuration.
 
         Returns:
             A list of dicts suitable for the chat pipeline.
@@ -394,4 +401,5 @@ class AutoHintEngine:
             command=command,
             file_content=file_content,
             system_prompt=system_prompt,
+            details=details,
         )
