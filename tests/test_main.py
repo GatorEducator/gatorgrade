@@ -416,7 +416,7 @@ def test_gatorgrade_with_version_flag(
     # strip ANSI escape codes that Rich may add when stdout is a TTY
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
     # the output should include the program name, version, and platform info
-    assert f"gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
+    assert f"Gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
     # the output should also include the python version
     assert "Python" in plain_stdout
     # the output should include the python version number
