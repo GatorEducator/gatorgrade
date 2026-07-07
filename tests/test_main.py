@@ -7,7 +7,7 @@ import platform
 import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click import BadParameter
@@ -118,6 +118,100 @@ def test_gatorgrade_with_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
+
+
+def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
+    """_resolve_system_prompt reads the system prompt file alongside config."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'system_prompt_file: "myprompt.md"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    prompt_file = tmp_path / "myprompt.md"
+    prompt_file.write_text("Custom system prompt content.")
+    result = main._resolve_system_prompt(config_file, None)
+    assert result == "Custom system prompt content."
+
+
+def test_resolve_system_prompt_returns_none_when_not_specified(
+    tmp_path: Path,
+) -> None:
+    """_resolve_system_prompt returns None when no system_prompt_file field."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    result = main._resolve_system_prompt(config_file, None)
+    assert result is None
+
+
+class TestFallbackHintEngine:
+    """Tests for the FallbackHintEngine class."""
+
+    def test_model_id_delegates_to_remote(self) -> None:
+        """model_id returns the remote engine's model_id."""
+        remote = MagicMock()
+        remote.model_id = "test-model"
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        assert engine.model_id == "test-model"
+
+    def test_is_loaded_delegates_to_remote(self) -> None:
+        """is_loaded returns the remote engine's value."""
+        remote = MagicMock()
+        remote.is_loaded = True
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        assert engine.is_loaded is True
+
+    def test_ensure_loaded_delegates_to_remote(self) -> None:
+        """ensure_loaded calls the remote engine's method."""
+        remote = MagicMock()
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        engine.ensure_loaded()
+        remote.ensure_loaded.assert_called_once()
+
+    def test_generate_hint_uses_remote_when_it_succeeds(
+        self,
+    ) -> None:
+        """Uses the remote engine's result when it succeeds."""
+        remote = MagicMock()
+        remote.generate_hint.return_value = ("A useful hint.", False)
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        hint, is_low = engine.generate_hint(
+            description="test", diagnostic="error"
+        )
+        assert hint == "A useful hint."
+        assert not is_low
+        local.generate_hint.assert_not_called()
+
+    def test_generate_hint_falls_back_to_local_on_failure(
+        self,
+    ) -> None:
+        """Falls back to the local engine when remote returns None."""
+        remote = MagicMock()
+        remote.generate_hint.return_value = (None, False)
+        local = MagicMock()
+        local.generate_hint.return_value = ("Local hint.", False)
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        hint, is_low = engine.generate_hint(
+            description="test", diagnostic="error"
+        )
+        assert hint == "Local hint."
+        assert not is_low
+        # should have tried both
+        remote.generate_hint.assert_called_once()
+        local.generate_hint.assert_called_once()
 
 
 def test_resolve_validation_rules_returns_none_when_not_specified(

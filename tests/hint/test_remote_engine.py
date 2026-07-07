@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from gatorgrade.hint.remote_engine import (
-    EXTRA_BODY_DISABLE_THINKING,
+    ENABLE_THINKING_DEFAULT,
     REMOTE_HINT_DIAG_TRUNCATE,
     REMOTE_HINT_FILE_LINES,
     REMOTE_HINT_MAX_TOKENS,
@@ -237,7 +237,7 @@ class TestRemoteHintEngineGenerateHint:
         assert call_kwargs["temperature"] == REMOTE_HINT_TEMPERATURE
         assert call_kwargs["top_p"] == REMOTE_HINT_TOP_P
         assert "extra_body" in call_kwargs
-        assert call_kwargs["extra_body"] == EXTRA_BODY_DISABLE_THINKING
+        assert call_kwargs["extra_body"] == ENABLE_THINKING_DEFAULT
 
     def test_generate_hint_handles_suggesting_test_change(self) -> None:
         """Return hint flagged as low quality when it suggests modifying tests."""
