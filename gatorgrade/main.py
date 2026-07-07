@@ -117,6 +117,7 @@ OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+VERBOSE_FLAG = "--verbose"
 AUTO_HINT_FLAG = "--auto-hint"
 AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_MODEL_DEFAULT = (
@@ -304,45 +305,108 @@ def _get_os_release() -> str:
     return ""
 
 
+def _print_version_info() -> None:
+    """Print gatorgrade version, platform, and environment information.
+
+    Used by both --version and --verbose to display diagnostic information.
+
+    """
+    console.print(
+        f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})"
+    )
+    console.print(_get_python_info())
+    os_release = _get_os_release()
+    if os_release:
+        console.print(os_release)
+    # show the path-related environment variables and resolved
+    # defaults so users know which paths affect gatorgrade
+    import os  # noqa: PLC0415
+
+    models_override = os.environ.get(ENV_CACHE_DIR)
+    config_override = os.environ.get(ENV_CONFIG_DIR)
+    models_default = str(_platform_model_cache_dir())
+    config_default = str(_platform_config_dir())
+
+    def _fmt_env(name: str, override: str | None, default: str) -> Text:
+        """Format a single environment variable line for display."""
+        result = Text()
+        result.append(f"{name}=")
+        result.append(
+            override if override else "(unset)",
+            style="" if override else "dim",
+        )
+        result.append(
+            f" (default: {default})",
+            style="dim",
+        )
+        return result
+
+    for env_line in [
+        _fmt_env(ENV_CACHE_DIR, models_override, models_default),
+        _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
+    ]:
+        console.print(env_line)
+
+
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        console.print(
-            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})"
-        )
-        console.print(_get_python_info())
-        os_release = _get_os_release()
-        if os_release:
-            console.print(os_release)
-        # show the path-related environment variables and resolved
-        # defaults so users know which paths affect gatorgrade
-        import os  # noqa: PLC0415
-
-        models_override = os.environ.get(ENV_CACHE_DIR)
-        config_override = os.environ.get(ENV_CONFIG_DIR)
-        models_default = str(_platform_model_cache_dir())
-        config_default = str(_platform_config_dir())
-
-        def _fmt_env(name: str, override: str | None, default: str) -> Text:
-            """Format a single environment variable line for display."""
-            result = Text()
-            result.append(f"{name}=")
-            result.append(
-                override if override else "(unset)",
-                style="" if override else "dim",
-            )
-            result.append(
-                f" (default: {default})",
-                style="dim",
-            )
-            return result
-
-        for env_line in [
-            _fmt_env(ENV_CACHE_DIR, models_override, models_default),
-            _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
-        ]:
-            console.print(env_line)
+        _print_version_info()
         raise typer.Exit()
+
+
+def _print_verbose_info(  # noqa: PLR0913
+    verbose: bool,
+    config_path: Path,
+    config_dir: Path,
+    auto_hint: bool,
+    auto_hint_model: str,
+    auto_hint_url: Optional[str],
+    output_limit: int,
+    baseline_weight: int,
+    show_diagnostics: bool,
+    progress_bar: bool,
+) -> None:
+    """Print verbose configuration info before running checks.
+
+    When verbose is True, displays a ruled section with
+    version info, file paths, and the active CLI arguments.
+
+    Args:
+        verbose: Whether verbose mode is enabled.
+        config_path: The resolved config file path.
+        config_dir: The config directory being used.
+        auto_hint: Whether auto-hint mode is enabled.
+        auto_hint_model: The auto-hint model identifier.
+        auto_hint_url: The remote auto-hint URL, if any.
+        output_limit: The output limit value.
+        baseline_weight: The baseline weight value.
+        show_diagnostics: Whether diagnostics are shown.
+        progress_bar: Whether the progress bar is shown.
+
+    """
+    if not verbose:
+        return
+    console.print()
+    console.print(Rule("Verbose Mode Information", style="green"))
+    console.print()
+    _print_version_info()
+    console.print(f"Config file: {config_path}")
+    console.print(f"Config dir:  {config_dir}")
+    console.print(f"Output limit:  {output_limit}")
+    console.print(f"Baseline weight: {baseline_weight}")
+    console.print(f"Diagnostics: {show_diagnostics}")
+    console.print(f"Progress:    {progress_bar}")
+    console.print(f"Auto-hint:   {auto_hint}")
+    if auto_hint:
+        model_display = auto_hint_model
+        if auto_hint_model == AUTO_HINT_MODEL_DEFAULT:
+            model_display = DEFAULT_MODEL_ID
+        console.print(f"Model:       {model_display}")
+        if auto_hint_url:
+            console.print(f"Remote URL:  {auto_hint_url}")
+    console.print()
+    console.print(Rule(style="green"))
 
 
 def _resolve_system_prompt(
@@ -350,18 +414,18 @@ def _resolve_system_prompt(
 ) -> Optional[str]:
     """Read the system prompt file if specified in the config front matter.
 
-    The filename is read from the ``system_prompt_file`` field in
+    The filename is read from the system_prompt_file field in
     the YAML front matter, then resolved in this search order:
 
     1. Current working directory
     2. Alongside the configuration file itself
-    3. The ``--config-dir`` directory (or the default platformdirs-
+    3. The --config-dir directory (or the default platformdirs-
        based config directory)
 
     Args:
         config_path: Path to the resolved gatorgrade configuration
             file.
-        config_dir: The config directory (from ``--config-dir``),
+        config_dir: The config directory (from --config-dir),
             or None to use the default.
 
     Returns:
@@ -391,12 +455,12 @@ def _resolve_validation_rules(
 ) -> dict[str, list[str]] | None:
     """Read the validation rules JSON file if specified in the config front matter.
 
-    The filename is read from the ``validation_phrases_file`` field
+    The filename is read from the validation_phrases_file field
     in the YAML front matter. The JSON file must contain an object
     with optional keys:
 
-    - ``must_contain``: list of phrases that must appear in hints
-    - ``cannot_contain``: list of phrases that must not appear
+    - must_contain: list of phrases that must appear in hints
+    - cannot_contain: list of phrases that must not appear
 
     The file is resolved in the same search order as the system
     prompt: CWD, alongside config file, then config dir.
@@ -404,7 +468,7 @@ def _resolve_validation_rules(
     Args:
         config_path: Path to the resolved gatorgrade configuration
             file.
-        config_dir: The config directory (from ``--config-dir``),
+        config_dir: The config directory (from --config-dir),
             or None to use the default.
 
     Returns:
@@ -461,8 +525,8 @@ def _create_auto_hint_engine(  # noqa: PLR0913
         auto_hint_api_key: API key for the remote server.
         system_prompt: Optional custom system prompt.
             If provided, this replaces the built-in default.
-        validation_rules: Optional dict with ``must_contain``
-            and/or ``cannot_contain`` lists of phrases to
+        validation_rules: Optional dict with must_contain
+            and/or cannot_contain lists of phrases to
             check, in addition to the built-in quality rules.
 
     Returns:
@@ -658,6 +722,11 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         "--progress-bar/--no-progress-bar",
         help="Show or hide the progress bar for checks.",
     ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose/--no-verbose",
+        help="Show detailed configuration info before running checks.",
+    ),
     show_diagnostics: bool = typer.Option(
         True,
         "--show-diagnostics/--no-show-diagnostics",
@@ -779,6 +848,19 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             console.print("Use only one due date field.")
             console.print()
             console.print(Rule(style="bright_yellow"))
+        # show verbose configuration information if requested
+        _print_verbose_info(
+            verbose,
+            resolved_filename,
+            resolved_config_dir or get_config_dir(),
+            auto_hint,
+            auto_hint_model,
+            auto_hint_url,
+            output_limit,
+            baseline_weight,
+            show_diagnostics,
+            progress_bar,
+        )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
@@ -810,6 +892,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
+                VERBOSE_FLAG: verbose,
                 PROGRESS_BAR_FLAG: progress_bar,
                 SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
                 AUTO_HINT_FLAG: auto_hint,
