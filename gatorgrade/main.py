@@ -1,4 +1,4 @@
-"""Use Typer to run gatorgrade to run the checks and generate the yml file."""
+"""Use GatorGrade to run checks and generate helpful output."""
 
 import importlib.metadata
 import platform
@@ -575,6 +575,7 @@ class FallbackHintEngine:
         """Generate a hint, falling back to the local engine on error."""
         hint: str | None
         is_low: bool
+        # use the remote server to generate the hint
         hint, is_low = self._remote.generate_hint(
             description=description,
             diagnostic=diagnostic,
@@ -583,20 +584,32 @@ class FallbackHintEngine:
             system_prompt=system_prompt,
             details=details,
         )
+        # a hint was generated and there were no errors,
+        # this means that the hint can be returned with
+        # the classification about whether or not it would
+        # be considered a low-quality hint (and must be dimmed)
         if hint is not None:
             return hint, is_low
         # remote failed; warn once and fall back to local
         if not self._fallback_warned:
-            from rich.console import Console as _Console  # noqa: PLC0415
-
-            _Console().print()
-            _Console().print(
-                "[yellow]Warning: Remote hint server at"
-                f" {self._remote_url} failed."
-                " Falling back to local model."
-                "[/]"
-            )
-            _Console().print()
+            remote_error = getattr(self._remote, "last_error", None)
+            console.print()
+            # if there was a specific error that can be
+            # displayed, then display it
+            if remote_error:
+                console.print(
+                    "[yellow]Warning: Remote hint server at"
+                    f" {self._remote_url} failed:"
+                    f" {remote_error}[/]"
+                )
+            # otherwise, display a generic error message
+            else:
+                console.print(
+                    "[yellow]Warning: Remote hint server at"
+                    f" {self._remote_url} failed."
+                    " Falling back to local model."
+                    "[/]"
+                )
             self._fallback_warned = True
         hint2: str | None
         is_low2: bool
@@ -648,23 +661,25 @@ def _create_auto_hint_engine(  # noqa: PLR0913
 
     """
     # resolve the model ID from the CLI, config file, or default;
-    # when a remote URL is specified, the remote default takes
-    # precedence over the local engine default
+    # the remote engine has its own default model, separate from
+    # the local engine default
     model_id = auto_hint_model
+    remote_model_id = auto_hint_model
     if (
         not model_id
         or not model_id.strip()
         or model_id == AUTO_HINT_MODEL_DEFAULT
     ):
         config_model = get_auto_hint_model(filename)
-        default_model = (
-            REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
-        )
-        model_id = config_model or default_model
-    # always build a local engine as the safety net
+        model_id = config_model or DEFAULT_MODEL_ID
+        remote_model_id = config_model or REMOTE_MODEL_DEFAULT
+    # always build a local engine as the safety net; the fallback
+    # always uses the small local default model regardless of what
+    # model was requested for the remote engine
+    local_model_id = DEFAULT_MODEL_ID
     try:
         local_engine = AutoHintEngine(
-            model_id=model_id,
+            model_id=local_model_id,
             system_prompt=system_prompt,
             validation_rules=validation_rules,
         )
@@ -675,7 +690,7 @@ def _create_auto_hint_engine(  # noqa: PLR0913
         remote_engine = _try_create_remote_engine(
             auto_hint_url,
             auto_hint_api_key,
-            model_id,
+            remote_model_id,
             system_prompt=system_prompt,
             validation_rules=validation_rules,
         )
@@ -689,14 +704,12 @@ def _create_auto_hint_engine(  # noqa: PLR0913
             return remote_engine
         # remote failed entirely
         if local_engine is not None:
-            from rich.console import Console as _Console  # noqa: PLC0415
-
-            _Console().print()
-            _Console().print(
+            console.print()
+            console.print(
                 "[yellow]Warning: Could not create remote hint engine for"
                 f" {auto_hint_url}. Using local model ({model_id}).[/]"
             )
-            _Console().print()
+            console.print()
     # return whatever local engine we have, or None
     return local_engine
 
@@ -792,7 +805,10 @@ class RemoteEngineAdapter:
 def gatorgrade(  # noqa: PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
-        FILE, "--config", "-c", help="Name of the yml file."
+        FILE,
+        "--config",
+        "-c",
+        help="Name of the configuration file in YML format.",
     ),
     config_dir: Optional[Path] = typer.Option(
         None,
@@ -884,7 +900,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             "URL of an OpenAI-compatible API server for remote hint "
             "generation (requires --auto-hint). When provided, the "
             "remote model is used instead of a local model. Falls "
-            "back to default local model on URL connection errors."
+            "back to default local model on any remote URL errors."
         ),
     ),
     auto_hint_api_key: Optional[str] = typer.Option(
