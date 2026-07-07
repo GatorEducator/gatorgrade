@@ -110,8 +110,8 @@ class AutoHintEngine:
                 Can also be set via $GATORGRADE_MODELS_DIR.
             system_prompt: Optional custom system prompt.
                 If provided, this replaces the built-in default.
-            validation_rules: Optional dict with ``must_contain``
-                and/or ``cannot_contain`` lists of phrases to
+            validation_rules: Optional dict with must_contain
+                and/or cannot_contain lists of phrases to
                 check, in addition to the built-in quality rules.
 
         """
