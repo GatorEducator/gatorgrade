@@ -59,7 +59,7 @@ SYS_INSTEAD_2 = (
     "- 'The implementation does not handle...; add logic to...'\n\n"
 )
 
-# user message suffix asking the LLM what to do
+# user message suffix telling the language model what to do
 USER_QUESTION = (
     "What to do: Write 3-5 sentences, mentioning the specific "
     "failing test/command/check if available."
