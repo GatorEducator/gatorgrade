@@ -167,10 +167,12 @@ def is_valid_hint(
         "expected result is wrong",
         "expected value is wrong",
     ]
+    # custom rules completely replace built-in defaults
     if custom_rules is not None:
-        # custom rules completely replace built-in defaults
+        # there is a must contain rule replacement
         if MUST_CONTAIN_KEY in custom_rules:
             must_contain = custom_rules[MUST_CONTAIN_KEY]
+        # there is a cannot contain rule replacement
         if CANNOT_CONTAIN_KEY in custom_rules:
             cannot_contain = custom_rules[CANNOT_CONTAIN_KEY]
     # all must-contain phrases must be present
