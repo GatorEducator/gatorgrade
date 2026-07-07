@@ -22,6 +22,7 @@ from gatorgrade.hint.local_engine import (
 )
 from gatorgrade.hint.remote_engine import (
     REMOTE_API_KEY_DEFAULT,
+    REMOTE_MODEL_DEFAULT,
     RemoteHintEngine,
 )
 from gatorgrade.input.parse_config import (
@@ -401,7 +402,9 @@ def _print_verbose_info(  # noqa: PLR0913
     if auto_hint:
         model_display = auto_hint_model
         if auto_hint_model == AUTO_HINT_MODEL_DEFAULT:
-            model_display = DEFAULT_MODEL_ID
+            model_display = (
+                REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
+            )
         console.print(f"Model:       {model_display}")
         if auto_hint_url:
             console.print(f"Remote URL:  {auto_hint_url}")
@@ -626,7 +629,9 @@ def _create_auto_hint_engine(  # noqa: PLR0913
         An AutoHintEngine instance, or None if creation fails.
 
     """
-    # resolve the model ID from the CLI, config file, or default
+    # resolve the model ID from the CLI, config file, or default;
+    # when a remote URL is specified, the remote default takes
+    # precedence over the local engine default
     model_id = auto_hint_model
     if (
         not model_id
@@ -634,7 +639,10 @@ def _create_auto_hint_engine(  # noqa: PLR0913
         or model_id == AUTO_HINT_MODEL_DEFAULT
     ):
         config_model = get_auto_hint_model(filename)
-        model_id = config_model or DEFAULT_MODEL_ID
+        default_model = (
+            REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
+        )
+        model_id = config_model or default_model
     # always build a local engine as the safety net
     try:
         local_engine = AutoHintEngine(
@@ -844,8 +852,10 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         AUTO_HINT_MODEL_DEFAULT,
         "--auto-hint-model",
         help=(
-            "Hugging Face or OpenAI-API-compatible model identifier for auto-hint generation "
-            "(requires --auto-hint)."
+            "Model identifier for auto-hint generation "
+            "(requires --auto-hint). For remote APIs, the default is"
+            f" {REMOTE_MODEL_DEFAULT}; for local models, it is"
+            f" {DEFAULT_MODEL_ID}."
         ),
         show_default=DEFAULT_MODEL_ID,
     ),
