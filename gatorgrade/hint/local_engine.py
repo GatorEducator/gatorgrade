@@ -33,6 +33,8 @@ GENERATED_TEXT_KEY = "generated_text"
 HF_HUB_DISABLE_PROGRESS_KEY = "HF_HUB_DISABLE_PROGRESS_BARS"
 HF_HUB_DISABLE_PROGRESS_VALUE = "1"
 MODEL_KWARGS_KEY = "model_kwargs"
+TRUST_REMOTE_CODE_KEY = "trust_remote_code"
+TRUST_REMOTE_CODE_VALUE = True
 
 
 def _model_cache_dir(override: Optional[Path] = None) -> Path:
@@ -225,17 +227,23 @@ class AutoHintEngine:
         devnull_fd = os.open(os.devnull, os.O_WRONLY)
         old_stderr = os.dup(2)
         os.dup2(devnull_fd, 2)
+        load_error: Exception | None = None
         try:
             # download and load the model via the text-generation pipeline
             self._pipe = pipeline(
                 TEXT_GENERATION_TASK,
                 model=self._model_id,
+                trust_remote_code=TRUST_REMOTE_CODE_VALUE,
                 **pipe_kwargs,
             )
+        except Exception as exc:
+            load_error = exc
         finally:
             os.dup2(old_stderr, 2)
             os.close(old_stderr)
             os.close(devnull_fd)
+        if load_error is not None:
+            raise load_error
 
     def _ensure_loaded(self) -> None:
         """Delegate to the public ensure_loaded method.
@@ -315,11 +323,7 @@ class AutoHintEngine:
             self._ensure_loaded()
         except ImportError:
             return None, False
-        except Exception as exc:  # pylint: disable=broad-except
-            print(
-                f"   → Auto-hint error (loading): {exc}",
-                file=__import__("sys").stderr,
-            )
+        except Exception:  # pylint: disable=broad-except
             return None, False
         # use the per-call system_prompt if provided, otherwise
         # fall back to the engine-level prompt or the built-in default
