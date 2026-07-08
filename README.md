@@ -115,6 +115,26 @@ The following options control how GatorGrade runs:
   checks run. The default is to show the progress bar.
 - `--show-diagnostics`, `--no-show-diagnostics`: Show or hide diagnostic details
   for failing checks. The default is to show diagnostics.
+- `--config-dir`, `-d`: Specify the directory for configuration files. The
+  default is the platform-specific user config directory for gatorgrade. When
+  the configuration file is not found in the current directory, gatorgrade
+  looks in this directory.
+- `--verbose`, `--no-verbose`: Show detailed configuration information before
+  running checks. The default is to not show verbose information. Use this to
+  see which config file, config directory, and CLI options are active.
+- `--auto-hint`, `--no-auto-hint`: Automatically generate hints for failing
+  checks using a local language model. The default is to not generate hints.
+  Requires the `auto-hint` extra. Use together with `--auto-hint-model` to
+  choose a different model.
+- `--auto-hint-model`: Model identifier for auto-hint generation. The default
+  for local models is `Qwen/Qwen2.5-0.5B-Instruct`. The default for remote
+  servers is `Qwen/Qwen3.6-35B-A3B`. This option requires `--auto-hint`.
+- `--auto-hint-url`: URL of an OpenAI-compatible API server for remote hint
+  generation. When provided, the remote model is used instead of the local
+  model. Falls back to the default local model on any remote server errors.
+  This option requires `--auto-hint`.
+- `--auto-hint-api-key`: API key for the remote auto-hint server. This option
+  requires `--auto-hint-url`.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
