@@ -347,6 +347,13 @@ def _print_version_info() -> None:
         _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
     ]:
         console.print(env_line)
+    # show the computer's hostname and IP address for
+    # debugging network-related problems; these are best-effort
+    # calls and will not cause a crash if they fail
+    import socket  # noqa: PLC0415
+
+    hostname = socket.gethostname()
+    console.print(f"Hostname:  {hostname}")
 
 
 def _version_callback(value: bool) -> None:
