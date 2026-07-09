@@ -193,6 +193,19 @@ setup: |
 The `setup` section runs shell commands before the checks. If a setup command
 fails, GatorGrade exits immediately.
 
+### Project Name
+
+An optional `name` field in the front matter sets a custom project name that
+appears in the summary output and in reports. If no name is specified, the
+current directory name is used.
+
+```yaml
+name: "Theory of Computation Final Examination"
+setup: |
+  uv sync --dev --no-install-project
+---
+```
+
 ### Due Date
 
 An optional due date field in the front matter shows a countdown in the
@@ -212,6 +225,39 @@ setup: |
 Using the colors defined by the terminal window, when the due date is
 approaching (i.e., within 24 hours) the countdown is shown in yellow.
 Otherwise, when the assignment is overdue, it is shown in red.
+
+### System Prompt File
+
+An optional `system_prompt_file` field in the front matter specifies a file
+containing a custom system prompt for the auto-hint generator. The file can
+contain any valid Markdown. When provided, this prompt replaces the built-in
+system prompt entirely. GatorGrade searches for the file in the current
+directory, alongside the configuration file, and then in the config directory.
+
+```yaml
+system_prompt_file: systemprompt.md
+setup: |
+  uv sync --dev --no-install-project
+---
+```
+
+### Validation Phrases File
+
+An optional `validation_phrases_file` field in the front matter specifies a
+JSON file that defines quality rules for generated hints. The file must
+contain an object with optional `must_contain` and `cannot_contain` lists of
+phrases. Every generated hint is checked against these rules and flagged as
+low quality if it violates them.
+
+```json
+{
+  "must_contain": ["fix"],
+  "cannot_contain": ["direct answer is", "complete solution"]
+}
+```
+
+GatorGrade searches for the file in the current directory, alongside the
+configuration file, and then in the config directory.
 
 ### File Context Checks
 
