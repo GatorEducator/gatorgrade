@@ -1,7 +1,6 @@
 """Use GatorGrade to run checks and generate helpful output."""
 
 import importlib.metadata
-import platform
 import sys
 from pathlib import Path
 from typing import Any, Optional, Tuple
@@ -12,11 +11,16 @@ from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
+from gatorgrade.detect import (
+    GATORGRADER_DEPENDENCY,
+    _get_os_release,
+    _get_platform_info,
+    _get_python_info,
+    _print_version_info,
+)
 from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
-    ENV_CACHE_DIR,
     AutoHintEngine,
-    _platform_model_cache_dir,
 )
 from gatorgrade.hint.remote_engine import (
     REMOTE_API_KEY_DEFAULT,
@@ -24,8 +28,6 @@ from gatorgrade.hint.remote_engine import (
     RemoteHintEngine,
 )
 from gatorgrade.input.parse_config import (
-    ENV_CONFIG_DIR,
-    _platform_config_dir,
     get_auto_hint_model,
     get_config_dir,
     get_due_date,
@@ -73,39 +75,6 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
-# define constants for the platform information that is displayed
-# by the --version option, mirroring the format used by uv; the
-# arch and system combination is already unique across platforms
-# (e.g., x86_64 + linux, arm64 + darwin, AMD64 + windows), so the
-# vendor field from Rust's target triple is omitted because Python
-# cannot determine it and it would always be "unknown"
-UNKNOWN_PLATFORM = "unknown"
-GATORGRADER_DEPENDENCY = "gatorgrader"
-
-# define constants related to platform details
-LIBC_GNU = "gnu"
-LIBC_MUSL = "musl"
-LIBC_NONE = "none"
-LIBC_MSVC = "msvc"
-SYSTEM_DARWIN = "darwin"
-SYSTEM_LINUX = "linux"
-SYSTEM_WINDOWS = "windows"
-_LIBC_BY_SYSTEM = {
-    SYSTEM_DARWIN: LIBC_NONE,
-    SYSTEM_WINDOWS: LIBC_MSVC,
-}
-
-# operating system display names for version output
-OS_DARWIN = "Darwin"
-OS_LINUX = "Linux"
-OS_MACOS = "MacOS"
-OS_WINDOWS = "Windows"
-
-# program and language display names for version output
-GATORGRADE_NAME = "Gatorgrade"
-GATORGRADER_NAME = "GatorGrader"
-PYTHON_NAME = "Python"
-
 # newline character for joining lines
 NEWLINE = "\n"
 
@@ -145,117 +114,10 @@ PLATFORM_INFO_KEY = "platform_info"
 OS_RELEASE_KEY = "os_release"
 
 
-def _get_platform_info() -> str:
-    """Get the platform information string for any platform."""
-    arch = platform.machine() or UNKNOWN_PLATFORM
-    system = platform.system().lower() or UNKNOWN_PLATFORM
-    libc_name, _ = platform.libc_ver()
-    if system == SYSTEM_LINUX:
-        libc_lower = libc_name.lower()
-        libc = (
-            LIBC_MUSL
-            if LIBC_MUSL in libc_lower
-            else LIBC_GNU
-            if libc_name
-            else UNKNOWN_PLATFORM
-        )
-    elif system in _LIBC_BY_SYSTEM:
-        libc = _LIBC_BY_SYSTEM[system]
-    else:
-        libc = UNKNOWN_PLATFORM
-    return f"{arch}-{system}-{libc}"
-
-
-def _get_python_info() -> str:
-    """Get the Python version, build, and compiler information string."""
-    version = platform.python_version()
-    build_no, build_date = platform.python_build()
-    compiler = platform.python_compiler().strip()
-    return f"{PYTHON_NAME} {version} ({build_no}, {build_date}, {compiler})"
-
-
-def _get_gatorgrade_info() -> str:
-    """Get the parenthetic GatorGrade info string with the GatorGrader version."""
-    # use the importlib.metadata version function to get the
-    # version of the gatorgrader dependency (note that this works correctly
-    # even when gatorgrade is published to PyPI and download and used because
-    # of the fact that gatorgrader is a required and packaged dependnecy)
-    gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
-    return f"{GATORGRADER_NAME} {gatorgrader_version}"
-
-
-def _get_os_release() -> str:
-    """Get the operating system release string for Linux, macOS, or Windows."""
-    parenthetic_platform_string = f"({_get_platform_info()})"
-    if platform.system() == OS_LINUX:
-        kernel = platform.release()
-        if kernel:
-            return f"{OS_LINUX} {kernel} {parenthetic_platform_string}"
-    elif platform.system() == OS_DARWIN:
-        release, _, _ = platform.mac_ver()
-        if release:
-            return f"{OS_MACOS} {release} {parenthetic_platform_string}"
-    elif platform.system() == OS_WINDOWS:
-        release, _, _, _ = platform.win32_ver()
-        if release:
-            return f"{OS_WINDOWS} {release} {parenthetic_platform_string}"
-    return ""
-
-
-def _print_version_info() -> None:
-    """Print gatorgrade version, platform, and environment information.
-
-    Used by both --version and --verbose to display diagnostic information.
-
-    """
-    console.print(
-        f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})"
-    )
-    console.print(_get_python_info())
-    os_release = _get_os_release()
-    if os_release:
-        console.print(os_release)
-    # show the path-related environment variables and resolved
-    # defaults so users know which paths affect gatorgrade
-    import os  # noqa: PLC0415
-
-    models_override = os.environ.get(ENV_CACHE_DIR)
-    config_override = os.environ.get(ENV_CONFIG_DIR)
-    models_default = str(_platform_model_cache_dir())
-    config_default = str(_platform_config_dir())
-
-    def _fmt_env(name: str, override: str | None, default: str) -> Text:
-        """Format a single environment variable line for display."""
-        result = Text()
-        result.append(f"{name}=")
-        result.append(
-            override if override else "(unset)",
-            style="" if override else "dim",
-        )
-        result.append(
-            f" (default: {default})",
-            style="dim",
-        )
-        return result
-
-    for env_line in [
-        _fmt_env(ENV_CACHE_DIR, models_override, models_default),
-        _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
-    ]:
-        console.print(env_line)
-    # show the computer's hostname for debugging
-    # network-related problems; this is a best-effort
-    # call and will not cause a crash if it fails
-    import socket  # noqa: PLC0415
-
-    hostname = socket.gethostname()
-    console.print(f"Hostname:  {hostname}")
-
-
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        _print_version_info()
+        _print_version_info(console)
         raise typer.Exit()
 
 
@@ -294,7 +156,7 @@ def _print_verbose_info(  # noqa: PLR0913
     console.print()
     console.print(Rule("Verbose Mode Information", style="green"))
     console.print()
-    _print_version_info()
+    _print_version_info(console)
     console.print(f"Config file: {config_path}")
     console.print(f"Config dir:  {config_dir}")
     console.print(f"Output limit:  {output_limit}")
