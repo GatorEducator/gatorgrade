@@ -3,6 +3,7 @@
 from typing import Any, Optional, cast
 
 from gatorgrade.hint.support import build_hint_messages, is_valid_hint
+from gatorgrade.version import GATORGRADE_VERSION
 
 # basic constants
 EMPTY = ""
@@ -240,12 +241,11 @@ class RemoteHintEngine:
               tests or assertions.
 
         """
+        # lazily import the openai client only when needed.
         try:
-            # lazily import the openai client only when needed.
             from openai import OpenAI  # noqa: PLC0415
         except ImportError:
             return None, False
-
         # use the per-call system_prompt if provided, otherwise
         # fall back to the engine-level prompt or the built-in default
         effective_prompt = system_prompt or self._system_prompt
@@ -257,15 +257,17 @@ class RemoteHintEngine:
             system_prompt=effective_prompt,
             details=details,
         )
-
         try:
             # call the OpenAI-compatible API directly using the
             # raw Chat Completions format, which handles reasoning
             # models (e.g., Qwen and others) that put their response in
-            # reasoning_content rather than content
+            # reasoning_content rather than content; the user-agent is
+            # overridden because some reverse proxies and WAFs, like
+            # cloudflare, block the default openai/python user-agent string
             client = OpenAI(
                 base_url=self._base_url,
                 api_key=self._api_key,
+                default_headers={USER_AGENT_KEY: USER_AGENT_VALUE},
             )
             from openai.types.chat import (  # noqa: PLC0415
                 ChatCompletion,
