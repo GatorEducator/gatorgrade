@@ -55,6 +55,13 @@ class RemoteHintEngine:
     not work, this information is logged and displayed and then there
     is an attempt to automatically generate the hints with a local model.
 
+    The engine overrides the default user-agent header sent by the
+    openai python library; some reverse proxies and WAFs, such as
+    cloudflare, block the default openai/python user-agent string
+    (e.g. OpenAI/Python 2.44.0) and respond with HTTP 403; using
+    a project-specific user-agent (e.g., gatorgrade/0.11.0) avoids these
+    false-positive blocks while still identifying the client.
+
     Usage:
 
         engine = RemoteHintEngine(
