@@ -1,9 +1,10 @@
-"""Check that the GatorGrade version in main.py matches the version in pyproject.toml.
+"""Check that the GatorGrade version in gatorgrade/version.py matches pyproject.toml.
 
-Uses Tree-sitter to parse gatorgrade/main.py into a Concrete Syntax Tree
-to extract the GATORGRADE_VERSION constant, and uses the toml library to
-read the project version from pyproject.toml. Exits with code 0 when the
-two versions match, and code 1 when they differ.
+Uses Tree-sitter to parse gatorgrade/version.py into a Concrete Syntax
+Tree to extract the GATORGRADE_VERSION constant, and uses the toml library
+to read the project version from pyproject.toml. The version lives in
+version.py (not main.py) so that other modules (e.g. the remote hint
+engine) can import it without creating a circular dependency.
 
 Run with:
 uv run -m scripts.vsc check
@@ -20,6 +21,7 @@ from rich.console import Console
 from tree_sitter import Language, Node, Parser
 
 VERSION_VAR = "GATORGRADE_VERSION"
+VERSION_PATH = Path("gatorgrade/version.py")
 PY_LANGUAGE = Language(tspython.language())
 
 console = Console(stderr=False)
@@ -28,8 +30,8 @@ err_console = Console(stderr=True)
 app = typer.Typer(
     name="version-check",
     help=(
-        "Check that the GATORGRADE_VERSION in main.py matches the "
-        "project version in pyproject.toml."
+        "Check that the GATORGRADE_VERSION in gatorgrade/version.py"
+        " matches the project version in pyproject.toml."
     ),
 )
 
@@ -79,8 +81,8 @@ def _extract_version_from_pyproject(pyproject_path: Path) -> str | None:
 
 @app.command()
 def check() -> None:
-    """Check that the versions in main.py and pyproject.toml match."""
-    main_path = Path("gatorgrade/main.py")
+    """Check that the versions in version.py and pyproject.toml match."""
+    main_path = VERSION_PATH
     pyproject_path = Path("pyproject.toml")
     parser = Parser(PY_LANGUAGE)
     main_version = _extract_version_from_main(main_path, parser)
@@ -106,8 +108,8 @@ def check() -> None:
     raise typer.Exit(code=1)
 
 
-def _update_version_in_main(main_path: Path, new_version: str) -> bool:
-    """Update the GATORGRADE_VERSION string in main_path. Return True if changed."""
+def _update_version_file(main_path: Path, new_version: str) -> bool:
+    """Update the GATORGRADE_VERSION string in version.py. Return True if changed."""
     text = main_path.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
     changed = False
@@ -125,8 +127,8 @@ def _update_version_in_main(main_path: Path, new_version: str) -> bool:
 
 @app.command()
 def fix() -> None:
-    """Update main.py so GATORGRADE_VERSION matches the pyproject.toml version."""
-    main_path = Path("gatorgrade/main.py")
+    """Update version.py so GATORGRADE_VERSION matches the pyproject.toml version."""
+    main_path = VERSION_PATH
     pyproject_path = Path("pyproject.toml")
     pyproject_version = _extract_version_from_pyproject(pyproject_path)
     if pyproject_version is None:
@@ -144,7 +146,7 @@ def fix() -> None:
             f"[red]Could not find {VERSION_VAR} in {main_path}[/red]"
         )
         raise typer.Exit(code=1)
-    if _update_version_in_main(main_path, pyproject_version):
+    if _update_version_file(main_path, pyproject_version):
         console.print(
             f"[green]Updated[/green] {VERSION_VAR} in {main_path} "
             f"from {main_version!r} to {pyproject_version!r}"
