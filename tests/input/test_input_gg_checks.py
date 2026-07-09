@@ -330,6 +330,13 @@ def test_get_auto_hint_model_returns_none_when_missing(tmp_path: Path) -> None:
     assert result is None
 
 
+def test_get_auto_hint_model_handles_os_error(tmp_path: Path) -> None:
+    """Return None when opening the config file raises an OSError."""
+    # a directory cannot be read as a file, triggering OSError
+    result = get_auto_hint_model(tmp_path)
+    assert result is None
+
+
 def test_get_due_date_handles_os_error(tmp_path: Path) -> None:
     """Test get_due_date returns an error when the path is a directory."""
     result, error = get_due_date(tmp_path)

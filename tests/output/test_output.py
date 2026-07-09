@@ -2532,6 +2532,19 @@ def test_run_checks_generates_auto_hint_for_failing_check() -> None:
     mock_engine.generate_hint.assert_called_once()
 
 
+def test_run_checks_skips_hint_when_engine_returns_none() -> None:
+    """No hint is set when the engine returns None."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.generate_hint.return_value = (None, False)
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_called_once()
+
+
 def test_run_checks_shows_summary_with_fallback_hints(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
