@@ -41,9 +41,11 @@ from gatorgrade.input.parse_config import (
 )
 from gatorgrade.output.output import run_checks
 
-# define the version of gatorgrade; this is used in the --version option
-# and must always match the value in the pyproject.toml file
-GATORGRADE_VERSION = "0.11.0"
+# import the version from the single-source-of-truth module so that
+# other modules (e.g., gatorgrade.hint.remote_engine) can import it
+# without creating a circular dependency that looks like:
+# gatorgrade.main -> gatorgrade.version -> gatorgrade.main
+from gatorgrade.version import GATORGRADE_VERSION
 
 # create an app for the Typer-based CLI
 
@@ -347,9 +349,9 @@ def _print_version_info() -> None:
         _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
     ]:
         console.print(env_line)
-    # show the computer's hostname and IP address for
-    # debugging network-related problems; these are best-effort
-    # calls and will not cause a crash if they fail
+    # show the computer's hostname for debugging
+    # network-related problems; this is a best-effort
+    # call and will not cause a crash if it fails
     import socket  # noqa: PLC0415
 
     hostname = socket.gethostname()
@@ -538,6 +540,8 @@ class FallbackHintEngine:
         self._fallback_eng = fallback_engine
         self._remote_url = remote_url
         self._fallback_warned = False
+        # stores the last error when both engines fail.
+        self.last_error: str | None = None
 
     @property
     def model_id(self) -> str:
@@ -634,6 +638,18 @@ class FallbackHintEngine:
             system_prompt=system_prompt,
             details=details,
         )
+        if hint2 is None:
+            pri_err = getattr(self._primary, "last_error", None)
+            fb_err = getattr(self._fallback_eng, "last_error", None)
+            parts: list[str] = []
+            if pri_err:
+                parts.append(f"primary: {pri_err}")
+            if fb_err:
+                parts.append(f"fallback: {fb_err}")
+            if parts:
+                self.last_error = "; ".join(parts)
+            else:
+                self.last_error = "All hint engines failed."
         return hint2, is_low2
 
 
@@ -929,7 +945,11 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             "URL of an OpenAI-compatible API server for remote hint "
             "generation (requires --auto-hint). When provided, the "
             "remote model is used instead of a local model. Falls "
-            "back to default local model on any remote URL errors."
+            "back to default local model on any remote URL errors. "
+            "Note: requests use the user-agent gatorgrade/0.11.0 "
+            "instead of the openai library default, because some "
+            "reverse proxies and WAFs (e.g. cloudflare) block the "
+            "default openai/python user-agent."
         ),
     ),
     auto_hint_api_key: Optional[str] = typer.Option(
