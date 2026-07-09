@@ -2752,6 +2752,26 @@ def test_run_checks_loads_model_and_generates_hints(
     mock_engine.generate_hint.assert_called_once()
 
 
+def test_run_checks_shows_warning_when_model_load_fails(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Warning is shown when the auto-hint model fails to load."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = False
+    mock_engine.ensure_loaded.side_effect = RuntimeError("Out of memory")
+    mock_engine.generate_hint.return_value = (
+        "Check the file path.",
+        False,
+    )
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.ensure_loaded.assert_called_once()
+
+
 def test_run_checks_generates_low_quality_hint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

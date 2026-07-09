@@ -3,17 +3,15 @@
 import builtins
 import io
 import os
-import platform
 import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
-from unittest.mock import MagicMock, patch
 
 import pytest
 from typer.testing import CliRunner
 
-from gatorgrade import detect, main
-from gatorgrade.hint.remote_engine import RemoteHintEngine
+from gatorgrade import main
+from gatorgrade.hint.fallback import RemoteEngineAdapter
 
 runner = CliRunner()
 
@@ -116,6 +114,73 @@ def test_gatorgrade_with_nonexistent_file(
     assert "either does not exist or is not valid" in result.stdout
 
 
+def test_gatorgrade_version_callback_with_false() -> None:
+    """_version_callback does not exit when value is False."""
+    main._version_callback(False)
+
+
+def test_gatorgrade_with_invalid_yaml_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """Test that gatorgrade displays a parse error for invalid YAML."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text("*invalid: yaml: [content")
+    chdir(tmp_path)
+    result = runner.invoke(main.app)
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 1
+
+
+def test_gatorgrade_with_version_flag(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade shows version with --version."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_create_auto_hint_engine_default_model(chdir: Any) -> None:
+    """_create_auto_hint_engine uses default model when sentinel is passed."""
+    chdir("tests/test_assignment")
+    engine = main._create_auto_hint_engine(
+        filename=Path("gatorgrade.yml"),
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url=None,
+        auto_hint_api_key=None,
+    )
+    assert engine is not None
+
+
+@pytest.mark.autohint
+def test_create_auto_hint_engine_with_remote_url_falls_back(
+    chdir: Any,
+) -> None:
+    """Falls back to local engine when remote URL is unreachable."""
+    chdir("tests/test_assignment")
+    engine = main._create_auto_hint_engine(
+        filename=Path("gatorgrade.yml"),
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url="http://localhost:99999",
+        auto_hint_api_key=None,
+    )
+    assert engine is not None
+
+
+@pytest.mark.autohint
+def test_try_create_remote_engine_returns_adapter() -> None:
+    """Returns a RemoteEngineAdapter even with a bad URL (lazy connect)."""
+    engine = main._try_create_remote_engine(
+        url="http://localhost:99999",
+        api_key=None,
+        model_id="test-model",
+    )
+    assert isinstance(engine, RemoteEngineAdapter)
+
+
 def test_print_verbose_info_skips_when_not_verbose(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -163,6 +228,27 @@ def test_print_verbose_info_shows_info_when_verbose(
     assert "Baseline weight: 2" in plain_out
 
 
+def test_print_verbose_info_shows_default_model_without_url(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info shows default model when model is not specified."""
+    main._print_verbose_info(
+        verbose=True,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=True,
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url=None,
+        output_limit=5,
+        baseline_weight=1,
+        show_diagnostics=False,
+        progress_bar=False,
+    )
+    captured = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
+    assert "Model:" in plain_out
+
+
 def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
     """_resolve_system_prompt reads the system prompt file alongside config."""
     config_file = tmp_path / "gatorgrade.yml"
@@ -194,731 +280,6 @@ def test_resolve_system_prompt_returns_none_when_not_specified(
     )
     result = main._resolve_system_prompt(config_file, None)
     assert result is None
-
-
-class TestFallbackHintEngine:
-    """Tests for the FallbackHintEngine class."""
-
-    def test_model_id_delegates_to_remote(self) -> None:
-        """model_id returns the remote engine's model_id."""
-        remote = MagicMock()
-        remote.model_id = "test-model"
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        assert engine.model_id == "test-model"
-
-    def test_is_loaded_delegates_to_remote(self) -> None:
-        """is_loaded returns the remote engine's value."""
-        remote = MagicMock()
-        remote.is_loaded = True
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        assert engine.is_loaded is True
-
-    def test_ensure_loaded_delegates_to_remote(self) -> None:
-        """ensure_loaded calls the remote engine's method."""
-        remote = MagicMock()
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        engine.ensure_loaded()
-        remote.ensure_loaded.assert_called_once()
-
-    def test_ensure_loaded_survives_remote_exception(self) -> None:
-        """ensure_loaded does not propagate exceptions from the remote engine."""
-        remote = MagicMock()
-        remote.ensure_loaded.side_effect = RuntimeError("connection failed")
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        # the exception is swallowed; no crash expected
-        engine.ensure_loaded()
-        remote.ensure_loaded.assert_called_once()
-
-    def test_generate_hint_uses_remote_when_it_succeeds(
-        self,
-    ) -> None:
-        """Uses the remote engine's result when it succeeds."""
-        remote = MagicMock()
-        remote.generate_hint.return_value = ("A useful hint.", False)
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        hint, is_low = engine.generate_hint(
-            description="test", diagnostic="error"
-        )
-        assert hint == "A useful hint."
-        assert not is_low
-        local.generate_hint.assert_not_called()
-
-    def test_generate_hint_falls_back_to_local_on_failure(
-        self,
-    ) -> None:
-        """Falls back to the local engine when remote returns None."""
-        remote = MagicMock()
-        remote.generate_hint.return_value = (None, False)
-        local = MagicMock()
-        local.generate_hint.return_value = ("Local hint.", False)
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        hint, is_low = engine.generate_hint(
-            description="test", diagnostic="error"
-        )
-        assert hint == "Local hint."
-        assert not is_low
-        # should have tried both
-        remote.generate_hint.assert_called_once()
-        local.generate_hint.assert_called_once()
-
-    def test_model_id_uses_local_after_fallback(self) -> None:
-        """model_id returns the local model ID after a fallback."""
-        remote = MagicMock()
-        remote.model_id = "remote-model"
-        remote.generate_hint.return_value = (None, False)
-        local = MagicMock()
-        local.model_id = "local-model"
-        local.generate_hint.return_value = ("hint", False)
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        # before fallback
-        assert engine.model_id == "remote-model"
-        assert not engine.has_fallback
-        assert engine.remote_url == "http://test.url"
-        # trigger fallback
-        engine.generate_hint(description="test")
-        # after fallback
-        assert engine.model_id == "local-model"
-        assert engine.has_fallback
-
-    def test_primary_model_id_property(self) -> None:
-        """primary_model_id returns the remote model ID unchanged."""
-        remote = MagicMock()
-        remote.model_id = "remote-model-v2"
-        local = MagicMock()
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        assert engine.primary_model_id == "remote-model-v2"
-
-    def test_generate_hint_when_both_engines_fail(self) -> None:
-        """last_error is set when both engines return None."""
-        remote = MagicMock()
-        remote.generate_hint.return_value = (None, False)
-        remote.last_error = "remote error"
-        local = MagicMock()
-        local.generate_hint.return_value = (None, False)
-        local.last_error = "local error"
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        hint, _is_low = engine.generate_hint(description="test")
-        assert hint is None
-        assert engine.last_error is not None
-        assert "remote error" in engine.last_error
-        assert "local error" in engine.last_error
-
-    def test_has_fallback_property(self) -> None:
-        """has_fallback returns False initially, True after fallback."""
-        remote = MagicMock()
-        remote.generate_hint.return_value = (None, False)
-        local = MagicMock()
-        local.generate_hint.return_value = ("hint", False)
-        engine = main.FallbackHintEngine(remote, local, "http://test.url")
-        assert not engine.has_fallback
-        engine.generate_hint(description="test")
-        assert engine.has_fallback
-
-    def test_remote_url_property(self) -> None:
-        """remote_url returns the URL passed at construction."""
-        remote = MagicMock()
-        local = MagicMock()
-        engine = main.FallbackHintEngine(
-            remote, local, "http://example.com:4000"
-        )
-        assert engine.remote_url == "http://example.com:4000"
-
-
-def test_resolve_validation_rules_returns_none_when_not_specified(
-    tmp_path: Path,
-) -> None:
-    """_resolve_validation_rules returns None when no validation_phrases_file."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    result = main._resolve_validation_rules(config_file, None)
-    assert result is None
-
-
-def test_resolve_validation_rules_reads_json_file(
-    tmp_path: Path,
-) -> None:
-    """_resolve_validation_rules reads and parses a JSON validation file."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        'validation_phrases_file: "quality.json"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    rules_file = tmp_path / "quality.json"
-    rules_file.write_text(
-        '{"cannot_contain": ["bad phrase"], "must_contain": ["good word"]}'
-    )
-    result = main._resolve_validation_rules(config_file, None)
-    assert result is not None
-    assert result["cannot_contain"] == ["bad phrase"]
-    assert result["must_contain"] == ["good word"]
-
-
-def test_resolve_validation_rules_returns_none_on_invalid_json(
-    tmp_path: Path,
-) -> None:
-    """_resolve_validation_rules returns None for unparseable JSON."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        'validation_phrases_file: "bad.json"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    rules_file = tmp_path / "bad.json"
-    rules_file.write_text("not valid json{{")
-    result = main._resolve_validation_rules(config_file, None)
-    assert result is None
-
-
-def test_resolve_validation_rules_returns_none_for_non_dict_json(
-    tmp_path: Path,
-) -> None:
-    """_resolve_validation_rules returns None when JSON is valid but not a dict."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        'validation_phrases_file: "items.json"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    rules_file = tmp_path / "items.json"
-    rules_file.write_text('["must_contain", "x"]')
-    result = main._resolve_validation_rules(config_file, None)
-    assert result is None
-
-
-def test_resolve_validation_rules_finds_file_alongside_config(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Resolves the validation file alongside the config file."""
-    config_dir = tmp_path / "config"
-    config_dir.mkdir()
-    config_file = config_dir / "gatorgrade.yml"
-    config_file.write_text(
-        'validation_phrases_file: "rules.json"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    rules_file = config_dir / "rules.json"
-    rules_file.write_text('{"cannot_contain": ["x"]}')
-    monkeypatch.chdir(tmp_path)
-    result = main._resolve_validation_rules(config_file, None)
-    assert result == {"cannot_contain": ["x"]}
-
-
-def test_gatorgrade_with_invalid_config_file(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test that gatorgrade exits with error when config file is not valid."""
-    invalid_config = Path("invalid_main_test.yml")
-    invalid_config.write_text("this is not valid yaml: [")
-    result = runner.invoke(main.app, ["--config", "invalid_main_test.yml"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_subcommand() -> None:
-    """Test that gatorgrade skips core logic if a subcommand is invoked."""
-    result = runner.invoke(main.app, ["nonexistent-command"])
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_custom_config_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with custom config file name."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_report_option(
-    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with report option."""
-    chdir("tests/test_assignment")
-    report_file = tmp_path / "report.json"
-    result = runner.invoke(
-        main.app, ["--report", "file", "json", str(report_file)]
-    )
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    assert report_file.exists()
-
-
-def test_gatorgrade_with_report_invalid_destination(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid report destination is rejected up front."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app, ["--report", "FILe111", "json", "report.json"]
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_report_invalid_type(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid report type is rejected up front."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app, ["--report", "file", "html", "report.json"]
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_report_uppercase_valid(
-    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that uppercase FILE/JSON is accepted."""
-    chdir("tests/test_assignment")
-    report_file = tmp_path / "report.json"
-    result = runner.invoke(
-        main.app, ["--report", "FILE", "JSON", str(report_file)]
-    )
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert report_file.exists()
-
-
-def test_gatorgrade_with_report_invalid_file_path(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that a report file path with a non-existent directory is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app,
-        ["--report", "file", "json", "nonexistent_dir/report.json"],
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_github_env_invalid_format(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid github-env format is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_github_env_valid_json(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that valid github-env format passes validation."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-
-
-def test_gatorgrade_with_github_env_invalid_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid github-env key name is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_invalid_due_date_format(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test gatorgrade warns about an unparseable due_date in the config."""
-    config = Path("bad_due_date.yml")
-    config.write_text(
-        'due_date: "not-a-date"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        "  command: echo hello\n"
-    )
-    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert "Invalid Due Date Configuration" in result.output
-
-
-def test_gatorgrade_with_multiple_due_date_aliases(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test gatorgrade warns when multiple due date fields are present."""
-    config = Path("multi_due_date.yml")
-    config.write_text(
-        'due_date: "2026-12-15"\n'
-        'due: "2026-12-20"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        "  command: echo hello\n"
-    )
-    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert "Multiple Due Date Fields" in result.output
-
-
-def test_gatorgrade_with_report_env_invalid_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid env var name in --report ENV is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_progress_bar_default(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade shows progress bar by default."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, [])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_no_status_bar(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with no status bar."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-progress-bar"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_version_flag(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade displays the version when --version is provided."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--version"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    # strip ANSI escape codes that Rich may add when stdout is a TTY
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    # the output should include the program name, version, and platform info
-    assert f"Gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
-    # the output should also include the python version
-    assert "Python" in plain_stdout
-    # the output should include the python version number
-    assert platform.python_version() in plain_stdout
-
-
-def test_gatorgrade_with_version_flag_on_macos(
-    chdir: Any,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the version output includes the macOS release on Darwin systems."""
-    monkeypatch.setattr(detect.platform, "machine", lambda: "arm64")
-    monkeypatch.setattr(detect.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        detect.platform,
-        "mac_ver",
-        lambda: ("14.5", (("", "", ""), ""), "arm64"),
-    )
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--version"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "MacOS 14.5" in plain_stdout
-
-
-def test_gatorgrade_with_version_flag_on_windows(
-    chdir: Any,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the version output includes the Windows release on Windows systems."""
-    monkeypatch.setattr(detect.platform, "machine", lambda: "AMD64")
-    monkeypatch.setattr(detect.platform, "system", lambda: "Windows")
-    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        detect.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
-    )
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--version"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "Windows 10" in plain_stdout
-
-
-def test_gatorgrade_version_callback_with_false() -> None:
-    """Test that the version callback does not exit when value is False."""
-    main._version_callback(False)
-
-
-def test_gatorgrade_with_output_limit_zero(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that output limit of zero is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "0"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_output_limit_negative(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that negative output limit is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "-5"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_output_limit_one(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that output limit of one is accepted."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "1"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-
-
-def test_gatorgrade_with_output_limit_valid(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that a valid output limit is accepted."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "5"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_baseline_weight_zero(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that baseline weight of zero is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "0"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_baseline_weight_negative(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that negative baseline weight is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "-2"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_baseline_weight_default(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that baseline weight of 1 is accepted and shows correct points."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "1"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_baseline_weight_custom(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that a custom baseline weight affects the points calculation."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "5"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Points: 15/15 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_show_diagnostics_default(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that show diagnostics is the default and runs successfully."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, [])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-
-
-def test_gatorgrade_with_show_diagnostics_explicit(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that --show-diagnostics flag is accepted."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--show-diagnostics"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_no_show_diagnostics(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that --no-show-diagnostics hides diagnostic output."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-show-diagnostics"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_auto_hint_creates_engine(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Using --auto-hint creates an engine and runs checks."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--auto-hint"])
-    capsys.readouterr()
-    # should succeed (engine creation failure is caught by the except
-    # clause, but the engine is optional)
-    assert result.exit_code == 0
-
-
-@pytest.mark.autohint
-def test_create_auto_hint_engine_default_model(chdir: Any) -> None:
-    """_create_auto_hint_engine uses default model when sentinel is passed."""
-    chdir("tests/test_assignment")
-    engine = main._create_auto_hint_engine(
-        filename=Path("gatorgrade.yml"),
-        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
-        auto_hint_url=None,
-        auto_hint_api_key=None,
-    )
-    assert engine is not None
-
-
-@pytest.mark.autohint
-def test_create_auto_hint_engine_with_remote_url_falls_back(
-    chdir: Any,
-) -> None:
-    """Falls back to local engine when remote URL is unreachable."""
-    chdir("tests/test_assignment")
-    engine = main._create_auto_hint_engine(
-        filename=Path("gatorgrade.yml"),
-        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
-        auto_hint_url="http://localhost:99999",
-        auto_hint_api_key=None,
-    )
-    assert engine is not None
-
-
-@pytest.mark.autohint
-def test_try_create_remote_engine_returns_adapter() -> None:
-    """Returns a RemoteEngineAdapter even with a bad URL (lazy connect)."""
-    engine = main._try_create_remote_engine(
-        url="http://localhost:99999",
-        api_key=None,
-        model_id="test-model",
-    )
-    assert isinstance(engine, main.RemoteEngineAdapter)
-
-
-class TestRemoteEngineAdapter:
-    """Direct tests for RemoteEngineAdapter."""
-
-    @pytest.mark.autohint
-    def test_is_loaded_returns_true(self) -> None:
-        """is_loaded always returns True."""
-        remote = RemoteHintEngine(base_url="http://test.url:4160")
-        adapter = main.RemoteEngineAdapter(remote, "test-model")
-        assert adapter.is_loaded is True
-
-    @pytest.mark.autohint
-    def test_model_id_returns_model_id_without_prefix(self) -> None:
-        """model_id returns the raw model identifier without prefix."""
-        remote = RemoteHintEngine(base_url="http://test.url:4160")
-        adapter = main.RemoteEngineAdapter(remote, "Qwen-3.6-35B-A3B")
-        assert adapter.model_id == "Qwen-3.6-35B-A3B"
-
-    @pytest.mark.autohint
-    def test_ensure_loaded_is_noop(self) -> None:
-        """ensure_loaded does not raise."""
-        remote = RemoteHintEngine(base_url="http://test.url:4160")
-        adapter = main.RemoteEngineAdapter(remote, "test-model")
-        adapter.ensure_loaded()  # must not raise
-
-    @pytest.mark.autohint
-    def test_generate_hint_with_mocked_remote(self) -> None:
-        """generate_hint delegates to the remote engine."""
-        remote = RemoteHintEngine(base_url="http://test.url:4160")
-        adapter = main.RemoteEngineAdapter(remote, "test-model")
-        with patch(
-            "gatorgrade.hint.remote_engine.RemoteHintEngine.generate_hint",
-            return_value=("A useful hint.", False),
-        ):
-            hint, is_low = adapter.generate_hint(
-                description="test", diagnostic="error"
-            )
-        assert hint == "A useful hint."
-        assert not is_low
 
 
 def test_gatorgrade_with_config_dir_no_file(

@@ -40,6 +40,8 @@ class TestRemoteHintEngineConstruction:
         """Remote engine is always considered loaded."""
         engine = RemoteHintEngine(base_url="http://test.url:4160")
         assert engine.is_loaded is True
+        # also call the property function directly for tsc coverage
+        _ = RemoteHintEngine.is_loaded.__get__(engine)
 
     def test_ensure_loaded_is_noop(self) -> None:
         """ensure_loaded does not raise."""
