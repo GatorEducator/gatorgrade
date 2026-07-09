@@ -2,13 +2,11 @@
 
 import importlib.metadata
 import platform
-import re
 import sys
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
 import typer
-from click import BadParameter
 from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
@@ -40,6 +38,12 @@ from gatorgrade.input.parse_config import (
     resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.validate import (
+    _validate_baseline_weight,
+    _validate_github_env,
+    _validate_output_limit,
+    _validate_report,
+)
 
 # import the version from the single-source-of-truth module so that
 # other modules (e.g., gatorgrade.hint.remote_engine) can import it
@@ -140,115 +144,6 @@ GATORGRADER_VERSION_KEY = "gatorgrader_version"
 PYTHON_INFO_KEY = "python_info"
 PLATFORM_INFO_KEY = "platform_info"
 OS_RELEASE_KEY = "os_release"
-
-# report argument constants
-REPORT_DEST_FILE = "FILE"
-REPORT_DEST_ENV = "ENV"
-REPORT_TYPE_JSON = "JSON"
-REPORT_TYPE_MD = "MD"
-VALID_REPORT_DESTS = (REPORT_DEST_FILE, REPORT_DEST_ENV)
-VALID_REPORT_TYPES = (REPORT_TYPE_JSON, REPORT_TYPE_MD)
-REPORT_DEST_ERR_FMT = "First report argument must be '{}' or '{}', got '{}'"
-REPORT_TYPE_ERR_FMT = "Second report argument must be '{}' or '{}', got '{}'"
-REPORT_PATH_ERR_FMT = (
-    "Cannot write report to '{}': directory '{}' does not exist"
-)
-GITHUB_ENV_TYPE_ERR_FMT = (
-    "First github-env argument must be '{}' or '{}', got '{}'"
-)
-GITHUB_ENV_NAME_ERR_FMT = (
-    "Second github-env argument must be a valid environment variable name, "
-    "got '{}'"
-)
-REPORT_ENV_NAME_ERR_FMT = (
-    "Third report argument must be a valid environment variable name when "
-    "destination is ENV, got '{}'"
-)
-VALID_ENV_VAR_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-
-
-def _validate_output_limit(value: int | None) -> int | None:
-    """Validate output limit is at least 1 if provided."""
-    if value is not None and value < 1:
-        raise BadParameter("Output limit must be at least 1.")
-    return value
-
-
-def _validate_baseline_weight(value: int) -> int:
-    """Validate baseline weight is greater than 0."""
-    if value < 1:
-        raise BadParameter("Baseline weight must be at least 1.")
-    return value
-
-
-def _validate_report(
-    value: Tuple[Optional[str], Optional[str], Optional[str]],
-) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    """Validate report tuple arguments up front to avoid crashes later.
-
-    Validates that:
-    - First argument is FILE or ENV (case-insensitive for backwards
-      compatibility)
-    - Second argument is JSON or MD (case-insensitive for backwards
-      compatibility)
-    - When the destination is not explicitly ENV, validate the third
-      argument's parent directory exists (it is a file path)
-
-    """
-    if any(v is not None for v in value):
-        errors = []
-        if value[0] is not None and value[0].upper() not in VALID_REPORT_DESTS:
-            errors.append(
-                REPORT_DEST_ERR_FMT.format(
-                    REPORT_DEST_FILE, REPORT_DEST_ENV, value[0]
-                )
-            )
-        if value[1] is not None and value[1].upper() not in VALID_REPORT_TYPES:
-            errors.append(
-                REPORT_TYPE_ERR_FMT.format(
-                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[1]
-                )
-            )
-        if value[0] is not None and value[0].upper() != REPORT_DEST_ENV:
-            assert value[2] is not None  # validated earlier
-            file_path = Path(value[2])
-            parent_dir = file_path.resolve().parent
-            if not parent_dir.exists():
-                errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
-        elif value[0] is not None and value[2] is not None:
-            if not VALID_ENV_VAR_NAME.fullmatch(value[2]):
-                errors.append(REPORT_ENV_NAME_ERR_FMT.format(value[2]))
-        # if there are one or more errors, then raise a BadParameter exception
-        # with all of the error messages joined by newlines (reporting all
-        # of the possible exceptions instead of failing fast with only the
-        # first one should enable a person to better debug command-line arguments)
-        if errors:
-            raise BadParameter(";\n".join(errors))
-    return value
-
-
-def _validate_github_env(
-    value: Tuple[Optional[str], Optional[str]],
-) -> Tuple[Optional[str], Optional[str]]:
-    """Validate github-env tuple arguments up front.
-
-    Validates that the first argument is JSON or MD
-    (case-insensitive for backwards compatibility).
-
-    """
-    if any(v is not None for v in value):
-        errors = []
-        if value[0] is not None and value[0].upper() not in VALID_REPORT_TYPES:
-            errors.append(
-                GITHUB_ENV_TYPE_ERR_FMT.format(
-                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[0]
-                )
-            )
-        if value[1] is not None and not VALID_ENV_VAR_NAME.fullmatch(value[1]):
-            errors.append(GITHUB_ENV_NAME_ERR_FMT.format(value[1]))
-        if errors:
-            raise BadParameter(";\n".join(errors))
-    return value
 
 
 def _get_platform_info() -> str:
