@@ -12,6 +12,10 @@ CANNOT_CONTAIN_KEY = "cannot_contain"
 ROLE_SYSTEM = "system"
 ROLE_USER = "user"
 
+# dictionary key constants for chat message dictionaries
+ROLE_KEY = "role"
+CONTENT_KEY = "content"
+
 # user message parts
 CHECK_LABEL = "Check"
 COMMAND_LABEL = "Command"
@@ -22,7 +26,7 @@ DETAILS_LABEL = "Details"
 # basic string constants
 EMPTY = ""
 NEWLINE = "\n"
-DOUBLE_NEWLINE = "\n\n"
+DOUBLE_NEWLINE = f"{NEWLINE}{NEWLINE}"
 
 # formatting constants
 CODE_BLOCK_OPEN = "Code:\n```\n"
@@ -175,10 +179,9 @@ def build_hint_messages(  # noqa: PLR0913
     if details:
         user_parts.append(f"{DETAILS_LABEL}: {details}")
     user_parts.append(USER_QUESTION)
-
     return [
-        {"role": ROLE_SYSTEM, "content": system},
-        {"role": ROLE_USER, "content": USER_SEPARATOR.join(user_parts)},
+        {ROLE_KEY: ROLE_SYSTEM, CONTENT_KEY: system},
+        {ROLE_KEY: ROLE_USER, CONTENT_KEY: USER_SEPARATOR.join(user_parts)},
     ]
 
 
