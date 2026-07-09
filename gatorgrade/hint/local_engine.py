@@ -125,10 +125,12 @@ class AutoHintEngine:
         self._cache_dir_override = cache_dir
         self._system_prompt = system_prompt
         self._validation_rules = validation_rules
-        # the text-generation pipeline, populated by _ensure_loaded().
+        # the text-generation pipeline, populated by _ensure_loaded()
         self._pipe: Any = None
-        # path to the cached model directory (set after loading).
+        # path to the cached model directory (set after loading)
         self._model_path: Optional[Path] = None
+        # stores the last error for diagnostic display
+        self.last_error: str | None = None
 
     @staticmethod
     def check_deps() -> None:
@@ -321,9 +323,11 @@ class AutoHintEngine:
         """
         try:
             self._ensure_loaded()
-        except ImportError:
+        except ImportError as exc:
+            self.last_error = f"Missing dependencies: {exc}"
             return None, False
-        except Exception:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
+            self.last_error = str(exc)[:300]
             return None, False
         # use the per-call system_prompt if provided, otherwise
         # fall back to the engine-level prompt or the built-in default
@@ -371,10 +375,7 @@ class AutoHintEngine:
                 return hint, True
             return hint, False
         except Exception as exc:  # pylint: disable=broad-except
-            print(
-                f"   → Auto-hint error (generation): {exc}",
-                file=__import__("sys").stderr,
-            )
+            self.last_error = str(exc)[:300]
             return None, False
 
     def _build_messages(  # noqa: PLR0913
