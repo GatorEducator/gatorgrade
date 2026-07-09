@@ -187,6 +187,10 @@ The coding agent should write the notes as a Markdown list.
   `main.py` displays with `Rule`-based formatting.
 - `EXIT_MESSAGE` is defined in `gatorgrade/main.py` and is the string
   displayed below error details in configuration error boxes.
+- **Never run `git stash`:** This command is destructive and risks losing
+  uncommitted work. If you need to temporarily set aside changes, create a
+  commit or use `git worktree` instead. The developer will handle any
+  rebasing or history cleanup.
 - **Creativity is welcome:** Every once in a while, feel free to slip
   in a bit of flair like a pun, a limerick, a dad joke, a haiku about
   test cases, or anything else that might make the developer smile.
