@@ -37,7 +37,9 @@
         "gatorgrader",
         "gatorgrade",
         "TODOs",
-        "gatorgradle"
+        "gatorgradle",
+        "worktree",
+        "systemprompt"
     ],
     "ignorePaths": [
         ".github/**",
