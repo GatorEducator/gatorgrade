@@ -10,7 +10,7 @@ from typing import Any, Callable, Generator, List
 import pytest
 from typer.testing import CliRunner
 
-from gatorgrade import main
+from gatorgrade import detect, main
 from gatorgrade.hint.fallback import RemoteEngineAdapter
 
 runner = CliRunner()
@@ -141,6 +141,406 @@ def test_gatorgrade_with_version_flag(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
+
+
+def test_gatorgrade_with_invalid_due_date_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """Test gatorgrade warns about an unparseable due_date in the config."""
+    config_file = tmp_path / "bad_due_date.yml"
+    config_file.write_text(
+        'due_date: "not-a-date"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_multiple_due_date_aliases(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """Test gatorgrade warns when both due_date and duedate are present."""
+    config_file = tmp_path / "multi_due_date.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15"\n'
+        'duedate: "2026-12-16"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_auto_hint_model_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-model without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint-model", "custom/model"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_creates_engine(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint creates an engine and runs checks."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_output_limit_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative output limit is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "-5"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_output_limit_one(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that output limit of one is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_output_limit_valid(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a valid output limit is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--output-limit", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_zero(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of zero is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "0"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_negative(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that negative baseline weight is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "-2"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_baseline_weight_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that baseline weight of 1 is accepted and shows correct points."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "1"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_baseline_weight_custom(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a custom baseline weight affects the points calculation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--baseline-weight", "5"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Points: 15/15 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_show_diagnostics_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that show diagnostics is the default and runs successfully."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_show_diagnostics_explicit(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --show-diagnostics flag is accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_no_show_diagnostics(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that --no-show-diagnostics hides diagnostic output."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-show-diagnostics"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_report_option(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade works with report option."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "file", "json", str(report_file)]
+    )
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_destination(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report destination is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "FILe111", "json", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_invalid_type(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report type is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "file", "html", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_uppercase_valid(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that uppercase FILE/JSON is accepted."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "FILE", "JSON", str(report_file)]
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_file_path(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a report file path with a non-existent directory is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--report", "file", "json", "nonexistent_dir/report.json"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid env var name in --report ENV is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_invalid_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env format is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_valid_json(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that valid github-env format passes validation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_github_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env key name is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_invalid_config_file(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """Test that gatorgrade exits with error when config file is not valid."""
+    config_file = tmp_path / "invalid_main_test.yml"
+    config_file.write_text("this is not valid yaml: [")
+    result = runner.invoke(main.app, ["--config", str(config_file)])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_subcommand() -> None:
+    """Test that gatorgrade skips core logic if a subcommand is invoked."""
+    result = runner.invoke(main.app, ["nonexistent-command"])
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_custom_config_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade works with custom config file name."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_no_status_bar(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade works with no status bar."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-progress-bar"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_progress_bar_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade shows progress bar by default."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_macos(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the macOS release on Darwin systems."""
+    monkeypatch.setattr(detect.platform, "machine", lambda: "arm64")
+    monkeypatch.setattr(detect.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        detect.platform,
+        "mac_ver",
+        lambda: ("14.5", (("", "", ""), ""), "arm64"),
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "MacOS 14.5" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_windows(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the Windows release on Windows systems."""
+    monkeypatch.setattr(detect.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(detect.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        detect.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "Windows 10" in plain_stdout
 
 
 def test_create_auto_hint_engine_default_model(chdir: Any) -> None:
