@@ -964,11 +964,19 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
 
                 thread = threading.Thread(target=_advance_bar, daemon=True)
                 thread.start()
+                load_error: str | None = None
                 try:
                     auto_hint_engine.ensure_loaded()
-                except Exception:  # pylint: disable=broad-except
-                    pass
+                except Exception as exc:  # pylint: disable=broad-except
+                    load_error = str(exc)[:300]
                 load_progress.update(task_id, completed=100)
+                if load_error is not None:
+                    rich.print()
+                    rich.print(
+                        "[yellow]Warning: Could not load the auto-hint"
+                        f" model: {load_error}"
+                        "[/]"
+                    )
         with Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(
@@ -988,6 +996,23 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             for result in failed_results:
                 _generate_hint(result)
                 progress.update(task, advance=1)
+        # if no hints were generated despite having an engine,
+        # print a diagnostic message to explain why
+        if not any(r.is_auto_hint for r in failed_results):
+            last_err = getattr(auto_hint_engine, "last_error", None)
+            if last_err:
+                rich.print()
+                rich.print(
+                    "[yellow]Warning: Auto-hints could not be generated:"
+                    f" {last_err}[/]"
+                )
+            else:
+                rich.print()
+                rich.print(
+                    "[yellow]Warning: Auto-hints could not be generated."
+                    " Check your network connection and model"
+                    " availability.[/]"
+                )
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
