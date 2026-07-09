@@ -29,43 +29,62 @@ NEWLINE = "\n"
 DOUBLE_NEWLINE = f"{NEWLINE}{NEWLINE}"
 
 # formatting constants
-CODE_BLOCK_OPEN = "Code:\n```\n"
-CODE_BLOCK_CLOSE = "\n```"
-DIAG_BLOCK_OPEN = "Diagnostic:\n```\n"
-DIAG_BLOCK_CLOSE = "\n```"
+CODE_BLOCK_OPEN = f"Code:{NEWLINE}```{NEWLINE}"
+CODE_BLOCK_CLOSE = f"{NEWLINE}```"
+DIAG_BLOCK_OPEN = f"Diagnostic:{NEWLINE}```{NEWLINE}"
+DIAG_BLOCK_CLOSE = f"{NEWLINE}```"
 USER_SEPARATOR = DOUBLE_NEWLINE
 
 # default system prompt constants
 SYS_INTRO = "You give short, direct hints for fixing code. "
-SYS_CRITICAL_HEADER = "CRITICAL RULES:\n"
+SYS_CRITICAL_HEADER = f"CRITICAL RULES:{NEWLINE}"
 SYS_TEST_CORRECT = (
-    "- The test suite is provided by the instructor and is ALWAYS correct.\n"
+    f"- The test suite is provided by the instructor "
+    f"and is ALWAYS correct.{NEWLINE}"
 )
-SYS_ALWAYS_MENTION = "- ALWAYS mention what test or command failed.\n"
+SYS_ALWAYS_MENTION = f"- ALWAYS mention what test or command failed.{NEWLINE}"
 SYS_ALWAYS_DESCRIBE = (
-    "- ALWAYS describe what to change in the student's implementation.\n"
+    f"- ALWAYS describe what to change in the "
+    f"student's implementation.{NEWLINE}"
 )
 SYS_ALWAYS_EXPLAIN = (
-    "- ALWAYS explain what is incorrect in the STUDENT's source code.\n"
+    f"- ALWAYS explain what is incorrect in the "
+    f"STUDENT's source code.{NEWLINE}"
 )
-SYS_ALWAYS_SUGGEST = "- ALWAYS suggest running the command that produced the diagnostic output to verify the fix.\n\n"
-SYS_ALWAYS_END_PERIOD = "- ALWAYS end every hint with a period.\n\n"
-SYS_NEVER_QUOTES = "- NEVER use single quotes (for example, ') or backticks (for example, `) in your response.\n"
+SYS_ALWAYS_SUGGEST = (
+    f"- ALWAYS suggest running the command that produced "
+    f"the diagnostic output to verify the fix.{NEWLINE}"
+    f"{NEWLINE}"
+)
+SYS_ALWAYS_END_PERIOD = (
+    f"- ALWAYS end every hint with a period.{NEWLINE}{NEWLINE}"
+)
+SYS_NEVER_QUOTES = (
+    f"- NEVER use single quotes (for example, ') or backticks "
+    f"(for example, `) in your response.{NEWLINE}"
+)
 SYS_NEVER_MODIFY = (
-    "- NEVER suggest modifying tests, test assertions, or expected results.\n"
+    f"- NEVER suggest modifying tests, test assertions, "
+    f"or expected results.{NEWLINE}"
 )
-SYS_NEVER_FENCE = "- NEVER write fenced source code blocks in your hint.\n"
-SYS_NEVER_WORDS = "- NEVER use the words 'student', 'you should', or 'you might'. NEVER say:\n"
-SYS_NEVER_SAY_1 = "- 'The test incorrectly asserts <...>'\n"
-SYS_NEVER_SAY_2 = "- 'Modify the test to <...>'\n"
-SYS_NEVER_SAY_3 = "- 'The assertion is wrong because <...>'\n"
-SYS_NEVER_SAY_4 = "- 'Change the expected result <...>'\n\n"
-SYS_INSTEAD_HEADER = "INSTEAD say:\n"
+SYS_NEVER_FENCE = (
+    f"- NEVER write fenced source code blocks in your hint.{NEWLINE}"
+)
+SYS_NEVER_WORDS = (
+    f"- NEVER use the words 'student', 'you should', "
+    f"or 'you might'. NEVER say:{NEWLINE}"
+)
+SYS_NEVER_SAY_1 = f"- 'The test incorrectly asserts <...>'{NEWLINE}"
+SYS_NEVER_SAY_2 = f"- 'Modify the test to <...>'{NEWLINE}"
+SYS_NEVER_SAY_3 = f"- 'The assertion is wrong because <...>'{NEWLINE}"
+SYS_NEVER_SAY_4 = f"- 'Change the expected result <...>'{NEWLINE}{NEWLINE}"
+SYS_INSTEAD_HEADER = f"INSTEAD say:{NEWLINE}"
 SYS_INSTEAD_1 = (
-    "- 'The function X returns Y but the test expects Z; check...'\n"
+    f"- 'The function X returns Y but the test expects Z; check...'{NEWLINE}"
 )
 SYS_INSTEAD_2 = (
-    "- 'The implementation does not handle...; add logic to...'\n\n"
+    f"- 'The implementation does not handle...; "
+    f"add logic to...'{NEWLINE}{NEWLINE}"
 )
 
 # user message suffix telling the language model what to do
