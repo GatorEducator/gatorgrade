@@ -968,6 +968,21 @@ def test_run_gg_check_path_extraction_with_different_order() -> None:
     assert result.path == "gatorgrade/input/checks.py"
 
 
+def test_run_gg_check_path_with_directory_missing_args() -> None:
+    """_run_gg_check handles --directory without enough args gracefully."""
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Test",
+            "MatchFileFragment",
+            "--directory",
+        ],
+        json_info={"check": "test"},
+    )
+    result = output._run_gg_check(check)
+    assert result.path is None
+
+
 def test_create_markdown_report_file_includes_file_option_only_when_present() -> (
     None
 ):
@@ -2451,6 +2466,14 @@ def test_format_remaining_time_overdue() -> None:
     assert color == "red"
 
 
+def test_format_remaining_time_overdue_mixed() -> None:
+    """Test overdue with hours but no days to cover minute branch."""
+    past = datetime.datetime.now() - datetime.timedelta(hours=1, minutes=30)
+    time_str, color = output._format_remaining_time(past)
+    assert "Overdue" in time_str
+    assert color == "red"
+
+
 def test_create_markdown_report_file_with_due_date() -> None:
     """Test markdown report includes due date when provided."""
     json_data = {
@@ -2656,6 +2679,19 @@ def test_build_gg_check_details_returns_options_when_check_name_missing() -> (
     )
     result = output._build_gg_check_details(check)
     assert "Python" in result
+
+
+def test_build_gg_check_details_handles_non_dict_options() -> None:
+    """_build_gg_check_details returns empty string when options is not a dict."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountLines"],
+        json_info={
+            "check": "CountLines",
+            "options": "not-a-dict",
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert result == ""
 
 
 def test_run_checks_skips_auto_hint_for_passing_check() -> None:

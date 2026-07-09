@@ -227,6 +227,16 @@ class TestFallbackHintEngine:
         engine.ensure_loaded()
         remote.ensure_loaded.assert_called_once()
 
+    def test_ensure_loaded_survives_remote_exception(self) -> None:
+        """ensure_loaded does not propagate exceptions from the remote engine."""
+        remote = MagicMock()
+        remote.ensure_loaded.side_effect = RuntimeError("connection failed")
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        # the exception is swallowed; no crash expected
+        engine.ensure_loaded()
+        remote.ensure_loaded.assert_called_once()
+
     def test_generate_hint_uses_remote_when_it_succeeds(
         self,
     ) -> None:
@@ -278,6 +288,29 @@ class TestFallbackHintEngine:
         # after fallback
         assert engine.model_id == "local-model"
         assert engine.has_fallback
+
+    def test_primary_model_id_property(self) -> None:
+        """primary_model_id returns the remote model ID unchanged."""
+        remote = MagicMock()
+        remote.model_id = "remote-model-v2"
+        local = MagicMock()
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        assert engine.primary_model_id == "remote-model-v2"
+
+    def test_generate_hint_when_both_engines_fail(self) -> None:
+        """last_error is set when both engines return None."""
+        remote = MagicMock()
+        remote.generate_hint.return_value = (None, False)
+        remote.last_error = "remote error"
+        local = MagicMock()
+        local.generate_hint.return_value = (None, False)
+        local.last_error = "local error"
+        engine = main.FallbackHintEngine(remote, local, "http://test.url")
+        hint, _is_low = engine.generate_hint(description="test")
+        assert hint is None
+        assert engine.last_error is not None
+        assert "remote error" in engine.last_error
+        assert "local error" in engine.last_error
 
     def test_has_fallback_property(self) -> None:
         """has_fallback returns False initially, True after fallback."""
@@ -354,6 +387,25 @@ def test_resolve_validation_rules_returns_none_on_invalid_json(
     )
     rules_file = tmp_path / "bad.json"
     rules_file.write_text("not valid json{{")
+    result = main._resolve_validation_rules(config_file, None)
+    assert result is None
+
+
+def test_resolve_validation_rules_returns_none_for_non_dict_json(
+    tmp_path: Path,
+) -> None:
+    """_resolve_validation_rules returns None when JSON is valid but not a dict."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text(
+        'validation_phrases_file: "items.json"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    rules_file = tmp_path / "items.json"
+    rules_file.write_text('["must_contain", "x"]')
     result = main._resolve_validation_rules(config_file, None)
     assert result is None
 
@@ -1092,6 +1144,12 @@ def test_validate_report_passes_for_none_values() -> None:
     """_validate_report passes through None values."""
     result = main._validate_report((None, None, None))
     assert result == (None, None, None)
+
+
+def test_validate_report_rejects_invalid_env_var_name() -> None:
+    """_validate_report rejects an invalid env var name with ENV destination."""
+    with pytest.raises(BadParameter, match="Third report argument"):
+        main._validate_report(("ENV", "MD", "1invalid!"))
 
 
 def test_gatorgrade_with_auto_hint_model_requires_auto_hint(
