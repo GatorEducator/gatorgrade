@@ -33,6 +33,15 @@ ENABLE_THINKING_DEFAULT = {
     }
 }
 
+# custom user-agent header sent with every request to the remote API
+# server; some reverse proxies, such as cloudflare WAF, block the
+# default user-agent string that the openai Python library sends
+# (e.g., "OpenAI/Python 2.44.0"), causing a silent 403 response;
+# overriding the user-agent with a project-specific value avoids
+# these false-positive blocks while still identifying the client
+USER_AGENT_KEY = "User-Agent"
+USER_AGENT_VALUE = f"gatorgrade/{GATORGRADE_VERSION}"
+
 
 class RemoteHintEngine:
     """Engine that generates hints via an OpenAI-compatible remote API.
