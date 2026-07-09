@@ -66,7 +66,6 @@ app = typer.Typer(
     help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified configuration file.",
 )
 
-
 # create a default console for printing with rich
 console = Console()
 
