@@ -73,8 +73,6 @@ def _platform_model_cache_dir() -> Path:
         The platform-level default model cache directory path.
 
     """
-    import platformdirs  # noqa: PLC0415
-
     return (
         Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
         / "models"
