@@ -115,3 +115,85 @@ def test_valid_env_var_names_match_property(value: str) -> None:
 def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
     """Property: invalid env var names do not match the pattern."""
     assert validate.VALID_ENV_VAR_NAME.match(value) is None
+
+
+class TestAutoHintOptionsValidation:
+    """Tests for _validate_auto_hint_options."""
+
+    def test_all_valid_when_auto_hint_enabled(self) -> None:
+        """No errors when all options are consistent with auto-hint enabled."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=True,
+            auto_hint_model="custom/model",
+            auto_hint_url="http://localhost:4000",
+            auto_hint_api_key="sk-test-key",
+        )
+        assert errors == []
+
+    def test_all_valid_with_default_model(self) -> None:
+        """No errors with default model sentinel."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=True,
+            auto_hint_model="__default_model__",
+            auto_hint_url=None,
+            auto_hint_api_key=None,
+        )
+        assert errors == []
+
+    def test_model_requires_auto_hint(self) -> None:
+        """Error when --auto-hint-model is used without --auto-hint."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=False,
+            auto_hint_model="custom/model",
+            auto_hint_url=None,
+            auto_hint_api_key=None,
+        )
+        assert len(errors) >= 1
+        assert "--auto-hint-model" in errors[0]
+        assert "--auto-hint" in errors[0]
+
+    def test_url_requires_auto_hint(self) -> None:
+        """Error when --auto-hint-url is used without --auto-hint."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=False,
+            auto_hint_model="__default_model__",
+            auto_hint_url="http://localhost:4000",
+            auto_hint_api_key=None,
+        )
+        assert len(errors) >= 1
+        assert "--auto-hint-url" in errors[0]
+        assert "--auto-hint" in errors[0]
+
+    def test_api_key_requires_auto_hint(self) -> None:
+        """Error when --auto-hint-api-key is used without --auto-hint."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=False,
+            auto_hint_model="__default_model__",
+            auto_hint_url=None,
+            auto_hint_api_key="sk-test-key",
+        )
+        assert len(errors) >= 1
+        assert "--auto-hint-api-key" in errors[0]
+        assert "--auto-hint" in errors[0]
+
+    def test_api_key_requires_url(self) -> None:
+        """Error when --auto-hint-api-key is used without --auto-hint-url."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=True,
+            auto_hint_model="__default_model__",
+            auto_hint_url=None,
+            auto_hint_api_key="sk-test-key",
+        )
+        assert len(errors) >= 1
+        assert "--auto-hint-api-key" in errors[0]
+        assert "--auto-hint-url" in errors[0]
+
+    def test_multiple_errors_reported(self) -> None:
+        """Multiple errors are reported when several flags are misused."""
+        errors = validate._validate_auto_hint_options(
+            auto_hint=False,
+            auto_hint_model="custom/model",
+            auto_hint_url=None,
+            auto_hint_api_key="sk-test-key",
+        )
+        assert len(errors) >= 2  # noqa: PLR2004

@@ -203,6 +203,41 @@ def test_gatorgrade_with_auto_hint_creates_engine(
     assert result.exit_code == 0
 
 
+def test_gatorgrade_with_auto_hint_url_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-url without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--auto-hint-url", "http://localhost:4000"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_api_key_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-api-key without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint-api-key", "sk-test-key"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_api_key_requires_url(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-api-key without --auto-hint-url exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--auto-hint", "--auto-hint-api-key", "sk-test-key"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
 def test_gatorgrade_with_output_limit_zero(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
