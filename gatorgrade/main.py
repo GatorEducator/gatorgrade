@@ -35,8 +35,8 @@ from gatorgrade.input.parse_config import (
 )
 from gatorgrade.output.output import run_checks
 from gatorgrade.resolve import (
-    _resolve_system_prompt,
-    _resolve_validation_rules,
+    resolve_system_prompt,
+    resolve_validation_rules,
 )
 from gatorgrade.validate import (
     validate_auto_hint_options,
@@ -486,10 +486,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # the program falls back to the local engine; resolve the system prompt
             # and validation rules if specified in the config front matter
             if auto_hint:
-                system_prompt = _resolve_system_prompt(
+                system_prompt = resolve_system_prompt(
                     resolved_filename, resolved_config_dir
                 )
-                validation_rules = _resolve_validation_rules(
+                validation_rules = resolve_validation_rules(
                     resolved_filename, resolved_config_dir
                 )
                 auto_hint_engine = create_auto_hint_engine(
