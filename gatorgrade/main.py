@@ -39,6 +39,7 @@ from gatorgrade.resolve import (
     _resolve_validation_rules,
 )
 from gatorgrade.validate import (
+    _validate_auto_hint_options,
     _validate_baseline_weight,
     _validate_github_env,
     _validate_output_limit,
@@ -173,7 +174,7 @@ def _print_verbose_info(  # noqa: PLR0913
 
 
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0913, PLR0915
+def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
         FILE,
@@ -438,13 +439,23 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # opted in to using auto-hinting both through the
             # command line and through running the tool with
             # the optional dependencies installed (auto-hinting
-            # relies on local transformers, which we do not
-            # want to load unless the opt-in was made)
+            # relies on local transformers or, if specified,
+            # a remote OpenAI-compatible API, both of which we
+            # do not want to load unless the opt-in was made)
             auto_hint_engine = None
-            # validate that --auto-hint-model is only used with --auto-hint;
-            # the sentinel default catches the case when the user did not
-            # explicitly pass the flag
-            if not auto_hint and auto_hint_model != AUTO_HINT_MODEL_DEFAULT:
+            # validate auto-hint option combinations make
+            # sure that invalid configurations are not
+            # allowed; this catches invalid combinations:
+            #   --auto-hint-model without --auto-hint
+            #   --auto-hint-url without --auto-hint
+            #   --auto-hint-api-key without --auto-hint-url
+            auto_hint_errors = _validate_auto_hint_options(
+                auto_hint,
+                auto_hint_model,
+                auto_hint_url,
+                auto_hint_api_key,
+            )
+            if auto_hint_errors:
                 checks_status = False
                 console.print()
                 console.print(
@@ -453,31 +464,34 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                         style="bright_red",
                     )
                 )
-                console.print()
-                console.print(
-                    f"The {AUTO_HINT_MODEL_FLAG} requires {AUTO_HINT_FLAG} "
-                    f"to be enabled for auto-hint generation."
-                )
-                # console.print()
+                # display a blank line if there is
+                # at least one error in configuration
+                # for the auto-hinting feature
+                if auto_hint_errors:
+                    console.print()
+                # display the errors in configuration
+                # for the auto-hinting (note that there
+                # could be one or more errors)
+                for error in auto_hint_errors:
+                    console.print(error)
                 console.print(Text(EXIT_MESSAGE))
                 console.print()
                 console.print(Rule(style="bright_red"))
                 sys.exit(FAILURE)
             # auto-hint engine: try to create it if --auto-hint is passed;
             # the engine sources hints from a remote OpenAI-compatible API
-            # (when --auto-hint-url is provided) or from a local
-            # huggingface transformers model (when no URL is provided).
+            # (i.e., when --auto-hint-url is provided) or from a local
+            # huggingface transformers model (i.e., when no URL is provided).
             # remote engine fails to initialise or returns None for a hint,
-            # the program falls back to the local engine.
-            # resolve the system prompt and validation rules if specified
-            # in the config front matter
-            system_prompt = _resolve_system_prompt(
-                resolved_filename, resolved_config_dir
-            )
-            validation_rules = _resolve_validation_rules(
-                resolved_filename, resolved_config_dir
-            )
+            # the program falls back to the local engine; resolve the system prompt
+            # and validation rules if specified in the config front matter
             if auto_hint:
+                system_prompt = _resolve_system_prompt(
+                    resolved_filename, resolved_config_dir
+                )
+                validation_rules = _resolve_validation_rules(
+                    resolved_filename, resolved_config_dir
+                )
                 auto_hint_engine = _create_auto_hint_engine(
                     resolved_filename,
                     auto_hint_model,
