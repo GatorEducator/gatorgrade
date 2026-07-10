@@ -338,7 +338,6 @@ class AutoHintEngine:
             system_prompt=effective_prompt,
             details=details,
         )
-
         try:
             # the pipeline applies the model's chat template internally,
             # formats the messages, and generates the assistant's reply;
