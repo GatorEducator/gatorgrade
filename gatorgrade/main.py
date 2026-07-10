@@ -20,7 +20,7 @@ from gatorgrade.detect import (
 )
 from gatorgrade.engine import (
     AUTO_HINT_MODEL_DEFAULT,
-    _create_auto_hint_engine,
+    create_auto_hint_engine,
 )
 from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
 from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
@@ -492,7 +492,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 validation_rules = _resolve_validation_rules(
                     resolved_filename, resolved_config_dir
                 )
-                auto_hint_engine = _create_auto_hint_engine(
+                auto_hint_engine = create_auto_hint_engine(
                     resolved_filename,
                     auto_hint_model,
                     auto_hint_url,
