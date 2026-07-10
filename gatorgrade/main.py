@@ -13,10 +13,10 @@ from rich.text import Text
 
 from gatorgrade.detect import (
     GATORGRADER_DEPENDENCY,
-    _get_os_release,
-    _get_platform_info,
-    _get_python_info,
-    _print_version_info,
+    get_os_release,
+    get_platform_info,
+    get_python_info,
+    print_version_info,
 )
 from gatorgrade.engine import (
     AUTO_HINT_MODEL_DEFAULT,
@@ -113,7 +113,7 @@ OS_RELEASE_KEY = "os_release"
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        _print_version_info(console)
+        print_version_info(console)
         raise typer.Exit()
 
 
@@ -152,7 +152,7 @@ def _print_verbose_info(  # noqa: PLR0913
     console.print()
     console.print(Rule("Verbose Mode Information", style="green"))
     console.print()
-    _print_version_info(console)
+    print_version_info(console)
     console.print(f"Config file: {config_path}")
     console.print(f"Config dir:  {config_dir}")
     console.print(f"Output limit:  {output_limit}")
@@ -430,9 +430,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 GATORGRADER_VERSION_KEY: importlib.metadata.version(
                     GATORGRADER_DEPENDENCY
                 ),
-                PYTHON_INFO_KEY: _get_python_info(),
-                PLATFORM_INFO_KEY: _get_platform_info(),
-                OS_RELEASE_KEY: _get_os_release(),
+                PYTHON_INFO_KEY: get_python_info(),
+                PLATFORM_INFO_KEY: get_platform_info(),
+                OS_RELEASE_KEY: get_os_release(),
             }
             # at the outset, there is no auto-hinting engine
             # unless the person using gatorgrade has explicitly
