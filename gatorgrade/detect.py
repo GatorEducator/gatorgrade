@@ -59,7 +59,7 @@ GATORGRADER_NAME = "GatorGrader"
 PYTHON_NAME = "Python"
 
 
-def _get_platform_info() -> str:
+def get_platform_info() -> str:
     """Get the platform information string for any platform.
 
     Mirrors the format used by uv: arch-os-libc with exactly
@@ -88,7 +88,7 @@ def _get_platform_info() -> str:
     return f"{arch}-{system}-{libc}"
 
 
-def _get_python_info() -> str:
+def get_python_info() -> str:
     """Get the Python version, build, and compiler information string.
 
     Returns:
@@ -102,7 +102,7 @@ def _get_python_info() -> str:
     return f"{PYTHON_NAME} {version} ({build_no}, {build_date}, {compiler})"
 
 
-def _get_gatorgrade_info() -> str:
+def get_gatorgrade_info() -> str:
     """Get the parenthetic GatorGrade info string with the GatorGrader version.
 
     Uses importlib.metadata to get the installed version of the
@@ -116,7 +116,7 @@ def _get_gatorgrade_info() -> str:
     return f"{GATORGRADER_NAME} {gatorgrader_version}"
 
 
-def _get_os_release() -> str:
+def get_os_release() -> str:
     """Get the operating system release string for Linux, macOS, or Windows.
 
     Returns:
@@ -124,7 +124,7 @@ def _get_os_release() -> str:
         empty string if the release cannot be determined.
 
     """
-    parenthetic_platform_string = f"({_get_platform_info()})"
+    parenthetic_platform_string = f"({get_platform_info()})"
     if platform.system() == OS_LINUX:
         kernel = platform.release()
         if kernel:
@@ -140,7 +140,7 @@ def _get_os_release() -> str:
     return ""
 
 
-def _print_version_info(console: Any) -> None:
+def print_version_info(console: Any) -> None:
     """Print gatorgrade version, platform, and environment information.
 
     Used by both --version and --verbose to display diagnostic
@@ -151,10 +151,10 @@ def _print_version_info(console: Any) -> None:
 
     """
     console.print(
-        f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})"
+        f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({get_gatorgrade_info()})"
     )
-    console.print(_get_python_info())
-    os_release = _get_os_release()
+    console.print(get_python_info())
+    os_release = get_os_release()
     if os_release:
         console.print(os_release)
     # show the path-related environment variables and resolved
