@@ -12,27 +12,27 @@ from gatorgrade.hint.local_engine import (
     HINT_REPETITION_PENALTY,
     HINT_TOP_P,
     AutoHintEngine,
-    _model_cache_dir,
+    model_cache_dir,
 )
 
 pytestmark = pytest.mark.autohint
 
 
 class TestHfCacheDir:
-    """Tests for the _model_cache_dir helper."""
+    """Tests for the model_cache_dir helper."""
 
     def test_returns_path(self) -> None:
         """The cache dir function returns a Path object."""
-        assert isinstance(_model_cache_dir(), Path)
+        assert isinstance(model_cache_dir(), Path)
 
     def test_ends_with_models(self) -> None:
         """The cache dir ends with 'models' by default."""
-        assert _model_cache_dir().name == "models"
+        assert model_cache_dir().name == "models"
 
     def test_override_is_honoured(self, tmp_path: Path) -> None:
         """Explicit override is returned as-is."""
         custom = tmp_path / "custom"
-        assert _model_cache_dir(override=custom) == custom
+        assert model_cache_dir(override=custom) == custom
 
 
 class TestAutoHintEngineConstruction:
@@ -422,14 +422,14 @@ class TestAutoHintEngineCacheDir:
 
 
 class TestModelCacheDirFallback:
-    """Tests for the _model_cache_dir fallback path."""
+    """Tests for the model_cache_dir fallback path."""
 
     def test_env_var_override(self, tmp_path: Path) -> None:
         """$GATORGRADE_MODELS_DIR overrides the cache dir."""
         with patch.dict(
             "os.environ", {"GATORGRADE_MODELS_DIR": str(tmp_path)}
         ):
-            result = _model_cache_dir()
+            result = model_cache_dir()
         assert result == tmp_path
 
 
