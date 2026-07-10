@@ -3,7 +3,7 @@
 import importlib.metadata
 import sys
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
 import typer
 from rich.console import Console
@@ -18,32 +18,26 @@ from gatorgrade.detect import (
     _get_python_info,
     _print_version_info,
 )
-from gatorgrade.hint.fallback import (
-    FallbackHintEngine,
-    RemoteEngineAdapter,
+from gatorgrade.engine import (
+    AUTO_HINT_MODEL_DEFAULT,
+    _create_auto_hint_engine,
 )
-from gatorgrade.hint.local_engine import (
-    DEFAULT_MODEL_ID,
-    AutoHintEngine,
-)
-from gatorgrade.hint.remote_engine import (
-    REMOTE_API_KEY_DEFAULT,
-    REMOTE_MODEL_DEFAULT,
-    RemoteHintEngine,
-)
+from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
+from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
 from gatorgrade.input.parse_config import (
-    get_auto_hint_model,
     get_config_dir,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
-    get_system_prompt_file,
-    get_validation_phrases_file,
     has_due_date_field,
     parse_config,
     resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.resolve import (
+    _resolve_system_prompt,
+    _resolve_validation_rules,
+)
 from gatorgrade.validate import (
     _validate_baseline_weight,
     _validate_github_env,
@@ -99,9 +93,6 @@ SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
 VERBOSE_FLAG = "--verbose"
 AUTO_HINT_FLAG = "--auto-hint"
 AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
-AUTO_HINT_MODEL_DEFAULT = (
-    "__default_model__"  # sentinel to detect if flag was explicitly passed
-)
 AUTO_HINT_URL_FLAG = "--auto-hint-url"
 AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
 GITHUB_ENV_FLAG = "--github-env"
@@ -179,232 +170,6 @@ def _print_verbose_info(  # noqa: PLR0913
             console.print(f"Remote URL:  {auto_hint_url}")
     console.print()
     console.print(Rule(style="green"))
-
-
-def _resolve_system_prompt(
-    config_path: Path, config_dir: Optional[Path]
-) -> Optional[str]:
-    """Read the system prompt file if specified in the config front matter.
-
-    The filename is read from the system_prompt_file field in
-    the YAML front matter, then resolved in this search order:
-
-    1. Current working directory
-    2. Alongside the configuration file itself
-    3. The --config-dir directory (or the default platformdirs-
-       based config directory)
-
-    Args:
-        config_path: Path to the resolved gatorgrade configuration
-            file.
-        config_dir: The config directory (from --config-dir),
-            or None to use the default.
-
-    Returns:
-        The contents of the system prompt file, or None if not
-        specified or not found.
-
-    """
-    prompt_filename = get_system_prompt_file(config_path)
-    if not prompt_filename:
-        return None
-    # search order: cwd, alongside config file, config dir
-    for candidate in [
-        Path(prompt_filename),
-        config_path.parent / prompt_filename,
-        (config_dir or get_config_dir()) / prompt_filename,
-    ]:
-        if candidate.exists():
-            try:
-                return candidate.read_text(encoding="utf-8")
-            except OSError:
-                return None
-    return None
-
-
-def _resolve_validation_rules(
-    config_path: Path, config_dir: Optional[Path]
-) -> dict[str, list[str]] | None:
-    """Read the validation rules JSON file if specified in the config front matter.
-
-    The filename is read from the validation_phrases_file field
-    in the YAML front matter. The JSON file must contain an object
-    with optional keys:
-
-    - must_contain: list of phrases that must appear in hints
-    - cannot_contain: list of phrases that must not appear
-
-    The file is resolved in the same search order as the system
-    prompt: CWD, alongside config file, then config dir.
-
-    Args:
-        config_path: Path to the resolved gatorgrade configuration
-            file.
-        config_dir: The config directory (from --config-dir),
-            or None to use the default.
-
-    Returns:
-        The parsed validation rules dict, or None if not specified
-        or not found.
-
-    """
-    import json  # noqa: PLC0415
-
-    filename = get_validation_phrases_file(config_path)
-    if not filename:
-        return None
-    for candidate in [
-        Path(filename),
-        config_path.parent / filename,
-        (config_dir or get_config_dir()) / filename,
-    ]:
-        if candidate.exists():
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-                if not isinstance(data, dict):
-                    return None
-                return data
-            except (json.JSONDecodeError, OSError):
-                return None
-    return None
-
-
-def _create_auto_hint_engine(  # noqa: PLR0913
-    filename: Path,
-    auto_hint_model: str,
-    auto_hint_url: Optional[str],
-    auto_hint_api_key: Optional[str],
-    system_prompt: str | None = None,
-    validation_rules: dict[str, list[str]] | None = None,
-) -> Any:
-    """Create the appropriate auto-hint engine based on CLI arguments.
-
-    When --auto-hint-url is provided, a RemoteHintEngine is
-    attempted first. If it succeeds, it is returned. If it
-    fails (e.g. the URL is unreachable or pydantic_ai is not
-    installed), a warning is printed and the engine falls back
-    to a local AutoHintEngine.
-
-    When no URL is provided, a local AutoHintEngine is created
-    directly, using the default configuration for auto-hinting.
-
-    Args:
-        filename: Path to the config file (for reading
-            auto_hint_model from front matter).
-        auto_hint_model: Model ID from the CLI, or a sentinel
-            default value.
-        auto_hint_url: URL of the remote API server, or None.
-        auto_hint_api_key: API key for the remote server.
-        system_prompt: Optional custom system prompt.
-            If provided, this replaces the built-in default.
-        validation_rules: Optional dict with must_contain
-            and/or cannot_contain lists of phrases to
-            check, in addition to the built-in quality rules.
-
-    Returns:
-        An AutoHintEngine instance, or None if creation fails.
-
-    """
-    # resolve the model ID from the CLI, config file, or default;
-    # the remote engine has its own default model, separate from
-    # the local engine default
-    model_id = auto_hint_model
-    remote_model_id = auto_hint_model
-    if (
-        not model_id
-        or not model_id.strip()
-        or model_id == AUTO_HINT_MODEL_DEFAULT
-    ):
-        config_model = get_auto_hint_model(filename)
-        model_id = config_model or DEFAULT_MODEL_ID
-        remote_model_id = config_model or REMOTE_MODEL_DEFAULT
-    # build the primary and fallback local engines
-    primary_local_model = DEFAULT_MODEL_ID if auto_hint_url else model_id
-    fallback_local_model = DEFAULT_MODEL_ID
-    try:
-        primary_engine = AutoHintEngine(
-            model_id=primary_local_model,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-    except Exception:
-        primary_engine = None
-    try:
-        fallback_engine = AutoHintEngine(
-            model_id=fallback_local_model,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-    except Exception:
-        fallback_engine = None
-    if auto_hint_url:
-        # attempt to create the remote engine
-        remote_engine = _try_create_remote_engine(
-            auto_hint_url,
-            auto_hint_api_key,
-            remote_model_id,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-        if remote_engine is not None and fallback_engine is not None:
-            return FallbackHintEngine(
-                remote_engine,
-                fallback_engine,
-                auto_hint_url,
-                console=console,
-            )
-        if remote_engine is not None:
-            return remote_engine
-        if fallback_engine is not None:
-            console.print()
-            console.print(
-                "[yellow]Warning: Could not create remote hint engine for"
-                f" {auto_hint_url}. Using local model."
-                "[/]"
-            )
-            console.print()
-        return fallback_engine
-    # no remote URL: use primary local engine, with fallback if needed
-    if primary_engine is not None and fallback_engine is not None:
-        return FallbackHintEngine(
-            primary_engine,
-            fallback_engine,
-            None,
-            console=console,
-        )
-    if primary_engine is not None:
-        return primary_engine
-    return fallback_engine
-
-
-def _try_create_remote_engine(
-    url: str,
-    api_key: Optional[str],
-    model_id: str,
-    system_prompt: str | None = None,
-    validation_rules: dict[str, list[str]] | None = None,
-) -> Any:
-    """Attempt to create and verify a RemoteHintEngine.
-
-    Returns the engine wrapped in an adapter that unifies the
-    RemoteHintEngine interface (is_loaded, ensure_loaded, model_id,
-    generate_hint) with the existing AutoHintEngine interface.
-
-    Returns None if the engine cannot be created (missing deps,
-    connection error, etc.).
-
-    """
-    try:
-        remote = RemoteHintEngine(
-            base_url=url,
-            api_key=api_key or REMOTE_API_KEY_DEFAULT,
-            model_id=model_id,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-        return RemoteEngineAdapter(remote, model_id)
-    except Exception:
-        return None
 
 
 @app.callback(invoke_without_command=True)
@@ -724,6 +489,8 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                     auto_hint_api_key,
                     system_prompt=system_prompt,
                     validation_rules=validation_rules,
+                    auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
+                    console=console,
                 )
             # run the checks that were specified in a way
             # that adheres to the configuration both in
