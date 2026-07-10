@@ -2772,6 +2772,24 @@ def test_run_checks_shows_warning_when_model_load_fails(
     mock_engine.ensure_loaded.assert_called_once()
 
 
+def test_run_checks_shows_warning_with_last_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Warning includes last_error when engine fails to generate hints."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = (None, False)
+    mock_engine.last_error = "connection refused"
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    captured = capsys.readouterr()
+    assert "connection refused" in captured.out
+
+
 def test_run_checks_generates_low_quality_hint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
