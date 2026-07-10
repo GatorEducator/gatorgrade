@@ -17,7 +17,7 @@ from gatorgrade.input.parse_config import (
 )
 
 
-def _resolve_system_prompt(
+def resolve_system_prompt(
     config_path: Path, config_dir: Optional[Path]
 ) -> Optional[str]:
     """Read the system prompt file if specified in the config front matter.
@@ -58,7 +58,7 @@ def _resolve_system_prompt(
     return None
 
 
-def _resolve_validation_rules(
+def resolve_validation_rules(
     config_path: Path, config_dir: Optional[Path]
 ) -> dict[str, list[str]] | None:
     """Read the validation rules JSON file if specified in the config front matter.
