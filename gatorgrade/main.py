@@ -39,11 +39,11 @@ from gatorgrade.resolve import (
     _resolve_validation_rules,
 )
 from gatorgrade.validate import (
-    _validate_auto_hint_options,
-    _validate_baseline_weight,
-    _validate_github_env,
-    _validate_output_limit,
-    _validate_report,
+    validate_auto_hint_options,
+    validate_baseline_weight,
+    validate_github_env,
+    validate_output_limit,
+    validate_report,
 )
 
 # import the version from the single-source-of-truth module so that
@@ -204,7 +204,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
             f" [green]FILE JSON report.json[/green] to save summary in report.json)."
         ),
-        callback=_validate_report,
+        callback=validate_report,
     ),
     github_env: Tuple[str, str] = typer.Option(
         (None, None),
@@ -218,21 +218,21 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             f" [green]md MD_REPORT[/green] to store Markdown data in the"
             f" GITHUB_ENV file for downstream steps)."
         ),
-        callback=_validate_github_env,
+        callback=validate_github_env,
     ),
     output_limit: int = typer.Option(
         5,
         "--output-limit",
         "-o",
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
-        callback=_validate_output_limit,
+        callback=validate_output_limit,
     ),
     baseline_weight: int = typer.Option(
         1,
         "--baseline-weight",
         "-b",
         help="Default weight applied to checks without an explicit weight (>= 1).",
-        callback=_validate_baseline_weight,
+        callback=validate_baseline_weight,
     ),
     progress_bar: bool = typer.Option(
         True,
@@ -449,7 +449,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             #   --auto-hint-model without --auto-hint
             #   --auto-hint-url without --auto-hint
             #   --auto-hint-api-key without --auto-hint-url
-            auto_hint_errors = _validate_auto_hint_options(
+            auto_hint_errors = validate_auto_hint_options(
                 auto_hint,
                 auto_hint_model,
                 auto_hint_url,
