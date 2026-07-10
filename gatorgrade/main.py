@@ -258,12 +258,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         AUTO_HINT_MODEL_DEFAULT,
         "--auto-hint-model",
         help=(
-            "Model identifier for auto-hint generation "
-            "(requires --auto-hint). For remote APIs, the default is"
-            f" {REMOTE_MODEL_DEFAULT}; for local models, it is"
-            f" {DEFAULT_MODEL_ID}."
+            "Model for auto-hint generation "
+            "(requires --auto-hint). Defaults to"
+            f" {REMOTE_MODEL_DEFAULT} when --auto-hint-url is set"
+            f" or {DEFAULT_MODEL_ID} otherwise."
         ),
-        show_default=DEFAULT_MODEL_ID,
+        show_default=False,
     ),
     auto_hint_url: Optional[str] = typer.Option(
         None,
