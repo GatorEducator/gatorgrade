@@ -271,11 +271,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             "URL of an OpenAI-compatible API server for remote hint "
             "generation (requires --auto-hint). When provided, the "
             "remote model is used instead of a local model. Falls "
-            "back to default local model on any remote URL errors. "
-            "Note: requests use the user-agent gatorgrade/0.11.0 "
-            "instead of the openai library default, because some "
-            "reverse proxies and WAFs (e.g. cloudflare) block the "
-            "default openai/python user-agent."
+            "back to default local model on any remote URL errors."
         ),
     ),
     auto_hint_api_key: Optional[str] = typer.Option(
