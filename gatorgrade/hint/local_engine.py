@@ -39,7 +39,7 @@ TRUST_REMOTE_CODE_KEY = "trust_remote_code"
 TRUST_REMOTE_CODE_VALUE = True
 
 
-def _model_cache_dir(override: Optional[Path] = None) -> Path:
+def model_cache_dir(override: Optional[Path] = None) -> Path:
     """Return the gatorgrade-specific directory where models are cached.
 
     Precedence for the gatorgrade-specific directory:
@@ -60,10 +60,10 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     )
 
 
-def _platform_model_cache_dir() -> Path:
+def platform_model_cache_dir() -> Path:
     """Return the platform-level default model cache directory.
 
-    Unlike _model_cache_dir, this ignores the $GATORGRADE_MODELS_DIR
+    Unlike model_cache_dir, this ignores the $GATORGRADE_MODELS_DIR
     environment variable and always returns the platformdirs-based
     default. This is useful for display purposes (e.g., --version)
     so users can see the underlying default even when an override is
@@ -172,7 +172,7 @@ class AutoHintEngine:
         Uses platformdirs.user_cache_dir("gatorgrade") / "models"
         so models live in the standard per-user cache location.
         """
-        return _model_cache_dir(override=self._cache_dir_override)
+        return model_cache_dir(override=self._cache_dir_override)
 
     @property
     def is_loaded(self) -> bool:
