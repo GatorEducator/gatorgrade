@@ -9,10 +9,10 @@ which Typer converts into a user-friendly error message.
 Usage:
     from gatorgrade.validate import (
         VALID_ENV_VAR_NAME,
-        _validate_baseline_weight,
-        _validate_github_env,
-        _validate_output_limit,
-        _validate_report,
+        validate_baseline_weight,
+        validate_github_env,
+        validate_output_limit,
+        validate_report,
     )
 """
 
@@ -58,7 +58,7 @@ REPORT_ENV_NAME_ERR_FMT = (
 VALID_ENV_VAR_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def _validate_output_limit(value: int | None) -> int | None:
+def validate_output_limit(value: int | None) -> int | None:
     """Validate output limit is at least 1 if provided.
 
     Args:
@@ -76,7 +76,7 @@ def _validate_output_limit(value: int | None) -> int | None:
     return value
 
 
-def _validate_baseline_weight(value: int) -> int:
+def validate_baseline_weight(value: int) -> int:
     """Validate baseline weight is greater than 0.
 
     Args:
@@ -94,7 +94,7 @@ def _validate_baseline_weight(value: int) -> int:
     return value
 
 
-def _validate_report(
+def validate_report(
     value: Tuple[Optional[str], Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """Validate report tuple arguments up front to avoid crashes later.
@@ -169,7 +169,7 @@ AUTO_HINT_DISPLAY = "--auto-hint"
 AUTO_HINT_MODEL_SENTINEL = "__default_model__"
 
 
-def _validate_auto_hint_options(
+def validate_auto_hint_options(
     auto_hint: bool,
     auto_hint_model: str,
     auto_hint_url: str | None,
@@ -224,7 +224,7 @@ def _validate_auto_hint_options(
     return errors
 
 
-def _validate_github_env(
+def validate_github_env(
     value: Tuple[Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str]]:
     """Validate github-env tuple arguments up front.
