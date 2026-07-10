@@ -8,7 +8,7 @@ from gatorgrade import resolve
 
 
 def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
-    """_resolve_system_prompt reads the system prompt file alongside config."""
+    """resolve_system_prompt reads the system prompt file alongside config."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         'system_prompt_file: "myprompt.md"\n'
@@ -20,14 +20,14 @@ def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
     )
     prompt_file = tmp_path / "myprompt.md"
     prompt_file.write_text("Custom system prompt content.")
-    result = resolve._resolve_system_prompt(config_file, None)
+    result = resolve.resolve_system_prompt(config_file, None)
     assert result == "Custom system prompt content."
 
 
 def test_resolve_system_prompt_returns_none_when_not_specified(
     tmp_path: Path,
 ) -> None:
-    """_resolve_system_prompt returns None when no system_prompt_file field."""
+    """resolve_system_prompt returns None when no system_prompt_file field."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         "setup: |\n"
@@ -36,14 +36,14 @@ def test_resolve_system_prompt_returns_none_when_not_specified(
         "- description: test\n"
         '  command: "echo hello"\n'
     )
-    result = resolve._resolve_system_prompt(config_file, None)
+    result = resolve.resolve_system_prompt(config_file, None)
     assert result is None
 
 
 def test_resolve_validation_rules_returns_none_when_not_specified(
     tmp_path: Path,
 ) -> None:
-    """_resolve_validation_rules returns None when no validation_phrases_file."""
+    """resolve_validation_rules returns None when no validation_phrases_file."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         "setup: |\n"
@@ -52,14 +52,14 @@ def test_resolve_validation_rules_returns_none_when_not_specified(
         "- description: test\n"
         '  command: "echo hello"\n'
     )
-    result = resolve._resolve_validation_rules(config_file, None)
+    result = resolve.resolve_validation_rules(config_file, None)
     assert result is None
 
 
 def test_resolve_validation_rules_reads_json_file(
     tmp_path: Path,
 ) -> None:
-    """_resolve_validation_rules reads and parses a JSON validation file."""
+    """resolve_validation_rules reads and parses a JSON validation file."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         'validation_phrases_file: "quality.json"\n'
@@ -73,7 +73,7 @@ def test_resolve_validation_rules_reads_json_file(
     rules_file.write_text(
         '{"cannot_contain": ["bad phrase"], "must_contain": ["good word"]}'
     )
-    result = resolve._resolve_validation_rules(config_file, None)
+    result = resolve.resolve_validation_rules(config_file, None)
     assert result is not None
     assert result["cannot_contain"] == ["bad phrase"]
     assert result["must_contain"] == ["good word"]
@@ -82,7 +82,7 @@ def test_resolve_validation_rules_reads_json_file(
 def test_resolve_validation_rules_returns_none_on_invalid_json(
     tmp_path: Path,
 ) -> None:
-    """_resolve_validation_rules returns None for unparseable JSON."""
+    """resolve_validation_rules returns None for unparseable JSON."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         'validation_phrases_file: "bad.json"\n'
@@ -94,14 +94,14 @@ def test_resolve_validation_rules_returns_none_on_invalid_json(
     )
     rules_file = tmp_path / "bad.json"
     rules_file.write_text("not valid json{{")
-    result = resolve._resolve_validation_rules(config_file, None)
+    result = resolve.resolve_validation_rules(config_file, None)
     assert result is None
 
 
 def test_resolve_validation_rules_returns_none_for_non_dict_json(
     tmp_path: Path,
 ) -> None:
-    """_resolve_validation_rules returns None when JSON is valid but not a dict."""
+    """resolve_validation_rules returns None when JSON is valid but not a dict."""
     config_file = tmp_path / "gatorgrade.yml"
     config_file.write_text(
         'validation_phrases_file: "items.json"\n'
@@ -113,7 +113,7 @@ def test_resolve_validation_rules_returns_none_for_non_dict_json(
     )
     rules_file = tmp_path / "items.json"
     rules_file.write_text('["must_contain", "x"]')
-    result = resolve._resolve_validation_rules(config_file, None)
+    result = resolve.resolve_validation_rules(config_file, None)
     assert result is None
 
 
@@ -135,5 +135,5 @@ def test_resolve_validation_rules_finds_file_alongside_config(
     rules_file = config_dir / "rules.json"
     rules_file.write_text('{"cannot_contain": ["x"]}')
     monkeypatch.chdir(tmp_path)
-    result = resolve._resolve_validation_rules(config_file, None)
+    result = resolve.resolve_validation_rules(config_file, None)
     assert result == {"cannot_contain": ["x"]}
