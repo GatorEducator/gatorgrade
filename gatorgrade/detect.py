@@ -17,7 +17,7 @@ from rich.text import Text
 
 from gatorgrade.hint.local_engine import (
     ENV_CACHE_DIR,
-    _platform_model_cache_dir,
+    platform_model_cache_dir,
 )
 from gatorgrade.input.parse_config import (
     ENV_CONFIG_DIR,
@@ -163,7 +163,7 @@ def print_version_info(console: Any) -> None:
 
     models_override = os.environ.get(ENV_CACHE_DIR)
     config_override = os.environ.get(ENV_CONFIG_DIR)
-    models_default = str(_platform_model_cache_dir())
+    models_default = str(platform_model_cache_dir())
     config_default = str(_platform_config_dir())
 
     def _fmt_env(name: str, override: str | None, default: str) -> Text:
