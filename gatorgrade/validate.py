@@ -150,6 +150,80 @@ def _validate_report(
     return value
 
 
+# error message format strings for auto-hint validation
+AUTO_HINT_URL_REQUIRES_AUTO_HINT_FMT = (
+    "The {} flag requires {} to be enabled for auto-hint generation."
+)
+AUTO_HINT_API_KEY_REQUIRES_URL_FMT = (
+    "The {} flag requires {} to specify a remote auto-hint server."
+)
+
+# flag display names used in error messages
+AUTO_HINT_MODEL_DISPLAY = "--auto-hint-model"
+AUTO_HINT_URL_DISPLAY = "--auto-hint-url"
+AUTO_HINT_API_KEY_DISPLAY = "--auto-hint-api-key"
+AUTO_HINT_DISPLAY = "--auto-hint"
+
+# sentinel that indicates the default model was not overridden;
+# must match the value in the engine module and main module
+AUTO_HINT_MODEL_SENTINEL = "__default_model__"
+
+
+def _validate_auto_hint_options(
+    auto_hint: bool,
+    auto_hint_model: str,
+    auto_hint_url: str | None,
+    auto_hint_api_key: str | None,
+) -> list[str]:
+    """Validate auto-hint CLI option combinations.
+
+    Checks the following rules:
+    - --auto-hint-model requires --auto-hint
+    - --auto-hint-url requires --auto-hint
+    - --auto-hint-api-key requires both --auto-hint and --auto-hint-url
+
+    Args:
+        auto_hint: Whether --auto-hint was passed.
+        auto_hint_model: The model identifier (or sentinel default).
+        auto_hint_url: The remote URL, or None.
+        auto_hint_api_key: The API key, or None.
+
+    Returns:
+        A list of error message strings. Empty if all checks pass.
+
+    """
+    errors: list[str] = []
+    # --auto-hint-model requires --auto-hint
+    if not auto_hint and auto_hint_model != AUTO_HINT_MODEL_SENTINEL:
+        errors.append(
+            AUTO_HINT_URL_REQUIRES_AUTO_HINT_FMT.format(
+                AUTO_HINT_MODEL_DISPLAY, AUTO_HINT_DISPLAY
+            )
+        )
+    # --auto-hint-url requires --auto-hint
+    if not auto_hint and auto_hint_url is not None:
+        errors.append(
+            AUTO_HINT_URL_REQUIRES_AUTO_HINT_FMT.format(
+                AUTO_HINT_URL_DISPLAY, AUTO_HINT_DISPLAY
+            )
+        )
+    # --auto-hint-api-key requires both --auto-hint and --auto-hint-url
+    if auto_hint_api_key is not None:
+        if not auto_hint:
+            errors.append(
+                AUTO_HINT_URL_REQUIRES_AUTO_HINT_FMT.format(
+                    AUTO_HINT_API_KEY_DISPLAY, AUTO_HINT_DISPLAY
+                )
+            )
+        elif auto_hint_url is None:
+            errors.append(
+                AUTO_HINT_API_KEY_REQUIRES_URL_FMT.format(
+                    AUTO_HINT_API_KEY_DISPLAY, AUTO_HINT_URL_DISPLAY
+                )
+            )
+    return errors
+
+
 def _validate_github_env(
     value: Tuple[Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str]]:
