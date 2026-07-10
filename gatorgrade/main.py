@@ -96,6 +96,7 @@ AUTO_HINT_FLAG = "--auto-hint"
 AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_URL_FLAG = "--auto-hint-url"
 AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
+AUTO_HINT_TRACK_FLAG = "--auto-hint-track"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -128,6 +129,7 @@ def _print_verbose_info(  # noqa: PLR0913
     baseline_weight: int,
     show_diagnostics: bool,
     progress_bar: bool,
+    auto_hint_track: bool | None = None,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -145,6 +147,7 @@ def _print_verbose_info(  # noqa: PLR0913
         baseline_weight: The baseline weight value.
         show_diagnostics: Whether diagnostics are shown.
         progress_bar: Whether the progress bar is shown.
+        auto_hint_track: Whether auto-hint tracking is enabled.
 
     """
     if not verbose:
@@ -169,6 +172,7 @@ def _print_verbose_info(  # noqa: PLR0913
         console.print(f"Model:       {model_display}")
         if auto_hint_url:
             console.print(f"Remote URL:  {auto_hint_url}")
+        console.print(f"Auto-hint track:  {auto_hint_track}")
     console.print()
     console.print(Rule(style="green"))
 
@@ -253,6 +257,15 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         False,
         "--auto-hint/--no-auto-hint",
         help="Automatically generate hints for failing checks.",
+    ),
+    auto_hint_track: bool = typer.Option(
+        True,
+        "--auto-hint-track/--no-auto-hint-track",
+        help=(
+            "Save auto-hint generation details to autohints.json "
+            "in the current working directory (only when "
+            "--auto-hint is enabled and hints are generated)."
+        ),
     ),
     auto_hint_model: str = typer.Option(
         AUTO_HINT_MODEL_DEFAULT,
@@ -379,6 +392,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             baseline_weight,
             show_diagnostics,
             progress_bar,
+            auto_hint_track=auto_hint_track,
         )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
@@ -424,6 +438,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 AUTO_HINT_API_KEY_FLAG: str(auto_hint_api_key)
                 if auto_hint_api_key
                 else None,
+                AUTO_HINT_TRACK_FLAG: auto_hint_track,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -519,6 +534,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 due_date,
                 auto_hint_engine=auto_hint_engine,
                 auto_hint_url=auto_hint_url,
+                auto_hint_track=auto_hint_track,
             )
         # no checks were created and this means
         # that, most likely, the file was not
