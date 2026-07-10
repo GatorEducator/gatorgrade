@@ -32,7 +32,7 @@ from gatorgrade.input.parse_config import get_auto_hint_model
 AUTO_HINT_MODEL_DEFAULT = "__default_model__"
 
 
-def _create_auto_hint_engine(  # noqa: PLR0913
+def create_auto_hint_engine(  # noqa: PLR0913
     filename: Path,
     auto_hint_model: str,
     auto_hint_url: Optional[str],
@@ -107,7 +107,7 @@ def _create_auto_hint_engine(  # noqa: PLR0913
         fallback_engine = None
     if auto_hint_url:
         # attempt to create the remote engine
-        remote_engine = _try_create_remote_engine(
+        remote_engine = try_create_remote_engine(
             auto_hint_url,
             auto_hint_api_key,
             remote_model_id,
@@ -145,7 +145,7 @@ def _create_auto_hint_engine(  # noqa: PLR0913
     return fallback_engine
 
 
-def _try_create_remote_engine(
+def try_create_remote_engine(
     url: str,
     api_key: Optional[str],
     model_id: str,
