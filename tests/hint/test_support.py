@@ -176,3 +176,27 @@ class TestIsValidHint:
             "cannot_contain": ["plagiarize"],
         }
         assert not is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_cannot_contain_case_insensitive_phrase(self) -> None:
+        """Custom cannot_contain with an uppercase phrase matches lowercase hint."""
+        hint = "Your code has a bug; plagiarize a solution."
+        rules = {"cannot_contain": ["PLAGIARIZE"]}
+        assert not is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_cannot_contain_case_insensitive_hint(self) -> None:
+        """Custom cannot_contain with lowercase phrase matches uppercase hint."""
+        hint = "Your code has a bug; PLAGIARIZE a solution."
+        rules = {"cannot_contain": ["plagiarize"]}
+        assert not is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_must_contain_case_insensitive_phrase(self) -> None:
+        """Custom must_contain with uppercase phrase matches lowercase hint."""
+        hint = "Check your code and verify the logic."
+        rules = {"must_contain": ["VERIFY"]}
+        assert is_valid_hint(hint, custom_rules=rules)
+
+    def test_custom_must_contain_case_insensitive_hint(self) -> None:
+        """Custom must_contain with lowercase phrase matches uppercase hint."""
+        hint = "Check your code and VERIFY the logic."
+        rules = {"must_contain": ["verify"]}
+        assert is_valid_hint(hint, custom_rules=rules)
