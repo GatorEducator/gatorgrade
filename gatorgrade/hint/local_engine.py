@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
+import platformdirs
+
 from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 
 if TYPE_CHECKING:
@@ -52,8 +54,6 @@ def _model_cache_dir(override: Optional[Path] = None) -> Path:
     env_dir = os.environ.get(ENV_CACHE_DIR)
     if env_dir:
         return Path(env_dir)
-    import platformdirs  # noqa: PLC0415
-
     return (
         Path(platformdirs.user_cache_dir("gatorgrade", appauthor=False))
         / "models"
