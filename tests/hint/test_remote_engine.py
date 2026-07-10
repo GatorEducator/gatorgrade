@@ -1,4 +1,4 @@
-"""Test suite for the remote auto-hint engine (remote_engine.py)."""
+"""Test suite for the remote auto-hint engine (i.e., remote_engine.py)."""
 
 from unittest.mock import MagicMock, patch
 

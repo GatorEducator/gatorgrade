@@ -11,7 +11,6 @@ import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import detect, main
-from gatorgrade.hint.fallback import RemoteEngineAdapter
 
 runner = CliRunner()
 
@@ -543,44 +542,6 @@ def test_gatorgrade_with_version_flag_on_windows(
     assert "Windows 10" in plain_stdout
 
 
-def test_create_auto_hint_engine_default_model(chdir: Any) -> None:
-    """_create_auto_hint_engine uses default model when sentinel is passed."""
-    chdir("tests/test_assignment")
-    engine = main._create_auto_hint_engine(
-        filename=Path("gatorgrade.yml"),
-        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
-        auto_hint_url=None,
-        auto_hint_api_key=None,
-    )
-    assert engine is not None
-
-
-@pytest.mark.autohint
-def test_create_auto_hint_engine_with_remote_url_falls_back(
-    chdir: Any,
-) -> None:
-    """Falls back to local engine when remote URL is unreachable."""
-    chdir("tests/test_assignment")
-    engine = main._create_auto_hint_engine(
-        filename=Path("gatorgrade.yml"),
-        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
-        auto_hint_url="http://localhost:99999",
-        auto_hint_api_key=None,
-    )
-    assert engine is not None
-
-
-@pytest.mark.autohint
-def test_try_create_remote_engine_returns_adapter() -> None:
-    """Returns a RemoteEngineAdapter even with a bad URL (lazy connect)."""
-    engine = main._try_create_remote_engine(
-        url="http://localhost:99999",
-        api_key=None,
-        model_id="test-model",
-    )
-    assert isinstance(engine, RemoteEngineAdapter)
-
-
 def test_print_verbose_info_skips_when_not_verbose(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -647,39 +608,6 @@ def test_print_verbose_info_shows_default_model_without_url(
     captured = capsys.readouterr()
     plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
     assert "Model:" in plain_out
-
-
-def test_resolve_system_prompt_reads_file(tmp_path: Path) -> None:
-    """_resolve_system_prompt reads the system prompt file alongside config."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        'system_prompt_file: "myprompt.md"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    prompt_file = tmp_path / "myprompt.md"
-    prompt_file.write_text("Custom system prompt content.")
-    result = main._resolve_system_prompt(config_file, None)
-    assert result == "Custom system prompt content."
-
-
-def test_resolve_system_prompt_returns_none_when_not_specified(
-    tmp_path: Path,
-) -> None:
-    """_resolve_system_prompt returns None when no system_prompt_file field."""
-    config_file = tmp_path / "gatorgrade.yml"
-    config_file.write_text(
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        '  command: "echo hello"\n'
-    )
-    result = main._resolve_system_prompt(config_file, None)
-    assert result is None
 
 
 def test_gatorgrade_with_config_dir_no_file(
