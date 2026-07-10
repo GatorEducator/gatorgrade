@@ -21,6 +21,7 @@ from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.track import append_track_entry, build_track_entry
 
 # disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -766,6 +767,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     due_date: datetime.datetime | None = None,
     auto_hint_engine: Any = None,
     auto_hint_url: str | None = None,
+    auto_hint_track: bool = False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -790,6 +792,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             checks. If provided, hints are generated lazily.
         auto_hint_url: URL of the remote auto-hint server, if any.
             Displayed in the summary when remote hints were used.
+        auto_hint_track: Whether to write tracking data to
+            autohints.json in the current working directory.
 
     """
 
@@ -1013,6 +1017,21 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                     " Check your network connection and model"
                     " availability.[/]"
                 )
+    # write tracking data to autohints.json if enabled and
+    # at least one auto-hint was generated for failing checks
+    if auto_hint_track and auto_hint_engine is not None:
+        hinted_results = [r for r in failed_results if r.is_auto_hint]
+        if hinted_results:
+            track_entry = build_track_entry(
+                failed_results,
+                project_name=display_project_name,
+                due_date=due_date,
+                version_info=version_info,
+                cli_args=cli_args,
+            )
+            if track_entry:
+                append_track_entry(track_entry)
+
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
