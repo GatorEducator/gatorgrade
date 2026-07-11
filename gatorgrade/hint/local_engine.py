@@ -20,8 +20,6 @@ DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
 # with the transformers package
 HINT_MAX_TOKENS = 80
 HINT_TEMPERATURE = 0.1
-HINT_DIAG_TRUNCATE = 2000
-HINT_FILE_LINES = 20
 HINT_REPETITION_PENALTY = 1.2
 HINT_TOP_P = 0.9
 
@@ -295,12 +293,10 @@ class AutoHintEngine:
         Args:
             description: Human-readable description of the check.
             diagnostic: Diagnostic output from the failing check.
-                May be truncated to HINT_DIAG_TRUNCATE characters.
             command: The shell / GatorGrader command that was run, if
                 available.
             file_content: The contents of the source file being
-                checked, if available. Truncated to HINT_FILE_LINES
-                lines.
+                checked, if available.
             system_prompt: Optional custom system prompt. If
                 provided, overrides both the engine-level default
                 and the built-in prompt.
@@ -392,8 +388,7 @@ class AutoHintEngine:
             description: Check description.
             diagnostic: Diagnostic output (truncated internally).
             command: Command that was run.
-            file_content: Source file content (truncated to
-                HINT_FILE_LINES lines).
+            file_content: Source file content.
             system_prompt: Optional custom system prompt.
             details: Structured details about the check
                 configuration.
