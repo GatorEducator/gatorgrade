@@ -1,7 +1,7 @@
 """SHA-256 hashing for gatorgrade checks, working for both shell checks and GatorGrader checks.
 
 Provides a deterministic check identifier based on the canonical
-representation of a check's configuration fields.  The same check
+representation of a check's configuration fields. The same check
 definition always produces the same hash, making it suitable as a
 globally unique identifier across runs and across machines.
 """
