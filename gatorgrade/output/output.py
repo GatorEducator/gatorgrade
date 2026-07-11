@@ -1185,6 +1185,11 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                     f"  Failed to use remote server at"
                     f" {auto_hint_engine.remote_url}.[/]"
                 )
+            # if a local fallback was needed (i.e., the model that
+            # was requested could not be downloaded from Hugging
+            # Face or it could not be loaded from the filesystem),
+            # then make sure that this is evident and that it is
+            # clear that default local model was used as the fallback
             elif local_fallback:
                 primary_model = getattr(
                     auto_hint_engine,
