@@ -113,7 +113,7 @@ def build_track_entry(
 def append_track_entry(entry: dict[str, Any]) -> bool:
     """Append a single tracking entry to autohints.json.
 
-    Creates the file if it does not exist.  Uses an atomic write
+    Creates the file if it does not exist. Uses an atomic write
     (temp file + rename) so concurrent runs cannot corrupt the file.
 
     Args:
