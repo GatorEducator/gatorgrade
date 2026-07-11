@@ -504,3 +504,88 @@ def test_generate_checks_count_matches_input_property(
             )
             for cd in check_data_list
         )
+
+
+def test_generate_checks_shell_check_has_check_id() -> None:
+    """Shell checks get a check_id from generate_checks."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo 'test'", "description": "A shell check"},
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], ShellCheck)
+    cid = checks[0].check_id
+    assert cid is not None
+    assert len(cid) == 64  # noqa: PLR2004
+    assert all(c in "0123456789abcdef" for c in cid)
+
+
+def test_generate_checks_gg_check_has_check_id() -> None:
+    """GatorGrader checks get a check_id from generate_checks."""
+    check_data = CheckData(
+        file_context="src/main.py",
+        check={
+            "check": "MatchFileFragment",
+            "description": "Check fragment in main.py",
+            "options": {"fragment": "TODO", "count": 0, "exact": True},
+        },
+    )
+    checks = generate_checks([check_data])
+    assert len(checks) == 1
+    assert isinstance(checks[0], GatorGraderCheck)
+    cid = checks[0].check_id
+    assert cid is not None
+    assert len(cid) == 64  # noqa: PLR2004
+    assert all(c in "0123456789abcdef" for c in cid)
+
+
+def test_generate_checks_check_id_is_deterministic() -> None:
+    """Same check data always produces the same check_id."""
+    check_data = CheckData(
+        file_context="src/main.py",
+        check={
+            "check": "MatchFileFragment",
+            "description": "A deterministic check",
+            "options": {"fragment": "TODO", "count": 0, "exact": True},
+        },
+    )
+    checks1 = generate_checks([check_data])
+    checks2 = generate_checks([check_data])
+    assert checks1[0].check_id == checks2[0].check_id
+
+
+def test_generate_checks_check_id_differs_with_file() -> None:
+    """Checks on different files get different check_ids."""
+    cd1 = CheckData(
+        file_context="src/file_a.py",
+        check={
+            "check": "MatchFileFragment",
+            "description": "Same check different file",
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    cd2 = CheckData(
+        file_context="src/file_b.py",
+        check={
+            "check": "MatchFileFragment",
+            "description": "Same check different file",
+            "options": {"fragment": "TODO", "count": 0},
+        },
+    )
+    checks = generate_checks([cd1, cd2])
+    assert checks[0].check_id != checks[1].check_id
+
+
+def test_generate_checks_shell_check_id_differs_with_command() -> None:
+    """Shell checks with different commands get different check_ids."""
+    cd1 = CheckData(
+        file_context=None,
+        check={"command": "echo hello", "description": "Echo hello"},
+    )
+    cd2 = CheckData(
+        file_context=None,
+        check={"command": "echo world", "description": "Echo world"},
+    )
+    checks = generate_checks([cd1, cd2])
+    assert checks[0].check_id != checks[1].check_id

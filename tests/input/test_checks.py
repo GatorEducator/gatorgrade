@@ -374,3 +374,45 @@ def test_gatorgrader_check_default_hint_is_none() -> None:
         json_info={"check": "TestCheck"},
     )
     assert check.hint is None
+
+
+def test_shell_check_stores_check_id() -> None:
+    """Test ShellCheck stores an optional check_id."""
+    cid = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+    check = ShellCheck(
+        command="echo 'test'",
+        description="Test with check_id",
+        json_info={"command": "echo 'test'"},
+        check_id=cid,
+    )
+    assert check.check_id == cid
+
+
+def test_shell_check_default_check_id_is_none() -> None:
+    """Test ShellCheck check_id defaults to None."""
+    check = ShellCheck(
+        command="echo 'test'",
+        description="Test without check_id",
+        json_info={"command": "echo 'test'"},
+    )
+    assert check.check_id is None
+
+
+def test_gatorgrader_check_stores_check_id() -> None:
+    """Test GatorGraderCheck stores an optional check_id."""
+    cid = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    check = GatorGraderCheck(
+        gg_args=["TestCheck"],
+        json_info={"check": "TestCheck"},
+        check_id=cid,
+    )
+    assert check.check_id == cid
+
+
+def test_gatorgrader_check_default_check_id_is_none() -> None:
+    """Test GatorGraderCheck check_id defaults to None."""
+    check = GatorGraderCheck(
+        gg_args=["TestCheck"],
+        json_info={"check": "TestCheck"},
+    )
+    assert check.check_id is None

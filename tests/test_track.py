@@ -12,6 +12,7 @@ import pytest
 from gatorgrade.output.check_result import CheckResult
 from gatorgrade.track import (
     AUTO_HINTS_FILENAME,
+    HINT_CHECK_ID_KEY,
     HINT_COMMAND_KEY,
     HINT_DESCRIPTION_KEY,
     HINT_DETAILS_KEY,
@@ -108,6 +109,23 @@ def test_build_track_entry_hint_contents() -> None:
     assert hint[HINT_HINT_KEY] == "this is a hint"
     assert hint[HINT_WEIGHT_KEY] == 3  # noqa: PLR2004
     assert hint[HINT_COMMAND_KEY] == "echo hello"
+
+
+def test_build_track_entry_includes_check_id() -> None:
+    """Hint entry includes check_id when the result has one."""
+    result = _make_hinted_result(description="check with id")
+    result.check_id = "a1b2c3d4e5f6" * 10 + "abcd"
+    entry = build_track_entry([result])
+    hint = entry[TRACK_HINTS_KEY][0]
+    assert hint[HINT_CHECK_ID_KEY] == result.check_id
+
+
+def test_build_track_entry_omits_check_id_when_none() -> None:
+    """Hint entry omits check_id when the result does not have one."""
+    result = _make_hinted_result(description="check without id")
+    result.check_id = None
+    entry = build_track_entry([result])
+    assert HINT_CHECK_ID_KEY not in entry[TRACK_HINTS_KEY][0]
 
 
 def test_build_track_entry_skips_non_auto_hints() -> None:
