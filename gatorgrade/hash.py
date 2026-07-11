@@ -31,6 +31,32 @@ OUTPUTLIMIT_KEY = "outputlimit"
 HINT_KEY = "hint"
 
 
+def _ensure_json_safe(obj: Any) -> Any:
+    """Recursively convert a Python object to a JSON-safe form.
+
+    Real YAML data is always JSON-serialisable, but hypothesis
+    property-based tests may generate dicts with non-serialisable
+    keys (e.g., strategy objects). This helper converts every key
+    to its string representation and every non-basic value to its
+    string representation, ensuring that json.dumps never crashes.
+
+    Args:
+        obj: The object to convert.
+
+    Returns:
+        A JSON-safe value (dict, list, str, int, float, bool, or
+        None).
+
+    """
+    if isinstance(obj, dict):
+        return {str(k): _ensure_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_ensure_json_safe(i) for i in obj]
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    return str(obj)
+
+
 def compute_check_id(  # noqa: PLR0913
     description: str,
     check_data: dict[str, Any],
