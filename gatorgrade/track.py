@@ -55,7 +55,7 @@ def build_track_entry(
     """Build a tracking entry dict from failing check results.
 
     Only includes checks that have an auto-generated hint
-    (result.is_auto_hint is True).  This keeps the tracking
+    (result.is_auto_hint is True). This keeps the tracking
     file focused on hints rather than every check.
 
     Args:
@@ -68,7 +68,7 @@ def build_track_entry(
 
     Returns:
         A dict with timestamp, project info, version info, CLI
-        args, and a hints list.  Returns an empty dict if no
+        args, and a hints list. Returns an empty dict if no
         auto-hints were generated.
 
     """
