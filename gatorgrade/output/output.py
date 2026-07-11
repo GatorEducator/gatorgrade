@@ -1153,6 +1153,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 f"[bold]- {REPORT_LABEL}:[/] "
                 f"{report_display_name} ({report_type_str})"
             )
+        # --> if a github-env was specified, display it and the type
         if github_env_written:
             rich.print(
                 f"[bold]- {GITHUB_ENV_LABEL}:[/] "
@@ -1164,10 +1165,15 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         if auto_hint_engine is not None and any(
             r.is_auto_hint for r in failed_results
         ):
+            # display a reminder about the use of auto-hinting
             has_fallback = getattr(auto_hint_engine, "has_fallback", False)
             local_fallback = has_fallback and not getattr(
                 auto_hint_engine, "remote_url", None
             )
+            # if a remote fallback was needed (i.e., could not connect
+            # to the remote server that provides the auto-hintint),
+            # then make sure that this is evident and that it is clear
+            # that a local model was used instead as the fallback
             remote_fallback = has_fallback and getattr(
                 auto_hint_engine, "remote_url", None
             )
