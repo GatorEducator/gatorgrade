@@ -1,5 +1,7 @@
 """Test suite for the remote auto-hint engine (i.e., remote_engine.py)."""
 
+from contextlib import contextmanager
+from typing import Any, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,6 +19,34 @@ from gatorgrade.hint.support import (
 from gatorgrade.hint.support import (
     HINT_FILE_LINES as REMOTE_HINT_FILE_LINES,
 )
+
+
+@contextmanager
+def _mock_openai_module(fake_module: Any) -> Generator[None, None, None]:
+    """Temporarily replace sys.modules['openai'] with a fake module.
+
+    Safely restores or deletes the original entry on exit,
+    preventing sys.modules corruption between tests.
+
+    Usage:
+        with _mock_openai_module(fake_openai):
+            # code that imports openai sees the fake
+            ...
+    """
+    import sys  # noqa: PLC0415
+
+    was_present = "openai" in sys.modules
+    old_module = sys.modules.get("openai")
+    sys.modules["openai"] = fake_module
+    try:
+        yield
+    finally:
+        if was_present:
+            assert old_module is not None
+            sys.modules["openai"] = old_module
+        else:
+            del sys.modules["openai"]
+
 
 pytestmark = pytest.mark.autohint
 
@@ -193,28 +223,16 @@ class TestRemoteHintEngineGenerateHint:
             api_key="not-needed",
             model_id="test-model",
         )
-        import sys  # noqa: PLC0415
-
         fake_openai = MagicMock()
         mock_client = MagicMock()
         mock_client.chat.completions.create.side_effect = RuntimeError(
             "Connection refused"
         )
         fake_openai.OpenAI.return_value = mock_client
-
-        was_present = "openai" in sys.modules
-        old_module = sys.modules.get("openai")
-        sys.modules["openai"] = fake_openai
-        try:
+        with _mock_openai_module(fake_openai):
             hint, _ = engine.generate_hint(
                 description="test", diagnostic="error"
             )
-        finally:
-            if was_present:
-                assert old_module is not None
-                sys.modules["openai"] = old_module
-                del sys.modules["openai"]
-
         assert hint is None
 
     def test_generate_hint_returns_none_for_empty_reply(self) -> None:
@@ -355,19 +373,9 @@ class TestRemoteHintEngineDepCheck:
 
     def test_check_deps_succeeds_when_present(self) -> None:
         """check_deps does not raise when openai is importable."""
-        import sys  # noqa: PLC0415
-
         fake_openai = MagicMock()
-        was_present = "openai" in sys.modules
-        old_module = sys.modules.get("openai")
-        sys.modules["openai"] = fake_openai
-        try:
+        with _mock_openai_module(fake_openai):
             RemoteHintEngine.check_deps()  # should not raise
-        finally:
-            if was_present:
-                assert old_module is not None
-                sys.modules["openai"] = old_module
-                del sys.modules["openai"]
 
 
 class TestRemoteHintEngineGracefulDegradation:
