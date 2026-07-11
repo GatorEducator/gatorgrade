@@ -6,12 +6,16 @@ import pytest
 
 from gatorgrade.hint.remote_engine import (
     ENABLE_THINKING_DEFAULT,
-    REMOTE_HINT_DIAG_TRUNCATE,
-    REMOTE_HINT_FILE_LINES,
     REMOTE_HINT_MAX_TOKENS,
     REMOTE_HINT_TEMPERATURE,
     REMOTE_MODEL_DEFAULT,
     RemoteHintEngine,
+)
+from gatorgrade.hint.support import (
+    HINT_DIAG_TRUNCATE as REMOTE_HINT_DIAG_TRUNCATE,
+)
+from gatorgrade.hint.support import (
+    HINT_FILE_LINES as REMOTE_HINT_FILE_LINES,
 )
 
 pytestmark = pytest.mark.autohint

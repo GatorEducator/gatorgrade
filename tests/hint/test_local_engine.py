@@ -7,13 +7,12 @@ import pytest
 
 from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
-    HINT_DIAG_TRUNCATE,
-    HINT_FILE_LINES,
     HINT_REPETITION_PENALTY,
     HINT_TOP_P,
     AutoHintEngine,
     model_cache_dir,
 )
+from gatorgrade.hint.support import HINT_DIAG_TRUNCATE, HINT_FILE_LINES
 
 pytestmark = pytest.mark.autohint
 
