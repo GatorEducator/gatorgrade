@@ -17,7 +17,6 @@ from gatorgrade.hint.remote_engine import (
     REMOTE_HINT_MAX_TOKENS,
     REMOTE_HINT_TEMPERATURE,
     REMOTE_HINT_TIMEOUT_MS,
-    REMOTE_HINT_TOP_P,
     REMOTE_MODEL_DEFAULT,
     RemoteHintEngine,
 )
@@ -36,7 +35,6 @@ __all__ = [
     "REMOTE_HINT_MAX_TOKENS",
     "REMOTE_HINT_TEMPERATURE",
     "REMOTE_HINT_TIMEOUT_MS",
-    "REMOTE_HINT_TOP_P",
     "REMOTE_MODEL_DEFAULT",
     "AutoHintEngine",
     "RemoteHintEngine",
