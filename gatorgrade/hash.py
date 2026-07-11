@@ -42,19 +42,23 @@ def compute_check_id(  # noqa: PLR0913
     """Compute a deterministic SHA-256 identifier for a check.
 
     The hash is computed from a canonical JSON representation of
-    the check's identifying fields.  Same fields → same hash,
-    every time, across machines and runs.
+    the check's identifying fields. Same fields → same hash,
+    every time, across machines and runs. This is helpful for
+    determining easily which checks pass/fail across runs or
+    across machines. It is also helpful when debugging the
+    auto-hinting feature so that it is easy to determine the
+    specific checks for which it is generating hints.
 
-    For shell checks (those with a ``command`` key), the canonical
+    For shell checks (those with a command key), the canonical
     input includes description, command, weight, outputlimit, and
-    hint.  For GatorGrader checks, it includes description, check
+    hint. For GatorGrader checks, it includes description, check
     name, options, file path, weight, outputlimit, and hint.
 
     Args:
         description: The human-readable description of the check.
         check_data: The raw dictionary from the YAML config file.
         file_context: The file path associated with the check
-            (e.g., ``questions/question_one.py``), or None for
+            (e.g., questions/question_one.py), or None for
             checks not tied to a file.
         weight: The weight of the check.
         outputlimit: The maximum number of diagnostic lines.
