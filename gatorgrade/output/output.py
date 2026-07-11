@@ -1142,10 +1142,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
         )
+        # --> display the number of points and the percentage of points
         rich.print(
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "
