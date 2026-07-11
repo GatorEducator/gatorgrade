@@ -85,6 +85,8 @@ All the Python code should follow these standards:
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
   identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
+- **Sentences**: When writing sentences in the comments, only use one space
+  between the period and the following sentence.
 - **No backticks in comments:** Do not use backticks in comments, docstrings,
   or any other prose text within source code files. Backticks are reserved for
   Markdown formatting in `.md` files only. If you need to refer to a code
