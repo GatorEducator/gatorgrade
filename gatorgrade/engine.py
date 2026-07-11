@@ -46,7 +46,7 @@ def create_auto_hint_engine(  # noqa: PLR0913
 
     When --auto-hint-url is provided, a RemoteHintEngine is
     attempted first. If it succeeds, it is returned. If it
-    fails (e.g. the URL is unreachable or pydantic_ai is not
+    fails (e.g., the URL is unreachable or the openai library is not
     installed), a warning is printed and the engine falls back
     to a local AutoHintEngine.
 
