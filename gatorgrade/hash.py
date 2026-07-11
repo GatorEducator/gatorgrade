@@ -106,9 +106,9 @@ def compute_check_id(  # noqa: PLR0913
 
     """
     # build the canonical representation from every identifying field
-    # of the check.  Each of the check object's own attributes is
+    # of the check; each of the check object's own attributes is
     # included explicitly so that the hash captures the resolved/
-    # effective values after defaults have been applied.
+    # effective values after defaults have been applied;
     canonical: dict[str, Any] = {
         DESCRIPTION_KEY: description,
         WEIGHT_KEY: weight,
@@ -124,14 +124,14 @@ def compute_check_id(  # noqa: PLR0913
             canonical[OPTIONS_KEY] = check_data[OPTIONS_KEY]
     # include the full raw check_data as a nested value so that no
     # yAML-level attribute is excluded from the hash, even custom
-    # keys that might be added in future configuration files.
+    # keys that might be added in future configuration files;
     # use _ensure_json_safe-converted value so that non-serialisable
-    # keys (e.g. from hypothesis property tests) don't crash.
+    # keys (e.g. from hypothesis property tests) don't crash;
     canonical[JSON_INFO_KEY] = _ensure_json_safe(check_data)
     # include the file path for all check types that have one
     if file_context is not None:
         canonical[FILE_KEY] = file_context
-    # serialise to canonical JSON with sorted keys for determinism.
+    # serialize to canonical JSON with sorted keys for determinism
     raw = json_module.dumps(
         canonical,
         indent=INDENT_JSON,
