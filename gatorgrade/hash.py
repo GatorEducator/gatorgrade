@@ -68,21 +68,31 @@ def compute_check_id(  # noqa: PLR0913
     """Compute a deterministic SHA-256 identifier for a check.
 
     The hash is computed from a canonical JSON representation of
-    the check's identifying fields. Same fields → same hash,
-    every time, across machines and runs. This is helpful for
-    determining easily which checks pass/fail across runs or
-    across machines. It is also helpful when debugging the
-    auto-hinting feature so that it is easy to determine the
-    specific checks for which it is generating hints.
+    every identifying field of the check. Same fields produce the
+    same hash every time, across machines and across runs. This
+    makes it possible to correlate checks across runs, across JSON
+    reports, and across auto-hint tracking files.
 
-    For shell checks (those with a command key), the canonical
-    input includes description, command, weight, outputlimit, and
-    hint. For GatorGrader checks, it includes description, check
-    name, options, file path, weight, outputlimit, and hint.
+    All of the following are included in the hash input so that no
+    attribute of the check is left out:
+
+    - description (from the explicit parameter)
+    - file context (the file path, if any)
+    - the full json_info / check_data dict from the YAML config
+      (which covers check name, options, command, and any other
+      custom keys present in the configuration)
+    - weight
+    - outputlimit
+    - hint
+
+    Because the full check_data dict is included rather than
+    cherry-picked keys, two checks whose YAML entries differ in
+    any way will always produce different hashes.
 
     Args:
         description: The human-readable description of the check.
-        check_data: The raw dictionary from the YAML config file.
+        check_data: The raw dictionary from the YAML config file
+            (i.e., the json_info of the check).
         file_context: The file path associated with the check
             (e.g., questions/question_one.py), or None for
             checks not tied to a file.
@@ -94,6 +104,10 @@ def compute_check_id(  # noqa: PLR0913
         A 64-character hexadecimal SHA-256 digest.
 
     """
+    # build the canonical representation from every identifying field
+    # of the check.  Each of the check object's own attributes is
+    # included explicitly so that the hash captures the resolved/
+    # effective values after defaults have been applied.
     canonical: dict[str, Any] = {
         DESCRIPTION_KEY: description,
         WEIGHT_KEY: weight,
@@ -101,23 +115,26 @@ def compute_check_id(  # noqa: PLR0913
         HINT_KEY: hint,
     }
     if COMMAND_KEY in check_data:
-        # shell check: command is the primary identifier
         canonical[COMMAND_KEY] = check_data[COMMAND_KEY]
     else:
-        # GatorGrader check: check name + options + file path
         if CHECK_KEY in check_data:
             canonical[CHECK_KEY] = check_data[CHECK_KEY]
         if OPTIONS_KEY in check_data:
             canonical[OPTIONS_KEY] = check_data[OPTIONS_KEY]
+    # include the full raw check_data as a nested value so that no
+    # yAML-level attribute is excluded from the hash, even custom
+    # keys that might be added in future configuration files.
+    # use _ensure_json_safe-converted value so that non-serialisable
+    # keys (e.g. from hypothesis property tests) don't crash.
+    canonical["json_info"] = _ensure_json_safe(check_data)
     # include the file path for all check types that have one
     if file_context is not None:
         canonical[FILE_KEY] = file_context
-    # serialise to canonical JSON with sorted keys for determinism
+    # serialise to canonical JSON with sorted keys for determinism.
     raw = json_module.dumps(
         canonical,
         indent=INDENT_JSON,
         sort_keys=SORT_KEYS,
-        ensure_ascii=False,
     )
     # compute the SHA-256 digest
     return hashlib.sha256(raw.encode(FILE_ENCODING)).hexdigest()
