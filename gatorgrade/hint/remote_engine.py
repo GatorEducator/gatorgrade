@@ -43,6 +43,9 @@ ENABLE_THINKING_DEFAULT = {
 USER_AGENT_KEY = "User-Agent"
 USER_AGENT_VALUE = f"gatorgrade/{GATORGRADE_VERSION}"
 
+# constants for the remote hint engine
+REASONING_CONTENT_KEY = "reasoning_content"
+
 
 class RemoteHintEngine:
     """Engine that generates hints via an OpenAI-compatible remote API.
@@ -230,7 +233,7 @@ class RemoteHintEngine:
                 checked, if available.
             system_prompt: Optional custom system prompt.
             details: Structured details about the check
-                configuration (e.g. options and expected values).
+                configuration (e.g., options and expected values).
 
         Returns:
             A tuple (hint, is_low_quality) where:
@@ -296,7 +299,7 @@ class RemoteHintEngine:
                     **completions_kwargs,
                 ),
             )
-            # extract the content from the response — for reasoning
+            # extract the content from the response; for reasoning
             # models this may be empty and the actual answer may be
             # in reasoning_content, so fall back to that
             choice = response.choices[0]
@@ -307,7 +310,7 @@ class RemoteHintEngine:
                 # produce content directly. however, some servers
                 # may still put the answer in reasoning_content,
                 # so fall back to that, although this is limited
-                rc = getattr(msg, "reasoning_content", None)
+                rc = getattr(msg, REASONING_CONTENT_KEY, None)
                 if rc:
                     hint = rc.strip()
             if not hint:
