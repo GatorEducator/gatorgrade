@@ -219,7 +219,7 @@ class RemoteHintEngine:
     ) -> tuple[Optional[str], bool]:
         """Generate a short hint by calling the remote OpenAI-compatible API.
 
-        Safe to call even when pydantic_ai is missing; in this case
+        Safe to call even when the openai library is missing; in this case
         it will return (None, False) for graceful degradation.
 
         Args:
