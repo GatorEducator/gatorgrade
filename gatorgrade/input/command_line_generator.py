@@ -3,6 +3,8 @@
 import os
 from typing import List, Union
 
+from gatorgrade.hash import compute_check_id
+
 from .checks import GatorGraderCheck, ShellCheck, validate_positive_nonzero_int
 from .in_file_path import CheckData
 
@@ -74,14 +76,31 @@ def generate_checks(  # noqa: PLR0912
         # if the check has a command key, then it is a shell check
         # which means that it will be run by the computer's shell
         if COMMAND_KEY in check_data.check:
+            description = check_data.check.get(DESCRIPTION_KEY)
+            effective_desc = (
+                description if description is not None else UNNAMED_CHECK
+            )
+            # compute the check identifier using a SHA256 hash,
+            # this helps to uniquely identifier each of these
+            # checks across runs, across JSON reports, and across
+            # any of the auto-hint tracking files
+            check_id = compute_check_id(
+                description=effective_desc,
+                check_data=check_data.check,
+                file_context=check_data.file_context,
+                weight=weight,
+                outputlimit=outputlimit,
+                hint=check_data.check.get(HINT_KEY),
+            )
             checks.append(
                 ShellCheck(
                     command=check_data.check.get(COMMAND_KEY),
-                    description=check_data.check.get(DESCRIPTION_KEY),
+                    description=description,
                     json_info=check_data.check,
                     weight=weight,
                     outputlimit=outputlimit,
                     hint=check_data.check.get(HINT_KEY),
+                    check_id=check_id,
                 )
             )
         # otherwise, it is a GatorGrader check, which means that it
@@ -114,6 +133,19 @@ def generate_checks(  # noqa: PLR0912
                 if dirname == EMPTY:
                     dirname = DEFAULT_DIRECTORY
                 gg_args.extend([ARG_DIRECTORY, dirname, ARG_FILE, filename])
+            description = check_data.check.get(DESCRIPTION_KEY, UNNAMED_CHECK)
+            # compute the check identifier using a SHA256 hash,
+            # this helps to uniquely identifier each of these
+            # checks across runs, across JSON reports, and across
+            # any of the auto-hint tracking files
+            check_id = compute_check_id(
+                description=description,
+                check_data=check_data.check,
+                file_context=check_data.file_context,
+                weight=weight,
+                outputlimit=outputlimit,
+                hint=check_data.check.get(HINT_KEY),
+            )
             checks.append(
                 GatorGraderCheck(
                     gg_args=gg_args,
@@ -121,6 +153,7 @@ def generate_checks(  # noqa: PLR0912
                     weight=weight,
                     outputlimit=outputlimit,
                     hint=check_data.check.get(HINT_KEY),
+                    check_id=check_id,
                 )
             )
     return checks
