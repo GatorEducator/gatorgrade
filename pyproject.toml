@@ -141,7 +141,9 @@ comments-fix = { cmd = "uv run -m scripts.ccl fix {project} {tests} {scripts}", 
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml", use_vars = true }
 test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested", use_vars = true }
 test-coverage-check-verbose = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder} --verbose", help = "Check function coverage with detailed analysis output", use_vars = true }
-test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
+test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization" }
+test-parallel = { cmd = "pytest -x -s -vv -n auto -p no:sugar", help = "Run the pytest test suite with parallel execution and order randomization" }
+test-parallel-not-random = { cmd = "pytest -x -s -vv -n auto -p no:randomly -p no:clarity", help = "Run the pytest test suite with parallel execution but without order randomization" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
 test-coverage = { cmd = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under={coveragefailunder} --cov-report=term-missing tests/", help = "Run the pytest test suite with coverage tracking", use_vars = true }
