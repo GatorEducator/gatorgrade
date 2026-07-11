@@ -83,6 +83,7 @@ DIAGNOSTIC_KEY = "diagnostic"
 HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
+CHECK_ID_KEY = "check_id"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 # JSON key constants used in check results
@@ -241,13 +242,14 @@ def _run_shell_check(
         outputlimit=limit,
         hint=check.hint,
         raw_diagnostic=raw_diagnostic,
+        check_id=check.check_id,
     )
 
 
 def _build_gg_check_details(check: GatorGraderCheck) -> str:
     """Build a details string from the check's configuration.
 
-    Extracts the check name and options from ``json_info`` and
+    Extracts the check name and options from json_info and
     formats them into a compact, readable string that is appended
     to the diagnostic output.
 
@@ -338,6 +340,7 @@ def _run_gg_check(
         hint=check.hint,
         raw_diagnostic=raw_diagnostic,
         details=details,
+        check_id=check.check_id,
     )
 
 
@@ -402,6 +405,8 @@ def create_report_json(  # noqa: PLR0913
                 results_json[DIAGNOSTIC_KEY] = checkResults[i].diagnostic
             if checkResults[i].hint:
                 results_json[HINT_KEY] = checkResults[i].hint
+            if checkResults[i].check_id:
+                results_json[CHECK_ID_KEY] = checkResults[i].check_id
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
