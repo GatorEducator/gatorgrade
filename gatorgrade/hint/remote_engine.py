@@ -17,8 +17,6 @@ REMOTE_API_KEY_DEFAULT = "not-needed"
 # not require authentication.
 REMOTE_HINT_MAX_TOKENS = 1200
 REMOTE_HINT_TEMPERATURE = 0.1
-REMOTE_HINT_DIAG_TRUNCATE = 2000
-REMOTE_HINT_FILE_LINES = 20
 REMOTE_HINT_TIMEOUT_MS = 180000
 
 # extra_body sent to disable visible thinking traces on Qwen
@@ -170,8 +168,7 @@ class RemoteHintEngine:
             description: Check description.
             diagnostic: Diagnostic output (truncated internally).
             command: Command that was run.
-            file_content: Source file content (truncated to
-                HINT_FILE_LINES lines).
+            file_content: Source file content.
             system_prompt: Optional custom system prompt.
             details: Structured details about the check
                 configuration.
