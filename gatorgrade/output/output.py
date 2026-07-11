@@ -1126,7 +1126,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                         f"[blue]   → {RUN_COMMAND_LABEL}: [green]{result.run_command}"
                     )
         rich.print("")
+        # add labels to the top of the summary section
+        # --> display the name of the project
         rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        # --> if a due date was specified, display it and the time remaining
         if due_date is not None:
             due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
             time_str, time_color = _format_remaining_time(due_date)
@@ -1134,6 +1137,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 f"[bold]- {DUE_DATE_LABEL}:[/] "
                 f"{due_date_str} [{time_color}]({time_str})[/]"
             )
+        # --> display the number of checks and the percentage of passed checks
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
