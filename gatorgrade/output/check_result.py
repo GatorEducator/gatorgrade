@@ -31,6 +31,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         raw_diagnostic: str | None = None,
         is_low_quality: bool = False,
         details: str = "",
+        check_id: str | None = None,
     ):
         """Construct a CheckResult.
 
@@ -54,6 +55,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 suggesting test changes (shown in dimmed style).
             details: Optional structured details about the check
                 configuration (e.g. options and expected values).
+            check_id: An optional SHA-256 hash uniquely identifying
+                this check.
 
         """
         self.passed = passed
@@ -69,6 +72,7 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.is_auto_hint = False
         self.is_low_quality = is_low_quality
         self.details = details
+        self.check_id = check_id
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
