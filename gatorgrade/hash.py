@@ -29,6 +29,7 @@ OPTIONS_KEY = "options"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
 HINT_KEY = "hint"
+JSON_INFO_KEY = "json_info"
 
 
 def _ensure_json_safe(obj: Any) -> Any:
@@ -126,7 +127,7 @@ def compute_check_id(  # noqa: PLR0913
     # keys that might be added in future configuration files.
     # use _ensure_json_safe-converted value so that non-serialisable
     # keys (e.g. from hypothesis property tests) don't crash.
-    canonical["json_info"] = _ensure_json_safe(check_data)
+    canonical[JSON_INFO_KEY] = _ensure_json_safe(check_data)
     # include the file path for all check types that have one
     if file_context is not None:
         canonical[FILE_KEY] = file_context
