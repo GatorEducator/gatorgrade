@@ -220,16 +220,20 @@ def is_valid_hint(
       found, the hint is invalid.
 
     Built-in defaults exist for both categories. When custom
-    rules are provided through a JSON file, they completely
-    replace the built-in defaults (this is same as the override
-    of the behavior of system_prompt_file).
+    rules are provided through a JSON file, each key in the dict
+    independently replaces the corresponding built-in list. For
+    example, providing only cannot_contain replaces the built-in
+    cannot_contain phrases while leaving the built-in must_contain
+    list (which is empty by default) unchanged. Any key that is
+    not provided keeps its built-in default.
 
     Args:
         hint: The generated hint text.
         custom_rules: Optional dict with must_contain and/or
-            cannot_contain lists of phrases. When provided,
-            these replace the built-in rules entirely. Each
-            phrase is matched case-insensitively as a substring.
+            cannot_contain lists of phrases. Each provided key
+            replaces the corresponding built-in list; omitted
+            keys keep their built-in defaults. Each phrase is
+            matched case-insensitively as a substring.
 
     Returns:
         True if the hint passes all quality checks, False if it
@@ -242,7 +246,8 @@ def is_valid_hint(
     # gatorgrade to specify a list of phrases that must be specified
     must_contain: list[str] = []
     cannot_contain = list(BUILTIN_CANNOT_CONTAIN)
-    # custom rules completely replace built-in defaults
+    # each key in custom_rules independently replaces the
+    # corresponding built-in list; omitted keys keep defaults
     if custom_rules is not None:
         # there is a must contain rule replacement
         if MUST_CONTAIN_KEY in custom_rules:
