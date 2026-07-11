@@ -372,7 +372,7 @@ class TestRemoteHintEngineGracefulDegradation:
     def test_generate_hint_never_crashes(self) -> None:
         """generate_hint never crashes — returns (None, False) or (hint, bool).
 
-        When pydantic_ai is not installed, generate_hint returns
+        When the openai library is not installed, generate_hint returns
         (None, False).  When it is installed with mocks, it returns
         a hint string.
 
