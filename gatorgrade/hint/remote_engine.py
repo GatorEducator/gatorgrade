@@ -19,7 +19,6 @@ REMOTE_HINT_MAX_TOKENS = 1200
 REMOTE_HINT_TEMPERATURE = 0.1
 REMOTE_HINT_DIAG_TRUNCATE = 2000
 REMOTE_HINT_FILE_LINES = 20
-REMOTE_HINT_TOP_P = 0.9
 REMOTE_HINT_TIMEOUT_MS = 180000
 
 # extra_body sent to disable visible thinking traces on Qwen
@@ -307,7 +306,7 @@ class RemoteHintEngine:
             hint = (msg.content or EMPTY).strip()
             if not hint:
                 # note: with enable_thinking=False the model should
-                # produce content directly. however, some servers
+                # produce content directly; however, some servers
                 # may still put the answer in reasoning_content,
                 # so fall back to that, although this is limited
                 rc = getattr(msg, REASONING_CONTENT_KEY, None)
