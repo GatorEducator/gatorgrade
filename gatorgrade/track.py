@@ -1,11 +1,11 @@
 """Hint tracking: save auto-hint generation details to autohints.json.
 
 This module manages a JSON file called autohints.json in the current
-working directory.  Each time gatorgrade runs with --auto-hint-track
+working directory. Each time gatorgrade runs with --auto-hint-track
 and at least one hint was generated, an entry is appended to this file.
 
-The file is a top-level JSON array.  If the file does not exist, it is
-created.  If it exists, new data is appended safely without corruption
+The file is a top-level JSON array. If the file does not exist, it is
+created. If it exists, new data is appended safely without corruption
 (atomic read-write via a temporary file + rename).
 """
 
@@ -34,6 +34,7 @@ HINT_DETAILS_KEY = "details"
 HINT_HINT_KEY = "hint"
 HINT_WEIGHT_KEY = "weight"
 HINT_COMMAND_KEY = "command"
+HINT_CHECK_ID_KEY = "check_id"
 
 # timestamp format matching the report
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -90,6 +91,8 @@ def build_track_entry(
         hint_entry[HINT_WEIGHT_KEY] = result.weight
         if result.run_command:
             hint_entry[HINT_COMMAND_KEY] = result.run_command
+        if result.check_id:
+            hint_entry[HINT_CHECK_ID_KEY] = result.check_id
         hints_list.append(hint_entry)
     # build the overall entry
     now = datetime.datetime.now()
