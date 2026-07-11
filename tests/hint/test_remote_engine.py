@@ -373,7 +373,7 @@ class TestRemoteHintEngineGracefulDegradation:
         """generate_hint never crashes — returns (None, False) or (hint, bool).
 
         When the openai library is not installed, generate_hint returns
-        (None, False).  When it is installed with mocks, it returns
+        (None, False). When it is installed with mocks, it returns
         a hint string.
 
         """
