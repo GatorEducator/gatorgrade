@@ -407,7 +407,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 Rule(Text(CONFIG_ERROR_PLURAL_LABEL), style="bright_red")
             )
             console.print(NEWLINE + parse_error)
-            console.print()
             console.print(Text(EXIT_MESSAGE))
             console.print()
             console.print(Rule(style="bright_red"))
