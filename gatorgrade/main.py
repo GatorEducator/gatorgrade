@@ -544,7 +544,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             console.print(Rule(CONFIG_ERROR_LABEL, style="bright_red"))
             console.print()
             console.print(
-                f"The file {resolved_filename} either does not exist or is not valid."
+                f"The path {resolved_filename} either does not exist or is not valid."
             )
             console.print(Text(EXIT_MESSAGE))
             console.print()
