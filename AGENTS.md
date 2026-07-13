@@ -85,6 +85,12 @@ All the Python code should follow these standards:
   comments during refactoring. The only exception is when the first word of the
   comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
   identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
+- **Sentences**: When writing sentences in the comments, only use one space
+  between the period and the following sentence.
+- **No backticks in comments:** Do not use backticks in comments, docstrings,
+  or any other prose text within source code files. Backticks are reserved for
+  Markdown formatting in `.md` files only. If you need to refer to a code
+  identifier, write it plainly (e.g., "transformers" not "`transformers`").
 - **Imports:** Group imports in this order: standard library, third-party,
   local imports. Use absolute imports (`from gatorgrade.module import <name>`).
   Finally, make sure that all imports are placed at the top of the file. Do not
@@ -183,6 +189,10 @@ The coding agent should write the notes as a Markdown list.
   `main.py` displays with `Rule`-based formatting.
 - `EXIT_MESSAGE` is defined in `gatorgrade/main.py` and is the string
   displayed below error details in configuration error boxes.
+- **Never run `git stash`:** This command is destructive and risks losing
+  uncommitted work. If you need to temporarily set aside changes, create a
+  commit or use `git worktree` instead. The developer will handle any
+  rebasing or history cleanup.
 - **Creativity is welcome:** Every once in a while, feel free to slip
   in a bit of flair like a pun, a limerick, a dad joke, a haiku about
   test cases, or anything else that might make the developer smile.

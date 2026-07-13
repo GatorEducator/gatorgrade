@@ -25,6 +25,88 @@ NAME_FIELD = "name"
 DUE_DATE_FIELD = "due_date"
 DUE_DATE_ALIASES = (DUE_DATE_FIELD, "duedate", "due", "date")
 BASELINE_WEIGHT_FIELD = "baseline_weight"
+AUTO_HINT_MODEL_FIELD = "auto_hint_model"
+SYSTEM_PROMPT_FILE_FIELD = "system_prompt_file"
+VALIDATION_PHRASES_FILE_FIELD = "validation_phrases_file"
+
+# environment variable that can override the default config directory
+ENV_CONFIG_DIR = "GATORGRADE_CONFIG_DIR"
+
+
+def get_config_dir() -> Path:
+    """Return the gatorgrade configuration directory.
+
+    This is the platformdirs user config directory for gatorgrade,
+    used as the default base for model storage and configuration
+    files. The precedence is:
+
+    1. $GATORGRADE_CONFIG_DIR environment variable
+    2. platformdirs.user_config_dir("gatorgrade")
+
+    Returns:
+        The configuration directory path.
+
+    """
+    env_dir = __import__("os").environ.get(ENV_CONFIG_DIR)
+    if env_dir:
+        return Path(env_dir)
+    import platformdirs  # noqa: PLC0415
+
+    return Path(platformdirs.user_config_dir("gatorgrade", appauthor=False))
+
+
+def _platform_config_dir() -> Path:
+    """Return the platform-level default config directory.
+
+    Unlike get_config_dir, this ignores the $GATORGRADE_CONFIG_DIR
+    environment variable and always returns the platformdirs-based
+    default. This is useful for display purposes (e.g., --version)
+    so users can see the underlying default even when an override is
+    active.
+
+    Returns:
+        The platform-level default config directory path.
+
+    """
+    import platformdirs  # noqa: PLC0415
+
+    return Path(platformdirs.user_config_dir("gatorgrade", appauthor=False))
+
+
+def resolve_config_path(
+    filename: Path, config_dir: Path | None = None
+) -> Path:
+    """Resolve the actual gatorgrade.yml path using the search order.
+
+    Search order:
+    1. The specified filename in the current working directory.
+    2. The specified filename inside --config-dir (if provided, or
+       the default platformdirs-based config directory).
+
+    If the filename is an absolute path, it is returned as-is.
+    If the file is not found in either location, the original
+    filename is returned so the caller can report a clear error.
+
+    Args:
+        filename: The config filename (from --config).
+        config_dir: The config directory (from --config-dir), or None
+            to use the default platformdirs-based directory.
+
+    Returns:
+        The resolved Path to the configuration file.
+
+    """
+    if filename.is_absolute():
+        return filename
+    # check the current working directory first
+    if filename.exists():
+        return filename
+    # fall back to the config directory
+    resolved = (config_dir or get_config_dir()) / filename
+    if resolved.exists():
+        return resolved
+    # not found in either location; return the original name
+    return filename
 
 
 def get_project_name(file: Path) -> str | None:
@@ -56,6 +138,103 @@ def get_project_name(file: Path) -> str | None:
     return None
 
 
+def get_auto_hint_model(file: Path) -> str | None:
+    """Extract the optional auto-hint model spec from a gatorgrade YAML config file.
+
+    The model is specified in the front matter of the YAML file as:
+
+        auto_hint_model: "litert-community/SmolLM2-135M-Instruct:SmolLM2_135M_Instruct.litertlm"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The model spec string if specified, or None if not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(AUTO_HINT_MODEL_FIELD, None)
+    except (yaml.YAMLError, OSError):
+        pass
+    return None
+
+
+def get_system_prompt_file(file: Path) -> str | None:
+    """Extract the optional system prompt filename from a gatorgrade YAML config file.
+
+    The filename is specified in the front matter of the YAML file as:
+
+        system_prompt_file: "system_prompt.md"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    The file is resolved relative to the current working directory
+    first, then falling back to the --config-dir directory if it is
+    not found in the CWD.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The system prompt filename string if specified, or None if
+        not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(SYSTEM_PROMPT_FILE_FIELD, None)
+    except (yaml.YAMLError, OSError):
+        pass
+    return None
+
+
+def get_validation_phrases_file(file: Path) -> str | None:
+    """Extract the optional validation phrases filename from a gatorgrade YAML config file.
+
+    The filename is specified in the front matter of the YAML file as:
+
+        validation_phrases_file: "quality_checks.txt"
+        setup: |
+          ...
+        ---
+        - checks...
+
+    The file should contain one phrase per line. Each phrase is
+    checked against generated hints; if any phrase is found, the
+    hint is flagged as low-quality.
+
+    Args:
+        file: Path to the gatorgrade YAML configuration file.
+
+    Returns:
+        The validation phrases filename string if specified, or
+        None if not present.
+
+    """
+    try:
+        parsed_yaml_file = parse_yaml_file(file)
+        if len(parsed_yaml_file) >= DATA_WITH_SETUP_LENGTH and isinstance(
+            parsed_yaml_file[0], dict
+        ):
+            return parsed_yaml_file[0].get(VALIDATION_PHRASES_FILE_FIELD, None)
+    except (yaml.YAMLError, OSError):
+        pass
+    return None
+
+
 def _parse_due_date_value(
     value: Any,
 ) -> tuple[datetime.datetime | None, str | None]:
@@ -73,15 +252,26 @@ def _parse_due_date_value(
         if the value could not be parsed.
 
     """
+    # convert the value to a datetime object, handling different
+    # types of input that are permitted in the YAML front matter
     try:
+        # if the value is a string, parse it as an ISO 8601 datetime string
         if isinstance(value, str):
             dt = datetime.datetime.fromisoformat(value)
+        # if it could not be extracted as a string, it could
+        # could be a datetime object and thus can be assigned
         elif isinstance(value, datetime.datetime):
             dt = value
+        # otherwise, it could be handled as a date object,
+        # and could be assigned to it directly
         elif isinstance(value, datetime.date):
             dt = datetime.datetime.combine(value, datetime.time.min)
+        # some aspect of parsing did not work and thus
+        # the value could not be parsed, so return an error message
         else:
             return None, (f"Unsupported due date type: {type(value).__name__}")
+    # the value could not be parsed by any supported means,
+    # so return an error message indicating that parsing failed
     except ValueError as e:
         return None, f"Could not parse due date: {e}"
     # convert timezone-aware datetimes to naive local time; note that
@@ -203,6 +393,7 @@ def get_due_date(
         if parse_error:
             return None, f"Invalid value for '{alias}': {parse_error}"
         return due_date, None
+    # report the error(s) that occurred when parsing the YAML file
     except yaml.YAMLError as e:
         return None, f"Could not parse YAML front matter: {e}"
     except OSError as e:
@@ -257,6 +448,8 @@ def parse_config(
     error = validate_positive_nonzero_int(
         baseline_weight, BASELINE_WEIGHT_FIELD
     )
+    # the baseline weight was not valid and thus this function
+    # should return early with an error message
     if error:
         return [], error
     try:

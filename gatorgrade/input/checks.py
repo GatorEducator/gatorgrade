@@ -39,6 +39,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         weight: int = 1,
         outputlimit: int | None = None,
         hint: str | None = None,
+        check_id: str | None = None,
     ):
         """Construct a ShellCheck.
 
@@ -51,6 +52,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
             hint: An optional hint message shown when the check fails.
+            check_id: An optional SHA-256 hash uniquely identifying this check.
 
         """
         # validate the weight and the outputlimit so that they
@@ -76,18 +78,20 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         self.weight = weight
         self.outputlimit = outputlimit
         self.hint = hint
+        self.check_id = check_id
 
 
 class GatorGraderCheck:  # pylint: disable=too-few-public-methods
     """Represent a GatorGrader check."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         gg_args: List[str],
         json_info: dict[str, Any] | str,
         weight: int = 1,
         outputlimit: int | None = None,
         hint: str | None = None,
+        check_id: str | None = None,
     ):
         """Construct a GatorGraderCheck.
 
@@ -97,6 +101,7 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
             weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
             hint: An optional hint message shown when the check fails.
+            check_id: An optional SHA-256 hash uniquely identifying this check.
 
         """
         errors = []
@@ -119,3 +124,4 @@ class GatorGraderCheck:  # pylint: disable=too-few-public-methods
         self.weight = weight
         self.outputlimit = outputlimit
         self.hint = hint
+        self.check_id = check_id

@@ -2,6 +2,7 @@
     "version": "0.2",
     "language": "en",
     "words": [
+        "backticks",
         "duedate",
         "DDTHH",
         "noqa",
@@ -32,10 +33,13 @@
         "gitignore",
         "github",
         "pwsh",
+        "Qwen",
         "gatorgrader",
         "gatorgrade",
         "TODOs",
-        "gatorgradle"
+        "gatorgradle",
+        "worktree",
+        "systemprompt"
     ],
     "ignorePaths": [
         ".github/**",

@@ -1,5 +1,6 @@
 """Pytest fixtures for testing various functions in GatorGrade."""
 
+import gc
 import io
 import os
 import subprocess
@@ -7,6 +8,11 @@ import sys
 from typing import Any
 
 import pytest
+
+# disable the garbage collector at module load time to avoid intermittent
+# segfaults on CPython 3.14 when numpy C extensions interact with
+# hypothesis strategy object cleanup during GC.
+gc.disable()
 
 
 @pytest.fixture(autouse=True)

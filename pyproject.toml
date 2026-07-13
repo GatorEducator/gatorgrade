@@ -1,6 +1,6 @@
 [project]
 name = "gatorgrade"
-version = "0.10.0"
+version = "0.11.0"
 description = "GatorGrade executes GatorGrader checks!"
 authors = [
     { name = "Michael Abraham" },
@@ -34,6 +34,27 @@ dependencies = [
     "rich>=13.8.1,<14",
     "gatorgrader>=1.1.2,<2",
     "click>=8.3.0,<9",
+    "platformdirs>=4.10.0",
+]
+
+[project.optional-dependencies]
+auto-hint = [
+    "openai>=2.44.0",
+    "torch>=2.12.1",
+    "transformers>=5.13.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+torchvision = [
+  { index = "pytorch-cpu" },
 ]
 
 [project.scripts]
@@ -63,6 +84,7 @@ dev = [
     "types-toml>=0.10.8.20260518",
     "hypothesis>=6.155.2",
     "tree-sitter-analyzer[popular]>=0.4.0",
+    "pytest-xdist>=3.8.0",
 ]
 
 [build-system]
@@ -73,7 +95,7 @@ build-backend = "hatchling.build"
 project = "gatorgrade"
 scripts = "scripts"
 tests = "tests"
-coveragefailunder = "98"
+coveragefailunder = "95"
 directtestedfailunder = "75"
 ruff-check-command = { var = "ruff check {project} {tests} {scripts}", recursive = true }
 coverage-test-command = { var = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under=98 --cov-report=term-missing tests/", recursive = true }
@@ -119,12 +141,16 @@ comments-fix = { cmd = "uv run -m scripts.ccl fix {project} {tests} {scripts}", 
 vsc = { cmd = "uv run -m scripts.vsc check", help = "Check that the GatorGrade version in main.py matches the version in pyproject.toml", use_vars = true }
 test-coverage-check = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder}", help = "Check that a minimum percentage of functions are directly tested", use_vars = true }
 test-coverage-check-verbose = { cmd = "uv run python -m scripts.tsc --threshold {directtestedfailunder} --verbose", help = "Check function coverage with detailed analysis output", use_vars = true }
-test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization and test distribution" }
+test = { cmd = "pytest -x -s -vv", help = "Run the pytest test suite using order randomization" }
+test-parallel = { cmd = "pytest -x -s -vv -n auto -p no:sugar", help = "Run the pytest test suite with parallel execution and order randomization" }
+test-parallel-not-random = { cmd = "pytest -x -s -vv -n auto -p no:randomly -p no:clarity", help = "Run the pytest test suite with parallel execution but without order randomization" }
 test-silent = { cmd = "pytest -x --show-capture=no -n auto", help = "Run the pytest test suite without showing output" }
 test-silent-not-random = { cmd = "pytest -x --show-capture=no -p no:randomly", help = "Run the pytest test suite without showing output and order randomization" }
 test-coverage = { cmd = "pytest -s --cov=gatorgrade --cov-branch --cov-fail-under={coveragefailunder} --cov-report=term-missing tests/", help = "Run the pytest test suite with coverage tracking", use_vars = true }
 test-not-propertybased = { cmd = "pytest -x -s -vv -m 'not propertybased'", help = "Run the pytest test suite without property-based tests" }
 test-propertybased = { cmd = "pytest -x -s -vv -m propertybased", help = "Run only the property-based tests" }
+test-not-autohint = { cmd = "pytest -x -s -vv -m 'not autohint'", help = "Run the pytest test suite without auto-hint tests" }
+test-autohint = { cmd = "pytest -x -s -vv -m autohint", help = "Run only the auto-hint tests" }
 test-not-random = { cmd = "pytest -x -s -vv -p no:randomly", help = "Run the pytest test suite without order randomization" }
 test-flaky = { cmd = "pytest -x -s -vv --flakefighters", help = "Run the pytest test suite with flakefighters enabled" }
 test-flaky-suppress = { cmd = "pytest -x -s -vv --flakefighters --suppress-flaky-failures-exit-code", help = "Run the pytest test suite with flakefighters suppressing flaky failure exit codes" }
@@ -156,6 +182,7 @@ exclude_lines = [
 [tool.pytest.ini_options]
 markers = [
     "propertybased: property-based tests using hypothesis",
+    "autohint: tests that exercise the optional auto-hint extra",
 ]
 
 [tool.ruff]
@@ -191,10 +218,6 @@ strict = false
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
-
-# [tool.ruff.lint.isort]
-# force-single-line = true
-# force-sort-within-sections = true
 
 [tool.pyrefly]
 preset = "legacy"

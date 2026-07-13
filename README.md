@@ -115,6 +115,26 @@ The following options control how GatorGrade runs:
   checks run. The default is to show the progress bar.
 - `--show-diagnostics`, `--no-show-diagnostics`: Show or hide diagnostic details
   for failing checks. The default is to show diagnostics.
+- `--config-dir`, `-d`: Specify the directory for configuration files. The
+  default is the platform-specific user config directory for gatorgrade. When
+  the configuration file is not found in the current directory, gatorgrade
+  looks in this directory.
+- `--verbose`, `--no-verbose`: Show detailed configuration information before
+  running checks. The default is to not show verbose information. Use this to
+  see which config file, config directory, and CLI options are active.
+- `--auto-hint`, `--no-auto-hint`: Automatically generate hints for failing
+  checks using a local language model. The default is to not generate hints.
+  Requires the `auto-hint` extra. Use together with `--auto-hint-model` to
+  choose a different model.
+- `--auto-hint-model`: Model identifier for auto-hint generation. The default
+  for local models is `Qwen/Qwen2.5-0.5B-Instruct`. The default for remote
+  servers is `Qwen/Qwen3.6-35B-A3B`. This option requires `--auto-hint`.
+- `--auto-hint-url`: URL of an OpenAI-compatible API server for remote hint
+  generation. When provided, the remote model is used instead of the local
+  model. Falls back to the default local model on any remote server errors.
+  This option requires `--auto-hint`.
+- `--auto-hint-api-key`: API key for the remote auto-hint server. This option
+  requires `--auto-hint-url`.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
@@ -173,6 +193,19 @@ setup: |
 The `setup` section runs shell commands before the checks. If a setup command
 fails, GatorGrade exits immediately.
 
+### Project Name
+
+An optional `name` field in the front matter sets a custom project name that
+appears in the summary output and in reports. If no name is specified, the
+current directory name is used.
+
+```yaml
+name: "Theory of Computation Final Examination"
+setup: |
+  uv sync --dev --no-install-project
+---
+```
+
 ### Due Date
 
 An optional due date field in the front matter shows a countdown in the
@@ -192,6 +225,39 @@ setup: |
 Using the colors defined by the terminal window, when the due date is
 approaching (i.e., within 24 hours) the countdown is shown in yellow.
 Otherwise, when the assignment is overdue, it is shown in red.
+
+### System Prompt File
+
+An optional `system_prompt_file` field in the front matter specifies a file
+containing a custom system prompt for the auto-hint generator. The file can
+contain any valid Markdown. When provided, this prompt replaces the built-in
+system prompt entirely. GatorGrade searches for the file in the current
+directory, alongside the configuration file, and then in the config directory.
+
+```yaml
+system_prompt_file: systemprompt.md
+setup: |
+  uv sync --dev --no-install-project
+---
+```
+
+### Validation Phrases File
+
+An optional `validation_phrases_file` field in the front matter specifies a
+JSON file that defines quality rules for generated hints. The file must
+contain an object with optional `must_contain` and `cannot_contain` lists of
+phrases. Every generated hint is checked against these rules and flagged as
+low quality if it violates them.
+
+```json
+{
+  "must_contain": ["fix"],
+  "cannot_contain": ["direct answer is", "complete solution"]
+}
+```
+
+GatorGrade searches for the file in the current directory, alongside the
+configuration file, and then in the config directory.
 
 ### File Context Checks
 

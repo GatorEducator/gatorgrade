@@ -12,7 +12,7 @@ from scripts.vsc import (
     _extract_version_from_main,
     _extract_version_from_pyproject,
     _unquote_string,
-    _update_version_in_main,
+    _update_version_file,
     app,
 )
 
@@ -89,49 +89,49 @@ def test_extract_version_from_pyproject_returns_none_when_no_project(
     assert _extract_version_from_pyproject(pyproject) is None
 
 
-def test_update_version_in_main_replaces_assigned_value(
+def test_update_version_file_replaces_assigned_value(
     tmp_path: Path,
 ) -> None:
     """Replace the GATORGRADE_VERSION string and write the file back."""
-    main_file = tmp_path / "main.py"
-    main_file.write_text(
+    version_file = tmp_path / "version.py"
+    version_file.write_text(
         f'"""Module."""\n{VERSION_VAR} = "0.1.0"\nimport os\n'
     )
-    changed = _update_version_in_main(main_file, "0.2.0")
+    changed = _update_version_file(version_file, "0.2.0")
     assert changed is True
-    assert f'{VERSION_VAR} = "0.2.0"' in main_file.read_text()
+    assert f'{VERSION_VAR} = "0.2.0"' in version_file.read_text()
 
 
-def test_update_version_in_main_returns_false_when_missing(
+def test_update_version_file_returns_false_when_missing(
     tmp_path: Path,
 ) -> None:
     """Return False when the file does not define GATORGRADE_VERSION."""
-    main_file = tmp_path / "main.py"
-    main_file.write_text("import os\n")
-    changed = _update_version_in_main(main_file, "0.2.0")
+    version_file = tmp_path / "version.py"
+    version_file.write_text("import os\n")
+    changed = _update_version_file(version_file, "0.2.0")
     assert changed is False
 
 
-def test_update_version_in_main_preserves_indentation(
+def test_update_version_file_preserves_indentation(
     tmp_path: Path,
 ) -> None:
     """Preserve the original indentation when updating the version line."""
-    main_file = tmp_path / "main.py"
-    main_file.write_text(
+    version_file = tmp_path / "version.py"
+    version_file.write_text(
         f'def f() -> None:\n    {VERSION_VAR} = "0.1.0"\n    return None\n'
     )
-    _update_version_in_main(main_file, "0.2.0")
-    lines = main_file.read_text().splitlines()
+    _update_version_file(version_file, "0.2.0")
+    lines = version_file.read_text().splitlines()
     assert lines[1] == f'    {VERSION_VAR} = "0.2.0"'
 
 
 @pytest.fixture
 def project_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Create a temporary gatorgrade/main.py and pyproject.toml and chdir into tmp_path."""
+    """Create a temporary gatorgrade/version.py and pyproject.toml and chdir into tmp_path."""
     main_dir = tmp_path / "gatorgrade"
     main_dir.mkdir(parents=True, exist_ok=True)
-    main_file = main_dir / "main.py"
-    main_file.write_text(f'"""Module."""\n{VERSION_VAR} = "9.9.9"\n')
+    version_file = main_dir / "version.py"
+    version_file.write_text(f'"""Module."""\n{VERSION_VAR} = "9.9.9"\n')
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text('[project]\nname = "gatorgrade"\nversion = "9.9.9"\n')
     monkeypatch.chdir(tmp_path)
@@ -150,20 +150,20 @@ def test_check_exits_one_when_versions_differ(
     project_files: Path,
 ) -> None:
     """Exit 1 and report the mismatch when versions differ."""
-    main_file = project_files / "gatorgrade" / "main.py"
-    main_file.write_text(f'"""Module."""\n{VERSION_VAR} = "0.0.1"\n')
+    version_file = project_files / "gatorgrade" / "version.py"
+    version_file.write_text(f'"""Module."""\n{VERSION_VAR} = "0.0.1"\n')
     runner = CliRunner()
     result = runner.invoke(app, ["check"])
     assert result.exit_code == 1
     assert "Version mismatch" in (result.stdout + result.stderr)
 
 
-def test_check_exits_one_when_main_version_missing(
+def test_check_exits_one_when_version_file_missing_var(
     project_files: Path,
 ) -> None:
-    """Exit 1 when main.py does not define GATORGRADE_VERSION."""
-    main_file = project_files / "gatorgrade" / "main.py"
-    main_file.write_text('"""Module."""\nimport os\n')
+    """Exit 1 when version.py does not define GATORGRADE_VERSION."""
+    version_file = project_files / "gatorgrade" / "version.py"
+    version_file.write_text('"""Module."""\nimport os\n')
     runner = CliRunner()
     result = runner.invoke(app, ["check"])
     assert result.exit_code == 1
@@ -180,36 +180,36 @@ def test_check_exits_one_when_pyproject_version_missing(
     assert result.exit_code == 1
 
 
-def test_fix_updates_main_when_versions_differ(
+def test_fix_updates_version_file_when_versions_differ(
     project_files: Path,
 ) -> None:
-    """Update main.py to match pyproject.toml when they differ."""
-    main_file = project_files / "gatorgrade" / "main.py"
-    main_file.write_text(f'"""Module."""\n{VERSION_VAR} = "0.0.1"\n')
+    """Update version.py to match pyproject.toml when they differ."""
+    version_file = project_files / "gatorgrade" / "version.py"
+    version_file.write_text(f'"""Module."""\n{VERSION_VAR} = "0.0.1"\n')
     runner = CliRunner()
     result = runner.invoke(app, ["fix"])
     assert result.exit_code == 0
-    assert f'{VERSION_VAR} = "9.9.9"' in main_file.read_text()
+    assert f'{VERSION_VAR} = "9.9.9"' in version_file.read_text()
 
 
 def test_fix_is_noop_when_versions_already_match(
     project_files: Path,
 ) -> None:
     """Exit 0 without changes when versions already match."""
-    main_file = project_files / "gatorgrade" / "main.py"
-    before = main_file.read_text()
+    version_file = project_files / "gatorgrade" / "version.py"
+    before = version_file.read_text()
     runner = CliRunner()
     result = runner.invoke(app, ["fix"])
     assert result.exit_code == 0
-    assert main_file.read_text() == before
+    assert version_file.read_text() == before
 
 
-def test_fix_exits_one_when_main_version_missing(
+def test_fix_exits_one_when_version_file_missing_var(
     project_files: Path,
 ) -> None:
-    """Exit 1 when main.py does not define GATORGRADE_VERSION."""
-    main_file = project_files / "gatorgrade" / "main.py"
-    main_file.write_text('"""Module."""\nimport os\n')
+    """Exit 1 when version.py does not define GATORGRADE_VERSION."""
+    version_file = project_files / "gatorgrade" / "version.py"
+    version_file.write_text('"""Module."""\nimport os\n')
     runner = CliRunner()
     result = runner.invoke(app, ["fix"])
     assert result.exit_code == 1

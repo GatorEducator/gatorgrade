@@ -4,16 +4,24 @@ import datetime
 import json as json_module
 import os
 import subprocess
+import threading
+import time
 from pathlib import Path
 from typing import Any, List, Tuple, Union
 
 import gator
 import rich
-from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.track import append_track_entry, build_track_entry
 
 # disable rich's default highlight to stop number coloring
 rich.reconfigure(highlight=False)
@@ -55,6 +63,7 @@ GG_COMMAND_ARG = "--command"
 GG_PATH_SEPARATOR = "/"
 INVALID_GG_CHECK_FMT = 'Invalid GatorGrader check: "{}"'
 GG_ERROR_FMT = '"{}" thrown by GatorGrader'
+DETAILS_ITEM_FMT = "[italic]{}[/]: {}"
 
 # JSON report key constants
 AMOUNT_CORRECT_KEY = "amount_correct"
@@ -74,6 +83,7 @@ DIAGNOSTIC_KEY = "diagnostic"
 HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
+CHECK_ID_KEY = "check_id"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
 # JSON key constants used in check results
@@ -136,6 +146,11 @@ FILE_WRITE_ERR = (
 
 # empty dict for CLI args default
 EMPTY_CLI_ARGS: dict = {}
+
+# default value for the auto-hint generation
+# maximum step value (used to mimic other progress bars)
+AUTO_HINT_STEPS = 100
+AUTO_HINT_SLEEP_TIME = 0.15
 
 
 def _elide_report_path(path_str: str) -> str:
@@ -226,7 +241,44 @@ def _run_shell_check(
         weight=check.weight,
         outputlimit=limit,
         hint=check.hint,
+        raw_diagnostic=raw_diagnostic,
+        check_id=check.check_id,
     )
+
+
+def _build_gg_check_details(check: GatorGraderCheck) -> str:
+    """Build a details string from the check's configuration.
+
+    Extracts the check name and options from json_info and
+    formats them into a compact, readable string that is appended
+    to the diagnostic output.
+
+    Args:
+        check: The GatorGrader check to extract details from.
+
+    Returns:
+        A formatted details string, or an empty string if no
+        options are present.
+
+    """
+    info = check.json_info
+    if not isinstance(info, dict):
+        return EMPTY
+    check_name = info.get("check", "")
+    options = info.get("options", {})
+    if not isinstance(options, dict):
+        return EMPTY
+    # build a list of labeled items, each with the label in italic
+    parts = []
+    if check_name:
+        parts.append(DETAILS_ITEM_FMT.format("check", check_name))
+    if isinstance(options, dict):
+        for key, value in options.items():
+            if key == COMMAND_KEY:
+                # command is already shown as "Run this command"
+                continue
+            parts.append(DETAILS_ITEM_FMT.format(key, value))
+    return ", ".join(parts)
 
 
 def _run_gg_check(
@@ -273,6 +325,9 @@ def _run_gg_check(
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
     )
+    raw_diagnostic = diagnostic
+    # extract the structured check details for GatorGrader checks
+    details = _build_gg_check_details(check)
     diagnostic = _truncate_diagnostic(diagnostic, limit)
     return CheckResult(
         passed=passed,
@@ -283,6 +338,9 @@ def _run_gg_check(
         weight=check.weight,
         outputlimit=limit,
         hint=check.hint,
+        raw_diagnostic=raw_diagnostic,
+        details=details,
+        check_id=check.check_id,
     )
 
 
@@ -347,6 +405,8 @@ def create_report_json(  # noqa: PLR0913
                 results_json[DIAGNOSTIC_KEY] = checkResults[i].diagnostic
             if checkResults[i].hint:
                 results_json[HINT_KEY] = checkResults[i].hint
+            if checkResults[i].check_id:
+                results_json[CHECK_ID_KEY] = checkResults[i].check_id
         checks_list.append(results_json)
     # create the dictionary for all of the check information
     overall_dict = dict(
@@ -710,6 +770,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     github_env: Tuple[str | None, str | None] = (None, None),
     project_name: str | None = None,
     due_date: datetime.datetime | None = None,
+    auto_hint_engine: Any = None,
+    auto_hint_url: str | None = None,
+    auto_hint_track: bool = False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -730,8 +793,47 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         project_name: Optional custom project name from the config file.
             If not provided, the current directory name is used.
         due_date: Optional due date from the config file for deadline display.
+        auto_hint_engine: Optional engine for generating hints for failing
+            checks. If provided, hints are generated lazily.
+        auto_hint_url: URL of the remote auto-hint server, if any.
+            Displayed in the summary when remote hints were used.
+        auto_hint_track: Whether to write tracking data to
+            autohints.json in the current working directory.
 
     """
+
+    def _generate_hint(result: CheckResult) -> None:
+        """Generate a hint for a failing check if the engine is available.
+
+        Does not overwrite hints that were explicitly provided via the
+        configuration file.
+
+        """
+        if auto_hint_engine is None or result.passed:
+            return
+        if result.hint is not None:
+            # do not overwrite an explicit hint from the config file.
+            return
+        # read the relevant file content if the check has a file path.
+        file_content = ""
+        if result.path is not None:
+            try:
+                with open(result.path, "r", encoding="utf-8") as f:
+                    file_content = f.read()
+            except (OSError, IOError):
+                file_content = ""
+        hint, is_low_quality = auto_hint_engine.generate_hint(
+            description=result.description,
+            diagnostic=result.raw_diagnostic,
+            command=result.run_command,
+            file_content=file_content,
+            details=result.details,
+        )
+        if hint is not None:
+            result.hint = hint
+            result.is_auto_hint = True
+            result.is_low_quality = is_low_quality
+
     results: List[CheckResult] = []
     # use the configured project name, falling back to directory name
     display_project_name = project_name or Path.cwd().name
@@ -826,15 +928,115 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                             index_of_new_command
                         ]
                 # there were results from running checks
-                # and thus they must be displayed
+                # and thus they must be displayed; use the progress
+                # bar's print method so each check appears above
+                # the progress bar as it completes
                 if result is not None:
-                    result.print()
                     results.append(result)
-                # update progress for every check
-                if result:
+                    progress.print(result.display_result())
+                    # if result:
                     progress.update(task, advance=1)
     # determine if there are failures and then display them
     failed_results = list(filter(lambda result: not result.passed, results))
+    # generate auto-hints for failing checks with a progress bar
+    if auto_hint_engine is not None and failed_results:
+        # if the model has not been loaded yet, show a dedicated
+        # progress bar for the download / load phase so the user
+        # understands why the first hint is taking longer
+        if not auto_hint_engine.is_loaded:
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(
+                    bar_width=40,
+                    style="red",
+                    complete_style="green",
+                    finished_style="green",
+                ),
+                TimeElapsedColumn(),
+            ) as load_progress:
+                task_id = load_progress.add_task(
+                    "[green]Loading auto-hinter",
+                    total=AUTO_HINT_STEPS,
+                )
+                load_progress.update(
+                    task_id,
+                    completed=0,
+                )
+
+                # use a daemon thread to advance the bar so it animates
+                # while the model is being loaded, then mark it complete
+                # in green once loading finishes
+                def _advance_bar() -> None:
+                    for _ in range(AUTO_HINT_STEPS - 1):
+                        time.sleep(AUTO_HINT_SLEEP_TIME)
+                        load_progress.update(task_id, advance=1)
+
+                thread = threading.Thread(target=_advance_bar, daemon=True)
+                thread.start()
+                load_error: str | None = None
+                try:
+                    auto_hint_engine.ensure_loaded()
+                except Exception as exc:  # pylint: disable=broad-except
+                    load_error = str(exc)[:300]
+                load_progress.update(task_id, completed=100)
+                if load_error is not None:
+                    rich.print()
+                    rich.print(
+                        "[yellow]Warning: Could not load the auto-hint"
+                        f" model: {load_error}"
+                        "[/]"
+                    )
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(
+                bar_width=40,
+                style="red",
+                complete_style="green",
+                finished_style="green",
+            ),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TextColumn("[green]({task.completed}/{task.total})[/green]"),
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task(
+                "[green]Generating auto-hints",
+                total=len(failed_results),
+            )
+            for result in failed_results:
+                _generate_hint(result)
+                progress.update(task, advance=1)
+        # if no hints were generated despite having an engine,
+        # print a diagnostic message to explain why
+        if not any(r.is_auto_hint for r in failed_results):
+            last_err = getattr(auto_hint_engine, "last_error", None)
+            if last_err:
+                rich.print()
+                rich.print(
+                    "[yellow]Warning: Auto-hints could not be generated:"
+                    f" {last_err}[/]"
+                )
+            else:
+                rich.print()
+                rich.print(
+                    "[yellow]Warning: Auto-hints could not be generated."
+                    " Check your network connection and model"
+                    " availability.[/]"
+                )
+    # write tracking data to autohints.json if enabled and
+    # at least one auto-hint was generated for failing checks
+    if auto_hint_track and auto_hint_engine is not None:
+        hinted_results = [r for r in failed_results if r.is_auto_hint]
+        if hinted_results:
+            track_entry = build_track_entry(
+                failed_results,
+                project_name=display_project_name,
+                due_date=due_date,
+                version_info=version_info,
+                cli_args=cli_args,
+            )
+            if track_entry:
+                append_track_entry(track_entry)
+
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
     passed_count = len(results) - len(failed_results)
@@ -924,7 +1126,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                         f"[blue]   → {RUN_COMMAND_LABEL}: [green]{result.run_command}"
                     )
         rich.print("")
+        # add labels to the top of the summary section
+        # --> display the name of the project
         rich.print(f"[bold]- {PROJECT_LABEL}:[/] {display_project_name}")
+        # --> if a due date was specified, display it and the time remaining
         if due_date is not None:
             due_date_str = due_date.strftime("%Y-%m-%d %H:%M")
             time_str, time_color = _format_remaining_time(due_date)
@@ -932,24 +1137,93 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 f"[bold]- {DUE_DATE_LABEL}:[/] "
                 f"{due_date_str} [{time_color}]({time_str})[/]"
             )
+        # --> display the number of checks and the percentage of passed checks
         rich.print(
             f"[bold]- {CHECKS_LABEL}:[/] {passed_count}/{len(results)} "
             f"[{summary_color}]({percent}%)[/]"
         )
+        # --> display the number of points and the percentage of points
         rich.print(
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "
                 f"{report_display_name} ({report_type_str})"
             )
+        # --> if a github-env was specified, display it and the type
         if github_env_written:
             rich.print(
                 f"[bold]- {GITHUB_ENV_LABEL}:[/] "
                 f"{github_env_key} ({github_env_type_str})"
             )
+        # add reminder about auto-hints at the very bottom
+        # (after all other summary lines) so they appear as a
+        # separate dimmed section below the main summary group
+        if auto_hint_engine is not None and any(
+            r.is_auto_hint for r in failed_results
+        ):
+            # display a reminder about the use of auto-hinting
+            has_fallback = getattr(auto_hint_engine, "has_fallback", False)
+            local_fallback = has_fallback and not getattr(
+                auto_hint_engine, "remote_url", None
+            )
+            # if a remote fallback was needed (i.e., could not connect
+            # to the remote server that provides the auto-hintint),
+            # then make sure that this is evident and that it is clear
+            # that a local model was used instead as the fallback
+            remote_fallback = has_fallback and getattr(
+                auto_hint_engine, "remote_url", None
+            )
+            if remote_fallback:
+                rich.print(
+                    f"\n[dim]→ Use auto-hints generated by "
+                    f"{auto_hint_engine.model_id} "
+                    f"to spark ideas.\n"
+                    f"  Failed to use remote server at"
+                    f" {auto_hint_engine.remote_url}.[/]"
+                )
+            # if a local fallback was needed (i.e., the model that
+            # was requested could not be downloaded from hugging
+            # face or it could not be loaded from the filesystem),
+            # then make sure that this is evident and that it is
+            # clear that default local model was used as the fallback
+            elif local_fallback:
+                primary_model = getattr(
+                    auto_hint_engine,
+                    "primary_model_id",
+                    "unknown",
+                )
+                rich.print(
+                    f"\n[dim]→ Use auto-hints generated by "
+                    f"{auto_hint_engine.model_id} "
+                    f"to spark ideas.\n"
+                    f"  The specified local model"
+                    f" ({primary_model}) was not available;"
+                    f" using the default model.[/]"
+                )
+            elif auto_hint_url:
+                rich.print(
+                    f"\n[dim]→ Use auto-hints generated by "
+                    f"{auto_hint_engine.model_id}"
+                    f" from {auto_hint_url} to spark ideas.[/]"
+                )
+            else:
+                rich.print(
+                    f"\n[dim]→ Use auto-hints generated by "
+                    f"{auto_hint_engine.model_id}"
+                    f" to spark ideas.[/]"
+                )
+            # add a note about lower-quality hints (dimmed/italic/grey)
+            if any(r.is_low_quality for r in failed_results):
+                rich.print(
+                    "[dim]  Hints shown in "
+                    "[dim][italic][bright_black]dimmed, grey, italic[/][/]"
+                    "[dim] text may be of lower quality. "
+                    "Use your judgment when following them![/]"
+                )
         rich.print(EMPTY)
         rich.print(Rule(style="bright_red"))
     # all of the checks passed and thus the color highlights
@@ -982,6 +1256,14 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             rich.print(
                 f"[bold]- {GITHUB_ENV_LABEL}:[/] "
                 f"{github_env_key} in {github_env_type_str} format"
+            )
+        # add reminder about auto-hints at the very bottom
+        # (after all other summary lines) so it appears as a
+        # separate dimmed line below the main summary group
+        if auto_hint_engine is not None:
+            rich.print(
+                f"[dim]Reminder: Auto-hints would have been generated by "
+                f"{auto_hint_engine.model_id} if any checks failed[/]"
             )
         # close the running checks section with an outcome-colored rule
         rich.print()

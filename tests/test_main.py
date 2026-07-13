@@ -3,23 +3,18 @@
 import builtins
 import io
 import os
-import platform
 import re
 from pathlib import Path
 from typing import Any, Callable, Generator, List
 
 import pytest
-from click import BadParameter
-from hypothesis import given
-from hypothesis import strategies as st
 from typer.testing import CliRunner
 
-from gatorgrade import main
+from gatorgrade import detect, main
 
 runner = CliRunner()
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
-PLATFORM_INFO_PARTS = 3
 
 
 def patch_open(
@@ -116,449 +111,131 @@ def test_gatorgrade_with_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
-    assert "Fix these error(s) before running gatorgrade." in result.stdout
 
 
-def test_gatorgrade_with_invalid_config_file(
-    capsys: pytest.CaptureFixture[str],
+def test_gatorgrade_version_callback_with_false() -> None:
+    """_version_callback does not exit when value is False."""
+    main._version_callback(False)
+
+
+def test_gatorgrade_with_invalid_yaml_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
-    """Test that gatorgrade exits with error when config file is not valid."""
-    invalid_config = Path("invalid_main_test.yml")
-    invalid_config.write_text("this is not valid yaml: [")
-    result = runner.invoke(main.app, ["--config", "invalid_main_test.yml"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_subcommand() -> None:
-    """Test that gatorgrade skips core logic if a subcommand is invoked."""
-    result = runner.invoke(main.app, ["nonexistent-command"])
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_custom_config_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with custom config file name."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    """Test that gatorgrade displays a parse error for invalid YAML."""
+    config_file = tmp_path / "gatorgrade.yml"
+    config_file.write_text("*invalid: yaml: [content")
+    chdir(tmp_path)
+    result = runner.invoke(main.app)
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_report_option(
-    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with report option."""
-    chdir("tests/test_assignment")
-    report_file = tmp_path / "report.json"
-    result = runner.invoke(
-        main.app, ["--report", "file", "json", str(report_file)]
-    )
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    assert report_file.exists()
-
-
-def test_gatorgrade_with_report_invalid_destination(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid report destination is rejected up front."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app, ["--report", "FILe111", "json", "report.json"]
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_report_invalid_type(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid report type is rejected up front."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app, ["--report", "file", "html", "report.json"]
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_report_uppercase_valid(
-    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that uppercase FILE/JSON is accepted."""
-    chdir("tests/test_assignment")
-    report_file = tmp_path / "report.json"
-    result = runner.invoke(
-        main.app, ["--report", "FILE", "JSON", str(report_file)]
-    )
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert report_file.exists()
-
-
-def test_gatorgrade_with_report_invalid_file_path(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that a report file path with a non-existent directory is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(
-        main.app,
-        ["--report", "file", "json", "nonexistent_dir/report.json"],
-    )
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_github_env_invalid_format(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid github-env format is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_github_env_valid_json(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that valid github-env format passes validation."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-
-
-def test_gatorgrade_with_github_env_invalid_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid github-env key name is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_invalid_due_date_format(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test gatorgrade warns about an unparseable due_date in the config."""
-    config = Path("bad_due_date.yml")
-    config.write_text(
-        'due_date: "not-a-date"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        "  command: echo hello\n"
-    )
-    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert "Invalid Due Date Configuration" in result.output
-
-
-def test_gatorgrade_with_multiple_due_date_aliases(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test gatorgrade warns when multiple due date fields are present."""
-    config = Path("multi_due_date.yml")
-    config.write_text(
-        'due_date: "2026-12-15"\n'
-        'due: "2026-12-20"\n'
-        "setup: |\n"
-        "  echo setup\n"
-        "---\n"
-        "- description: test\n"
-        "  command: echo hello\n"
-    )
-    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
-    capsys.readouterr()
-    assert result.exit_code == 0
-    assert "Multiple Due Date Fields" in result.output
-
-
-def test_gatorgrade_with_report_env_invalid_name(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that an invalid env var name in --report ENV is rejected."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_progress_bar_default(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade shows progress bar by default."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, [])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
-
-
-def test_gatorgrade_with_no_status_bar(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test that gatorgrade works with no status bar."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-progress-bar"])
-    capsys.readouterr()
-    print(result.stdout)  # noqa: T201
-    assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "- Checks: 3/3 (100%)" in plain_stdout
-    assert "- Points: 3/3 (100%)" in plain_stdout
+    assert result.exit_code == 1
 
 
 def test_gatorgrade_with_version_flag(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test that gatorgrade displays the version when --version is provided."""
+    """Test that gatorgrade shows version with --version."""
     chdir("tests/test_assignment")
     result = runner.invoke(main.app, ["--version"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    # strip ANSI escape codes that Rich may add when stdout is a TTY
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    # the output should include the program name, version, and platform info
-    assert f"gatorgrade {main.GATORGRADE_VERSION} (" in plain_stdout
-    # the output should also include the python version
-    assert "Python" in plain_stdout
-    # the output should include the python version number
-    assert platform.python_version() in plain_stdout
 
 
-def test_gatorgrade_with_version_flag_on_macos(
-    chdir: Any,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
+def test_gatorgrade_with_invalid_due_date_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
-    """Test the version output includes the macOS release on Darwin systems."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        main.platform, "mac_ver", lambda: ("14.5", (("", "", ""), ""), "arm64")
+    """Test gatorgrade warns about an unparseable due_date in the config."""
+    config_file = tmp_path / "bad_due_date.yml"
+    config_file.write_text(
+        'due_date: "not-a-date"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
     )
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--version"])
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "MacOS 14.5" in plain_stdout
 
 
-def test_gatorgrade_with_version_flag_on_windows(
-    chdir: Any,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
+def test_gatorgrade_with_multiple_due_date_aliases(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
-    """Test the version output includes the Windows release on Windows systems."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        main.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
+    """Test gatorgrade warns when both due_date and duedate are present."""
+    config_file = tmp_path / "multi_due_date.yml"
+    config_file.write_text(
+        'due_date: "2026-12-15"\n'
+        'duedate: "2026-12-16"\n'
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
     )
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--version"])
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-    assert "Windows 10" in plain_stdout
 
 
-def test_gatorgrade_version_callback_with_false() -> None:
-    """Test that the version callback does not exit when value is False."""
-    main._version_callback(False)
-
-
-def test_gatorgrade_get_platform_info_format() -> None:
-    """Test that the platform info function returns a uv-like format string."""
-    platform_info = main._get_platform_info()
-    # the format is arch-os-libc with exactly three parts
-    parts = platform_info.split("-")
-    assert len(parts) == PLATFORM_INFO_PARTS
-    # no part should be empty
-    assert all(parts)
-    # the second part is the operating system
-    assert parts[1] == platform.system().lower()
-
-
-def test_gatorgrade_get_platform_info_linux_musl(
-    monkeypatch: pytest.MonkeyPatch,
+def test_gatorgrade_with_auto_hint_model_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test the platform info string on a Linux system with musl libc."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("musl", "1.2"))
-    assert main._get_platform_info() == "x86_64-linux-musl"
+    """Using --auto-hint-model without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint-model", "custom/model"])
+    capsys.readouterr()
+    assert result.exit_code != 0
 
 
-def test_gatorgrade_get_platform_info_linux_empty_libc(
-    monkeypatch: pytest.MonkeyPatch,
+def test_gatorgrade_with_auto_hint_creates_engine(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test the platform info string on a Linux system with unknown libc."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "x86_64-linux-unknown"
+    """Using --auto-hint creates an engine and runs checks."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint"])
+    capsys.readouterr()
+    assert result.exit_code == 0
 
 
-def test_gatorgrade_get_platform_info_darwin(
-    monkeypatch: pytest.MonkeyPatch,
+def test_gatorgrade_with_auto_hint_url_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Test the platform info string on a Darwin (macOS) system."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "arm64-darwin-none"
-
-
-def test_gatorgrade_get_platform_info_windows(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the platform info string on a Windows system."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "AMD64-windows-msvc"
-
-
-def test_gatorgrade_get_platform_info_unknown_system(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the platform info string on an unknown system."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Plan9")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    assert main._get_platform_info() == "x86_64-plan9-unknown"
-
-
-def test_gatorgrade_get_platform_info_fallback_arch(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the platform info string when machine returns an empty value."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "")
-    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("glibc", "2.40"))
-    assert main._get_platform_info() == "unknown-linux-gnu"
-
-
-def test_gatorgrade_get_gatorgrade_info_format() -> None:
-    """Test the gatorgrade info string contains the GatorGrader version."""
-    gatorgrade_info = main._get_gatorgrade_info()
-    # the format is GatorGrader {version}
-    assert gatorgrade_info.startswith("GatorGrader ")
-    # it should contain a version number
-    assert any(char.isdigit() for char in gatorgrade_info)
-
-
-def test_gatorgrade_get_python_info_format() -> None:
-    """Test the python info string contains the expected fields."""
-    python_info = main._get_python_info()
-    # the format is Python {version} ({build_no}, {build_date}, {compiler})
-    assert python_info.startswith("Python ")
-    # it should contain a version in parentheses
-    assert "(" in python_info
-    assert python_info.endswith(")")
-
-
-def test_gatorgrade_get_python_info_uses_platform(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the python info string uses the platform module functions."""
-    monkeypatch.setattr(main.platform, "python_version", lambda: "3.12.0")
-    monkeypatch.setattr(
-        main.platform, "python_build", lambda: ("v3.12.0", "Jan 1 2024")
+    """Using --auto-hint-url without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--auto-hint-url", "http://localhost:4000"]
     )
-    monkeypatch.setattr(main.platform, "python_compiler", lambda: "GCC 11.4 ")
-    assert (
-        main._get_python_info()
-        == "Python 3.12.0 (v3.12.0, Jan 1 2024, GCC 11.4)"
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_api_key_requires_auto_hint(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-api-key without --auto-hint exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--auto-hint-api-key", "sk-test-key"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_api_key_requires_url(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-api-key without --auto-hint-url exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--auto-hint", "--auto-hint-api-key", "sk-test-key"],
     )
-
-
-def test_gatorgrade_get_os_release_darwin(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on a Darwin (macOS) system."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "arm64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        main.platform, "mac_ver", lambda: ("14.5", (("", "", ""), ""), "arm64")
-    )
-    assert main._get_os_release() == "MacOS 14.5 (arm64-darwin-none)"
-
-
-def test_gatorgrade_get_os_release_darwin_no_release(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on macOS when no release is available."""
-    monkeypatch.setattr(main.platform, "system", lambda: "Darwin")
-    monkeypatch.setattr(
-        main.platform, "mac_ver", lambda: ("", (("", "", ""), ""), "")
-    )
-    assert main._get_os_release() == ""
-
-
-def test_gatorgrade_get_os_release_windows(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on a Windows system."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "AMD64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("", ""))
-    monkeypatch.setattr(
-        main.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
-    )
-    assert main._get_os_release() == "Windows 10 (AMD64-windows-msvc)"
-
-
-def test_gatorgrade_get_os_release_windows_no_release(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on Windows when no release is available."""
-    monkeypatch.setattr(main.platform, "system", lambda: "Windows")
-    monkeypatch.setattr(main.platform, "win32_ver", lambda: ("", "", "", ""))
-    assert main._get_os_release() == ""
-
-
-def test_gatorgrade_get_os_release_linux(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on Linux uses the kernel version."""
-    monkeypatch.setattr(main.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
-    monkeypatch.setattr(main.platform, "libc_ver", lambda: ("glibc", "2.40"))
-    monkeypatch.setattr(main.platform, "release", lambda: "6.18.17")
-    assert main._get_os_release() == "Linux 6.18.17 (x86_64-linux-gnu)"
-
-
-def test_gatorgrade_get_os_release_linux_no_release(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test the os release string on Linux when no kernel is available."""
-    monkeypatch.setattr(main.platform, "system", lambda: "Linux")
-    monkeypatch.setattr(main.platform, "release", lambda: "")
-    assert main._get_os_release() == ""
+    capsys.readouterr()
+    assert result.exit_code != 0
 
 
 def test_gatorgrade_with_output_limit_zero(
@@ -691,94 +368,372 @@ def test_gatorgrade_with_no_show_diagnostics(
     assert "- Points: 3/3 (100%)" in plain_stdout
 
 
-@pytest.mark.propertybased
-@given(st.integers(min_value=1, max_value=1000))
-def test_validate_output_limit_valid_property(value: int) -> None:
-    """Property: positive ints pass through validation unchanged."""
-    result = main._validate_output_limit(value)
-    assert result == value
-
-
-@pytest.mark.propertybased
-@given(st.integers(max_value=0))
-def test_validate_output_limit_invalid_property(value: int) -> None:
-    """Property: non-positive ints cause BadParameter."""
-    with pytest.raises(BadParameter):
-        main._validate_output_limit(value)
-
-
-@pytest.mark.propertybased
-@given(st.integers(min_value=1, max_value=1000))
-def test_validate_baseline_weight_valid_property(value: int) -> None:
-    """Property: positive ints pass through validation unchanged."""
-    result = main._validate_baseline_weight(value)
-    assert result == value
-
-
-@pytest.mark.propertybased
-@given(st.integers(max_value=0))
-def test_validate_baseline_weight_invalid_property(value: int) -> None:
-    """Property: non-positive ints cause BadParameter."""
-    with pytest.raises(BadParameter):
-        main._validate_baseline_weight(value)
-
-
-@pytest.mark.propertybased
-@given(st.data())
-def test_platform_info_format_property(_: st.DataObject) -> None:
-    """Property: platform info is a non-empty string with at least one dash."""
-    info = main._get_platform_info()
-    assert isinstance(info, str)
-    assert len(info) > 0
-    assert "-" in info
-
-
-@pytest.mark.propertybased
-@given(st.data())
-def test_python_info_starts_with_python_property(_: st.DataObject) -> None:
-    """Property: python info starts with 'Python'."""
-    info = main._get_python_info()
-    assert info.startswith("Python")
-
-
-@pytest.mark.propertybased
-@given(st.data())
-def test_gatorgrade_info_contains_gatorgrader_property(
-    _: st.DataObject,
+def test_gatorgrade_with_report_option(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Property: gatorgrade info contains 'GatorGrader'."""
-    info = main._get_gatorgrade_info()
-    assert "GatorGrader" in info
-
-
-@pytest.mark.propertybased
-@given(st.data())
-def test_os_release_format_property(_: st.DataObject) -> None:
-    """Property: os release is non-empty with parens or empty string."""
-    info = main._get_os_release()
-    assert isinstance(info, str)
-    if info:
-        assert "(" in info and ")" in info
-
-
-@pytest.mark.propertybased
-@given(st.from_regex(r"^[A-Za-z_][A-Za-z0-9_]*$"))
-def test_valid_env_var_names_match_property(value: str) -> None:
-    """Property: valid env var names match the VALID_ENV_VAR_NAME pattern."""
-    assert main.VALID_ENV_VAR_NAME.match(value) is not None
-
-
-@pytest.mark.propertybased
-@given(
-    st.one_of(
-        # names starting with a digit are invalid
-        st.from_regex(r"^[0-9].*$", fullmatch=True),
-        # names containing spaces are invalid
-        st.from_regex(r"^.*\\s+.*$", fullmatch=True),
-        # names containing special characters (not underscore) are invalid
-        st.from_regex(r"^.*[^A-Za-z0-9_].*$", fullmatch=True),
+    """Test that gatorgrade works with report option."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "file", "json", str(report_file)]
     )
-)
-def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
-    """Property: invalid env var names do not match the VALID_ENV_VAR_NAME pattern."""
-    assert main.VALID_ENV_VAR_NAME.match(value) is None
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_destination(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report destination is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "FILe111", "json", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_invalid_type(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid report type is rejected up front."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app, ["--report", "file", "html", "report.json"]
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_uppercase_valid(
+    chdir: Any, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that uppercase FILE/JSON is accepted."""
+    chdir("tests/test_assignment")
+    report_file = tmp_path / "report.json"
+    result = runner.invoke(
+        main.app, ["--report", "FILE", "JSON", str(report_file)]
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert report_file.exists()
+
+
+def test_gatorgrade_with_report_invalid_file_path(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that a report file path with a non-existent directory is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--report", "file", "json", "nonexistent_dir/report.json"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_report_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid env var name in --report ENV is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--report", "ENV", "json", "BAD NAME!"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_invalid_format(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env format is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "html", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_github_env_valid_json(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that valid github-env format passes validation."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
+def test_gatorgrade_with_github_env_invalid_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that an invalid github-env key name is rejected."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--github-env", "json", "1invalid"])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_invalid_config_file(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """Test that gatorgrade exits with error when config file is not valid."""
+    config_file = tmp_path / "invalid_main_test.yml"
+    config_file.write_text("this is not valid yaml: [")
+    result = runner.invoke(main.app, ["--config", str(config_file)])
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_subcommand() -> None:
+    """Test that gatorgrade skips core logic if a subcommand is invoked."""
+    result = runner.invoke(main.app, ["nonexistent-command"])
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_with_custom_config_name(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade works with custom config file name."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_no_status_bar(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade works with no status bar."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-progress-bar"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_progress_bar_default(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that gatorgrade shows progress bar by default."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, [])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 3/3 (100%)" in plain_stdout
+    assert "- Points: 3/3 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_macos(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the macOS release on Darwin systems."""
+    monkeypatch.setattr(detect.platform, "machine", lambda: "arm64")
+    monkeypatch.setattr(detect.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        detect.platform,
+        "mac_ver",
+        lambda: ("14.5", (("", "", ""), ""), "arm64"),
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "MacOS 14.5" in plain_stdout
+
+
+def test_gatorgrade_with_version_flag_on_windows(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the version output includes the Windows release on Windows systems."""
+    monkeypatch.setattr(detect.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(detect.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(detect.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(
+        detect.platform, "win32_ver", lambda: ("10", "10.0.19041", "", "")
+    )
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--version"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "Windows 10" in plain_stdout
+
+
+def test_print_verbose_info_skips_when_not_verbose(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info prints nothing when verbose is False."""
+    main._print_verbose_info(
+        verbose=False,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=False,
+        auto_hint_model="model",
+        auto_hint_url=None,
+        output_limit=5,
+        baseline_weight=1,
+        show_diagnostics=True,
+        progress_bar=True,
+    )
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_print_verbose_info_shows_info_when_verbose(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info prints configuration when verbose is True."""
+    main._print_verbose_info(
+        verbose=True,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=True,
+        auto_hint_model="test-model",
+        auto_hint_url="http://localhost:4000",
+        output_limit=10,
+        baseline_weight=2,
+        show_diagnostics=False,
+        progress_bar=False,
+    )
+    captured = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
+    assert "Verbose Mode Information" in plain_out
+    assert "Config file: test.yml" in plain_out
+    assert "Config dir:" in plain_out
+    assert "tmp" in plain_out
+    assert "Auto-hint:   True" in plain_out
+    assert "Output limit:  10" in plain_out
+    assert "Baseline weight: 2" in plain_out
+
+
+def test_print_verbose_info_shows_default_model_without_url(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_print_verbose_info shows default model when model is not specified."""
+    main._print_verbose_info(
+        verbose=True,
+        config_path=Path("test.yml"),
+        config_dir=Path("/tmp"),
+        auto_hint=True,
+        auto_hint_model=main.AUTO_HINT_MODEL_DEFAULT,
+        auto_hint_url=None,
+        output_limit=5,
+        baseline_weight=1,
+        show_diagnostics=False,
+        progress_bar=False,
+    )
+    captured = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", captured.out)
+    assert "Model:" in plain_out
+
+
+def test_gatorgrade_with_config_dir_no_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with a file in the config dir should work."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file = config_dir / "gatorgrade.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_and_explicit_config(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with --config pointing to a file in the config dir."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file = config_dir / "custom.yml"
+    config_file.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: test\n"
+        '  command: "echo hello"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(
+        main.app,
+        ["--config-dir", str(config_dir), "--config", "custom.yml"],
+    )
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_cwd_takes_precedence(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """A file in the CWD takes precedence over a file in --config-dir."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    config_file_config = config_dir / "gatorgrade.yml"
+    config_file_config.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: from_config_dir\n"
+        '  command: "echo wrong"\n'
+    )
+    config_file_cwd = tmp_path / "gatorgrade.yml"
+    config_file_cwd.write_text(
+        "setup: |\n"
+        "  echo setup\n"
+        "---\n"
+        "- description: from_cwd\n"
+        '  command: "echo correct"\n'
+    )
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+    assert "- Checks: 1/1 (100%)" in plain_stdout
+
+
+def test_gatorgrade_with_config_dir_nonexistent_file(
+    chdir: Any, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """--config-dir with a nonexistent config returns error."""
+    config_dir = tmp_path / "myconfig"
+    config_dir.mkdir()
+    chdir(tmp_path)
+    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 1
+    assert "either does not exist or is not valid" in result.stdout

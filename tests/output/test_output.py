@@ -6,7 +6,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any, List, Tuple, Union
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from hypothesis import given
@@ -966,6 +966,21 @@ def test_run_gg_check_path_extraction_with_different_order() -> None:
     )
     result = output._run_gg_check(check)
     assert result.path == "gatorgrade/input/checks.py"
+
+
+def test_run_gg_check_path_with_directory_missing_args() -> None:
+    """_run_gg_check handles --directory without enough args gracefully."""
+    check = GatorGraderCheck(
+        gg_args=[
+            "--description",
+            "Test",
+            "MatchFileFragment",
+            "--directory",
+        ],
+        json_info={"check": "test"},
+    )
+    result = output._run_gg_check(check)
+    assert result.path is None
 
 
 def test_create_markdown_report_file_includes_file_option_only_when_present() -> (
@@ -1963,7 +1978,7 @@ def test_run_checks_no_output_limit_shows_full_diagnostic(
         ShellCheck(description="Failing check", command=FAILING_CMD),
     ]
     report = (None, None, None)
-    output.run_checks(checks, report)  # type: ignore
+    output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
     out, _ = capsys.readouterr()
     assert "... (output truncated)" not in out
 
@@ -2451,6 +2466,14 @@ def test_format_remaining_time_overdue() -> None:
     assert color == "red"
 
 
+def test_format_remaining_time_overdue_mixed() -> None:
+    """Test overdue with hours but no days to cover minute branch."""
+    past = datetime.datetime.now() - datetime.timedelta(hours=1, minutes=30)
+    time_str, color = output._format_remaining_time(past)
+    assert "Overdue" in time_str
+    assert color == "red"
+
+
 def test_create_markdown_report_file_with_due_date() -> None:
     """Test markdown report includes due date when provided."""
     json_data = {
@@ -2494,3 +2517,295 @@ def test_create_report_json_includes_hint_in_failing_check() -> None:
     result = output.create_report_json(0, [failed], 0)
     check_data = result["checks"][0]
     assert check_data["hint"] == "Try checking your input"
+
+
+def test_run_checks_generates_auto_hint_for_failing_check() -> None:
+    """The auto-hint engine is called when a check fails."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.generate_hint.return_value = ("Add the missing file.", False)
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_called_once()
+
+
+def test_run_checks_skips_hint_when_engine_returns_none() -> None:
+    """No hint is set when the engine returns None."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.generate_hint.return_value = (None, False)
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_called_once()
+
+
+def test_run_checks_shows_summary_with_fallback_hints(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows fallback note when engine has_fallback is True."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.has_fallback = True
+    mock_engine.remote_url = "http://bad.url:4000"
+    mock_engine.model_id = "local-model"
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+        auto_hint_url="http://bad.url:4000",
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "Failed to use remote server" in plain_out
+
+
+def test_run_checks_shows_summary_with_url_when_no_fallback(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows URL when engine has no fallback and URL was given."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.model_id = "remote-model"
+    # magicmock auto-creates attributes, so explicitly set these
+    # to their false/None values to avoid truthy mock objects
+    mock_engine.has_fallback = False
+    mock_engine.remote_url = None
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+        auto_hint_url="http://good.url:4000",
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "remote-model" in plain_out
+    assert "from http://good.url:4000" in plain_out
+
+
+def test_run_checks_shows_summary_without_url_when_not_given(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Summary shows just model name when no URL was given."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = ("A hint.", False)
+    mock_engine.model_id = "local-model"
+    mock_engine.has_fallback = False
+    mock_engine.remote_url = None
+    report = ("", "", "")
+    output.run_checks(
+        [check],
+        report,
+        auto_hint_engine=mock_engine,
+        no_progress_bar=True,
+    )
+    out, _ = capsys.readouterr()
+    plain_out = ANSI_ESCAPE_PATTERN.sub("", out)
+    assert "local-model" in plain_out
+    assert "from" not in plain_out
+    assert "was unavailable" not in plain_out
+
+
+def test_build_gg_check_details_with_options_returns_formatted_string() -> (
+    None
+):
+    """_build_gg_check_details returns italic-labeled details from options."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountSingleLineComments"],
+        json_info={
+            "check": "CountSingleLineComments",
+            "options": {"language": "Python", "count": 200, "exact": False},
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "CountSingleLineComments" in result
+    assert "language" in result
+    assert "Python" in result
+    assert "count" in result
+    assert "200" in result
+    assert "exact" in result
+    assert "False" in result
+
+
+def test_build_gg_check_details_skips_command_key() -> None:
+    """_build_gg_check_details skips the command key in options."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "MatchCommandFragment"],
+        json_info={
+            "check": "MatchCommandFragment",
+            "options": {
+                "command": "uv run test",
+                "fragment": "expected",
+                "count": 1,
+            },
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "command" not in result
+    assert "expected" in result
+    assert "1" in result
+
+
+def test_build_gg_check_details_returns_empty_for_non_dict_info() -> None:
+    """_build_gg_check_details returns empty string when json_info is not a dict."""
+    check = GatorGraderCheck(
+        gg_args=["test"],
+        json_info="just a string",
+    )
+    result = output._build_gg_check_details(check)
+    assert result == ""
+
+
+def test_build_gg_check_details_returns_options_when_check_name_missing() -> (
+    None
+):
+    """_build_gg_check_details still shows options even when check name is missing."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountLines"],
+        json_info={
+            "options": {"language": "Python"},
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert "Python" in result
+
+
+def test_build_gg_check_details_handles_non_dict_options() -> None:
+    """_build_gg_check_details returns empty string when options is not a dict."""
+    check = GatorGraderCheck(
+        gg_args=["--description", "Test", "CountLines"],
+        json_info={
+            "check": "CountLines",
+            "options": "not-a-dict",
+        },
+    )
+    result = output._build_gg_check_details(check)
+    assert result == ""
+
+
+def test_run_checks_skips_auto_hint_for_passing_check() -> None:
+    """The auto-hint engine is not called when all checks pass."""
+    check = ShellCheck(
+        description="pass",
+        command="python -c 'print(\"ok\")'",
+    )
+    mock_engine = MagicMock()
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_not_called()
+
+
+def test_run_checks_preserves_explicit_hint() -> None:
+    """An explicit hint from the config is not overwritten by auto-hints."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+        hint="Explicit hint",
+    )
+    mock_engine = MagicMock()
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.generate_hint.assert_not_called()
+
+
+def test_run_checks_loads_model_and_generates_hints(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The model loading progress bar and hint generation work together."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = False
+    mock_engine.generate_hint.return_value = (
+        "Check the file path.",
+        False,
+    )
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.ensure_loaded.assert_called_once()
+    mock_engine.generate_hint.assert_called_once()
+
+
+def test_run_checks_shows_warning_when_model_load_fails(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Warning is shown when the auto-hint model fails to load."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = False
+    mock_engine.ensure_loaded.side_effect = RuntimeError("Out of memory")
+    mock_engine.generate_hint.return_value = (
+        "Check the file path.",
+        False,
+    )
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    mock_engine.ensure_loaded.assert_called_once()
+
+
+def test_run_checks_shows_warning_with_last_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Warning includes last_error when engine fails to generate hints."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = (None, False)
+    mock_engine.last_error = "connection refused"
+    report = ("", "", "")
+    output.run_checks([check], report, auto_hint_engine=mock_engine)
+    captured = capsys.readouterr()
+    assert "connection refused" in captured.out
+
+
+def test_run_checks_generates_low_quality_hint(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Low-quality hints are still generated and displayed."""
+    check = ShellCheck(
+        description="fail",
+        command=FAILING_CMD,
+    )
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = (
+        "The test is incorrect.",
+        True,
+    )
+    report = ("", "", "")
+    output.run_checks(
+        [check], report, auto_hint_engine=mock_engine, no_progress_bar=True
+    )
+    mock_engine.generate_hint.assert_called_once()

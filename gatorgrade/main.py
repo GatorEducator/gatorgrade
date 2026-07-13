@@ -1,31 +1,56 @@
-"""Use Typer to run gatorgrade to run the checks and generate the yml file."""
+"""Use GatorGrade to run checks and generate helpful output."""
 
 import importlib.metadata
-import platform
-import re
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import typer
-from click import BadParameter
 from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
 
+from gatorgrade.detect import (
+    GATORGRADER_DEPENDENCY,
+    get_os_release,
+    get_platform_info,
+    get_python_info,
+    print_version_info,
+)
+from gatorgrade.engine import (
+    AUTO_HINT_MODEL_DEFAULT,
+    create_auto_hint_engine,
+)
+from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
+from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
 from gatorgrade.input.parse_config import (
+    get_config_dir,
     get_due_date,
     get_due_date_aliases_present,
     get_project_name,
     has_due_date_field,
     parse_config,
+    resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.resolve import (
+    resolve_system_prompt,
+    resolve_validation_rules,
+)
+from gatorgrade.validate import (
+    validate_auto_hint_options,
+    validate_baseline_weight,
+    validate_github_env,
+    validate_output_limit,
+    validate_report,
+)
 
-# define the version of gatorgrade; this is used in the --version option
-# and must always match the value in the pyproject.toml file
-GATORGRADE_VERSION = "0.10.0"
+# import the version from the single-source-of-truth module so that
+# other modules (e.g., gatorgrade.hint.remote_engine) can import it
+# without creating a circular dependency that looks like:
+# gatorgrade.main -> gatorgrade.version -> gatorgrade.main
+from gatorgrade.version import GATORGRADE_VERSION
 
 # create an app for the Typer-based CLI
 
@@ -42,7 +67,6 @@ app = typer.Typer(
     help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified configuration file.",
 )
 
-
 # create a default console for printing with rich
 console = Console()
 
@@ -50,51 +74,29 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
-# define constants for the platform information that is displayed
-# by the --version option, mirroring the format used by uv; the
-# arch and system combination is already unique across platforms
-# (e.g., x86_64 + linux, arm64 + darwin, AMD64 + windows), so the
-# vendor field from Rust's target triple is omitted because Python
-# cannot determine it and it would always be "unknown"
-UNKNOWN_PLATFORM = "unknown"
-GATORGRADER_DEPENDENCY = "gatorgrader"
-
-LIBC_GNU = "gnu"
-LIBC_MUSL = "musl"
-LIBC_NONE = "none"
-LIBC_MSVC = "msvc"
-SYSTEM_DARWIN = "darwin"
-SYSTEM_LINUX = "linux"
-SYSTEM_WINDOWS = "windows"
-_LIBC_BY_SYSTEM = {
-    SYSTEM_DARWIN: LIBC_NONE,
-    SYSTEM_WINDOWS: LIBC_MSVC,
-}
-
-# operating system display names for version output
-OS_DARWIN = "Darwin"
-OS_LINUX = "Linux"
-OS_MACOS = "MacOS"
-OS_WINDOWS = "Windows"
-
-# program and language display names for version output
-GATORGRADE_NAME = "gatorgrade"
-GATORGRADER_NAME = "GatorGrader"
-PYTHON_NAME = "Python"
-
 # newline character for joining lines
 NEWLINE = "\n"
 
 # exit message
 EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
+# default config directory computed at module load time for display in help
+DEFAULT_CONFIG_DIR = str(get_config_dir())
+
 # cli flag names used in the report
 CONFIG_FLAG = "--config"
+CONFIG_DIR_FLAG = "--config-dir"
 REPORT_FLAG = "--report"
 OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
+VERBOSE_FLAG = "--verbose"
+AUTO_HINT_FLAG = "--auto-hint"
+AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
+AUTO_HINT_URL_FLAG = "--auto-hint-url"
+AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
+AUTO_HINT_TRACK_FLAG = "--auto-hint-track"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -108,189 +110,91 @@ PYTHON_INFO_KEY = "python_info"
 PLATFORM_INFO_KEY = "platform_info"
 OS_RELEASE_KEY = "os_release"
 
-# report argument constants
-REPORT_DEST_FILE = "FILE"
-REPORT_DEST_ENV = "ENV"
-REPORT_TYPE_JSON = "JSON"
-REPORT_TYPE_MD = "MD"
-VALID_REPORT_DESTS = (REPORT_DEST_FILE, REPORT_DEST_ENV)
-VALID_REPORT_TYPES = (REPORT_TYPE_JSON, REPORT_TYPE_MD)
-REPORT_DEST_ERR_FMT = "First report argument must be '{}' or '{}', got '{}'"
-REPORT_TYPE_ERR_FMT = "Second report argument must be '{}' or '{}', got '{}'"
-REPORT_PATH_ERR_FMT = (
-    "Cannot write report to '{}': directory '{}' does not exist"
-)
-GITHUB_ENV_TYPE_ERR_FMT = (
-    "First github-env argument must be '{}' or '{}', got '{}'"
-)
-GITHUB_ENV_NAME_ERR_FMT = (
-    "Second github-env argument must be a valid environment variable name, "
-    "got '{}'"
-)
-REPORT_ENV_NAME_ERR_FMT = (
-    "Third report argument must be a valid environment variable name when "
-    "destination is ENV, got '{}'"
-)
-VALID_ENV_VAR_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-
-
-def _validate_output_limit(value: int | None) -> int | None:
-    """Validate output limit is at least 1 if provided."""
-    if value is not None and value < 1:
-        raise BadParameter("Output limit must be at least 1.")
-    return value
-
-
-def _validate_baseline_weight(value: int) -> int:
-    """Validate baseline weight is greater than 0."""
-    if value < 1:
-        raise BadParameter("Baseline weight must be at least 1.")
-    return value
-
-
-def _validate_report(value: Tuple[str, str, str]) -> Tuple[str, str, str]:
-    """Validate report tuple arguments up front to avoid crashes later.
-
-    Validates that:
-    - First argument is FILE or ENV (case-insensitive for backwards
-      compatibility)
-    - Second argument is JSON or MD (case-insensitive for backwards
-      compatibility)
-    - When the destination is not explicitly ENV, validate the third
-      argument's parent directory exists (it is a file path)
-
-    """
-    if any(v is not None for v in value):
-        errors = []
-        if value[0] is not None and value[0].upper() not in VALID_REPORT_DESTS:
-            errors.append(
-                REPORT_DEST_ERR_FMT.format(
-                    REPORT_DEST_FILE, REPORT_DEST_ENV, value[0]
-                )
-            )
-        if value[1] is not None and value[1].upper() not in VALID_REPORT_TYPES:
-            errors.append(
-                REPORT_TYPE_ERR_FMT.format(
-                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[1]
-                )
-            )
-        if value[0] is not None and value[0].upper() != REPORT_DEST_ENV:
-            file_path = Path(value[2])
-            parent_dir = file_path.resolve().parent
-            if not parent_dir.exists():
-                errors.append(REPORT_PATH_ERR_FMT.format(value[2], parent_dir))
-        elif value[0] is not None and value[2] is not None:
-            if not VALID_ENV_VAR_NAME.fullmatch(value[2]):
-                errors.append(REPORT_ENV_NAME_ERR_FMT.format(value[2]))
-        # if there are one or more errors, then raise a BadParameter exception
-        # with all of the error messages joined by newlines (reporting all
-        # of the possible exceptions instead of failing fast with only the
-        # first one should enable a person to better debug command-line arguments)
-        if errors:
-            raise BadParameter(";\n".join(errors))
-    return value
-
-
-def _validate_github_env(
-    value: Tuple[str, str],
-) -> Tuple[str, str]:
-    """Validate github-env tuple arguments up front.
-
-    Validates that the first argument is JSON or MD
-    (case-insensitive for backwards compatibility).
-
-    """
-    if any(v is not None for v in value):
-        errors = []
-        if value[0] is not None and value[0].upper() not in VALID_REPORT_TYPES:
-            errors.append(
-                GITHUB_ENV_TYPE_ERR_FMT.format(
-                    REPORT_TYPE_JSON, REPORT_TYPE_MD, value[0]
-                )
-            )
-        if value[1] is not None and not VALID_ENV_VAR_NAME.fullmatch(value[1]):
-            errors.append(GITHUB_ENV_NAME_ERR_FMT.format(value[1]))
-        if errors:
-            raise BadParameter(";\n".join(errors))
-    return value
-
-
-def _get_platform_info() -> str:
-    """Get the platform information string for any platform."""
-    arch = platform.machine() or UNKNOWN_PLATFORM
-    system = platform.system().lower() or UNKNOWN_PLATFORM
-    libc_name, _ = platform.libc_ver()
-    if system == SYSTEM_LINUX:
-        libc_lower = libc_name.lower()
-        libc = (
-            LIBC_MUSL
-            if LIBC_MUSL in libc_lower
-            else LIBC_GNU
-            if libc_name
-            else UNKNOWN_PLATFORM
-        )
-    elif system in _LIBC_BY_SYSTEM:
-        libc = _LIBC_BY_SYSTEM[system]
-    else:
-        libc = UNKNOWN_PLATFORM
-    return f"{arch}-{system}-{libc}"
-
-
-def _get_python_info() -> str:
-    """Get the Python version, build, and compiler information string."""
-    version = platform.python_version()
-    build_no, build_date = platform.python_build()
-    compiler = platform.python_compiler().strip()
-    return f"{PYTHON_NAME} {version} ({build_no}, {build_date}, {compiler})"
-
-
-def _get_gatorgrade_info() -> str:
-    """Get the parenthetic GatorGrade info string with the GatorGrader version."""
-    # use the importlib.metadata version function to get the
-    # version of the gatorgrader dependency (note that this works correctly
-    # even when gatorgrade is published to PyPI and download and used because
-    # of the fact that gatorgrader is a required and packaged dependnecy)
-    gatorgrader_version = importlib.metadata.version(GATORGRADER_DEPENDENCY)
-    return f"{GATORGRADER_NAME} {gatorgrader_version}"
-
-
-def _get_os_release() -> str:
-    """Get the operating system release string for Linux, macOS, or Windows."""
-    parenthetic_platform_string = f"({_get_platform_info()})"
-    if platform.system() == OS_LINUX:
-        kernel = platform.release()
-        if kernel:
-            return f"{OS_LINUX} {kernel} {parenthetic_platform_string}"
-    elif platform.system() == OS_DARWIN:
-        release, _, _ = platform.mac_ver()
-        if release:
-            return f"{OS_MACOS} {release} {parenthetic_platform_string}"
-    elif platform.system() == OS_WINDOWS:
-        release, _, _, _ = platform.win32_ver()
-        if release:
-            return f"{OS_WINDOWS} {release} {parenthetic_platform_string}"
-    return ""
-
 
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        lines = [
-            f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({_get_gatorgrade_info()})",
-            _get_python_info(),
-        ]
-        os_release = _get_os_release()
-        if os_release:
-            lines.append(os_release)
-        console.print(NEWLINE.join(lines))
+        print_version_info(console)
         raise typer.Exit()
 
 
+def _print_verbose_info(  # noqa: PLR0913
+    verbose: bool,
+    config_path: Path,
+    config_dir: Path,
+    auto_hint: bool,
+    auto_hint_model: str,
+    auto_hint_url: Optional[str],
+    output_limit: int,
+    baseline_weight: int,
+    show_diagnostics: bool,
+    progress_bar: bool,
+    auto_hint_track: bool | None = None,
+) -> None:
+    """Print verbose configuration info before running checks.
+
+    When verbose is True, displays a ruled section with
+    version info, file paths, and the active CLI arguments.
+
+    Args:
+        verbose: Whether verbose mode is enabled.
+        config_path: The resolved config file path.
+        config_dir: The config directory being used.
+        auto_hint: Whether auto-hint mode is enabled.
+        auto_hint_model: The auto-hint model identifier.
+        auto_hint_url: The remote auto-hint URL, if any.
+        output_limit: The output limit value.
+        baseline_weight: The baseline weight value.
+        show_diagnostics: Whether diagnostics are shown.
+        progress_bar: Whether the progress bar is shown.
+        auto_hint_track: Whether auto-hint tracking is enabled.
+
+    """
+    if not verbose:
+        return
+    console.print()
+    console.print(Rule("Verbose Mode Information", style="green"))
+    console.print()
+    print_version_info(console)
+    console.print(f"Config file: {config_path}")
+    console.print(f"Config dir:  {config_dir}")
+    console.print(f"Output limit:  {output_limit}")
+    console.print(f"Baseline weight: {baseline_weight}")
+    console.print(f"Diagnostics: {show_diagnostics}")
+    console.print(f"Progress:    {progress_bar}")
+    console.print(f"Auto-hint:   {auto_hint}")
+    if auto_hint:
+        model_display = auto_hint_model
+        if auto_hint_model == AUTO_HINT_MODEL_DEFAULT:
+            model_display = (
+                REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
+            )
+        console.print(f"Model:       {model_display}")
+        if auto_hint_url:
+            console.print(f"Remote URL:  {auto_hint_url}")
+        console.print(f"Auto-hint track:  {auto_hint_track}")
+    console.print()
+    console.print(Rule(style="green"))
+
+
 @app.callback(invoke_without_command=True)
-def gatorgrade(  # noqa: PLR0913, PLR0915
+def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     ctx: typer.Context,
     filename: Path = typer.Option(
-        FILE, "--config", "-c", help="Name of the yml file."
+        FILE,
+        "--config",
+        "-c",
+        help="Name of the configuration file in YML format.",
+    ),
+    config_dir: Optional[Path] = typer.Option(
+        None,
+        "--config-dir",
+        "-d",
+        help=(
+            "Directory for configuration files including the"
+            " gatorgrade.yml file and other configuration files."
+        ),
+        show_default=DEFAULT_CONFIG_DIR,
     ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
@@ -304,7 +208,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
             f" [green]FILE JSON report.json[/green] to save summary in report.json)."
         ),
-        callback=_validate_report,
+        callback=validate_report,
     ),
     github_env: Tuple[str, str] = typer.Option(
         (None, None),
@@ -318,31 +222,79 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             f" [green]md MD_REPORT[/green] to store Markdown data in the"
             f" GITHUB_ENV file for downstream steps)."
         ),
-        callback=_validate_github_env,
+        callback=validate_github_env,
     ),
     output_limit: int = typer.Option(
         5,
         "--output-limit",
         "-o",
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
-        callback=_validate_output_limit,
+        callback=validate_output_limit,
     ),
     baseline_weight: int = typer.Option(
         1,
         "--baseline-weight",
         "-b",
         help="Default weight applied to checks without an explicit weight (>= 1).",
-        callback=_validate_baseline_weight,
+        callback=validate_baseline_weight,
     ),
     progress_bar: bool = typer.Option(
         True,
         "--progress-bar/--no-progress-bar",
         help="Show or hide the progress bar for checks.",
     ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose/--no-verbose",
+        help="Show detailed configuration info before running checks.",
+    ),
     show_diagnostics: bool = typer.Option(
         True,
         "--show-diagnostics/--no-show-diagnostics",
         help="Show or hide diagnostic details for failing checks.",
+    ),
+    auto_hint: bool = typer.Option(
+        False,
+        "--auto-hint/--no-auto-hint",
+        help="Automatically generate hints for failing checks.",
+    ),
+    auto_hint_track: bool = typer.Option(
+        True,
+        "--auto-hint-track/--no-auto-hint-track",
+        help=(
+            "Save auto-hint generation details to autohints.json "
+            "in the current working directory (only when "
+            "--auto-hint is enabled and hints are generated)."
+        ),
+    ),
+    auto_hint_model: str = typer.Option(
+        AUTO_HINT_MODEL_DEFAULT,
+        "--auto-hint-model",
+        help=(
+            "Model for auto-hint generation "
+            "(requires --auto-hint). Defaults to"
+            f" {REMOTE_MODEL_DEFAULT} when --auto-hint-url is set"
+            f" or {DEFAULT_MODEL_ID} otherwise."
+        ),
+        show_default=False,
+    ),
+    auto_hint_url: Optional[str] = typer.Option(
+        None,
+        "--auto-hint-url",
+        help=(
+            "URL of an OpenAI-compatible API server for remote hint "
+            "generation (requires --auto-hint). When provided, the "
+            "remote model is used instead of a local model. Falls "
+            "back to default local model on any remote URL errors."
+        ),
+    ),
+    auto_hint_api_key: Optional[str] = typer.Option(
+        None,
+        "--auto-hint-api-key",
+        help=(
+            "API key for the remote auto-hint server "
+            "(requires --auto-hint-url)."
+        ),
     ),
     _version: bool = typer.Option(
         False,
@@ -353,6 +305,17 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""
+    # resolve the config directory and configuration file path;
+    # the precedence for looking for the gatorgrade.yml file is:
+    # 1. the specified filename in the current working directory;
+    # 2. the specified filename inside the --config-dir directory
+    #    (either the user-specified value for this directory
+    #    or the default platformdirs config directory);
+    # 3. if the file is not found in either location, the filename
+    #    itself is returned so that the downstream code can report
+    #    a clear "file not found" error for that specified file
+    resolved_config_dir: Path | None = config_dir
+    resolved_filename = resolve_config_path(filename, resolved_config_dir)
     # if ctx.subcommand is None then this means
     # that, by default, gatorgrade should run in checking mode;
     # note that the current implementation of the tool only
@@ -363,8 +326,8 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         # check the due date before parsing config so warnings appear before setup;
         # this returns both the due date and any errors that might have arisen
         # when parsing the due date (i.e., due to an incorrect time/date format)
-        due_date, due_date_error = get_due_date(filename)
-        if has_due_date_field(filename) and due_date is None:
+        due_date, due_date_error = get_due_date(resolved_filename)
+        if has_due_date_field(resolved_filename) and due_date is None:
             console.print()
             console.print(
                 Rule(
@@ -397,7 +360,7 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
         # (there are multiple ways to specify a due date,
         # in terms of the keys that are accepted in the front
         # matter, include both "due_date" and "duedate")
-        aliases_present = get_due_date_aliases_present(filename)
+        aliases_present = get_due_date_aliases_present(resolved_filename)
         if len(aliases_present) > 1:
             chosen = aliases_present[0]
             ignored = ", ".join(aliases_present[1:])
@@ -417,10 +380,24 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             console.print("Use only one due date field.")
             console.print()
             console.print(Rule(style="bright_yellow"))
+        # show verbose configuration information if requested
+        _print_verbose_info(
+            verbose,
+            resolved_filename,
+            resolved_config_dir or get_config_dir(),
+            auto_hint,
+            auto_hint_model,
+            auto_hint_url,
+            output_limit,
+            baseline_weight,
+            show_diagnostics,
+            progress_bar,
+            auto_hint_track=auto_hint_track,
+        )
         # parse the provided configuration file
-        checks, parse_error = parse_config(filename, baseline_weight)
+        checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
-        project_name = get_project_name(filename)
+        project_name = get_project_name(resolved_filename)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -440,23 +417,106 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             # create a dictionary of the CLI arguments to pass to the report
             # (this will enable them to be saved inside of a report)
             cli_args = {
-                CONFIG_FLAG: str(filename),
+                CONFIG_FLAG: str(resolved_filename),
+                CONFIG_DIR_FLAG: str(resolved_config_dir)
+                if resolved_config_dir
+                else None,
                 REPORT_FLAG: list(report),
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
+                VERBOSE_FLAG: verbose,
                 PROGRESS_BAR_FLAG: progress_bar,
                 SHOW_DIAGNOSTICS_FLAG: show_diagnostics,
+                AUTO_HINT_FLAG: auto_hint,
+                AUTO_HINT_MODEL_FLAG: auto_hint_model
+                if auto_hint_model
+                else None,
+                AUTO_HINT_URL_FLAG: str(auto_hint_url)
+                if auto_hint_url
+                else None,
+                AUTO_HINT_API_KEY_FLAG: str(auto_hint_api_key)
+                if auto_hint_api_key
+                else None,
+                AUTO_HINT_TRACK_FLAG: auto_hint_track,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
                 GATORGRADER_VERSION_KEY: importlib.metadata.version(
                     GATORGRADER_DEPENDENCY
                 ),
-                PYTHON_INFO_KEY: _get_python_info(),
-                PLATFORM_INFO_KEY: _get_platform_info(),
-                OS_RELEASE_KEY: _get_os_release(),
+                PYTHON_INFO_KEY: get_python_info(),
+                PLATFORM_INFO_KEY: get_platform_info(),
+                OS_RELEASE_KEY: get_os_release(),
             }
+            # at the outset, there is no auto-hinting engine
+            # unless the person using gatorgrade has explicitly
+            # opted in to using auto-hinting both through the
+            # command line and through running the tool with
+            # the optional dependencies installed (auto-hinting
+            # relies on local transformers or, if specified,
+            # a remote OpenAI-compatible API, both of which we
+            # do not want to load unless the opt-in was made)
+            auto_hint_engine = None
+            # validate auto-hint option combinations make
+            # sure that invalid configurations are not
+            # allowed; this catches invalid combinations:
+            #   --auto-hint-model without --auto-hint
+            #   --auto-hint-url without --auto-hint
+            #   --auto-hint-api-key without --auto-hint-url
+            auto_hint_errors = validate_auto_hint_options(
+                auto_hint,
+                auto_hint_model,
+                auto_hint_url,
+                auto_hint_api_key,
+            )
+            if auto_hint_errors:
+                checks_status = False
+                console.print()
+                console.print(
+                    Rule(
+                        CONFIG_ERROR_LABEL,
+                        style="bright_red",
+                    )
+                )
+                # display a blank line if there is
+                # at least one error in configuration
+                # for the auto-hinting feature
+                if auto_hint_errors:
+                    console.print()
+                # display the errors in configuration
+                # for the auto-hinting (note that there
+                # could be one or more errors)
+                for error in auto_hint_errors:
+                    console.print(error)
+                console.print(Text(EXIT_MESSAGE))
+                console.print()
+                console.print(Rule(style="bright_red"))
+                sys.exit(FAILURE)
+            # auto-hint engine: try to create it if --auto-hint is passed;
+            # the engine sources hints from a remote OpenAI-compatible API
+            # (i.e., when --auto-hint-url is provided) or from a local
+            # huggingface transformers model (i.e., when no URL is provided).
+            # remote engine fails to initialise or returns None for a hint,
+            # the program falls back to the local engine; resolve the system prompt
+            # and validation rules if specified in the config front matter
+            if auto_hint:
+                system_prompt = resolve_system_prompt(
+                    resolved_filename, resolved_config_dir
+                )
+                validation_rules = resolve_validation_rules(
+                    resolved_filename, resolved_config_dir
+                )
+                auto_hint_engine = create_auto_hint_engine(
+                    resolved_filename,
+                    auto_hint_model,
+                    auto_hint_url,
+                    auto_hint_api_key,
+                    system_prompt=system_prompt,
+                    validation_rules=validation_rules,
+                    auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
+                    console=console,
+                )
             # run the checks that were specified in a way
             # that adheres to the configuration both in
             # the command-line arguments and also in the
@@ -472,6 +532,9 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
                 github_env,
                 project_name,
                 due_date,
+                auto_hint_engine=auto_hint_engine,
+                auto_hint_url=auto_hint_url,
+                auto_hint_track=auto_hint_track,
             )
         # no checks were created and this means
         # that, most likely, the file was not
@@ -482,9 +545,8 @@ def gatorgrade(  # noqa: PLR0913, PLR0915
             console.print(Rule(CONFIG_ERROR_LABEL, style="bright_red"))
             console.print()
             console.print(
-                f"The file {filename} either does not exist or is not valid."
+                f"The file {resolved_filename} either does not exist or is not valid."
             )
-            console.print()
             console.print(Text(EXIT_MESSAGE))
             console.print()
             console.print(Rule(style="bright_red"))
