@@ -35,6 +35,21 @@ def test_parse_config_returns_error_for_invalid_yaml(tmp_path: Path) -> None:
     assert error is not None
 
 
+def test_parse_config_returns_error_for_directory() -> None:
+    """Test parse_config returns an error when given a directory instead of a file."""
+    # given a directory path (e.g., --config .gatorgrade instead of --config gatorgrade.yml)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        dir_path = Path(tmp_dir) / "test_dir"
+        dir_path.mkdir()
+        # when parse_config is run with a directory
+        checks, error = parse_config(dir_path)
+        # then checks is empty and error mentions it is a directory
+        assert checks == []
+        assert error is not None
+        assert "directory" in error.lower()
+        assert "not a file" in error.lower()
+
+
 def test_get_due_date_returns_datetime_when_specified(tmp_path: Path) -> None:
     """Test get_due_date returns a datetime from the front matter."""
     config_file = tmp_path / "gatorgrade.yml"
