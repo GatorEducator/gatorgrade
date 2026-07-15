@@ -11,6 +11,9 @@ from gatorgrade.hint.support import build_hint_messages, is_valid_hint
 if TYPE_CHECKING:
     import transformers  # noqa: F401
 
+# basic constants
+NEWLINE = "\n"
+
 # default model for auto-hinting (note that this names,
 # and those accepted on the command-line, are expected to be
 # the same as those provided on Hugging Face)
@@ -201,11 +204,11 @@ class AutoHintEngine:
             from transformers import pipeline  # noqa: PLC0415
         except ImportError as e:
             raise ImportError(
-                "The 'auto-hint' extra is required to generate hints.\n\n"
-                "Install it with one of these commands:\n\n"
-                "  uv tool install --from 'gatorgrade[auto-hint]' gatorgrade\n"
-                "  uvx --from 'gatorgrade[auto-hint]' gatorgrade --auto-hint\n"
-                "  pip install 'gatorgrade[auto-hint]'\n"
+                f"The 'auto-hint' extra is required to generate hints.{NEWLINE}"
+                f"Install it with one of these commands:{NEWLINE}"
+                f"  uv tool install --from 'gatorgrade[auto-hint]' gatorgrade{NEWLINE}"
+                f"  uvx --from 'gatorgrade[auto-hint]' gatorgrade --auto-hint{NEWLINE}"
+                f"  pip install 'gatorgrade[auto-hint]'{NEWLINE}"
             ) from e
         # suppress all chatty Hugging Face output: logging messages,
         # progress bars for downloading, and progress bars for loading

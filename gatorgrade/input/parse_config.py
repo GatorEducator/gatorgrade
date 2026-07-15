@@ -452,6 +452,13 @@ def parse_config(
     # should return early with an error message
     if error:
         return [], error
+    # check that the path is a file, not a directory, so that
+    # accidental use of --config .gatorgrade instead of
+    # --config gatorgrade.yml gives a clear error message; this
+    # is critical because you cannot read a directory as a file
+    # as doing so will crash the program and display a stack trace
+    if file.is_dir():
+        return [], f"The path {file} is a directory, not a file."
     try:
         # parse the YAML file using parse_yaml_file provided by gatorgrade
         parsed_yaml_file = parse_yaml_file(file)
@@ -470,5 +477,11 @@ def parse_config(
         # parsing process did not return a list with content;
         # allow the calling function to handle the empty list
         return [], None
-    except (yaml.YAMLError, ValueError, TypeError, IndexError) as error:
+    except (
+        yaml.YAMLError,
+        ValueError,
+        TypeError,
+        IndexError,
+        IsADirectoryError,
+    ) as error:
         return [], str(error)

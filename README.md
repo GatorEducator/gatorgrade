@@ -85,7 +85,10 @@ run. If you installed `gatorgrade` with `uv` or `pipx`, then run GatorGrade from
 the assignment directory with the command `gatorgrade`. Alternatively, if you
 use `uvx`, run GatorGrade with the command `uvx gatorgrade`. GatorGrade will run
 each check and display a summary of passing and failing checks along with a
-weighted score and additional diagnostic information.
+weighted score and additional diagnostic information. If you want to use
+GatorGrade's auto-hinting feature, you need to run it with `uvx --from
+'gatorgrade[auto-hint]' gatorgrade` as this will load in the optional
+dependencies that support hint generation.
 
 ## Command-Line Options
 
