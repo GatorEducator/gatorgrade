@@ -39,7 +39,8 @@
         "TODOs",
         "gatorgradle",
         "worktree",
-        "systemprompt"
+        "systemprompt",
+        "socio"
     ],
     "ignorePaths": [
         ".github/**",
