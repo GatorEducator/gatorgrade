@@ -2540,6 +2540,7 @@ def test_run_checks_skips_hint_when_engine_returns_none() -> None:
     )
     mock_engine = MagicMock()
     mock_engine.generate_hint.return_value = (None, False)
+    mock_engine.last_error = None
     report = ("", "", "")
     output.run_checks([check], report, auto_hint_engine=mock_engine)
     mock_engine.generate_hint.assert_called_once()
