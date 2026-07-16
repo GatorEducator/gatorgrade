@@ -14,6 +14,8 @@ from rich.console import Console
 
 from gatorgrade.hint.remote_engine import RemoteHintEngine
 
+NEWLINE = "\n"
+
 # create a default console for printing diagnostic messages; callers
 # may pass their own console instance to FallbackHintEngine.
 DEFAULT_CONSOLE = Console()
@@ -95,7 +97,7 @@ class FallbackHintEngine:
         except Exception:  # pylint: disable=broad-except
             pass
 
-    def generate_hint(  # noqa: PLR0913
+    def generate_hint(  # noqa: PLR0912, PLR0913
         self,
         description: str,
         diagnostic: str = "",
@@ -175,15 +177,20 @@ class FallbackHintEngine:
         if hint2 is None:
             pri_err = getattr(self._primary, "last_error", None)
             fb_err = getattr(self._fallback_eng, "last_error", None)
-            parts: list[str] = []
-            if pri_err:
-                parts.append(f"primary: {pri_err}")
-            if fb_err:
-                parts.append(f"fallback: {fb_err}")
-            if parts:
-                self.last_error = "; ".join(parts)
+            if pri_err and fb_err and pri_err == fb_err:
+                # both engines failed with the same error;
+                # show it once to avoid repetitive output
+                self.last_error = pri_err
             else:
-                self.last_error = "All hint engines failed."
+                parts: list[str] = []
+                if pri_err:
+                    parts.append(f"Primary: {pri_err}")
+                if fb_err:
+                    parts.append(f"{NEWLINE}Fallback: {fb_err}")
+                if parts:
+                    self.last_error = "; ".join(parts)
+                else:
+                    self.last_error = "All hint engines failed."
         return hint2, is_low2
 
 

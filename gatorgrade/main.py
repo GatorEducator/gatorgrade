@@ -191,8 +191,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--config-dir",
         "-d",
         help=(
-            "Directory for configuration files including the"
-            " gatorgrade.yml file and other configuration files."
+            "Directory for gatorgrade.yml and other configuration files"
+            " referenced in gatorgrade.yml's YML frontmatter."
         ),
         show_default=DEFAULT_CONFIG_DIR,
     ),
@@ -301,7 +301,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--version",
         callback=_version_callback,
         is_eager=True,
-        help="Show the GatorGrade version and exit.",
+        help="Exit after show the GatorGrade version and other details.",
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""

@@ -123,6 +123,14 @@ BUILTIN_CANNOT_CONTAIN = [
     "expected value is wrong",
 ]
 
+EXTRA_AUTO_HINTS_INSTALLATION_INSTRUCTIONS = (
+    f"The 'auto-hint' extra is required to generate hints.{NEWLINE}"
+    f"Install it with one of these commands:{NEWLINE}"
+    f"  uvx --from 'gatorgrade[auto-hint]' gatorgrade --auto-hint{NEWLINE}"
+    f"  uv tool install --from 'gatorgrade[auto-hint]' gatorgrade{NEWLINE}"
+    f"  pip install 'gatorgrade[auto-hint]'"
+)
+
 
 def build_hint_messages(  # noqa: PLR0913
     description: str,
