@@ -191,8 +191,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--config-dir",
         "-d",
         help=(
-            "Directory for configuration files including the"
-            " gatorgrade.yml file and other configuration files."
+            "Directory for configuration files including"
+            " gatorgrade.yml and other configuration files."
         ),
         show_default=DEFAULT_CONFIG_DIR,
     ),
