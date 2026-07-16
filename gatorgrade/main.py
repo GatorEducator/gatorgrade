@@ -301,7 +301,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--version",
         callback=_version_callback,
         is_eager=True,
-        help="Show the GatorGrade version and exit.",
+        help="Exit after show the GatorGrade version and other details.",
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""
