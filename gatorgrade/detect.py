@@ -156,8 +156,10 @@ def get_os_release() -> str:
 def _check_auto_hint_installed() -> Text:
     """Check if the optional auto-hint extra is installed.
 
-    Attempts to import each package in the auto-hint extra. Returns a
-    Rich Text showing which packages are present and which are missing.
+    Checks package metadata (not actual imports) to determine whether
+    each package in the auto-hint extra is installed. This is fast
+    (microseconds) because it reads metadata files rather than loading
+    and executing any Python code.
 
     Returns:
         A Rich Text object suitable for printing.
@@ -169,9 +171,9 @@ def _check_auto_hint_installed() -> Text:
     present: list[str] = []
     for pkg in AUTO_HINT_PACKAGES:
         try:
-            importlib.import_module(pkg)
+            importlib.metadata.distribution(pkg)
             present.append(pkg)
-        except (ImportError, OSError):
+        except importlib.metadata.PackageNotFoundError:
             missing.append(pkg)
     if not missing:
         result.append("installed", style="green")
