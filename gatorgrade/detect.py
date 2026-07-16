@@ -171,7 +171,7 @@ def _check_auto_hint_installed() -> Text:
         try:
             importlib.import_module(pkg)
             present.append(pkg)
-        except ImportError:
+        except (ImportError, OSError):
             missing.append(pkg)
     if not missing:
         result.append("installed", style="green")
