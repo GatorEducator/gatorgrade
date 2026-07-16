@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 # basic constants
 NEWLINE = "\n"
 
-# default model for auto-hinting (note that this names,
+# default model for auto-hinting (note that this name,
 # and those accepted on the command-line, are expected to be
 # the same as those provided on Hugging Face)
 DEFAULT_MODEL_ID = "Qwen/Qwen2.5-0.5B-Instruct"
