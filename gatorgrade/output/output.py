@@ -11,6 +11,7 @@ from typing import Any, List, Tuple, Union
 
 import gator
 import rich
+from rich.markup import escape
 from rich.progress import (
     BarColumn,
     Progress,
@@ -1012,8 +1013,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             if last_err:
                 rich.print()
                 rich.print(
-                    "[yellow]Warning: Auto-hints could not be generated:"
-                    f" {last_err}[/]"
+                    "[yellow]Warning: Auto-hints could not be generated."
+                    f" {escape(str(last_err))}[/]"
                 )
             else:
                 rich.print()
