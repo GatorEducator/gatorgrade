@@ -192,7 +192,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "-d",
         help=(
             "Directory for gatorgrade.yml and other configuration files"
-            " referenced in gatorgrade.yml's YAML frontmatter."
+            " referenced in gatorgrade.yml's YML frontmatter."
         ),
         show_default=DEFAULT_CONFIG_DIR,
     ),
