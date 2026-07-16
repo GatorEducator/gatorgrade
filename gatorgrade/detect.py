@@ -58,6 +58,19 @@ GATORGRADE_NAME = "Gatorgrade"
 GATORGRADER_NAME = "GatorGrader"
 PYTHON_NAME = "Python"
 
+# packages included in the optional auto-hint extra; note
+# that the reason for adding these to an extras package
+# that is not instaslled by default is that they could
+# take a long time to install and they are only needed
+# if the person wants to use auto-hinting for failing checks;
+# if the dependencies for extra packages change, then this
+# variable should be updated to match the new set of packages
+AUTO_HINT_PACKAGES = [
+    "openai",
+    "torch",
+    "transformers",
+]
+
 
 def get_platform_info() -> str:
     """Get the platform information string for any platform.
@@ -140,6 +153,34 @@ def get_os_release() -> str:
     return ""
 
 
+def _check_auto_hint_installed() -> Text:
+    """Check if the optional auto-hint extra is installed.
+
+    Attempts to import each package in the auto-hint extra. Returns a
+    Rich Text showing which packages are present and which are missing.
+
+    Returns:
+        A Rich Text object suitable for printing.
+
+    """
+    result = Text()
+    result.append("Auto-hint extra: ")
+    missing: list[str] = []
+    present: list[str] = []
+    for pkg in AUTO_HINT_PACKAGES:
+        try:
+            importlib.import_module(pkg)
+            present.append(pkg)
+        except ImportError:
+            missing.append(pkg)
+    if not missing:
+        result.append("installed", style="green")
+    else:
+        result.append("not installed", style="bright_red")
+        result.append(f" ({', '.join(missing)})", style="dim")
+    return result
+
+
 def print_version_info(console: Any) -> None:
     """Print gatorgrade version, platform, and environment information.
 
@@ -153,6 +194,11 @@ def print_version_info(console: Any) -> None:
     console.print(
         f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({get_gatorgrade_info()})"
     )
+    # show whether the optional auto-hint extra is installed right
+    # after the version line so users can quickly diagnose whether
+    # the extra is available
+    auto_hint_status = _check_auto_hint_installed()
+    console.print(auto_hint_status)
     console.print(get_python_info())
     os_release = get_os_release()
     if os_release:
