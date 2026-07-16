@@ -2,7 +2,11 @@
 
 from typing import Any, Optional, cast
 
-from gatorgrade.hint.support import build_hint_messages, is_valid_hint
+from gatorgrade.hint.support import (
+    EXTRA_AUTO_HINTS_INSTALLATION_INSTRUCTIONS,
+    build_hint_messages,
+    is_valid_hint,
+)
 from gatorgrade.version import GATORGRADE_VERSION
 
 # basic constants
@@ -198,13 +202,7 @@ class RemoteHintEngine:
             import openai as _openai_check  # noqa: PLC0415,F401
         except ImportError as e:
             raise ImportError(
-                "The 'auto-hint' extra is required to generate hints.\n\n"
-                "Install it with one of these commands:\n\n"
-                "  uv tool install --from 'gatorgrade[auto-hint]'"
-                " gatorgrade\n"
-                "  uvx --from 'gatorgrade[auto-hint]'"
-                " gatorgrade --auto-hint\n"
-                "  pip install 'gatorgrade[auto-hint]'\n"
+                EXTRA_AUTO_HINTS_INSTALLATION_INSTRUCTIONS
             ) from e
 
     def generate_hint(  # noqa: PLR0913
