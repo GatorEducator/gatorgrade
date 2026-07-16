@@ -211,9 +211,16 @@ class AutoHintEngine:
                 EXTRA_AUTO_HINTS_INSTALLATION_INSTRUCTIONS
             ) from e
         # suppress all chatty Hugging Face output: logging messages,
-        # progress bars for downloading, and progress bars for loading
-        # weights; these would appear inline during the standard
-        # gatorgrade output and confuse students
+        # progress bars for downloading, HF_TOKEN warnings, and progress
+        # bars for loading weights; these would appear inline during the
+        # standard gatorgrade output and confuse students
+        import logging as _logging  # noqa: PLC0415
+
+        # suppress all logging from huggingface_hub (warnings about
+        # unauthenticated requests, rate limits, download retries, etc.);
+        # setting the root logger to the error level silences all child
+        # loggers (e.g., huggingface_hub.file_download, huggingface_hub.utils._auth)
+        _logging.getLogger("huggingface_hub").setLevel(_logging.ERROR)
         import transformers as _tf_mod  # noqa: PLC0415
 
         _tf_mod.logging.set_verbosity_error()
