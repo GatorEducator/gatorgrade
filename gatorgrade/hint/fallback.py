@@ -14,6 +14,8 @@ from rich.console import Console
 
 from gatorgrade.hint.remote_engine import RemoteHintEngine
 
+NEWLINE = "\n"
+
 # create a default console for printing diagnostic messages; callers
 # may pass their own console instance to FallbackHintEngine.
 DEFAULT_CONSOLE = Console()
@@ -177,9 +179,9 @@ class FallbackHintEngine:
             fb_err = getattr(self._fallback_eng, "last_error", None)
             parts: list[str] = []
             if pri_err:
-                parts.append(f"primary: {pri_err}")
+                parts.append(f"Primary: {pri_err}")
             if fb_err:
-                parts.append(f"fallback: {fb_err}")
+                parts.append(f"{NEWLINE}Fallback: {fb_err}")
             if parts:
                 self.last_error = "; ".join(parts)
             else:
