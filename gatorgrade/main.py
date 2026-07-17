@@ -26,6 +26,7 @@ from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
 from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
 from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_FUZZY_THRESHOLD,
     DEFAULT_FILTER_MODE,
     DEFAULT_FILTER_TYPE,
     FilterBy,
@@ -50,6 +51,7 @@ from gatorgrade.resolve import (
 from gatorgrade.validate import (
     validate_auto_hint_options,
     validate_baseline_weight,
+    validate_filter_fuzzy_threshold,
     validate_filter_options,
     validate_github_env,
     validate_output_limit,
@@ -133,6 +135,7 @@ FILTER_MODE_FLAG = "--filter-mode"
 FILTER_BY_FLAG = "--filter-by"
 FILTER_TYPE_FLAG = "--filter-type"
 FILTER_QUERY_FLAG = "--filter-query"
+FILTER_FUZZY_THRESHOLD_FLAG = "--filter-fuzzy-threshold"
 FILTER_TOTAL_FLAG = "--filter-total"
 GITHUB_ENV_FLAG = "--github-env"
 
@@ -171,6 +174,7 @@ def _print_verbose_info(  # noqa: PLR0913
     filter_mode: FilterMode = DEFAULT_FILTER_MODE,
     filter_by: FilterBy = DEFAULT_FILTER_BY,
     filter_type: FilterType = DEFAULT_FILTER_TYPE,
+    filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -193,6 +197,7 @@ def _print_verbose_info(  # noqa: PLR0913
         filter_mode: The filter mode, or None.
         filter_by: The filter-by field, or None.
         filter_type: The filter type, or None.
+        filter_fuzzy_threshold: Fuzzy word-matching threshold.
 
     """
     if not verbose:
@@ -223,6 +228,8 @@ def _print_verbose_info(  # noqa: PLR0913
         console.print(f"Filter mode:  {filter_mode.value}")
         console.print(f"Filter by:    {filter_by.value}")
         console.print(f"Filter type:  {filter_type.value}")
+        if filter_mode == FilterMode.FUZZY:
+            console.print(f"Filter fuzzy threshold: {filter_fuzzy_threshold}")
     console.print()
     console.print(Rule(style="green"))
 
@@ -287,6 +294,17 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             " that match the filter (default)."
         ),
         show_default=True,
+    ),
+    filter_fuzzy_threshold: float = typer.Option(
+        DEFAULT_FILTER_FUZZY_THRESHOLD,
+        "--filter-fuzzy-threshold",
+        help=(
+            "Threshold for fuzzy word matching (0.0 to 1.0). Higher"
+            " values allow looser matching, e.g. 'checking' matches"
+            " 'check' at 0.4. Only used with --filter-mode FUZZY."
+        ),
+        show_default=True,
+        callback=validate_filter_fuzzy_threshold,
     ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
@@ -393,7 +411,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--version",
         callback=_version_callback,
         is_eager=True,
-        help="Exit after show the GatorGrade version and other details.",
+        help="Exit after showing the GatorGrade version and other details.",
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""
@@ -489,6 +507,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             filter_mode=filter_mode,
             filter_by=filter_by,
             filter_type=filter_type,
+            filter_fuzzy_threshold=filter_fuzzy_threshold,
         )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
@@ -561,6 +580,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 else None,
                 FILTER_TOTAL_FLAG: pre_filter_count
                 if filter_was_active
+                else None,
+                FILTER_FUZZY_THRESHOLD_FLAG: filter_fuzzy_threshold
+                if filter_was_active
+                and resolved_filter_mode == FilterMode.FUZZY
                 else None,
             }
             version_info = {
@@ -652,6 +675,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     by=resolved_filter_by,
                     ftype=resolved_filter_type,
                     query=filter_query or "",
+                    fuzzy_threshold=filter_fuzzy_threshold,
                 )
             # if filtering emptied the list, handle it here before
             # auto-hint engine and run_checks are reached
