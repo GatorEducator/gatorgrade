@@ -41,6 +41,45 @@ def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
+def test_print_historical_filter_summary_displays_report_count(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Historical filter summaries show the requested and inspected counts."""
+    output._print_historical_filter_summary(
+        {
+            "--filter-failed-last": 3,
+            "--filter-history-reports": 2,
+        }
+    )
+    out, _ = capsys.readouterr()
+    assert "most recent 3" in out
+    assert "report(s); inspected 2" in out.replace("\n", "")
+
+
+def test_run_checks_history_write_failure_does_not_change_status(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """History write failures warn without changing a successful result."""
+    monkeypatch.setattr(
+        output,
+        "save_report_history",
+        MagicMock(side_effect=OSError("history unavailable")),
+    )
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        history_scope="project-one",
+    )
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "Could not save automatic report history" in out
+
+
 def test_run_checks_invalid_gg_args_prints_exception(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

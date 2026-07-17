@@ -1,5 +1,7 @@
 """Tests for the gatorgrade.validate module."""
 
+import math
+
 import pytest
 from click import BadParameter
 from hypothesis import given
@@ -115,6 +117,47 @@ def test_valid_env_var_names_match_property(value: str) -> None:
 def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
     """Property: invalid env var names do not match the pattern."""
     assert validate.VALID_ENV_VAR_NAME.match(value) is None
+
+
+class TestReportHistoryValidation:
+    """Tests for report-history and historical-filter validators."""
+
+    def test_positive_report_history_count_is_valid(self) -> None:
+        """Positive report-history counts pass validation."""
+        assert validate.validate_report_history_count(1) == 1
+
+    def test_non_positive_report_history_count_is_invalid(self) -> None:
+        """Non-positive report-history counts fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_report_history_count(0)
+
+    def test_positive_report_history_size_is_valid(self) -> None:
+        """Positive report-history sizes pass validation."""
+        assert validate.validate_report_history_size(1) == 1
+
+    def test_non_positive_report_history_size_is_invalid(self) -> None:
+        """Non-positive report-history sizes fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_report_history_size(0)
+
+    def test_positive_failed_last_count_is_valid(self) -> None:
+        """Positive historical-filter counts pass validation."""
+        assert validate.validate_filter_failed_last(1) == 1
+
+    def test_non_positive_failed_last_count_is_invalid(self) -> None:
+        """Non-positive historical-filter counts fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_failed_last(0)
+
+    def test_missing_failed_last_count_is_valid(self) -> None:
+        """An omitted historical-filter count disables that selector."""
+        assert validate.validate_filter_failed_last(None) is None
+
+    def test_non_finite_fuzzy_threshold_is_invalid(self) -> None:
+        """Non-finite fuzzy thresholds fail validation."""
+        for value in (math.nan, math.inf, -math.inf):
+            with pytest.raises(BadParameter):
+                validate.validate_filter_fuzzy_threshold(value)
 
 
 class TestAutoHintOptionsValidation:

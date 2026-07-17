@@ -10,7 +10,8 @@ from typing import Any, Callable, Generator, List
 import pytest
 from typer.testing import CliRunner
 
-from gatorgrade import detect, main
+from gatorgrade import detect, main, report_history
+from gatorgrade.input.parse_config import parse_config
 
 runner = CliRunner()
 
@@ -273,6 +274,138 @@ class TestFilterCli:
         assert "Complete all TODOs" in plain_stdout
         assert "Use an if statement" in plain_stdout
         assert "- Checks: 3/3 (100%)" in plain_stdout
+
+    def test_filter_failed_last_without_history_runs_all_checks(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Historical filtering falls back safely when no history exists."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(
+            main.app,
+            [
+                "--filter-failed-last",
+                "1",
+                "--no-report-history",
+                "--no-progress-bar",
+            ],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "Complete all TODOs" in plain_stdout
+        assert "Use an if statement" in plain_stdout
+
+    def test_filter_failed_last_selects_historical_failures(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Historical filtering selects matching current check IDs."""
+        chdir("tests/test_assignment")
+        checks, parse_error = parse_config(Path("gatorgrade.yml"))
+        assert parse_error is None
+        selected_check = checks[1]
+        history_directory = main.get_report_history_directory()
+        report_history.save_report_history(
+            {
+                "checks": [
+                    {
+                        "check_id": selected_check.check_id,
+                        "status": False,
+                    }
+                ]
+            },
+            scope=main.get_history_scope(Path("gatorgrade.yml"), None),
+            history_directory=history_directory,
+        )
+        result = runner.invoke(
+            main.app,
+            [
+                "--filter-failed-last",
+                "1",
+                "--no-report-history",
+                "--no-progress-bar",
+            ],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "Use an if statement" in plain_stdout
+        assert "Complete all TODOs" not in plain_stdout
+
+    def test_filter_failed_last_intersects_with_text_filter(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Historical and text filters narrow checks using intersection."""
+        chdir("tests/test_assignment")
+        checks, parse_error = parse_config(Path("gatorgrade.yml"))
+        assert parse_error is None
+        selected_check = checks[1]
+        report_history.save_report_history(
+            {
+                "checks": [
+                    {
+                        "check_id": selected_check.check_id,
+                        "status": False,
+                    }
+                ]
+            },
+            scope=main.get_history_scope(Path("gatorgrade.yml"), None),
+            history_directory=main.get_report_history_directory(),
+        )
+        result = runner.invoke(
+            main.app,
+            [
+                "--filter-failed-last",
+                "1",
+                "--filter-query",
+                "if",
+                "--filter-by",
+                "DESCRIPTION",
+                "--no-report-history",
+                "--no-progress-bar",
+            ],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "Use an if statement" in plain_stdout
+        assert "Complete all TODOs" not in plain_stdout
+
+    def test_report_history_can_be_disabled(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """The no-report-history switch prevents automatic history writes."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--no-report-history"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        assert not list(main.get_report_history_directory().glob("*.json"))
+
+
+def test_default_run_saves_report_history(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A normal run saves a JSON history file by default."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(main.app, ["--no-progress-bar"])
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+    history_files = list(main.get_report_history_directory().glob("*.json"))
+    assert len(history_files) == 1
+    assert '"checks"' in history_files[0].read_text(encoding="utf-8")
 
 
 def test_gatorgrade_version_callback_with_false() -> None:
