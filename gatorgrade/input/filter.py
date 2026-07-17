@@ -320,11 +320,12 @@ def _match(
 def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     """Extract the relevant string value from a check for the given field.
 
-    For NAME field: GatorGraderCheck reads from json_info["check"] (the
-    check: key in the config, e.g. "MatchFileFragment" or
-    "ExecuteCommand"); ShellCheck reads from check.command (the shell
-    command string, since top-level-command checks have no separate
-    name). For HINT, returns empty string when hint is None.
+    For NAME field: GatorGraderCheck reads from json_info["check"] and
+    also includes options.command if present (so an ExecuteCommand check
+    is searchable by both "ExecuteCommand" and its command text).
+    ShellCheck reads from check.command (the shell command string,
+    since top-level-command checks have no separate name).
+    For HINT, returns empty string when hint is None.
 
     Args:
         check: A ShellCheck or GatorGraderCheck instance.
@@ -348,6 +349,16 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
             info = check.json_info
             if isinstance(info, dict):
                 name = info.get("check", "")
+                # for check types that carry a command in options
+                # (e.g. ExecuteCommand, MatchCommandFragment),
+                # append the command so NAME searches both the
+                # logical check name and the underlying command.
+                options = info.get("options", {})
+                if isinstance(options, dict):
+                    cmd = options.get("command", "")
+                    if cmd:
+                        combined = f"{name} {cmd}" if name else cmd
+                        return combined.strip()
                 return str(name) if name else ""
             return str(info) if info else ""
         # ShellCheck has no separate check name; use the command
