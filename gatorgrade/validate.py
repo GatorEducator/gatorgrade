@@ -190,7 +190,9 @@ def validate_filter_fuzzy_threshold(value: float | None) -> float | None:
 FILTER_QUERY_REQUIRED_FMT = (
     "The {} flag requires --filter-query to be specified."
 )
-FILTER_QUERY_EMPTY_MSG = "Filter query must not be empty."
+FILTER_QUERY_EMPTY_MSG = (
+    "Filter query must not be empty or contain only blank spaces."
+)
 
 # flag display names for filter error messages
 FILTER_MODE_DISPLAY = "--filter-mode"
@@ -200,7 +202,7 @@ FILTER_FUZZY_THRESHOLD_DISPLAY = "--filter-fuzzy-threshold"
 
 # error message format for threshold without FUZZY mode
 FILTER_FUZZY_THRESHOLD_REQUIRES_FUZZY_FMT = (
-    "The {} flag requires --filter-mode FUZZY to have an effect."
+    "The {} flag requires --filter-mode FUZZY to influence filtering."
 )
 
 
@@ -216,7 +218,8 @@ def validate_filter_options(
     Checks the following rules:
     - If any of --filter-mode, --filter-by, or --filter-type is
       provided without a non-empty --filter-query, it is an error.
-    - If --filter-query is an explicit empty string, it is an error.
+    - If --filter-query is empty or contains only blank space, it is
+      an error.
     - If --filter-fuzzy-threshold is set to a non-default value
       without --filter-mode FUZZY, it is an error.
 
@@ -232,8 +235,8 @@ def validate_filter_options(
 
     """
     errors: list[str] = []
-    # --filter-query explicitly empty is an error
-    if filter_query is not None and filter_query == "":
+    # --filter-query explicitly empty or whitespace-only is an error
+    if filter_query is not None and filter_query.strip() == "":
         errors.append(FILTER_QUERY_EMPTY_MSG)
     # mode/by/type without query is an error (only if non-default)
     if not filter_query:
