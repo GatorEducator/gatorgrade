@@ -9,12 +9,18 @@ Three matching modes, all case-insensitive:
 
 - EXACT: whole-field equality via field.lower() == query.lower().
 - CONTAINS: substring containment via the 'in' operator (default).
-- FUZZY: subsequence match (characters of query appear in order with
-  possible gaps, implemented via a hand-rolled character walk).
+- FUZZY: multi-word subsequence matching with Levenshtein-distance
+  fallback. Each whitespace-separated word in the query must match
+  independently. A word matches if EITHER:
+    (a) it appears as a case-insensitive subsequence anywhere in the
+        target field (handles abbreviations: "tdo" finds "TODOs"), OR
+    (b) it has a normalized Levenshtein edit distance at or below
+        FUZZY_LEVENSHTEIN_RATIO against any individual word in the
+        target field (handles typos and morphological variants:
+        "checking" finds "check", "conferm" finds "Confirm").
 
-Four filter-by fields: DESCRIPTION (check.description), NAME (check name
-or command for ShellCheck), HINT (check.hint, empty when None), and ANY
-(check all three fields; hit if ANY matches).
+  All query words must match (AND logic across words), which mirrors
+  how fzf and similar fuzzy-finder tools handle multi-word queries.
 
 IMPORTANT: Why NOT difflib.get_close_matches for FUZZY?
 
@@ -42,19 +48,19 @@ Measured examples (verified empirically):
     similar-length strings).
 
 So difflib does typo-tolerance on similar-length strings, not
-abbreviation matching. FUZZY in this feature means abbreviation matching
-(short query, gaps allowed, no length penalty), which a ~6-line hand-
-rolled subsequence walk provides directly with zero imports.
-
-Verdict: difflib is the wrong tool for FUZZY. If typo-tolerance is ever
-desired later, it would belong in a separate mode (e.g. a hypothetical
---filter-mode FUZZY_TYPO), not as a replacement for subsequence FUZZY.
+abbreviation matching. FUZZY handles abbreviation matching through
+subsequence search and handles typo-tolerance through a hand-rolled
+Levenshtein distance check — both pure Python with zero imports beyond
+the standard library (and the Levenshtein implementation imports
+nothing at all).
 """
 
 from enum import Enum
 from typing import Any, List
 
 from gatorgrade.input.checks import GatorGraderCheck
+
+# --- Enum definitions ---
 
 
 class FilterMode(Enum):
@@ -81,9 +87,21 @@ class FilterType(Enum):
     EXCLUDE = "EXCLUDE"
 
 
+# --- Defaults ---
+
 DEFAULT_FILTER_MODE = FilterMode.CONTAINS
 DEFAULT_FILTER_BY = FilterBy.ANY
 DEFAULT_FILTER_TYPE = FilterType.INCLUDE
+
+# --- FUZZY matching constants ---
+
+# maximum normalized Levenshtein distance (edit_distance / max_len) for
+# a fuzzy word-level match. At 0.4, "checking" (8 chars) vs "check"
+# (5 chars) gives 3/8 = 0.375, which is below the threshold, so it
+# matches. Raise this to allow looser matching, lower to tighten it.
+FUZZY_LEVENSHTEIN_RATIO = 0.4
+
+# --- Core matchers (all case-insensitive) ---
 
 
 def _exact_match(query: str, target: str) -> bool:
@@ -114,7 +132,7 @@ def _contains_match(query: str, target: str) -> bool:
     return query.lower() in target.lower()
 
 
-def _fuzzy_match(query: str, target: str) -> bool:
+def _fuzzy_subsequence(query: str, target: str) -> bool:
     """Return True if all chars of query appear in target in order (subsequence).
 
     Case-insensitive subsequence match implemented as a hand-rolled
@@ -142,8 +160,127 @@ def _fuzzy_match(query: str, target: str) -> bool:
     return False
 
 
+# could also expose this as a future --filter-fuzzy-threshold CLI flag
+def _levenshtein_distance(s1: str, s2: str) -> int:
+    """Compute Levenshtein (edit) distance between two strings.
+
+    The Levenshtein distance is the minimum number of single-character
+    edits (insertions, deletions, or substitutions) needed to turn one
+    string into the other. Uses a classic dynamic-programming approach
+    with a single-row optimization, O(n*m) time and O(n) space.
+
+    Args:
+        s1: The first string.
+        s2: The second string.
+
+    Returns:
+        The edit distance between s1 and s2.
+
+    """
+    # ensure s2 is the shorter dimension for the O(min(m,n)) row
+    if len(s1) < len(s2):
+        s1, s2 = s2, s1
+    prev_row = list(range(len(s2) + 1))
+    for i, char1 in enumerate(s1, 1):
+        curr_row = [i]
+        for j, char2 in enumerate(s2, 1):
+            cost = 0 if char1 == char2 else 1
+            curr_row.append(
+                min(
+                    curr_row[j - 1] + 1,  # insertion
+                    prev_row[j] + 1,  # deletion
+                    prev_row[j - 1] + cost,  # substitution
+                )
+            )
+        prev_row = curr_row
+    return prev_row[-1]
+
+
+def _levenshtein_ratio(word_a: str, word_b: str) -> float:
+    """Return normalized edit distance between two words.
+
+    This is levenshtein(a, b) / max(len(a), len(b)).
+    A ratio of 0.0 means the words are identical; 1.0 means they
+    share no characters in common (or one is empty). The comparison
+    is case-insensitive.
+
+    Args:
+        word_a: The first word.
+        word_b: The second word.
+
+    Returns:
+        The normalized edit distance as a float between 0.0 and 1.0.
+
+    """
+    max_len = max(len(word_a), len(word_b))
+    if max_len == 0:
+        return 0.0
+    return _levenshtein_distance(word_a.lower(), word_b.lower()) / max_len
+
+
+def _fuzzy_match_word(word: str, target: str) -> bool:
+    """Check if a single query word matches a target string.
+
+    A word matches if either:
+    1. It appears as a case-insensitive subsequence anywhere in the
+       target (handles abbreviations like "tdo" matching "TODOs").
+    2. The target contains an individual word whose normalized
+       Levenshtein distance to the query word is at or below
+       FUZZY_LEVENSHTEIN_RATIO (handles typos like "conferm"
+       matching "ConfirmFileExists" and morphological variants
+       like "checking" matching "check").
+
+    Args:
+        word: A single query word (no internal whitespace).
+        target: The full target field string to search against.
+
+    Returns:
+        True if the word matches the target via either strategy.
+
+    """
+    # strategy 1: the word is a subsequence of the whole target field
+    if _fuzzy_subsequence(word, target):
+        return True
+    # strategy 2: some individual word in the target is close enough
+    # via edit distance (handles typos and differently-ending variants
+    # like "checking" vs "check" which subsequence alone would miss)
+    for target_word in target.split():
+        if _levenshtein_ratio(word, target_word) <= FUZZY_LEVENSHTEIN_RATIO:
+            return True
+    return False
+
+
+def _fuzzy_match_multiword(query: str, target: str) -> bool:
+    """Return True if all words in the query match the target, AND logic.
+
+    The query is split on whitespace into individual words. Each word
+    must independently match the target via _fuzzy_match_word. If ANY
+    word fails to match, the whole query is considered a miss.
+
+    This mirrors how fzf and similar fuzzy-finder tools interpret
+    space-separated tokens: each token narrows the result set, and
+    every token must be satisfied for an item to be included.
+
+    Args:
+        query: The full query string (may contain multiple words).
+        target: The field value to search.
+
+    Returns:
+        True if every word in the query matches the target.
+
+    """
+    words = query.split()
+    if not words:
+        return True
+    return all(_fuzzy_match_word(w, target) for w in words)
+
+
 def _match(mode: FilterMode, query: str, target: str) -> bool:
     """Dispatch to the correct matcher based on mode.
+
+    For FUZZY mode, uses multi-word matching with subsequence and
+    Levenshtein fallback. For EXACT and CONTAINS, uses the simpler
+    single-string matchers.
 
     Args:
         mode: The FilterMode to use.
@@ -158,7 +295,7 @@ def _match(mode: FilterMode, query: str, target: str) -> bool:
         return _exact_match(query, target)
     if mode == FilterMode.CONTAINS:
         return _contains_match(query, target)
-    return _fuzzy_match(query, target)
+    return _fuzzy_match_multiword(query, target)
 
 
 # --- Field extraction ---
@@ -197,6 +334,9 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     if field == FilterBy.HINT:
         return check.hint or ""
     return ""
+
+
+# --- Entry point ---
 
 
 def filter_checks(
