@@ -352,7 +352,7 @@ class TestFilterOptionsValidation:
             filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert len(errors) >= 1
-        assert "whitespace" in errors[0]
+        assert "blank space" in errors[0]
 
     def test_tab_only_query_is_invalid(self) -> None:
         """--filter-query with tabs only returns an error."""
@@ -363,7 +363,7 @@ class TestFilterOptionsValidation:
             filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert len(errors) >= 1
-        assert "whitespace" in errors[0]
+        assert "blank space" in errors[0]
 
     def test_default_values_are_not_flagged(self) -> None:
         """Passing default enum values without query does not error.
