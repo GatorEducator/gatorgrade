@@ -92,8 +92,13 @@ DEFAULT_FILTER_TYPE = FilterType.INCLUDE
 # maximum normalized Levenshtein distance (edit_distance / max_len) for
 # a fuzzy word-level match. At 0.4, "checking" (8 chars) vs "check"
 # (5 chars) gives 3/8 = 0.375, which is below the threshold, so it
-# matches. Raise this to allow looser matching, lower to tighten it.
+# matches; raise this to allow looser matching, lower to tighten it
 FUZZY_LEVENSHTEIN_RATIO = 0.4
+
+# command-line argument flag name for the fuzzy threshold;
+# the default matches the value of FUZZY_LEVENSHTEIN_RATIO
+# so behavior is unchanged when flag is omitted
+DEFAULT_FILTER_FUZZY_THRESHOLD = FUZZY_LEVENSHTEIN_RATIO
 
 
 def _exact_match(query: str, target: str) -> bool:
@@ -152,7 +157,6 @@ def _fuzzy_subsequence(query: str, target: str) -> bool:
     return False
 
 
-# could also expose this as a future --filter-fuzzy-threshold CLI flag
 def _levenshtein_distance(s1: str, s2: str) -> int:
     """Compute Levenshtein (edit) distance between two strings.
 
@@ -210,7 +214,11 @@ def _levenshtein_ratio(word_a: str, word_b: str) -> float:
     return _levenshtein_distance(word_a.lower(), word_b.lower()) / max_len
 
 
-def _fuzzy_match_word(word: str, target: str) -> bool:
+def _fuzzy_match_word(
+    word: str,
+    target: str,
+    fuzzy_threshold: float = FUZZY_LEVENSHTEIN_RATIO,
+) -> bool:
     """Check if a single query word matches a target string.
 
     A word matches if either:
@@ -218,13 +226,14 @@ def _fuzzy_match_word(word: str, target: str) -> bool:
        target (handles abbreviations like "tdo" matching "TODOs").
     2. The target contains an individual word whose normalized
        Levenshtein distance to the query word is at or below
-       FUZZY_LEVENSHTEIN_RATIO (handles typos like "conferm"
-       matching "ConfirmFileExists" and morphological variants
+       fuzzy_threshold (handles typos and morphological variants
        like "checking" matching "check").
 
     Args:
         word: A single query word (no internal whitespace).
         target: The full target field string to search against.
+        fuzzy_threshold: Maximum normalized edit distance for a
+            word-level match (0.0 = only exact word matches).
 
     Returns:
         True if the word matches the target via either strategy.
@@ -237,12 +246,16 @@ def _fuzzy_match_word(word: str, target: str) -> bool:
     # via edit distance (handles typos and differently-ending variants
     # like "checking" vs "check" which subsequence alone would miss)
     for target_word in target.split():
-        if _levenshtein_ratio(word, target_word) <= FUZZY_LEVENSHTEIN_RATIO:
+        if _levenshtein_ratio(word, target_word) <= fuzzy_threshold:
             return True
     return False
 
 
-def _fuzzy_match_multiword(query: str, target: str) -> bool:
+def _fuzzy_match_multiword(
+    query: str,
+    target: str,
+    fuzzy_threshold: float = FUZZY_LEVENSHTEIN_RATIO,
+) -> bool:
     """Return True if all words in the query match the target, AND logic.
 
     The query is split on whitespace into individual words. Each word
@@ -256,6 +269,8 @@ def _fuzzy_match_multiword(query: str, target: str) -> bool:
     Args:
         query: The full query string (may contain multiple words).
         target: The field value to search.
+        fuzzy_threshold: Maximum normalized edit distance for a
+            word-level match (0.0 = only exact word matches).
 
     Returns:
         True if every word in the query matches the target.
@@ -264,10 +279,18 @@ def _fuzzy_match_multiword(query: str, target: str) -> bool:
     words = query.split()
     if not words:
         return True
-    return all(_fuzzy_match_word(w, target) for w in words)
+    return all(
+        _fuzzy_match_word(w, target, fuzzy_threshold=fuzzy_threshold)
+        for w in words
+    )
 
 
-def _match(mode: FilterMode, query: str, target: str) -> bool:
+def _match(
+    mode: FilterMode,
+    query: str,
+    target: str,
+    fuzzy_threshold: float = FUZZY_LEVENSHTEIN_RATIO,
+) -> bool:
     """Dispatch to the correct matcher based on mode.
 
     For FUZZY mode, uses multi-word matching with subsequence and
@@ -278,6 +301,8 @@ def _match(mode: FilterMode, query: str, target: str) -> bool:
         mode: The FilterMode to use.
         query: The search query.
         target: The field value to search.
+        fuzzy_threshold: Maximum normalized edit distance for a
+            word-level match (only used in FUZZY mode).
 
     Returns:
         True if the target matches the query per the chosen mode.
@@ -287,15 +312,18 @@ def _match(mode: FilterMode, query: str, target: str) -> bool:
         return _exact_match(query, target)
     if mode == FilterMode.CONTAINS:
         return _contains_match(query, target)
-    return _fuzzy_match_multiword(query, target)
+    return _fuzzy_match_multiword(
+        query, target, fuzzy_threshold=fuzzy_threshold
+    )
 
 
 def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     """Extract the relevant string value from a check for the given field.
 
-    For ShellCheck with NAME field, falls back to check.command since
-    ShellCheck has no separate name attribute. For HINT, returns empty
-    string when hint is None.
+    For both ShellCheck and GatorGraderCheck, the NAME field reads
+    from json_info["check"] (the check: key in the config, e.g.
+    "MatchFileFragment" or "ExecuteCommand"). For HINT, returns
+    empty string when hint is None.
 
     Args:
         check: A ShellCheck or GatorGraderCheck instance.
@@ -325,12 +353,13 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     return ""
 
 
-def filter_checks(
+def filter_checks(  # noqa: PLR0913
     checks: List[Any],
     mode: FilterMode = DEFAULT_FILTER_MODE,
     by: FilterBy = DEFAULT_FILTER_BY,
     ftype: FilterType = DEFAULT_FILTER_TYPE,
     query: str = "",
+    fuzzy_threshold: float = FUZZY_LEVENSHTEIN_RATIO,
 ) -> List[Any]:
     """Filter a list of checks based on the query and filter parameters.
 
@@ -344,6 +373,8 @@ def filter_checks(
         by: The field(s) to search (default ANY).
         ftype: Whether to INCLUDE or EXCLUDE matching checks.
         query: The search query string.
+        fuzzy_threshold: Maximum normalized edit distance for a
+            word-level match (only used in FUZZY mode).
 
     Returns:
         The filtered list of checks.
@@ -363,7 +394,12 @@ def filter_checks(
     result: List[Any] = []
     for check in checks:
         is_hit = any(
-            _match(mode, query, _get_field_value(check, field))
+            _match(
+                mode,
+                query,
+                _get_field_value(check, field),
+                fuzzy_threshold=fuzzy_threshold,
+            )
             for field in fields_to_check
         )
         if ftype == FilterType.INCLUDE and is_hit:
