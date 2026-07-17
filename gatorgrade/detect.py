@@ -183,28 +183,47 @@ def _check_auto_hint_installed() -> Text:
     return result
 
 
-def print_version_info(console: Any) -> None:
+def print_version_info(
+    console: Any,
+    tree: Any | None = None,
+    env_tree: Any | None = None,
+) -> None:
     """Print gatorgrade version, platform, and environment information.
 
     Used by both --version and --verbose to display diagnostic
-    information about the current environment.
+    information about the current environment. When a Tree is
+    provided via the tree parameter, version-level items are
+    added to that tree instead of being printed directly. When
+    env_tree is provided, environment variables and hostname go
+    to that separate tree.
 
     Args:
         console: A Rich Console instance for printing output.
+        tree: An optional rich.tree.Tree for version info.
+        env_tree: An optional rich.tree.Tree for env/hostname.
 
     """
-    console.print(
+
+    def _output(item: str, use_env: bool = False) -> None:
+        """Print or add to tree depending on mode."""
+        target = env_tree if (use_env and env_tree is not None) else tree
+        if target is not None:
+            target.add(item)
+        else:
+            console.print(item)
+
+    _output(
         f"{GATORGRADE_NAME} {GATORGRADE_VERSION} ({get_gatorgrade_info()})"
     )
     # show whether the optional auto-hint extra is installed right
     # after the version line so users can quickly diagnose whether
     # the extra is available
     auto_hint_status = _check_auto_hint_installed()
-    console.print(auto_hint_status)
-    console.print(get_python_info())
+    _output(str(auto_hint_status))
+    _output(get_python_info())
     os_release = get_os_release()
     if os_release:
-        console.print(os_release)
+        _output(os_release)
     # show the path-related environment variables and resolved
     # defaults so users know which paths affect gatorgrade
     import os  # noqa: PLC0415
@@ -232,9 +251,9 @@ def print_version_info(console: Any) -> None:
         _fmt_env(ENV_CACHE_DIR, models_override, models_default),
         _fmt_env(ENV_CONFIG_DIR, config_override, config_default),
     ]:
-        console.print(env_line)
+        _output(str(env_line), use_env=True)
     # show the computer's hostname for debugging
     # network-related problems; this is a best-effort
     # call and will not cause a crash if it fails
     hostname = socket.gethostname()
-    console.print(f"Hostname: {hostname}")
+    _output(f"Hostname: {hostname}", use_env=True)
