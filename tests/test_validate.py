@@ -206,9 +206,9 @@ class TestFilterOptionsValidation:
         """No filter args at all returns no errors (filtering off)."""
         errors = validate.validate_filter_options(
             filter_query=None,
-            filter_mode=None,
-            filter_by=None,
-            filter_type=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert errors == []
 
@@ -216,9 +216,9 @@ class TestFilterOptionsValidation:
         """--filter-query alone returns no errors."""
         errors = validate.validate_filter_options(
             filter_query="todo",
-            filter_mode=None,
-            filter_by=None,
-            filter_type=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert errors == []
 
@@ -227,8 +227,8 @@ class TestFilterOptionsValidation:
         errors = validate.validate_filter_options(
             filter_query="todo",
             filter_mode=validate.FilterMode.EXACT,
-            filter_by=None,
-            filter_type=None,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert errors == []
 
@@ -236,9 +236,9 @@ class TestFilterOptionsValidation:
         """--filter-query plus --filter-by returns no errors."""
         errors = validate.validate_filter_options(
             filter_query="todo",
-            filter_mode=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
             filter_by=validate.FilterBy.DESCRIPTION,
-            filter_type=None,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert errors == []
 
@@ -246,8 +246,8 @@ class TestFilterOptionsValidation:
         """--filter-query plus --filter-type returns no errors."""
         errors = validate.validate_filter_options(
             filter_query="todo",
-            filter_mode=None,
-            filter_by=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
             filter_type=validate.FilterType.EXCLUDE,
         )
         assert errors == []
@@ -267,8 +267,8 @@ class TestFilterOptionsValidation:
         errors = validate.validate_filter_options(
             filter_query=None,
             filter_mode=validate.FilterMode.EXACT,
-            filter_by=None,
-            filter_type=None,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert len(errors) >= 1
         assert "--filter-mode" in errors[0]
@@ -278,9 +278,9 @@ class TestFilterOptionsValidation:
         """--filter-by without --filter-query returns an error."""
         errors = validate.validate_filter_options(
             filter_query=None,
-            filter_mode=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
             filter_by=validate.FilterBy.DESCRIPTION,
-            filter_type=None,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert len(errors) >= 1
         assert "--filter-by" in errors[0]
@@ -290,8 +290,8 @@ class TestFilterOptionsValidation:
         """--filter-type without --filter-query returns an error."""
         errors = validate.validate_filter_options(
             filter_query=None,
-            filter_mode=None,
-            filter_by=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
             filter_type=validate.FilterType.EXCLUDE,
         )
         assert len(errors) >= 1
@@ -302,9 +302,9 @@ class TestFilterOptionsValidation:
         """--filter-query with empty string returns an error."""
         errors = validate.validate_filter_options(
             filter_query="",
-            filter_mode=None,
-            filter_by=None,
-            filter_type=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert len(errors) >= 1
         assert "empty" in errors[0]
