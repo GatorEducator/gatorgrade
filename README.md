@@ -157,13 +157,13 @@ The following options control how GatorGrade runs:
     - `gatorgrade --filter-query "if" --filter-mode FUZZY`
 - `--filter-mode`: Matching mode for the filter query. One of `EXACT`
   (case-insensitive whole-field equality), `CONTAINS` (case-insensitive
-  substring containment, the default), or `FUZZY` (case-insensitive
-  subsequence, characters in order with gaps allowed). Requires
-  `--filter-query`.
+  substring containment, the default), or `FUZZY` (split query into words,
+  each word matches as subsequence or by edit-distance closeness, all words
+  required). Requires `--filter-query`.
 - `--filter-by`: Field to match the filter query against. One of `DESCRIPTION`
   (the check description), `NAME` (the check name, or the shell command for
-  shell checks), `HINT` (the optional hint), or `ANY` (all three fields, the
-  default). Requires `--filter-query`.
+  top-level shell checks), `HINT` (the optional hint), or `ANY` (all three
+  fields, the default). Requires `--filter-query`.
 - `--filter-type`: Whether to keep or discard matching checks. `INCLUDE` (the
   default) keeps only the matching checks; `EXCLUDE` drops the matching checks
   and keeps the rest. Requires `--filter-query`.
