@@ -69,12 +69,31 @@ from gatorgrade.version import GATORGRADE_VERSION
 # independent as possible, across three major operating systems
 gatorgrade_emoji = Emoji.replace(":crocodile:")
 
+# constants for display of output
+NEWLINE = "\n"
+TAB = "   "
+
 # create a Typer app that
 # --> does not support completion
 # --> has a specified help message with an emoji
+#     followed by usage instructions for uvx/uv run
 app = typer.Typer(
     add_completion=False,
-    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified configuration file.",
+    help=(
+        f"{gatorgrade_emoji} Run the GatorGrader checks in the"
+        f" specified configuration file."
+        f"{NEWLINE}{NEWLINE}"
+        "Examples of how to run this program:"
+        f"{NEWLINE}"
+        f"{TAB}- Without auto-hinting:{NEWLINE}"
+        f"{TAB}{TAB}- uvx gatorgrade"
+        f"{NEWLINE}"
+        "  - uv run gatorgrade"
+        f"{NEWLINE}"
+        "  - uvx --from 'gatorgrade\\[auto-hint]' gatorgrade"
+        f"{NEWLINE}"
+        "  - uv run gatorgrade --auto-hint"
+    ),
 )
 
 # create a default console for printing with rich
@@ -84,8 +103,6 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
-# newline character for joining lines
-NEWLINE = "\n"
 
 # exit message
 EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
