@@ -197,3 +197,128 @@ class TestAutoHintOptionsValidation:
             auto_hint_api_key="sk-test-key",
         )
         assert len(errors) >= 2  # noqa: PLR2004
+
+
+class TestFilterOptionsValidation:
+    """Tests for validate_filter_options."""
+
+    def test_no_args_is_valid(self) -> None:
+        """No filter args at all returns no errors (filtering off)."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=None,
+            filter_by=None,
+            filter_type=None,
+        )
+        assert errors == []
+
+    def test_query_only_is_valid(self) -> None:
+        """--filter-query alone returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=None,
+            filter_by=None,
+            filter_type=None,
+        )
+        assert errors == []
+
+    def test_query_with_mode_is_valid(self) -> None:
+        """--filter-query plus --filter-mode returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=None,
+            filter_type=None,
+        )
+        assert errors == []
+
+    def test_query_with_by_is_valid(self) -> None:
+        """--filter-query plus --filter-by returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=None,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=None,
+        )
+        assert errors == []
+
+    def test_query_with_type_is_valid(self) -> None:
+        """--filter-query plus --filter-type returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=None,
+            filter_by=None,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert errors == []
+
+    def test_query_with_all_four_is_valid(self) -> None:
+        """All four filter args together returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert errors == []
+
+    def test_mode_without_query_is_invalid(self) -> None:
+        """--filter-mode without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=None,
+            filter_type=None,
+        )
+        assert len(errors) >= 1
+        assert "--filter-mode" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_by_without_query_is_invalid(self) -> None:
+        """--filter-by without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=None,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=None,
+        )
+        assert len(errors) >= 1
+        assert "--filter-by" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_type_without_query_is_invalid(self) -> None:
+        """--filter-type without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=None,
+            filter_by=None,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert len(errors) >= 1
+        assert "--filter-type" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_empty_query_is_invalid(self) -> None:
+        """--filter-query with empty string returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="",
+            filter_mode=None,
+            filter_by=None,
+            filter_type=None,
+        )
+        assert len(errors) >= 1
+        assert "empty" in errors[0]
+
+    def test_default_values_are_not_flagged(self) -> None:
+        """Passing default enum values without query does not error.
+
+        The validation should only error when a non-default value is
+        explicitly passed without --filter-query.
+        """
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
