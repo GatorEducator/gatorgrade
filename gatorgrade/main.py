@@ -337,12 +337,13 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         callback=validate_filter_fuzzy_threshold,
     ),
     filter_failed_last: Optional[int] = typer.Option(
-        DEFAULT_HISTORY_REPORT_COUNT,
+        None,
         "--filter-failed-last",
         help=(
             "Only run checks that failed in at least the specified number of the most recent"
-            " reports. Combines with text filtering using check intersection."
+            " reports. Combines with text filtering by check intersection."
         ),
+        show_default=True,
         callback=validate_filter_failed_last,
     ),
     report_history: bool = typer.Option(
