@@ -272,10 +272,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-by",
         help=(
             "Field to match the filter query against. DESCRIPTION"
-            " checks the check description; NAME checks the"
-            " check's check: field (e.g., MatchFileFragment,"
-            " ExecuteCommand); HINT checks the hint; ANY checks"
-            " all three fields (default)."
+            " filters on check description; NAME filters on"
+            " check's name (e.g., MatchFileFragment,"
+            " ExecuteCommand); HINT filters on check's hint; ANY "
+            " filters on all three fields."
         ),
         show_default=True,
     ),
