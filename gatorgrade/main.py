@@ -83,7 +83,7 @@ app = typer.Typer(
         f"{gatorgrade_emoji} Run the GatorGrader checks in the"
         f" specified configuration file."
         f"{NEWLINE}{NEWLINE}"
-        "Run gatorgrade using uv:"
+        "Want to run gatorgrade using uv?"
         f"{NEWLINE}"
         f"{TAB}- Without auto-hinting:{NEWLINE}"
         f"{TAB}{TAB}- uvx gatorgrade"
