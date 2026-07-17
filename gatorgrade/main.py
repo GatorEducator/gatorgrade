@@ -252,7 +252,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Search term for pre-run check filtering. When provided,"
             " only checks matching this query are included or excluded."
-            " Requires at least one non-whitespace character."
+            " Requires at least one non-blank character."
         ),
     ),
     filter_mode: FilterMode = typer.Option(
