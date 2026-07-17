@@ -34,6 +34,12 @@ HISTORY_FILENAME_TIME_FORMAT = "%Y%m%dT%H%M%S.%fZ"
 UTC = datetime.timezone.utc
 PRIVATE_DIRECTORY_MODE = 0o700
 PRIVATE_FILE_MODE = 0o600
+SCOPE_SEPARATOR = "\n"
+SCOPE_EMPTY_NAME = ""
+HISTORY_FILE_MODE_WRITE = "w"
+HISTORY_FILE_ENCODING = "utf-8"
+HISTORY_JSON_INDENT = 4
+HISTORY_TEMPORARY_SUFFIX = ".tmp"
 
 
 def get_report_history_directory() -> Path:
@@ -51,7 +57,9 @@ def get_history_scope(
 ) -> str:
     """Return a stable scope identifier for a configuration and project."""
     resolved_path = config_path.expanduser().resolve(strict=False)
-    scope_source = f"{resolved_path}\n{project_name or ''}"
+    scope_source = (
+        f"{resolved_path}{SCOPE_SEPARATOR}{project_name or SCOPE_EMPTY_NAME}"
+    )
     return hashlib.sha256(scope_source.encode("utf-8")).hexdigest()
 
 
@@ -110,12 +118,14 @@ def _write_json_atomically(
 ) -> None:
     """Write a JSON payload through a temporary file and atomic replacement."""
     temporary_path = destination.with_name(
-        f".{destination.name}.{uuid.uuid4().hex}.tmp"
+        f".{destination.name}.{uuid.uuid4().hex}{HISTORY_TEMPORARY_SUFFIX}"
     )
     try:
-        with temporary_path.open("w", encoding="utf-8") as file:
-            json.dump(payload, file, indent=4)
-            file.write("\n")
+        with temporary_path.open(
+            HISTORY_FILE_MODE_WRITE, encoding=HISTORY_FILE_ENCODING
+        ) as file:
+            json.dump(payload, file, indent=HISTORY_JSON_INDENT)
+            file.write(SCOPE_SEPARATOR)
             file.flush()
             os.fsync(file.fileno())
         try:
@@ -204,7 +214,7 @@ def _load_history_file(  # noqa: PLR0911
 ) -> dict[str, Any] | None:
     """Load one valid in-scope history file, or return None."""
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding=HISTORY_FILE_ENCODING))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return None
     if not isinstance(payload, dict):
