@@ -175,9 +175,9 @@ FILTER_TYPE_DISPLAY = "--filter-type"
 
 def validate_filter_options(
     filter_query: str | None,
-    filter_mode: FilterMode | None,
-    filter_by: FilterBy | None,
-    filter_type: FilterType | None,
+    filter_mode: FilterMode,
+    filter_by: FilterBy,
+    filter_type: FilterType,
 ) -> list[str]:
     """Validate filter CLI option combinations.
 
@@ -188,9 +188,9 @@ def validate_filter_options(
 
     Args:
         filter_query: The --filter-query value, or None.
-        filter_mode: The --filter-mode value, or None.
-        filter_by: The --filter-by value, or None.
-        filter_type: The --filter-type value, or None.
+        filter_mode: The --filter-mode value.
+        filter_by: The --filter-by value.
+        filter_type: The --filter-type value.
 
     Returns:
         A list of error message strings. Empty if all checks pass.
@@ -200,15 +200,15 @@ def validate_filter_options(
     # --filter-query explicitly empty is an error
     if filter_query is not None and filter_query == "":
         errors.append(FILTER_QUERY_EMPTY_MSG)
-    # mode/by/type without query is an error
+    # mode/by/type without query is an error (only if non-default)
     if not filter_query:
-        if filter_mode is not None and filter_mode != DEFAULT_FILTER_MODE:
+        if filter_mode != DEFAULT_FILTER_MODE:
             errors.append(
                 FILTER_QUERY_REQUIRED_FMT.format(FILTER_MODE_DISPLAY)
             )
-        if filter_by is not None and filter_by != DEFAULT_FILTER_BY:
+        if filter_by != DEFAULT_FILTER_BY:
             errors.append(FILTER_QUERY_REQUIRED_FMT.format(FILTER_BY_DISPLAY))
-        if filter_type is not None and filter_type != DEFAULT_FILTER_TYPE:
+        if filter_type != DEFAULT_FILTER_TYPE:
             errors.append(
                 FILTER_QUERY_REQUIRED_FMT.format(FILTER_TYPE_DISPLAY)
             )
