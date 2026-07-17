@@ -280,8 +280,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Field to match the filter query against. DESCRIPTION"
             " filters on check description; NAME filters on"
-            " check's name (or shell command for command-only"
-            " checks); HINT filters on check's hint; ANY"
+            " check name or, as a fallback, check command;"
+            " HINT filters on check's hint; ANY"
             " filters across all three fields."
         ),
         show_default=True,
