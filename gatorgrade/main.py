@@ -281,7 +281,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "Field to match the filter query against. DESCRIPTION"
             " filters on check description; NAME filters on"
             " check's name (or shell command for command-only"
-            " checks); HINT filters on check's hint; ANY "
+            " checks); HINT filters on check's hint; ANY"
             " filters on all three fields."
         ),
         show_default=True,
