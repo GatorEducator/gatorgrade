@@ -9,7 +9,9 @@ which Typer converts into a user-friendly error message.
 Usage:
     from gatorgrade.validate import (
         VALID_ENV_VAR_NAME,
+        validate_auto_hint_options,
         validate_baseline_weight,
+        validate_filter_options,
         validate_github_env,
         validate_output_limit,
         validate_report,
@@ -21,6 +23,15 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from click import BadParameter
+
+from gatorgrade.input.filter import (
+    DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_MODE,
+    DEFAULT_FILTER_TYPE,
+    FilterBy,
+    FilterMode,
+    FilterType,
+)
 
 # validation constants for the --report option
 REPORT_DEST_FILE = "FILE"
@@ -148,6 +159,60 @@ def validate_report(
         if errors:
             raise BadParameter(";\n".join(errors))
     return value
+
+
+# filter validation constants
+FILTER_QUERY_REQUIRED_FMT = (
+    "The {} flag requires --filter-query to be specified."
+)
+FILTER_QUERY_EMPTY_MSG = "Filter query must not be empty."
+
+# flag display names for filter error messages
+FILTER_MODE_DISPLAY = "--filter-mode"
+FILTER_BY_DISPLAY = "--filter-by"
+FILTER_TYPE_DISPLAY = "--filter-type"
+
+
+def validate_filter_options(
+    filter_query: str | None,
+    filter_mode: FilterMode | None,
+    filter_by: FilterBy | None,
+    filter_type: FilterType | None,
+) -> list[str]:
+    """Validate filter CLI option combinations.
+
+    Checks the following rules:
+    - If any of --filter-mode, --filter-by, or --filter-type is
+      provided without a non-empty --filter-query, it is an error.
+    - If --filter-query is an explicit empty string, it is an error.
+
+    Args:
+        filter_query: The --filter-query value, or None.
+        filter_mode: The --filter-mode value, or None.
+        filter_by: The --filter-by value, or None.
+        filter_type: The --filter-type value, or None.
+
+    Returns:
+        A list of error message strings. Empty if all checks pass.
+
+    """
+    errors: list[str] = []
+    # --filter-query explicitly empty is an error
+    if filter_query is not None and filter_query == "":
+        errors.append(FILTER_QUERY_EMPTY_MSG)
+    # mode/by/type without query is an error
+    if not filter_query:
+        if filter_mode is not None and filter_mode != DEFAULT_FILTER_MODE:
+            errors.append(
+                FILTER_QUERY_REQUIRED_FMT.format(FILTER_MODE_DISPLAY)
+            )
+        if filter_by is not None and filter_by != DEFAULT_FILTER_BY:
+            errors.append(FILTER_QUERY_REQUIRED_FMT.format(FILTER_BY_DISPLAY))
+        if filter_type is not None and filter_type != DEFAULT_FILTER_TYPE:
+            errors.append(
+                FILTER_QUERY_REQUIRED_FMT.format(FILTER_TYPE_DISPLAY)
+            )
+    return errors
 
 
 # error message format strings for auto-hint validation
