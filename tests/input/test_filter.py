@@ -696,6 +696,47 @@ class TestShellCheckNameField:
         )
         assert result2 == []
 
+    def test_gg_execute_command_searchable_by_command(self) -> None:
+        """ExecuteCommand check is searchable by options.command via NAME."""
+        json_info = {
+            "check": "ExecuteCommand",
+            "description": "Run mypy",
+            "options": {
+                "command": "uv run mypy questions/three.py",
+            },
+        }
+        check = GatorGraderCheck(
+            gg_args=["--description", "Run mypy", "ExecuteCommand"],
+            json_info=json_info,
+        )
+        # searchable by the logical name
+        result = filter_checks(
+            [check],
+            mode=FilterMode.CONTAINS,
+            by=FilterBy.NAME,
+            ftype=FilterType.INCLUDE,
+            query="ExecuteCommand",
+        )
+        assert len(result) == 1
+        # searchable by the underlying command too
+        result = filter_checks(
+            [check],
+            mode=FilterMode.CONTAINS,
+            by=FilterBy.NAME,
+            ftype=FilterType.INCLUDE,
+            query="mypy",
+        )
+        assert len(result) == 1
+        # searchable by a fragment of either
+        result = filter_checks(
+            [check],
+            mode=FilterMode.FUZZY,
+            by=FilterBy.NAME,
+            ftype=FilterType.INCLUDE,
+            query="ExecCommand mypy three",
+        )
+        assert len(result) == 1
+
 
 class TestHintNone:
     """Tests that None hint is treated as empty string."""
