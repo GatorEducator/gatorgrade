@@ -244,12 +244,12 @@ def _print_verbose_info(  # noqa: PLR0913
     # configuration tree
     config = Tree("Configuration", guide_style="dim")
     config.add(f"Config file: {config_path}")
-    config.add(f"Config dir:  {config_dir}")
-    config.add(f"Output limit:  {output_limit}")
+    config.add(f"Config dir: {config_dir}")
+    config.add(f"Output limit: {output_limit}")
     config.add(f"Baseline weight: {baseline_weight}")
     config.add(f"Diagnostics: {show_diagnostics}")
-    config.add(f"Progress:    {progress_bar}")
-    config.add(f"Auto-hint:   {auto_hint}")
+    config.add(f"Progress: {progress_bar}")
+    config.add(f"Auto-hint: {auto_hint}")
     # auto hinting
     if auto_hint:
         model_display = auto_hint_model
@@ -257,18 +257,18 @@ def _print_verbose_info(  # noqa: PLR0913
             model_display = (
                 REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
             )
-        config.add(f"Model:       {model_display}")
+        config.add(f"Model: {model_display}")
         if auto_hint_url:
-            config.add(f"Remote URL:  {auto_hint_url}")
-        config.add(f"Auto-hint track:  {auto_hint_track}")
+            config.add(f"Remote URL: {auto_hint_url}")
+        config.add(f"Auto-hint track: {auto_hint_track}")
     console.print(config)
     # filtering tree
     filtering = Tree("Filtering", guide_style="dim")
     if filter_query:
         filtering.add(f"Query: {filter_query}")
-    filtering.add(f"Mode:  {filter_mode.value}")
-    filtering.add(f"By:    {filter_by.value}")
-    filtering.add(f"Type:  {filter_type.value}")
+    filtering.add(f"Mode: {filter_mode.value}")
+    filtering.add(f"By: {filter_by.value}")
+    filtering.add(f"Type: {filter_type.value}")
     if filter_mode == FilterMode.FUZZY:
         filtering.add(f"Fuzzy threshold: {filter_fuzzy_threshold}")
     if filter_failed_last is not None:
@@ -279,7 +279,7 @@ def _print_verbose_info(  # noqa: PLR0913
     reports.add(f"History: {report_history}")
     if report_history:
         reports.add(f"Max count: {report_history_max_count}")
-        reports.add(f"Max MiB:   {report_history_max_mib}")
+        reports.add(f"Max MiB: {report_history_max_mib}")
         reports.add(f"Directory: {DEFAULT_REPORT_HISTORY_DIR}")
     console.print(reports)
     console.print()
