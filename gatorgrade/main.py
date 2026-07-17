@@ -251,7 +251,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-query",
         help=(
             "Search term for pre-run check filtering. When provided,"
-            " only checks matching this query are included or excluded."
+            " the checks matching this query are included or excluded."
             " Requires at least one non-blank character."
         ),
     ),
@@ -259,10 +259,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_MODE,
         "--filter-mode",
         help=(
-            "Matching mode for filter query. EXACT = case-insensitive"
-            " whole-field equality; CONTAINS = case-insensitive substring"
-            " (default); FUZZY = case-insensitive subsequence (chars in"
-            " order, gaps allowed)."
+            "Matching mode for filtering query with EXACT = case-insensitive whole-field"
+            " equality; CONTAINS = case-insensitive substring;"
+            " FUZZY = split query into words, each"
+            " matches as subsequence or by edit-distance"
+            " closeness, all words required."
         ),
         show_default=True,
     ),
