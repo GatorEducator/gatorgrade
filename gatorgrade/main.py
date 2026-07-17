@@ -282,7 +282,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             " filters on check description; NAME filters on"
             " check's name (or shell command for command-only"
             " checks); HINT filters on check's hint; ANY"
-            " filters on all three fields."
+            " filters across all three fields."
         ),
         show_default=True,
     ),
