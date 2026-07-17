@@ -1165,7 +1165,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
             filter_line = (
                 f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
-                f' checks with query="{fq},"'
+                f' checks with query="{fq}",'
                 f" mode={fm}, by={fb}, type={ft}"
             )
             if fthreshold is not None:
@@ -1281,7 +1281,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
             filter_line = (
                 f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
-                f' checks with query="{fq},"'
+                f' checks with query="{fq}",'
                 f" mode={fm}, by={fb}, type={ft}"
             )
             if fthreshold is not None:
