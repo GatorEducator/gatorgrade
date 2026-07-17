@@ -181,6 +181,18 @@ class TestFilterCli:
         print(result.stdout)  # noqa: T201
         assert result.exit_code != 0
 
+    def test_whitespace_only_filter_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-query with spaces only exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-query", "   "])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
     def test_filter_mode_fuzzy_without_query_is_error(
         self,
         chdir: Any,

@@ -343,6 +343,28 @@ class TestFilterOptionsValidation:
         assert len(errors) >= 1
         assert "empty" in errors[0]
 
+    def test_whitespace_only_query_is_invalid(self) -> None:
+        """--filter-query with spaces only returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="   ",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "whitespace" in errors[0]
+
+    def test_tab_only_query_is_invalid(self) -> None:
+        """--filter-query with tabs only returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="\t\t",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "whitespace" in errors[0]
+
     def test_default_values_are_not_flagged(self) -> None:
         """Passing default enum values without query does not error.
 
