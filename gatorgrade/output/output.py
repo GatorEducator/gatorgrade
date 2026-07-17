@@ -220,7 +220,7 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
         return
     inspected = cli_args.get(FILTER_HISTORY_REPORTS_KEY, 0)
     rich.print(
-        "[bold]- Historical filter:[/] Checks failed in at least one of "
+        "[bold]- Historical Filter:[/] Checks failed in at least one of "
         f"the most recent {failed_last} report(s); inspected {inspected}."
     )
 
