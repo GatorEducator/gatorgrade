@@ -27,11 +27,17 @@ def _make_shell_check(
     command: str = "echo hello",
     description: str | None = None,
     hint: str | None = None,
+    check_name: str = "ShellCommand",
 ) -> ShellCheck:
     """Create a ShellCheck with the given attributes."""
+    json_info: dict[str, str] = {
+        "check": check_name,
+        "description": description or "",
+    }
     return ShellCheck(
         command=command,
         description=description,
+        json_info=json_info,
         hint=hint,
     )
 
@@ -183,11 +189,13 @@ class TestGetFieldValue:
         result = _get_field_value(check, FilterBy.NAME)
         assert result == "MatchFileFragment"
 
-    def test_name_on_shell_check_falls_back_to_command(self) -> None:
-        """_get_field_value returns command for ShellCheck when field is NAME."""
-        check = _make_shell_check(command="echo hello")
+    def test_name_on_shell_check_uses_check_field(self) -> None:
+        """_get_field_value returns json_info check field for ShellCheck NAME."""
+        check = _make_shell_check(
+            command="echo hello", check_name="ExecuteCommand"
+        )
         result = _get_field_value(check, FilterBy.NAME)
-        assert result == "echo hello"
+        assert result == "ExecuteCommand"
 
     def test_hint_returns_empty_string_when_none(self) -> None:
         """_get_field_value returns empty string when hint is None."""
@@ -365,28 +373,30 @@ class TestFilterDefaults:
 
 
 class TestShellCheckNameField:
-    """Tests that ShellCheck NAME falls back to command."""
+    """Tests that ShellCheck NAME comes from json_info["check"]."""
 
-    def test_name_filter_matches_command(self) -> None:
-        """NAME field on a ShellCheck matches against the command."""
+    def test_name_filter_matches_check_name(self) -> None:
+        """NAME field on a ShellCheck matches against json_info check."""
         check = _make_shell_check(
             command="mdl .",
             description="Check markdown style",
+            check_name="ExecuteCommand",
         )
         result = filter_checks(
             [check],
             mode=FilterMode.CONTAINS,
             by=FilterBy.NAME,
             ftype=FilterType.INCLUDE,
-            query="mdl",
+            query="ExecuteCommand",
         )
         assert len(result) == 1
 
-    def test_name_filter_no_match_on_command(self) -> None:
-        """NAME field on a ShellCheck does not match when command differs."""
+    def test_name_filter_does_not_match_command(self) -> None:
+        """NAME field on a ShellCheck does not match the command itself."""
         check = _make_shell_check(
-            command="pytest",
-            description="Run tests",
+            command="mdl .",
+            description="Check markdown style",
+            check_name="ShellCommand",
         )
         result = filter_checks(
             [check],
