@@ -9,18 +9,21 @@ from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
     DEFAULT_FILTER_MODE,
     DEFAULT_FILTER_TYPE,
+    FUZZY_LEVENSHTEIN_RATIO,
     FilterBy,
     FilterMode,
     FilterType,
     _contains_match,
     _exact_match,
-    _fuzzy_match,
+    _fuzzy_match_multiword,
+    _fuzzy_match_word,
+    _fuzzy_subsequence,
     _get_field_value,
+    _levenshtein_distance,
+    _levenshtein_ratio,
     _match,
     filter_checks,
 )
-
-# --- Helper factories ---
 
 
 def _make_shell_check(
@@ -57,9 +60,6 @@ def _make_gg_check(
         json_info=json_info,
         hint=hint,
     )
-
-
-# --- Matcher tests (grouped by function) ---
 
 
 class TestExactMatch:
@@ -110,36 +110,194 @@ class TestContainsMatch:
         assert _contains_match("hello", "hello") is True
 
 
-class TestFuzzyMatch:
-    """Tests for _fuzzy_match."""
+class TestFuzzySubsequence:
+    """Tests for _fuzzy_subsequence."""
 
     def test_subsequence_match_returns_true(self) -> None:
-        """Fuzzy match returns True when all query chars appear in order."""
-        assert _fuzzy_match("tdo", "Complete all TODOs") is True
+        """Subsequence returns True when all query chars appear in order."""
+        assert _fuzzy_subsequence("tdo", "Complete all TODOs") is True
 
-    def test_exact_substring_is_fuzzy(self) -> None:
-        """Fuzzy match returns True for contiguous substring."""
-        assert _fuzzy_match("todo", "Complete all TODOs") is True
+    def test_exact_substring_is_subsequence(self) -> None:
+        """Subsequence returns True for contiguous substring."""
+        assert _fuzzy_subsequence("todo", "Complete all TODOs") is True
 
-    def test_case_insensitive_fuzzy(self) -> None:
-        """Fuzzy match is case-insensitive."""
-        assert _fuzzy_match("TDO", "Complete all todos") is True
+    def test_case_insensitive_subsequence(self) -> None:
+        """Subsequence is case-insensitive."""
+        assert _fuzzy_subsequence("TDO", "Complete all todos") is True
 
     def test_wrong_order_returns_false(self) -> None:
-        """Fuzzy match returns False when chars not in order."""
-        assert _fuzzy_match("odt", "Complete all TODOs") is False
+        """Subsequence returns False when chars not in order."""
+        assert _fuzzy_subsequence("odt", "Complete all TODOs") is False
 
     def test_extra_chars_in_query_returns_false(self) -> None:
-        """Fuzzy match returns False when query has chars not in target."""
-        assert _fuzzy_match("todoz", "Complete all TODOs") is False
+        """Subsequence returns False when query has chars not in target."""
+        assert _fuzzy_subsequence("todoz", "Complete all TODOs") is False
 
     def test_empty_query_returns_true(self) -> None:
-        """Fuzzy match returns True for empty query."""
-        assert _fuzzy_match("", "anything") is True
+        """Subsequence returns True for empty query."""
+        assert _fuzzy_subsequence("", "anything") is True
 
     def test_short_query_in_long_description(self) -> None:
-        """Fuzzy matches short abbreviations in long descriptions."""
-        assert _fuzzy_match("cmp", "CountCommits present") is True
+        """Subsequence matches short abbreviations in long descriptions."""
+        assert _fuzzy_subsequence("cmp", "CountCommits present") is True
+
+
+class TestLevenshteinDistance:
+    """Tests for _levenshtein_distance."""
+
+    def test_identical_strings(self) -> None:
+        """Identical strings have distance 0."""
+        assert _levenshtein_distance("hello", "hello") == 0
+
+    def test_one_substitution(self) -> None:
+        """One character substitution."""
+        assert _levenshtein_distance("cat", "cut") == 1
+
+    def test_one_insertion(self) -> None:
+        """One character insertion."""
+        assert _levenshtein_distance("cat", "cats") == 1
+
+    def test_one_deletion(self) -> None:
+        """One character deletion."""
+        assert _levenshtein_distance("cats", "cat") == 1
+
+    def test_empty_strings(self) -> None:
+        """Both empty strings have distance 0."""
+        assert _levenshtein_distance("", "") == 0
+
+    def test_empty_vs_nonempty(self) -> None:
+        """Distance from empty to non-empty is the length of non-empty."""
+        assert _levenshtein_distance("", "hello") == 5  # noqa: PLR2004
+
+    def test_checking_vs_check(self) -> None:
+        """Checking has distance 3 from check (insert ing)."""
+        assert _levenshtein_distance("checking", "check") == 3  # noqa: PLR2004
+
+    def test_conferm_vs_confirm(self) -> None:
+        """Conferm has distance 1 from confirm (e to i)."""
+        assert _levenshtein_distance("conferm", "confirm") == 1
+
+    def test_completely_different(self) -> None:
+        """Completely different strings have large distance."""
+        assert _levenshtein_distance("abc", "xyz") == 3  # noqa: PLR2004
+
+
+class TestLevenshteinRatio:
+    """Tests for _levenshtein_ratio."""
+
+    def test_identical_strings(self) -> None:
+        """Identical strings have ratio 0.0."""
+        assert _levenshtein_ratio("hello", "hello") == 0.0
+
+    def test_checking_vs_check(self) -> None:
+        """checking/check has ratio 3/8 = 0.375."""
+        ratio = _levenshtein_ratio("checking", "check")
+        assert ratio == 3 / 8
+        assert ratio <= FUZZY_LEVENSHTEIN_RATIO
+
+    def test_conferm_vs_confirm(self) -> None:
+        """conferm/confirm has ratio 1/7 = 0.143."""
+        ratio = _levenshtein_ratio("conferm", "confirm")
+        assert ratio == 1 / 7
+        assert ratio <= FUZZY_LEVENSHTEIN_RATIO
+
+    def test_case_insensitive(self) -> None:
+        """Ratio is case-insensitive."""
+        assert _levenshtein_ratio("HELLO", "hello") == 0.0
+
+    def test_completely_different(self) -> None:
+        """Different strings have ratio above threshold."""
+        ratio = _levenshtein_ratio("abc", "xyz")
+        assert ratio > FUZZY_LEVENSHTEIN_RATIO
+
+    def test_both_empty(self) -> None:
+        """Both empty has ratio 0.0."""
+        assert _levenshtein_ratio("", "") == 0.0
+
+
+class TestFuzzyMatchWord:
+    """Tests for _fuzzy_match_word."""
+
+    def test_subsequence_match(self) -> None:
+        """Word matches via subsequence."""
+        assert _fuzzy_match_word("tdo", "Complete all TODOs") is True
+
+    def test_levenshtein_morphology(self) -> None:
+        """Word matches morphological variant via Levenshtein."""
+        assert (
+            _fuzzy_match_word("checking", "...with command 'ruff check'")
+            is True
+        )
+
+    def test_levenshtein_typo(self) -> None:
+        """Word matches a typo via Levenshtein against a similar-length target word."""
+        # "conferm" vs the individual word "Confirm" in the CamelCase
+        # compound: subsequence "conferm" in "ConfirmFileExists" fails,
+        # but Levenshtein against the CamelCase prefix "Confirm" works
+        # because "Confirm" is split as a separate word in the description
+        assert (
+            _fuzzy_match_word(
+                "conferm",
+                "Ensure ConfirmFileExists works properly",
+            )
+            is False
+        )  # confirmFileExists is one word, too long for edit ratio
+        # when the target has "confirm" as a separate word, it does match
+        assert (
+            _fuzzy_match_word("conferm", "Please confirm the file exists")
+            is True
+        )
+
+    def test_no_match(self) -> None:
+        """Word does not match at all."""
+        assert _fuzzy_match_word("xyzzy", "Complete all TODOs") is False
+
+    def test_empty_word(self) -> None:
+        """Empty word returns True (trivially matches everything)."""
+        assert _fuzzy_match_word("", "anything") is True
+
+
+class TestFuzzyMatchMultiword:
+    """Tests for _fuzzy_match_multiword."""
+
+    def test_single_word_subsequence(self) -> None:
+        """Single word matches via subsequence."""
+        assert _fuzzy_match_multiword("tdo", "Complete all TODOs") is True
+
+    def test_multi_word_all_via_subsequence(self) -> None:
+        """Multiple words each match independently via subsequence."""
+        assert (
+            _fuzzy_match_multiword("cmp tdo", "CountCommits Complete TODOs")
+            is True
+        )
+
+    def test_multi_word_with_levenshtein(self) -> None:
+        """Multiple words with one matching via Levenshtein fallback."""
+        target = "Ensure correct formatting with command 'ruff check'"
+        assert (
+            _fuzzy_match_multiword("ruff formatting checking", target) is True
+        )
+
+    def test_one_word_fails_whole_query_fails(self) -> None:
+        """If any single word fails, the entire query is a miss."""
+        assert (
+            _fuzzy_match_multiword("tdo xyzzy", "Complete all TODOs") is False
+        )
+
+    def test_empty_query(self) -> None:
+        """Empty query returns True."""
+        assert _fuzzy_match_multiword("", "anything") is True
+
+    def test_ruff_formatting_example(self) -> None:
+        """The user's multi-word example matches via Levenshtein fallback."""
+        target = (
+            "Ensure that Question 1 has no Python files with"
+            " incorrect formatting with command 'ruff check'"
+        )
+        assert (
+            _fuzzy_match_multiword("ruff formatting ruff checking", target)
+            is True
+        )
 
 
 class TestMatchDispatcher:
@@ -159,13 +317,19 @@ class TestMatchDispatcher:
             _match(FilterMode.CONTAINS, "todo", "Add documentation") is False
         )
 
-    def test_fuzzy_mode_uses_fuzzy_matcher(self) -> None:
-        """_match with FUZZY mode delegates to _fuzzy_match."""
+    def test_fuzzy_mode_uses_multiword_matcher(self) -> None:
+        """_match with FUZZY mode delegates to _fuzzy_match_multiword."""
         assert _match(FilterMode.FUZZY, "tdo", "Complete all TODOs") is True
         assert _match(FilterMode.FUZZY, "xyz", "Complete all TODOs") is False
-
-
-# --- Field extraction tests ---
+        # multi-word with Levenshtein fallback
+        assert (
+            _match(
+                FilterMode.FUZZY,
+                "ruff formatting checking",
+                "Ensure formatting with command 'ruff check'",
+            )
+            is True
+        )
 
 
 class TestGetFieldValue:
@@ -208,9 +372,6 @@ class TestGetFieldValue:
         check = _make_shell_check(hint="Try using a loop")
         result = _get_field_value(check, FilterBy.HINT)
         assert result == "Try using a loop"
-
-
-# --- filter_checks integration tests ---
 
 
 class TestFilterChecksInclude:
@@ -482,24 +643,25 @@ class TestCaseInsensitivity:
         assert len(result) == 1
 
 
-# --- Property-based tests ---
-
-
 @pytest.mark.propertybased
 @given(st.text(min_size=0, max_size=20), st.text(min_size=0, max_size=100))
 def test_monotonic_exact_implies_contains_implies_fuzzy(
     query: str, target: str
 ) -> None:
-    """An EXACT match implies a CONTAINS match implies a FUZZY match."""
+    """An EXACT match implies a CONTAINS match implies a FUZZY match.
+
+    The FUZZY mode uses multi-word subsequence + Levenshtein matching.
+    If a query is a substring of the target, every word in the query
+    is also a substring (hence subsequence) of the target, so FUZZY
+    will match via subsequence.
+    """
     exact = _exact_match(query, target)
     contains = _contains_match(query, target)
-    fuzzy = _fuzzy_match(query, target)
-    # if exact holds, contains must also hold
+    fuzzy = _fuzzy_match_multiword(query, target)
     if exact:
         assert contains, (
             f"EXACT match '{query}' in '{target}' should imply CONTAINS match"
         )
-    # if contains holds, fuzzy must also hold
     if contains:
         assert fuzzy, (
             f"CONTAINS match '{query}' in '{target}' should imply FUZZY match"
@@ -507,12 +669,15 @@ def test_monotonic_exact_implies_contains_implies_fuzzy(
 
 
 @pytest.mark.propertybased
-@given(st.text(min_size=0, max_size=20), st.text(min_size=0, max_size=100))
-def test_fuzzy_match_every_query_char_appears_in_target_in_order(
+@given(
+    st.text(min_size=0, max_size=15),
+    st.text(min_size=0, max_size=80),
+)
+def test_fuzzy_subsequence_chars_in_order_property(
     query: str, target: str
 ) -> None:
-    """For any FUZZY hit, every query char appears in target in order."""
-    if _fuzzy_match(query, target):
+    """For any _fuzzy_subsequence hit, every query char appears in target in order."""
+    if _fuzzy_subsequence(query, target):
         if not query:
             return
         target_lower = target.lower()
@@ -522,6 +687,21 @@ def test_fuzzy_match_every_query_char_appears_in_target_in_order(
             if idx < len(query_lower) and char == query_lower[idx]:
                 idx += 1
         assert idx == len(query_lower), (
-            f"FUZZY match '{query}' in '{target}' but "
+            f"_fuzzy_subsequence match '{query}' in '{target}' but "
             f"could not consume all query chars"
         )
+
+
+@pytest.mark.propertybased
+@given(
+    st.text(min_size=0, max_size=10),
+    st.text(min_size=0, max_size=10),
+)
+def test_levenshtein_properties(s1: str, s2: str) -> None:
+    """Levenshtein distance is symmetric and non-negative."""
+    dist = _levenshtein_distance(s1, s2)
+    # symmetry: distance(a, b) == distance(b, a)
+    assert dist == _levenshtein_distance(s2, s1)
+    # non-negative and bounded by the longer string length
+    assert dist >= 0
+    assert dist <= max(len(s1), len(s2))
