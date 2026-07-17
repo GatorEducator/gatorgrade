@@ -102,6 +102,15 @@ The following options control how GatorGrade runs:
   name. Examples:
   - `gatorgrade --report FILE JSON report.json`
   - `gatorgrade --report ENV MD GITHUB_STEP_SUMMARY`
+- `--report-history`, `--no-report-history`: Enable or disable automatic JSON
+  report history. History is enabled by default and is saved in the
+  platform-specific user data directory. Automatic history is independent of
+  `--report`.
+- `--report-history-max-count`: Set the maximum number of automatic reports to
+  retain. The default is 100. The value must be a positive integer.
+- `--report-history-max-mb`: Set the maximum total size of automatic reports in
+  MiB. The default is 100. The value must be a positive integer. Oldest
+  history files are removed when either retention limit is exceeded.
 - `--github-env`, `-g`: Write report data to the `GITHUB_ENV` file in GitHub
   Actions. Takes two arguments: the format (`JSON` or `MD`) and the name of
   the environment variable to set. When provided and the `GITHUB_ENV`
@@ -164,6 +173,11 @@ The following options control how GatorGrade runs:
   considered close). The default is `0.4`, which allows "checking" to match
   "check" but keeps most unrelated words apart. Only used with
   `--filter-mode FUZZY`.
+- `--filter-failed-last`: Select checks that failed in at least one of the
+  newest number of retained history reports. Historical matching uses exact
+  check IDs. This option can be combined with `--filter-query`; both filters
+  then apply together. If no usable history exists, all checks are run with a
+  warning. The value must be a positive integer.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
@@ -314,6 +328,23 @@ by `--output-limit`.
 ## Reports
 
 GatorGrade can generate reports in JSON or Markdown format.
+
+### Automatic Report History
+
+GatorGrade automatically saves one JSON report for each completed run in the
+platform-specific user data directory. Automatic history is enabled by default
+and can be disabled with `--no-report-history`.
+
+History is limited to 100 reports and 100 MiB by default. The limits can be
+changed with `--report-history-max-count` and `--report-history-max-mb`. The
+oldest history files are removed when either limit is exceeded. These automatic
+history files are separate from reports written with `--report` or
+`--github-env`.
+
+Use `--filter-failed-last` to run only checks that failed in at least one of the
+newest retained reports. Historical matching uses each check's exact `check_id`.
+When combined with `--filter-query`, both filters apply to the checks before
+execution.
 
 ### File Reports
 
