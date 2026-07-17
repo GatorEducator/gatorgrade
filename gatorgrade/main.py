@@ -352,8 +352,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-fuzzy-threshold",
         help=(
             "Threshold for fuzzy word matching (0.0 to 1.0). Higher"
-            " values result in less stringent matching (e.g., 'checking' matches"
-            " 'check' at 0.4). Requires --filter-mode FUZZY."
+            " values result in less stringent (i.e., more fuzzy) matching."
+            " Requires --filter-mode FUZZY."
         ),
         show_default=True,
         callback=validate_filter_fuzzy_threshold,
