@@ -81,13 +81,9 @@ class FilterType(Enum):
     EXCLUDE = "EXCLUDE"
 
 
-# --- Defaults ---
-
 DEFAULT_FILTER_MODE = FilterMode.CONTAINS
 DEFAULT_FILTER_BY = FilterBy.ANY
 DEFAULT_FILTER_TYPE = FilterType.INCLUDE
-
-# --- Internal matchers (all case-insensitive) ---
 
 
 def _exact_match(query: str, target: str) -> bool:
@@ -193,20 +189,14 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
         # ShellCheck has description attribute
         return check.description or ""
     if field == FilterBy.NAME:
-        if isinstance(check, GatorGraderCheck):
-            info = check.json_info
-            if isinstance(info, dict):
-                name = info.get("check", "")
-                return str(name) if name else ""
-            return str(info) if info else ""
-        # ShellCheck has no separate name; use command
-        return check.command or ""
+        info = check.json_info
+        if isinstance(info, dict):
+            name = info.get("check", "")
+            return str(name) if name else ""
+        return str(info) if info else ""
     if field == FilterBy.HINT:
         return check.hint or ""
     return ""
-
-
-# --- Entry point ---
 
 
 def filter_checks(
