@@ -60,8 +60,6 @@ from typing import Any, List
 
 from gatorgrade.input.checks import GatorGraderCheck
 
-# --- Enum definitions ---
-
 
 class FilterMode(Enum):
     """Matching strictness mode for filter queries."""
@@ -87,21 +85,15 @@ class FilterType(Enum):
     EXCLUDE = "EXCLUDE"
 
 
-# --- Defaults ---
-
 DEFAULT_FILTER_MODE = FilterMode.CONTAINS
 DEFAULT_FILTER_BY = FilterBy.ANY
 DEFAULT_FILTER_TYPE = FilterType.INCLUDE
-
-# --- FUZZY matching constants ---
 
 # maximum normalized Levenshtein distance (edit_distance / max_len) for
 # a fuzzy word-level match. At 0.4, "checking" (8 chars) vs "check"
 # (5 chars) gives 3/8 = 0.375, which is below the threshold, so it
 # matches. Raise this to allow looser matching, lower to tighten it.
 FUZZY_LEVENSHTEIN_RATIO = 0.4
-
-# --- Core matchers (all case-insensitive) ---
 
 
 def _exact_match(query: str, target: str) -> bool:
@@ -298,9 +290,6 @@ def _match(mode: FilterMode, query: str, target: str) -> bool:
     return _fuzzy_match_multiword(query, target)
 
 
-# --- Field extraction ---
-
-
 def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     """Extract the relevant string value from a check for the given field.
 
@@ -334,9 +323,6 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     if field == FilterBy.HINT:
         return check.hint or ""
     return ""
-
-
-# --- Entry point ---
 
 
 def filter_checks(
