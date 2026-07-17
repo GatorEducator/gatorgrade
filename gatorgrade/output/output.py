@@ -35,6 +35,12 @@ SPACE = " "
 # output labels
 CHECKS_LABEL = "Checks"
 FAILING_CHECKS_LABEL = "Failing Check(s)"
+FILTER_QUERY_KEY = "--filter-query"
+FILTER_MODE_KEY = "--filter-mode"
+FILTER_BY_KEY = "--filter-by"
+FILTER_TYPE_KEY = "--filter-type"
+FILTER_TOTAL_KEY = "--filter-total"
+FILTER_LABEL = "Filter"
 OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
@@ -1148,6 +1154,17 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if filtering was active, show a reminder line
+        if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
+            fq = cli_args[FILTER_QUERY_KEY]
+            fm = cli_args.get(FILTER_MODE_KEY, "")
+            fb = cli_args.get(FILTER_BY_KEY, "")
+            ft = cli_args.get(FILTER_TYPE_KEY, "")
+            ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
+            rich.print(
+                f'[bold]- {FILTER_LABEL}:[/] Selected from {ftotal} checks with query="{fq},"'
+                f" mode={fm}, by={fb}, type={ft}"
+            )
         # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
@@ -1248,6 +1265,17 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if filtering was active, show a reminder line
+        if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
+            fq = cli_args[FILTER_QUERY_KEY]
+            fm = cli_args.get(FILTER_MODE_KEY, "")
+            fb = cli_args.get(FILTER_BY_KEY, "")
+            ft = cli_args.get(FILTER_TYPE_KEY, "")
+            ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
+            rich.print(
+                f'[bold]- {FILTER_LABEL}:[/] Selected from {ftotal} checks with query="{fq},"'
+                f" mode={fm}, by={fb}, type={ft}"
+            )
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "
