@@ -44,6 +44,14 @@ from gatorgrade.input.parse_config import (
     resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.report_history import (
+    DEFAULT_HISTORY_REPORT_COUNT,
+    DEFAULT_HISTORY_SIZE_MIB,
+    filter_checks_by_failed_ids,
+    get_failed_check_ids,
+    get_history_scope,
+    get_report_history_directory,
+)
 from gatorgrade.resolve import (
     resolve_system_prompt,
     resolve_validation_rules,
@@ -51,11 +59,14 @@ from gatorgrade.resolve import (
 from gatorgrade.validate import (
     validate_auto_hint_options,
     validate_baseline_weight,
+    validate_filter_failed_last,
     validate_filter_fuzzy_threshold,
     validate_filter_options,
     validate_github_env,
     validate_output_limit,
     validate_report,
+    validate_report_history_count,
+    validate_report_history_size,
 )
 
 # import the version from the single-source-of-truth module so that
@@ -137,6 +148,11 @@ FILTER_TYPE_FLAG = "--filter-type"
 FILTER_QUERY_FLAG = "--filter-query"
 FILTER_FUZZY_THRESHOLD_FLAG = "--filter-fuzzy-threshold"
 FILTER_TOTAL_FLAG = "--filter-total"
+FILTER_FAILED_LAST_FLAG = "--filter-failed-last"
+FILTER_HISTORY_REPORTS_FLAG = "--filter-history-reports"
+REPORT_HISTORY_FLAG = "--report-history"
+REPORT_HISTORY_MAX_COUNT_FLAG = "--report-history-max-count"
+REPORT_HISTORY_MAX_MIB_FLAG = "--report-history-max-mb"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -175,6 +191,10 @@ def _print_verbose_info(  # noqa: PLR0913
     filter_by: FilterBy = DEFAULT_FILTER_BY,
     filter_type: FilterType = DEFAULT_FILTER_TYPE,
     filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
+    filter_failed_last: int | None = None,
+    report_history: bool = True,
+    report_history_max_count: int = DEFAULT_HISTORY_REPORT_COUNT,
+    report_history_max_mib: int = DEFAULT_HISTORY_SIZE_MIB,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -198,6 +218,10 @@ def _print_verbose_info(  # noqa: PLR0913
         filter_by: The filter-by field, or None.
         filter_type: The filter type, or None.
         filter_fuzzy_threshold: Fuzzy word-matching threshold.
+        filter_failed_last: Number of recent reports for failure filtering.
+        report_history: Whether automatic report history is enabled.
+        report_history_max_count: Maximum retained report count.
+        report_history_max_mib: Maximum retained report size in MiB.
 
     """
     if not verbose:
@@ -230,6 +254,12 @@ def _print_verbose_info(  # noqa: PLR0913
         console.print(f"Filter type:  {filter_type.value}")
         if filter_mode == FilterMode.FUZZY:
             console.print(f"Filter fuzzy threshold: {filter_fuzzy_threshold}")
+    if filter_failed_last is not None:
+        console.print(f"Filter failed last: {filter_failed_last}")
+    console.print(f"Report history: {report_history}")
+    if report_history:
+        console.print(f"Report history max count: {report_history_max_count}")
+        console.print(f"Report history max MiB: {report_history_max_mib}")
     console.print()
     console.print(Rule(style="green"))
 
@@ -305,6 +335,34 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         ),
         show_default=True,
         callback=validate_filter_fuzzy_threshold,
+    ),
+    filter_failed_last: Optional[int] = typer.Option(
+        DEFAULT_HISTORY_REPORT_COUNT,
+        "--filter-failed-last",
+        help=(
+            "Only run checks that failed in at least the specified number of the most recent"
+            " reports. Combines with text filtering using check intersection."
+        ),
+        callback=validate_filter_failed_last,
+    ),
+    report_history: bool = typer.Option(
+        True,
+        "--report-history/--no-report-history",
+        help="Save bounded JSON report history in the user data directory.",
+    ),
+    report_history_max_count: int = typer.Option(
+        DEFAULT_HISTORY_REPORT_COUNT,
+        "--report-history-max-count",
+        help="Maximum number of automatic JSON reports to retain.",
+        show_default=True,
+        callback=validate_report_history_count,
+    ),
+    report_history_max_mib: int = typer.Option(
+        DEFAULT_HISTORY_SIZE_MIB,
+        "--report-history-max-mb",
+        help="Maximum total size of automatic reports in MiB.",
+        show_default=True,
+        callback=validate_report_history_size,
     ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
@@ -508,13 +566,21 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             filter_by=filter_by,
             filter_type=filter_type,
             filter_fuzzy_threshold=filter_fuzzy_threshold,
+            filter_failed_last=filter_failed_last,
+            report_history=report_history,
+            report_history_max_count=report_history_max_count,
+            report_history_max_mib=report_history_max_mib,
         )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
         project_name = get_project_name(resolved_filename)
-        # determine whether filter query was provided (used in elif chain)
-        filter_was_active = bool(filter_query)
+        history_scope = get_history_scope(resolved_filename, project_name)
+        # determine whether any pre-run filter was provided
+        filter_was_active = (
+            bool(filter_query) or filter_failed_last is not None
+        )
+        history_reports_inspected = 0
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -585,6 +651,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if filter_was_active
                 and resolved_filter_mode == FilterMode.FUZZY
                 else None,
+                FILTER_FAILED_LAST_FLAG: filter_failed_last,
+                FILTER_HISTORY_REPORTS_FLAG: history_reports_inspected,
+                REPORT_HISTORY_FLAG: report_history,
+                REPORT_HISTORY_MAX_COUNT_FLAG: report_history_max_count,
+                REPORT_HISTORY_MAX_MIB_FLAG: report_history_max_mib,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -668,16 +739,43 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 console.print()
                 console.print(Rule(style="bright_red"))
                 sys.exit(FAILURE)
-            # apply pre-run check filtering when filter_query is active
-            if filter_was_active:
+            # apply historical filtering before text filtering
+            if filter_failed_last is not None:
+                try:
+                    failed_check_ids, history_reports_inspected = (
+                        get_failed_check_ids(
+                            get_report_history_directory(),
+                            history_scope,
+                            filter_failed_last,
+                        )
+                    )
+                except (OSError, TypeError, ValueError) as error:
+                    console.print(
+                        "[yellow]Warning: Could not read report history. "
+                        f"Running all checks instead: {error}[/]"
+                    )
+                else:
+                    if history_reports_inspected > 0:
+                        checks = filter_checks_by_failed_ids(
+                            checks,
+                            failed_check_ids,
+                        )
+                    else:
+                        console.print(
+                            "[yellow]Warning: No usable report history was "
+                            "found. Running all checks instead.[/]"
+                        )
+            # apply text filtering after historical filtering
+            if filter_query:
                 checks = filter_checks(
                     checks,
                     mode=resolved_filter_mode,
                     by=resolved_filter_by,
                     ftype=resolved_filter_type,
-                    query=filter_query or "",
+                    query=filter_query,
                     fuzzy_threshold=filter_fuzzy_threshold,
                 )
+            cli_args[FILTER_HISTORY_REPORTS_FLAG] = history_reports_inspected
             # if filtering emptied the list, handle it here before
             # auto-hint engine and run_checks are reached
             if filter_was_active and not checks:
@@ -731,6 +829,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     auto_hint_engine=auto_hint_engine,
                     auto_hint_url=auto_hint_url,
                     auto_hint_track=auto_hint_track,
+                    report_history=report_history,
+                    report_history_max_count=report_history_max_count,
+                    report_history_max_mib=report_history_max_mib,
+                    history_scope=history_scope,
                 )
         # no checks were created and this means
         # that, most likely, the file was not
