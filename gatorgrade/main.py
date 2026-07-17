@@ -24,6 +24,15 @@ from gatorgrade.engine import (
 )
 from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
 from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
+from gatorgrade.input.filter import (
+    DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_MODE,
+    DEFAULT_FILTER_TYPE,
+    FilterBy,
+    FilterMode,
+    FilterType,
+    filter_checks,
+)
 from gatorgrade.input.parse_config import (
     get_config_dir,
     get_due_date,
@@ -41,6 +50,7 @@ from gatorgrade.resolve import (
 from gatorgrade.validate import (
     validate_auto_hint_options,
     validate_baseline_weight,
+    validate_filter_options,
     validate_github_env,
     validate_output_limit,
     validate_report,
@@ -97,6 +107,10 @@ AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_URL_FLAG = "--auto-hint-url"
 AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
 AUTO_HINT_TRACK_FLAG = "--auto-hint-track"
+FILTER_MODE_FLAG = "--filter-mode"
+FILTER_BY_FLAG = "--filter-by"
+FILTER_TYPE_FLAG = "--filter-type"
+FILTER_QUERY_FLAG = "--filter-query"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -130,6 +144,10 @@ def _print_verbose_info(  # noqa: PLR0913
     show_diagnostics: bool,
     progress_bar: bool,
     auto_hint_track: bool | None = None,
+    filter_query: str | None = None,
+    filter_mode: FilterMode | None = None,
+    filter_by: FilterBy | None = None,
+    filter_type: FilterType | None = None,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -148,6 +166,10 @@ def _print_verbose_info(  # noqa: PLR0913
         show_diagnostics: Whether diagnostics are shown.
         progress_bar: Whether the progress bar is shown.
         auto_hint_track: Whether auto-hint tracking is enabled.
+        filter_query: The filter query string, or None.
+        filter_mode: The filter mode, or None.
+        filter_by: The filter-by field, or None.
+        filter_type: The filter type, or None.
 
     """
     if not verbose:
@@ -173,6 +195,14 @@ def _print_verbose_info(  # noqa: PLR0913
         if auto_hint_url:
             console.print(f"Remote URL:  {auto_hint_url}")
         console.print(f"Auto-hint track:  {auto_hint_track}")
+    if filter_query:
+        console.print(f"Filter query: {filter_query}")
+        if filter_mode is not None:
+            console.print(f"Filter mode:  {filter_mode.value}")
+        if filter_by is not None:
+            console.print(f"Filter by:    {filter_by.value}")
+        if filter_type is not None:
+            console.print(f"Filter type:  {filter_type.value}")
     console.print()
     console.print(Rule(style="green"))
 
@@ -296,6 +326,49 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "(requires --auto-hint-url)."
         ),
     ),
+    filter_query: Optional[str] = typer.Option(
+        None,
+        "--filter-query",
+        help=(
+            "Search term for pre-run check filtering. When provided,"
+            " only checks matching this query are included or excluded."
+            " Requires at least one non-whitespace character."
+        ),
+    ),
+    filter_mode: Optional[FilterMode] = typer.Option(
+        None,
+        "--filter-mode",
+        help=(
+            "Matching mode for filter query. EXACT = case-insensitive"
+            " whole-field equality; CONTAINS = case-insensitive substring"
+            " (default when --filter-query is given);"
+            " FUZZY = case-insensitive subsequence (chars in order,"
+            " gaps allowed)."
+        ),
+        show_default=False,
+    ),
+    filter_by: Optional[FilterBy] = typer.Option(
+        None,
+        "--filter-by",
+        help=(
+            "Field to match the filter query against. DESCRIPTION"
+            " checks the check description; NAME checks the check"
+            " name (or command for shell checks); HINT checks the"
+            " hint; ANY checks all three (default when"
+            " --filter-query is given)."
+        ),
+        show_default=False,
+    ),
+    filter_type: Optional[FilterType] = typer.Option(
+        None,
+        "--filter-type",
+        help=(
+            "Whether to INCLUDE (keep) or EXCLUDE (drop) the checks"
+            " that match the filter. Default INCLUDE when"
+            " --filter-query is given."
+        ),
+        show_default=False,
+    ),
     _version: bool = typer.Option(
         False,
         "--version",
@@ -393,11 +466,17 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             show_diagnostics,
             progress_bar,
             auto_hint_track=auto_hint_track,
+            filter_query=filter_query,
+            filter_mode=filter_mode,
+            filter_by=filter_by,
+            filter_type=filter_type,
         )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
         project_name = get_project_name(resolved_filename)
+        # determine whether filter query was provided (used in elif chain)
+        filter_was_active = bool(filter_query)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -413,6 +492,17 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         # there are valid checks and thus the
         # tool should run them with run_checks
         elif len(checks) > 0:
+            # resolve filter defaults when filter_query is active
+            # (must happen before cli_args dict references them)
+            resolved_filter_mode = (
+                filter_mode if filter_mode is not None else DEFAULT_FILTER_MODE
+            )
+            resolved_filter_by = (
+                filter_by if filter_by is not None else DEFAULT_FILTER_BY
+            )
+            resolved_filter_type = (
+                filter_type if filter_type is not None else DEFAULT_FILTER_TYPE
+            )
             # create a dictionary of the CLI arguments to pass to the report
             # (this will enable them to be saved inside of a report)
             cli_args = {
@@ -438,6 +528,16 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if auto_hint_api_key
                 else None,
                 AUTO_HINT_TRACK_FLAG: auto_hint_track,
+                FILTER_QUERY_FLAG: filter_query,
+                FILTER_MODE_FLAG: resolved_filter_mode.value
+                if filter_was_active
+                else None,
+                FILTER_BY_FLAG: resolved_filter_by.value
+                if filter_was_active
+                else None,
+                FILTER_TYPE_FLAG: resolved_filter_type.value
+                if filter_was_active
+                else None,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -492,49 +592,97 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 console.print()
                 console.print(Rule(style="bright_red"))
                 sys.exit(FAILURE)
-            # auto-hint engine: try to create it if --auto-hint is passed;
-            # the engine sources hints from a remote OpenAI-compatible API
-            # (i.e., when --auto-hint-url is provided) or from a local
-            # huggingface transformers model (i.e., when no URL is provided).
-            # remote engine fails to initialise or returns None for a hint,
-            # the program falls back to the local engine; resolve the system prompt
-            # and validation rules if specified in the config front matter
-            if auto_hint:
-                system_prompt = resolve_system_prompt(
-                    resolved_filename, resolved_config_dir
-                )
-                validation_rules = resolve_validation_rules(
-                    resolved_filename, resolved_config_dir
-                )
-                auto_hint_engine = create_auto_hint_engine(
-                    resolved_filename,
-                    auto_hint_model,
-                    auto_hint_url,
-                    auto_hint_api_key,
-                    system_prompt=system_prompt,
-                    validation_rules=validation_rules,
-                    auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
-                    console=console,
-                )
-            # run the checks that were specified in a way
-            # that adheres to the configuration both in
-            # the command-line arguments and also in the
-            # gatorgrade.yml file
-            checks_status = run_checks(
-                checks,
-                report,
-                not progress_bar,
-                show_diagnostics,
-                output_limit,
-                cli_args,
-                version_info,
-                github_env,
-                project_name,
-                due_date,
-                auto_hint_engine=auto_hint_engine,
-                auto_hint_url=auto_hint_url,
-                auto_hint_track=auto_hint_track,
+            # validate filter option combinations;
+            # this catches:
+            #   --filter-mode/--filter-by/--filter-type without
+            #     --filter-query
+            #   --filter-query with empty string
+            filter_errors = validate_filter_options(
+                filter_query,
+                filter_mode,
+                filter_by,
+                filter_type,
             )
+            if filter_errors:
+                checks_status = False
+                console.print()
+                console.print(
+                    Rule(
+                        CONFIG_ERROR_LABEL,
+                        style="bright_red",
+                    )
+                )
+                if filter_errors:
+                    console.print()
+                for error in filter_errors:
+                    console.print(error)
+                console.print(Text(EXIT_MESSAGE))
+                console.print()
+                console.print(Rule(style="bright_red"))
+                sys.exit(FAILURE)
+            # apply pre-run check filtering when filter_query is active
+            if filter_was_active:
+                checks = filter_checks(
+                    checks,
+                    mode=resolved_filter_mode,
+                    by=resolved_filter_by,
+                    ftype=resolved_filter_type,
+                    query=filter_query or "",
+                )
+            # if filtering emptied the list, handle it here before
+            # auto-hint engine and run_checks are reached
+            if filter_was_active and not checks:
+                checks_status = True
+                console.print()
+                console.print(Rule("Filter Results", style="green"))
+                console.print()
+                console.print("No checks matched the filter; nothing to run.")
+                console.print()
+                console.print(Rule(style="green"))
+            else:
+                # auto-hint engine: try to create it if --auto-hint is passed;
+                # the engine sources hints from a remote OpenAI-compatible API
+                # (i.e., when --auto-hint-url is provided) or from a local
+                # huggingface transformers model (i.e., when no URL is provided).
+                # remote engine fails to initialise or returns None for a hint,
+                # the program falls back to the local engine; resolve the system prompt
+                # and validation rules if specified in the config front matter
+                if auto_hint:
+                    system_prompt = resolve_system_prompt(
+                        resolved_filename, resolved_config_dir
+                    )
+                    validation_rules = resolve_validation_rules(
+                        resolved_filename, resolved_config_dir
+                    )
+                    auto_hint_engine = create_auto_hint_engine(
+                        resolved_filename,
+                        auto_hint_model,
+                        auto_hint_url,
+                        auto_hint_api_key,
+                        system_prompt=system_prompt,
+                        validation_rules=validation_rules,
+                        auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
+                        console=console,
+                    )
+                # run the checks that were specified in a way
+                # that adheres to the configuration both in
+                # the command-line arguments and also in the
+                # gatorgrade.yml file
+                checks_status = run_checks(
+                    checks,
+                    report,
+                    not progress_bar,
+                    show_diagnostics,
+                    output_limit,
+                    cli_args,
+                    version_info,
+                    github_env,
+                    project_name,
+                    due_date,
+                    auto_hint_engine=auto_hint_engine,
+                    auto_hint_url=auto_hint_url,
+                    auto_hint_track=auto_hint_track,
+                )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
