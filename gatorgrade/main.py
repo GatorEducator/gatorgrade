@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
+from rich.tree import Tree
 
 from gatorgrade.detect import (
     GATORGRADER_DEPENDENCY,
@@ -171,7 +172,11 @@ OS_RELEASE_KEY = "os_release"
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        print_version_info(console)
+        tree = Tree("Version", guide_style="dim")
+        env_tree = Tree("Environment", guide_style="dim")
+        print_version_info(console, tree=tree, env_tree=env_tree)
+        console.print(tree)
+        console.print(env_tree)
         raise typer.Exit()
 
 
@@ -230,40 +235,53 @@ def _print_verbose_info(  # noqa: PLR0913
     console.print()
     console.print(Rule("Verbose Mode Information", style="green"))
     console.print()
-    print_version_info(console)
-    console.print(f"Config file: {config_path}")
-    console.print(f"Config dir:  {config_dir}")
-    console.print(f"Output limit:  {output_limit}")
-    console.print(f"Baseline weight: {baseline_weight}")
-    console.print(f"Diagnostics: {show_diagnostics}")
-    console.print(f"Progress:    {progress_bar}")
-    console.print(f"Auto-hint:   {auto_hint}")
+    # version tree (same structure as --version)
+    version_tree = Tree("Version", guide_style="dim")
+    env_tree = Tree("Environment", guide_style="dim")
+    print_version_info(console, tree=version_tree, env_tree=env_tree)
+    console.print(version_tree)
+    console.print(env_tree)
+    # configuration tree
+    config = Tree("Configuration", guide_style="dim")
+    config.add(f"Config file: {config_path}")
+    config.add(f"Config dir:  {config_dir}")
+    config.add(f"Output limit:  {output_limit}")
+    config.add(f"Baseline weight: {baseline_weight}")
+    config.add(f"Diagnostics: {show_diagnostics}")
+    config.add(f"Progress:    {progress_bar}")
+    config.add(f"Auto-hint:   {auto_hint}")
+    # auto hinting
     if auto_hint:
         model_display = auto_hint_model
         if auto_hint_model == AUTO_HINT_MODEL_DEFAULT:
             model_display = (
                 REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
             )
-        console.print(f"Model:       {model_display}")
+        config.add(f"Model:       {model_display}")
         if auto_hint_url:
-            console.print(f"Remote URL:  {auto_hint_url}")
-        console.print(f"Auto-hint track:  {auto_hint_track}")
+            config.add(f"Remote URL:  {auto_hint_url}")
+        config.add(f"Auto-hint track:  {auto_hint_track}")
+    console.print(config)
+    # filtering tree
+    filtering = Tree("Filtering", guide_style="dim")
     if filter_query:
-        console.print(f"Filter query: {filter_query}")
-    console.print(f"Filter mode:  {filter_mode.value}")
-    console.print(f"Filter by:    {filter_by.value}")
-    console.print(f"Filter type:  {filter_type.value}")
+        filtering.add(f"Query: {filter_query}")
+    filtering.add(f"Mode:  {filter_mode.value}")
+    filtering.add(f"By:    {filter_by.value}")
+    filtering.add(f"Type:  {filter_type.value}")
     if filter_mode == FilterMode.FUZZY:
-        console.print(f"Filter fuzzy threshold: {filter_fuzzy_threshold}")
+        filtering.add(f"Fuzzy threshold: {filter_fuzzy_threshold}")
     if filter_failed_last is not None:
-        console.print(f"Filter failed last: {filter_failed_last}")
-    console.print(f"Report history: {report_history}")
+        filtering.add(f"Failed last: {filter_failed_last}")
+    console.print(filtering)
+    # reports tree
+    reports = Tree("Reports", guide_style="dim")
+    reports.add(f"History: {report_history}")
     if report_history:
-        console.print(f"Report history max count: {report_history_max_count}")
-        console.print(f"Report history max MiB: {report_history_max_mib}")
-        console.print(
-            f"Report history directory: {DEFAULT_REPORT_HISTORY_DIR}"
-        )
+        reports.add(f"Max count: {report_history_max_count}")
+        reports.add(f"Max MiB:   {report_history_max_mib}")
+        reports.add(f"Directory: {DEFAULT_REPORT_HISTORY_DIR}")
+    console.print(reports)
     console.print()
     console.print(Rule(style="green"))
 
