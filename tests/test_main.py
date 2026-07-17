@@ -113,6 +113,156 @@ def test_gatorgrade_with_nonexistent_file(
     assert "either does not exist or is not valid" in result.stdout
 
 
+class TestFilterCli:
+    """CLI-level tests for the --filter-* options."""
+
+    def test_filter_query_todo_alone(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-query with TODO filters to only matching checks."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-query", "TODO"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "Complete all TODOs" in plain_stdout
+        assert "Use an if statement" not in plain_stdout
+        assert "- Checks: 2/2 (100%)" in plain_stdout
+
+    def test_filter_mode_exact_with_query(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-mode EXACT with --filter-query runs correctly."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(
+            main.app,
+            ["--filter-query", "Complete all TODOs", "--filter-mode", "EXACT"],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "- Checks: 2/2 (100%)" in plain_stdout
+
+    def test_filter_type_exclude(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-type EXCLUDE with --filter-query excludes matching."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(
+            main.app,
+            ["--filter-query", "TODO", "--filter-type", "EXCLUDE"],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        # excludes TODO check, keeps only if check
+        assert "Use an if statement" in plain_stdout
+        assert "Complete all TODOs" not in plain_stdout
+        assert "- Checks: 1/1 (100%)" in plain_stdout
+
+    def test_filter_mode_exact_without_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-mode EXACT without --filter-query exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-mode", "EXACT"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
+    def test_filter_mode_fuzzy_without_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-mode FUZZY without --filter-query exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-mode", "FUZZY"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
+    def test_filter_by_without_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-by without --filter-query exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-by", "DESCRIPTION"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
+    def test_filter_type_without_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-type without --filter-query exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-type", "EXCLUDE"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
+    def test_empty_filter_query_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-query with empty string exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-query", ""])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
+    def test_filter_to_zero_checks_exits_zero(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Filtering to zero checks prints message and exits 0."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(
+            main.app,
+            ["--filter-query", "ZZZZNONEXISTENT"],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "No checks matched the filter" in plain_stdout
+
+    def test_no_filter_args_is_unchanged(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Running without any filter args behaves exactly as before."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, [])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        assert "Complete all TODOs" in plain_stdout
+        assert "Use an if statement" in plain_stdout
+        assert "- Checks: 3/3 (100%)" in plain_stdout
+
+
 def test_gatorgrade_version_callback_with_false() -> None:
     """_version_callback does not exit when value is False."""
     main._version_callback(False)
