@@ -138,6 +138,26 @@ The following options control how GatorGrade runs:
   This option requires `--auto-hint`.
 - `--auto-hint-api-key`: API key for the remote auto-hint server. This option
   requires `--auto-hint-url`.
+- `--filter-query`: Search term for pre-run check filtering. When provided,
+  only checks matching this query are included or excluded. Filtering happens
+  before checks run; if the filter keeps 10 of 400 checks, only those 10 run.
+  This flag is the trigger for filtering; the other three filter flags have
+  sensible defaults when this one is given.
+  - Examples:
+    - `gatorgrade --filter-query "todo"`
+    - `gatorgrade --filter-query "if" --filter-mode FUZZY`
+- `--filter-mode`: Matching mode for the filter query. One of `EXACT`
+  (case-insensitive whole-field equality), `CONTAINS` (case-insensitive
+  substring containment, the default), or `FUZZY` (case-insensitive
+  subsequence, characters in order with gaps allowed). Requires
+  `--filter-query`.
+- `--filter-by`: Field to match the filter query against. One of `DESCRIPTION`
+  (the check description), `NAME` (the check name, or the shell command for
+  shell checks), `HINT` (the optional hint), or `ANY` (all three fields, the
+  default). Requires `--filter-query`.
+- `--filter-type`: Whether to keep or discard matching checks. `INCLUDE` (the
+  default) keeps only the matching checks; `EXCLUDE` drops the matching checks
+  and keeps the rest. Requires `--filter-query`.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
