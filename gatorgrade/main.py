@@ -127,6 +127,7 @@ EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
 # default config directory computed at module load time for display in help
 DEFAULT_CONFIG_DIR = str(get_config_dir())
+DEFAULT_REPORT_HISTORY_DIR = str(get_report_history_directory())
 
 # cli flag names used in the report
 CONFIG_FLAG = "--config"
@@ -249,17 +250,20 @@ def _print_verbose_info(  # noqa: PLR0913
         console.print(f"Auto-hint track:  {auto_hint_track}")
     if filter_query:
         console.print(f"Filter query: {filter_query}")
-        console.print(f"Filter mode:  {filter_mode.value}")
-        console.print(f"Filter by:    {filter_by.value}")
-        console.print(f"Filter type:  {filter_type.value}")
-        if filter_mode == FilterMode.FUZZY:
-            console.print(f"Filter fuzzy threshold: {filter_fuzzy_threshold}")
+    console.print(f"Filter mode:  {filter_mode.value}")
+    console.print(f"Filter by:    {filter_by.value}")
+    console.print(f"Filter type:  {filter_type.value}")
+    if filter_mode == FilterMode.FUZZY:
+        console.print(f"Filter fuzzy threshold: {filter_fuzzy_threshold}")
     if filter_failed_last is not None:
         console.print(f"Filter failed last: {filter_failed_last}")
     console.print(f"Report history: {report_history}")
     if report_history:
         console.print(f"Report history max count: {report_history_max_count}")
         console.print(f"Report history max MiB: {report_history_max_mib}")
+        console.print(
+            f"Report history directory: {DEFAULT_REPORT_HISTORY_DIR}"
+        )
     console.print()
     console.print(Rule(style="green"))
 
@@ -349,7 +353,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     report_history: bool = typer.Option(
         True,
         "--report-history/--no-report-history",
-        help="Save bounded JSON report history in the user data directory.",
+        help=(
+            "Save bounded JSON report history in the user data directory"
+            f" ({DEFAULT_REPORT_HISTORY_DIR})."
+        ),
     ),
     report_history_max_count: int = typer.Option(
         DEFAULT_HISTORY_REPORT_COUNT,
