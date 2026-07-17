@@ -342,7 +342,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_TYPE,
         "--filter-type",
         help=(
-            "Whether to INCLUDE (keep) or EXCLUDE (drop) the checks"
+            "Whether to INCLUDE (i.e., keep) or EXCLUDE (i.e., drop) the checks"
             " that match the filter."
         ),
         show_default=True,
@@ -372,7 +372,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         True,
         "--report-history/--no-report-history",
         help=(
-            "Save bounded JSON report history in the user data directory"
+            "Save bounded amount of JSON report history in the user data directory"
             f" ({DEFAULT_REPORT_HISTORY_DIR})."
         ),
     ),
