@@ -111,6 +111,7 @@ FILTER_MODE_FLAG = "--filter-mode"
 FILTER_BY_FLAG = "--filter-by"
 FILTER_TYPE_FLAG = "--filter-type"
 FILTER_QUERY_FLAG = "--filter-query"
+FILTER_TOTAL_FLAG = "--filter-total"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -145,9 +146,9 @@ def _print_verbose_info(  # noqa: PLR0913
     progress_bar: bool,
     auto_hint_track: bool | None = None,
     filter_query: str | None = None,
-    filter_mode: FilterMode | None = None,
-    filter_by: FilterBy | None = None,
-    filter_type: FilterType | None = None,
+    filter_mode: FilterMode = DEFAULT_FILTER_MODE,
+    filter_by: FilterBy = DEFAULT_FILTER_BY,
+    filter_type: FilterType = DEFAULT_FILTER_TYPE,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -197,12 +198,9 @@ def _print_verbose_info(  # noqa: PLR0913
         console.print(f"Auto-hint track:  {auto_hint_track}")
     if filter_query:
         console.print(f"Filter query: {filter_query}")
-        if filter_mode is not None:
-            console.print(f"Filter mode:  {filter_mode.value}")
-        if filter_by is not None:
-            console.print(f"Filter by:    {filter_by.value}")
-        if filter_type is not None:
-            console.print(f"Filter type:  {filter_type.value}")
+        console.print(f"Filter mode:  {filter_mode.value}")
+        console.print(f"Filter by:    {filter_by.value}")
+        console.print(f"Filter type:  {filter_type.value}")
     console.print()
     console.print(Rule(style="green"))
 
@@ -225,6 +223,47 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             " referenced in gatorgrade.yml's YML frontmatter."
         ),
         show_default=DEFAULT_CONFIG_DIR,
+    ),
+    filter_query: Optional[str] = typer.Option(
+        None,
+        "--filter-query",
+        help=(
+            "Search term for pre-run check filtering. When provided,"
+            " only checks matching this query are included or excluded."
+            " Requires at least one non-whitespace character."
+        ),
+    ),
+    filter_mode: FilterMode = typer.Option(
+        DEFAULT_FILTER_MODE,
+        "--filter-mode",
+        help=(
+            "Matching mode for filter query. EXACT = case-insensitive"
+            " whole-field equality; CONTAINS = case-insensitive substring"
+            " (default); FUZZY = case-insensitive subsequence (chars in"
+            " order, gaps allowed)."
+        ),
+        show_default=True,
+    ),
+    filter_by: FilterBy = typer.Option(
+        DEFAULT_FILTER_BY,
+        "--filter-by",
+        help=(
+            "Field to match the filter query against. DESCRIPTION"
+            " checks the check description; NAME checks the"
+            " check's check: field (e.g., MatchFileFragment,"
+            " ExecuteCommand); HINT checks the hint; ANY checks"
+            " all three fields (default)."
+        ),
+        show_default=True,
+    ),
+    filter_type: FilterType = typer.Option(
+        DEFAULT_FILTER_TYPE,
+        "--filter-type",
+        help=(
+            "Whether to INCLUDE (keep) or EXCLUDE (drop) the checks"
+            " that match the filter (default)."
+        ),
+        show_default=True,
     ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
@@ -325,49 +364,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "API key for the remote auto-hint server "
             "(requires --auto-hint-url)."
         ),
-    ),
-    filter_query: Optional[str] = typer.Option(
-        None,
-        "--filter-query",
-        help=(
-            "Search term for pre-run check filtering. When provided,"
-            " only checks matching this query are included or excluded."
-            " Requires at least one non-whitespace character."
-        ),
-    ),
-    filter_mode: Optional[FilterMode] = typer.Option(
-        None,
-        "--filter-mode",
-        help=(
-            "Matching mode for filter query. EXACT = case-insensitive"
-            " whole-field equality; CONTAINS = case-insensitive substring"
-            " (default when --filter-query is given);"
-            " FUZZY = case-insensitive subsequence (chars in order,"
-            " gaps allowed)."
-        ),
-        show_default=False,
-    ),
-    filter_by: Optional[FilterBy] = typer.Option(
-        None,
-        "--filter-by",
-        help=(
-            "Field to match the filter query against. DESCRIPTION"
-            " checks the check description; NAME checks the check"
-            " name (or command for shell checks); HINT checks the"
-            " hint; ANY checks all three (default when"
-            " --filter-query is given)."
-        ),
-        show_default=False,
-    ),
-    filter_type: Optional[FilterType] = typer.Option(
-        None,
-        "--filter-type",
-        help=(
-            "Whether to INCLUDE (keep) or EXCLUDE (drop) the checks"
-            " that match the filter. Default INCLUDE when"
-            " --filter-query is given."
-        ),
-        show_default=False,
     ),
     _version: bool = typer.Option(
         False,
@@ -492,6 +488,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         # there are valid checks and thus the
         # tool should run them with run_checks
         elif len(checks) > 0:
+            # capture the original check count before filtering
+            pre_filter_count = len(checks)
             # resolve filter defaults when filter_query is active
             # (must happen before cli_args dict references them)
             resolved_filter_mode = (
@@ -536,6 +534,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if filter_was_active
                 else None,
                 FILTER_TYPE_FLAG: resolved_filter_type.value
+                if filter_was_active
+                else None,
+                FILTER_TOTAL_FLAG: pre_filter_count
                 if filter_was_active
                 else None,
             }
