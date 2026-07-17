@@ -266,9 +266,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_MODE,
         "--filter-mode",
         help=(
-            "Matching mode for filtering query with EXACT = case-insensitive whole-field"
-            " equality; CONTAINS = case-insensitive substring;"
-            " FUZZY = split query into words, each"
+            "Matching mode for filtering query with EXACT for case-insensitive whole-field"
+            " equality; CONTAINS for case-insensitive substring;"
+            " FUZZY for split query into words, each"
             " matches as subsequence or by edit-distance"
             " closeness, all words required."
         ),
@@ -291,7 +291,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-type",
         help=(
             "Whether to INCLUDE (keep) or EXCLUDE (drop) the checks"
-            " that match the filter (default)."
+            " that match the filter."
         ),
         show_default=True,
     ),
@@ -300,7 +300,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-fuzzy-threshold",
         help=(
             "Threshold for fuzzy word matching (0.0 to 1.0). Higher"
-            " values allow less stringent matching (e.g., 'checking' matches"
+            " values result in less stringent matching (e.g., 'checking' matches"
             " 'check' at 0.4). Requires --filter-mode FUZZY."
         ),
         show_default=True,
