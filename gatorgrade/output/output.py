@@ -40,6 +40,7 @@ FILTER_MODE_KEY = "--filter-mode"
 FILTER_BY_KEY = "--filter-by"
 FILTER_TYPE_KEY = "--filter-type"
 FILTER_TOTAL_KEY = "--filter-total"
+FILTER_FUZZY_THRESHOLD_KEY = "--filter-fuzzy-threshold"
 FILTER_LABEL = "Filter"
 OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
@@ -1161,10 +1162,15 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fb = cli_args.get(FILTER_BY_KEY, "")
             ft = cli_args.get(FILTER_TYPE_KEY, "")
             ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
-            rich.print(
-                f'[bold]- {FILTER_LABEL}:[/] Selected from {ftotal} checks with query="{fq},"'
+            fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
+            filter_line = (
+                f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
+                f' checks with query="{fq},"'
                 f" mode={fm}, by={fb}, type={ft}"
             )
+            if fthreshold is not None:
+                filter_line += f", fuzzy-threshold={fthreshold}"
+            rich.print(filter_line)
         # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
@@ -1272,10 +1278,15 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fb = cli_args.get(FILTER_BY_KEY, "")
             ft = cli_args.get(FILTER_TYPE_KEY, "")
             ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
-            rich.print(
-                f'[bold]- {FILTER_LABEL}:[/] Selected from {ftotal} checks with query="{fq},"'
+            fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
+            filter_line = (
+                f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
+                f' checks with query="{fq},"'
                 f" mode={fm}, by={fb}, type={ft}"
             )
+            if fthreshold is not None:
+                filter_line += f", fuzzy-threshold={fthreshold}"
+            rich.print(filter_line)
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "

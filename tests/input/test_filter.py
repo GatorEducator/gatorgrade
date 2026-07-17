@@ -7,6 +7,7 @@ from hypothesis import strategies as st
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_FUZZY_THRESHOLD,
     DEFAULT_FILTER_MODE,
     DEFAULT_FILTER_TYPE,
     FUZZY_LEVENSHTEIN_RATIO,
@@ -298,6 +299,92 @@ class TestFuzzyMatchMultiword:
             _fuzzy_match_multiword("ruff formatting ruff checking", target)
             is True
         )
+
+
+class TestFuzzyThreshold:
+    """Tests for the fuzzy threshold parameter."""
+
+    def test_default_threshold_matches_constant(self) -> None:
+        """Default threshold equals FUZZY_LEVENSHTEIN_RATIO."""
+        assert DEFAULT_FILTER_FUZZY_THRESHOLD == FUZZY_LEVENSHTEIN_RATIO
+
+    def test_zero_threshold_requires_subsequence_match(self) -> None:
+        """At threshold 0.0, Levenshtein fallback never activates."""
+        # "checking" does not match "check" via subsequence
+        assert (
+            _fuzzy_match_word("checking", "check", fuzzy_threshold=0.0)
+            is False
+        )
+        # "tdo" still matches "TODOs" via subsequence
+        assert (
+            _fuzzy_match_word("tdo", "Complete all TODOs", fuzzy_threshold=0.0)
+            is True
+        )
+
+    def test_low_threshold_rejects_loose_match(self) -> None:
+        """A low threshold rejects words that are too different."""
+        # "checking" vs "check" has ratio 3/8 = 0.375
+        # at threshold 0.3, this should NOT match
+        assert (
+            _fuzzy_match_word("checking", "check", fuzzy_threshold=0.3)
+            is False
+        )
+
+    def test_high_threshold_accepts_loose_match(self) -> None:
+        """A high threshold allows looser word matches."""
+        # "checking" vs "check" has ratio 3/8 = 0.375
+        # at threshold 0.5, this SHOULD match
+        assert (
+            _fuzzy_match_word("checking", "check", fuzzy_threshold=0.5) is True
+        )
+
+    def test_threshold_passed_through_multiword(self) -> None:
+        """Threshold is passed through _fuzzy_match_multiword."""
+        target = "Ensure formatting with command 'ruff check'"
+        # at 0.0, "checking" won't match "check" via Levenshtein
+        assert (
+            _fuzzy_match_multiword(
+                "ruff formatting checking", target, fuzzy_threshold=0.0
+            )
+            is False
+        )
+        # at 0.5, "checking" matches "check" via Levenshtein
+        assert (
+            _fuzzy_match_multiword(
+                "ruff formatting checking", target, fuzzy_threshold=0.5
+            )
+            is True
+        )
+
+    def test_threshold_passed_through_filter_checks(self) -> None:
+        """Threshold is passed through filter_checks."""
+        checks = [
+            ShellCheck(
+                command="ruff check",
+                description="Ensure formatting with command 'ruff check'",
+                json_info={"check": "ShellCommand", "description": "test"},
+            ),
+        ]
+        # at 0.0, "checking" won't match "check"
+        result = filter_checks(
+            checks,
+            mode=FilterMode.FUZZY,
+            by=FilterBy.DESCRIPTION,
+            ftype=FilterType.INCLUDE,
+            query="ruff formatting checking",
+            fuzzy_threshold=0.0,
+        )
+        assert len(result) == 0
+        # at 0.5, "checking" matches "check"
+        result = filter_checks(
+            checks,
+            mode=FilterMode.FUZZY,
+            by=FilterBy.DESCRIPTION,
+            ftype=FilterType.INCLUDE,
+            query="ruff formatting checking",
+            fuzzy_threshold=0.5,
+        )
+        assert len(result) == 1
 
 
 class TestMatchDispatcher:

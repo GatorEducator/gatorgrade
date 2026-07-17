@@ -649,6 +649,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 filter_mode,
                 filter_by,
                 filter_type,
+                filter_fuzzy_threshold=filter_fuzzy_threshold,
             )
             if filter_errors:
                 checks_status = False

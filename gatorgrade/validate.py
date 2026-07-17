@@ -26,6 +26,7 @@ from click import BadParameter
 
 from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_FUZZY_THRESHOLD,
     DEFAULT_FILTER_MODE,
     DEFAULT_FILTER_TYPE,
     FilterBy,
@@ -161,6 +162,30 @@ def validate_report(
     return value
 
 
+# error message for filter fuzzy threshold validation
+FILTER_FUZZY_THRESHOLD_ERR_FMT = (
+    "Filter fuzzy threshold must be between 0.0 and 1.0, got {}"
+)
+
+
+def validate_filter_fuzzy_threshold(value: float | None) -> float | None:
+    """Validate the filter fuzzy threshold is between 0.0 and 1.0.
+
+    Args:
+        value: The threshold value to validate, or None.
+
+    Returns:
+        The validated value unchanged.
+
+    Raises:
+        BadParameter: If value is outside the valid range.
+
+    """
+    if value is not None and (value < 0.0 or value > 1.0):
+        raise BadParameter(FILTER_FUZZY_THRESHOLD_ERR_FMT.format(value))
+    return value
+
+
 # filter validation constants
 FILTER_QUERY_REQUIRED_FMT = (
     "The {} flag requires --filter-query to be specified."
@@ -171,6 +196,12 @@ FILTER_QUERY_EMPTY_MSG = "Filter query must not be empty."
 FILTER_MODE_DISPLAY = "--filter-mode"
 FILTER_BY_DISPLAY = "--filter-by"
 FILTER_TYPE_DISPLAY = "--filter-type"
+FILTER_FUZZY_THRESHOLD_DISPLAY = "--filter-fuzzy-threshold"
+
+# error message format for threshold without FUZZY mode
+FILTER_FUZZY_THRESHOLD_REQUIRES_FUZZY_FMT = (
+    "The {} flag requires --filter-mode FUZZY to have an effect."
+)
 
 
 def validate_filter_options(
@@ -178,6 +209,7 @@ def validate_filter_options(
     filter_mode: FilterMode,
     filter_by: FilterBy,
     filter_type: FilterType,
+    filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
 ) -> list[str]:
     """Validate filter CLI option combinations.
 
@@ -185,12 +217,15 @@ def validate_filter_options(
     - If any of --filter-mode, --filter-by, or --filter-type is
       provided without a non-empty --filter-query, it is an error.
     - If --filter-query is an explicit empty string, it is an error.
+    - If --filter-fuzzy-threshold is set to a non-default value
+      without --filter-mode FUZZY, it is an error.
 
     Args:
         filter_query: The --filter-query value, or None.
         filter_mode: The --filter-mode value.
         filter_by: The --filter-by value.
         filter_type: The --filter-type value.
+        filter_fuzzy_threshold: The --filter-fuzzy-threshold value.
 
     Returns:
         A list of error message strings. Empty if all checks pass.
@@ -212,6 +247,17 @@ def validate_filter_options(
             errors.append(
                 FILTER_QUERY_REQUIRED_FMT.format(FILTER_TYPE_DISPLAY)
             )
+    # --filter-fuzzy-threshold requires --filter-mode FUZZY (only when
+    # the threshold is explicitly set to a non-default value)
+    if (
+        filter_fuzzy_threshold != DEFAULT_FILTER_FUZZY_THRESHOLD
+        and filter_mode != FilterMode.FUZZY
+    ):
+        errors.append(
+            FILTER_FUZZY_THRESHOLD_REQUIRES_FUZZY_FMT.format(
+                FILTER_FUZZY_THRESHOLD_DISPLAY
+            )
+        )
     return errors
 
 

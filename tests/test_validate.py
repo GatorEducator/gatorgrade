@@ -130,6 +130,40 @@ class TestAutoHintOptionsValidation:
         )
         assert errors == []
 
+    def test_threshold_without_fuzzy_is_invalid(self) -> None:
+        """--filter-fuzzy-threshold without --filter-mode FUZZY errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.CONTAINS,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert len(errors) >= 1
+        assert "--filter-fuzzy-threshold" in errors[0]
+        assert "FUZZY" in errors[0]
+
+    def test_threshold_with_fuzzy_is_valid(self) -> None:
+        """--filter-fuzzy-threshold with --filter-mode FUZZY is valid."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.FUZZY,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert errors == []
+
+    def test_default_threshold_with_any_mode_is_valid(self) -> None:
+        """Default threshold with any mode is valid (no explicit override)."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
     def test_all_valid_with_default_model(self) -> None:
         """No errors with default model sentinel."""
         errors = validate.validate_auto_hint_options(
@@ -322,3 +356,37 @@ class TestFilterOptionsValidation:
             filter_type=validate.DEFAULT_FILTER_TYPE,
         )
         assert errors == []
+
+
+class TestFilterFuzzyThreshold:
+    """Tests for validate_filter_fuzzy_threshold."""
+
+    def test_valid_threshold_zero(self) -> None:
+        """Threshold of 0.0 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(0.0)
+        assert result == 0.0
+
+    def test_valid_threshold_default(self) -> None:
+        """Threshold of 0.4 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(0.4)
+        assert result == 0.4  # noqa: PLR2004
+
+    def test_valid_threshold_one(self) -> None:
+        """Threshold of 1.0 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(1.0)
+        assert result == 1.0
+
+    def test_valid_threshold_none(self) -> None:
+        """None threshold is valid (flag not provided)."""
+        result = validate.validate_filter_fuzzy_threshold(None)
+        assert result is None
+
+    def test_negative_threshold_invalid(self) -> None:
+        """Negative threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(-0.1)
+
+    def test_threshold_above_one_invalid(self) -> None:
+        """Threshold above 1.0 raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(1.5)

@@ -158,6 +158,12 @@ The following options control how GatorGrade runs:
 - `--filter-type`: Whether to keep or discard matching checks. `INCLUDE` (the
   default) keeps only the matching checks; `EXCLUDE` drops the matching checks
   and keeps the rest. Requires `--filter-query`.
+- `--filter-fuzzy-threshold`: How aggressively the Levenshtein distance
+  fallback matches words in FUZZY mode. A float between `0.0` (only exact
+  subsequence matches, no typo tolerance) and `1.0` (any two words are
+  considered close). The default is `0.4`, which allows "checking" to match
+  "check" but keeps most unrelated words apart. Only used with
+  `--filter-mode FUZZY`.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
