@@ -18,6 +18,7 @@ Usage:
     )
 """
 
+import math
 import re
 from pathlib import Path
 from typing import Optional, Tuple
@@ -106,6 +107,40 @@ def validate_baseline_weight(value: int) -> int:
     return value
 
 
+REPORT_HISTORY_COUNT_ERR_FMT = (
+    "Report history maximum count must be a positive integer, got {}"
+)
+REPORT_HISTORY_SIZE_ERR_FMT = (
+    "Report history maximum size must be a positive integer, got {}"
+)
+FILTER_FAILED_LAST_ERR_FMT = (
+    "Failed-check history count must be a positive integer, got {}"
+)
+
+
+def validate_report_history_count(value: int) -> int:
+    """Validate the maximum number of retained history reports."""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise BadParameter(REPORT_HISTORY_COUNT_ERR_FMT.format(value))
+    return value
+
+
+def validate_report_history_size(value: int) -> int:
+    """Validate the maximum report-history size in MiB."""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise BadParameter(REPORT_HISTORY_SIZE_ERR_FMT.format(value))
+    return value
+
+
+def validate_filter_failed_last(value: int | None) -> int | None:
+    """Validate the number of recent reports used for failure filtering."""
+    if value is not None and (
+        isinstance(value, bool) or not isinstance(value, int) or value <= 0
+    ):
+        raise BadParameter(FILTER_FAILED_LAST_ERR_FMT.format(value))
+    return value
+
+
 def validate_report(
     value: Tuple[Optional[str], Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -181,7 +216,9 @@ def validate_filter_fuzzy_threshold(value: float | None) -> float | None:
         BadParameter: If value is outside the valid range.
 
     """
-    if value is not None and (value < 0.0 or value > 1.0):
+    if value is not None and (
+        not math.isfinite(value) or value < 0.0 or value > 1.0
+    ):
         raise BadParameter(FILTER_FUZZY_THRESHOLD_ERR_FMT.format(value))
     return value
 
