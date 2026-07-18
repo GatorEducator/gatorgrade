@@ -55,7 +55,24 @@ def get_history_scope(
     config_path: Path,
     project_name: str | None = None,
 ) -> str:
-    """Return a stable scope identifier for a configuration and project."""
+    """Return a stable scope identifier for a configuration and project.
+
+    The scope is a SHA-256 hash of the resolved config file path and
+    optional project name. Reports from different projects (different
+    config paths or project names) receive different scope values,
+    so history queries only load reports matching the current project.
+    This keeps projects isolated even though all history files share
+    the same directory.
+
+    Args:
+        config_path: Path to the configuration file.
+        project_name: Optional project name from the config front
+            matter, which further distinguishes scopes.
+
+    Returns:
+        A hex digest string uniquely identifying this project scope.
+
+    """
     resolved_path = config_path.expanduser().resolve(strict=False)
     scope_source = (
         f"{resolved_path}{SCOPE_SEPARATOR}{project_name or SCOPE_EMPTY_NAME}"
@@ -222,6 +239,7 @@ def _load_history_file(  # noqa: PLR0911
     if payload.get(HISTORY_SCHEMA_KEY) != HISTORY_SCHEMA_VERSION:
         return None
     if payload.get(HISTORY_SCOPE_KEY) != scope:
+        # report belongs to a different project scope — skip it
         return None
     report = payload.get(HISTORY_REPORT_KEY)
     if not isinstance(report, dict):
