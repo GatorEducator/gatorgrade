@@ -86,8 +86,7 @@ the assignment directory with the command `gatorgrade`. Alternatively, if you
 use `uvx`, run GatorGrade with the command `uvx gatorgrade`. GatorGrade will run
 each check and display a summary of passing and failing checks along with a
 weighted score and additional diagnostic information. If you want to use
-GatorGrade's auto-hinting feature, you need to run it with `uvx --from
-'gatorgrade[auto-hint]' gatorgrade` as this will load in the optional
+GatorGrade's auto-hinting feature, you need to run it with `uvx --from 'gatorgrade[auto-hint]' gatorgrade` as this will load in the optional
 dependencies that support hint generation.
 
 ## Command-Line Options
@@ -334,6 +333,12 @@ GatorGrade can generate reports in JSON or Markdown format.
 GatorGrade automatically saves one JSON report for each completed run in the
 platform-specific user data directory. Automatic history is enabled by default
 and can be disabled with `--no-report-history`.
+
+Each saved report is tagged with a **project scope**, consisting of a hash of
+the config file path and optional project name. When you use the history-based
+`--filter-failed-last` or `--filter-passed-last`, only reports matching the
+current project's scope are considered. This keeps history from different
+projects isolated even though all reports share the same directory.
 
 History is limited to 100 reports and 100 MiB by default. The limits can be
 changed with `--report-history-max-count` and `--report-history-max-mb`. The
