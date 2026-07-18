@@ -253,8 +253,8 @@ def get_failed_check_ids(
     history_directory: Path,
     scope: str,
     report_count: int,
-) -> tuple[set[str], int]:
-    """Return failed IDs and the number of valid reports inspected."""
+) -> tuple[set[str], int, int]:
+    """Return failed IDs, number inspected, and total in-scope reports."""
     reports = load_history_reports(
         history_directory,
         scope,
@@ -276,7 +276,11 @@ def get_failed_check_ids(
                 and check.get(STATUS_KEY) is False
             ):
                 failed_check_ids.add(check_id)
-    return failed_check_ids, len(reports)
+    return (
+        failed_check_ids,
+        len(reports),
+        len(load_history_reports(history_directory, scope)),
+    )
 
 
 def filter_checks_by_failed_ids(
