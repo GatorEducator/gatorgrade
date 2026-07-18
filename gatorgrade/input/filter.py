@@ -317,6 +317,27 @@ def _match(
     )
 
 
+def _ensure_str(value: Any) -> str:
+    """Safely convert a value to string for matching.
+
+    None becomes empty string. Non-string values are converted
+    via str() so that .lower() calls in the matchers never
+    raise AttributeError. String values pass through unchanged.
+
+    Args:
+        value: The value to convert.
+
+    Returns:
+        A string representation safe for matching.
+
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
 def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
     """Extract the relevant string value from a check for the given field.
 
@@ -339,16 +360,15 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
         if isinstance(check, GatorGraderCheck):
             info = check.json_info
             if isinstance(info, dict):
-                desc = info.get("description", "")
-                return str(desc) if desc else ""
+                return _ensure_str(info.get("description"))
             return ""
         # ShellCheck has description attribute
-        return check.description or ""
+        return _ensure_str(check.description)
     if field == FilterBy.NAME:
         if isinstance(check, GatorGraderCheck):
             info = check.json_info
             if isinstance(info, dict):
-                name = info.get("check", "")
+                name = _ensure_str(info.get("check"))
                 # for check types that carry a command in options
                 # (e.g. ExecuteCommand, MatchCommandFragment),
                 # append the command so NAME searches both the
@@ -359,12 +379,12 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
                     if cmd:
                         combined = f"{name} {cmd}" if name else cmd
                         return combined.strip()
-                return str(name) if name else ""
+                return name
             return str(info) if info else ""
         # ShellCheck has no separate check name; use the command
-        return check.command or ""
+        return _ensure_str(check.command)
     if field == FilterBy.HINT:
-        return check.hint or ""
+        return _ensure_str(check.hint)
     return ""
 
 
