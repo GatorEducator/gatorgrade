@@ -609,6 +609,38 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         )
         history_reports_inspected = 0
         history_reports_total = 0
+        # validate filter option combinations;
+        # this catches:
+        #   --filter-mode/--filter-by/--filter-type without
+        #     --filter-query
+        #   --filter-query with empty or whitespace-only string
+        #   --filter-fuzzy-threshold without --filter-mode FUZZY
+        # happens before config parsing so errors are independent
+        # of whether the config file exists or is valid
+        filter_errors = validate_filter_options(
+            filter_query,
+            filter_mode,
+            filter_by,
+            filter_type,
+            filter_fuzzy_threshold=filter_fuzzy_threshold,
+        )
+        if filter_errors:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(
+                    CONFIG_ERROR_LABEL,
+                    style="bright_red",
+                )
+            )
+            if filter_errors:
+                console.print()
+            for error in filter_errors:
+                console.print(error)
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
+            sys.exit(FAILURE)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -734,35 +766,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 # for the auto-hinting (note that there
                 # could be one or more errors)
                 for error in auto_hint_errors:
-                    console.print(error)
-                console.print(Text(EXIT_MESSAGE))
-                console.print()
-                console.print(Rule(style="bright_red"))
-                sys.exit(FAILURE)
-            # validate filter option combinations;
-            # this catches:
-            #   --filter-mode/--filter-by/--filter-type without
-            #     --filter-query
-            #   --filter-query with empty string
-            filter_errors = validate_filter_options(
-                filter_query,
-                filter_mode,
-                filter_by,
-                filter_type,
-                filter_fuzzy_threshold=filter_fuzzy_threshold,
-            )
-            if filter_errors:
-                checks_status = False
-                console.print()
-                console.print(
-                    Rule(
-                        CONFIG_ERROR_LABEL,
-                        style="bright_red",
-                    )
-                )
-                if filter_errors:
-                    console.print()
-                for error in filter_errors:
                     console.print(error)
                 console.print(Text(EXIT_MESSAGE))
                 console.print()
