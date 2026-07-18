@@ -48,6 +48,7 @@ FILTER_TOTAL_KEY = "--filter-total"
 FILTER_FUZZY_THRESHOLD_KEY = "--filter-fuzzy-threshold"
 FILTER_FAILED_LAST_KEY = "--filter-failed-last"
 FILTER_HISTORY_REPORTS_KEY = "--filter-history-reports"
+FILTER_HISTORY_REPORTS_TOTAL_KEY = "--filter-history-reports-total"
 FILTER_LABEL = "Filter"
 REPORT_HISTORY_WARNING = (
     "[yellow]Warning: Could not save automatic report history: {}[/]"
@@ -219,9 +220,11 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
     if failed_last is None:
         return
     inspected = cli_args.get(FILTER_HISTORY_REPORTS_KEY, 0)
+    total = cli_args.get(FILTER_HISTORY_REPORTS_TOTAL_KEY, 0)
     rich.print(
         "[bold]- Historical Filter:[/] Checks failed in at least one of "
-        f"the most recent {failed_last} report(s); inspected {inspected}."
+        f"the at most {failed_last} recent report(s); inspected first {inspected}"
+        f" of {total}"
     )
 
 
