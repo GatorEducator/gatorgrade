@@ -1044,3 +1044,19 @@ def test_gatorgrade_with_config_dir_nonexistent_file(
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 1
     assert "either does not exist or is not valid" in result.stdout
+
+    def test_filter_passed_last_is_accepted(  # type: ignore[no-untyped-def]
+        self,
+        chdir: Any,
+        capsys: Any,
+    ) -> None:
+        """--filter-passed-last is accepted without error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(
+            main.app,
+            ["--filter-passed-last", "10", "--no-progress-bar"],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        # runs all checks since history likely doesn't exist
+        assert result.exit_code == 0

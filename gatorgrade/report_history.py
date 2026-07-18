@@ -285,11 +285,37 @@ def get_failed_check_ids(
 
 def filter_checks_by_failed_ids(
     checks: Sequence[Any],
-    failed_check_ids: set[str],
+    check_ids: set[str],
 ) -> list[Any]:
-    """Return checks whose IDs appear in a historical failure set."""
+    """Return checks whose IDs appear in a given set."""
     return [
         check
         for check in checks
-        if getattr(check, CHECK_ID_KEY, None) in failed_check_ids
+        if getattr(check, CHECK_ID_KEY, None) in check_ids
     ]
+
+
+def get_all_check_ids(
+    history_directory: Path,
+    scope: str,
+    report_count: int,
+) -> set[str]:
+    """Return all distinct check IDs from the last N reports."""
+    reports = load_history_reports(
+        history_directory,
+        scope,
+        maximum_reports=report_count,
+    )
+    all_ids: set[str] = set()
+    for history_payload in reports:
+        report = history_payload.get(HISTORY_REPORT_KEY, {})
+        checks = report.get(CHECKS_KEY, [])
+        if not isinstance(checks, list):
+            continue
+        for check in checks:
+            if not isinstance(check, dict):
+                continue
+            check_id = check.get(CHECK_ID_KEY)
+            if isinstance(check_id, str) and check_id:
+                all_ids.add(check_id)
+    return all_ids

@@ -47,6 +47,7 @@ FILTER_TYPE_KEY = "--filter-type"
 FILTER_TOTAL_KEY = "--filter-total"
 FILTER_FUZZY_THRESHOLD_KEY = "--filter-fuzzy-threshold"
 FILTER_FAILED_LAST_KEY = "--filter-failed-last"
+FILTER_PASSED_LAST_KEY = "--filter-passed-last"
 FILTER_HISTORY_REPORTS_KEY = "--filter-history-reports"
 FILTER_HISTORY_REPORTS_TOTAL_KEY = "--filter-history-reports-total"
 FILTER_LABEL = "Filter"
@@ -217,14 +218,20 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
     if cli_args is None:
         return
     failed_last = cli_args.get(FILTER_FAILED_LAST_KEY)
-    if failed_last is None:
+    passed_last = cli_args.get(FILTER_PASSED_LAST_KEY)
+    if failed_last is None and passed_last is None:
         return
     inspected = cli_args.get(FILTER_HISTORY_REPORTS_KEY, 0)
     total = cli_args.get(FILTER_HISTORY_REPORTS_TOTAL_KEY, 0)
+    parts = []
+    if failed_last is not None:
+        parts.append(f"failed in last {failed_last}")
+    if passed_last is not None:
+        parts.append(f"passed in last {passed_last}")
+    label = " and ".join(parts)
     rich.print(
-        "[bold]- Historical Filter:[/] Checks failed in at least one of "
-        f"the at most {failed_last} recent report(s); inspected first {inspected}"
-        f" of {total}"
+        "[bold]- Historical Filter:[/]"
+        f" Checks {label} (inspected {inspected} of {total})"
     )
 
 

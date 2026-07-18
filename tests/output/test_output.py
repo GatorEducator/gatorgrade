@@ -52,8 +52,8 @@ def test_print_historical_filter_summary_displays_report_count(
         }
     )
     out, _ = capsys.readouterr()
-    assert "at most 3 recent" in out
-    assert "report(s); inspected first 2" in out.replace("\n", "")
+    assert "failed in last 3" in out
+    assert "inspected 2" in out
 
 
 def test_run_checks_history_write_failure_does_not_change_status(

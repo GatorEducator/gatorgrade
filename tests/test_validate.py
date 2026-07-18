@@ -470,3 +470,32 @@ class TestFilterFuzzyThreshold:
         """Negative infinity threshold raises BadParameter."""
         with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
             validate.validate_filter_fuzzy_threshold(float("-inf"))
+
+
+class TestFilterPassedLast:
+    """Tests for validate_filter_passed_last."""
+
+    def test_valid_positive_int(self) -> None:
+        """Positive integer is valid."""
+        result = validate.validate_filter_passed_last(5)
+        assert result == 5  # noqa: PLR2004
+
+    def test_none_is_valid(self) -> None:
+        """None is valid (flag not provided)."""
+        result = validate.validate_filter_passed_last(None)
+        assert result is None
+
+    def test_zero_invalid(self) -> None:
+        """Zero raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(0)
+
+    def test_negative_invalid(self) -> None:
+        """Negative raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(-1)
+
+    def test_bool_invalid(self) -> None:
+        """Boolean raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(True)

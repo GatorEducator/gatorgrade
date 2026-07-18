@@ -141,6 +141,21 @@ def validate_filter_failed_last(value: int | None) -> int | None:
     return value
 
 
+# error message for filter passed last validation
+FILTER_PASSED_LAST_ERR_FMT = (
+    "Filter passed last must be a positive integer, got {}"
+)
+
+
+def validate_filter_passed_last(value: int | None) -> int | None:
+    """Validate the number of recent reports used for passed filtering."""
+    if value is not None and (
+        isinstance(value, bool) or not isinstance(value, int) or value <= 0
+    ):
+        raise BadParameter(FILTER_PASSED_LAST_ERR_FMT.format(value))
+    return value
+
+
 def validate_report(
     value: Tuple[Optional[str], Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
