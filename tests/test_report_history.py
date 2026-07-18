@@ -174,7 +174,7 @@ def test_failed_ids_use_union_of_newest_reports_and_scope(
             history_directory=tmp_path,
             current_time=datetime.datetime(2026, 1, day, tzinfo=UTC),
         )
-    failed_ids, reports_inspected = get_failed_check_ids(
+    failed_ids, reports_inspected, _reports_total = get_failed_check_ids(
         tmp_path,
         "project-one",
         report_count=2,

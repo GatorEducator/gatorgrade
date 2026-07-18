@@ -15,6 +15,7 @@ from gatorgrade.input.filter import (
     FilterMode,
     FilterType,
     _contains_match,
+    _ensure_str,
     _exact_match,
     _fuzzy_match_multiword,
     _fuzzy_match_word,
@@ -874,3 +875,90 @@ def test_levenshtein_properties(s1: str, s2: str) -> None:
     # non-negative and bounded by the longer string length
     assert dist >= 0
     assert dist <= max(len(s1), len(s2))
+
+
+class TestEnsureStr:
+    """Tests for _ensure_str."""
+
+    def test_none_returns_empty(self) -> None:
+        """None becomes empty string."""
+        assert _ensure_str(None) == ""
+
+    def test_string_passes_through(self) -> None:
+        """String values pass through unchanged."""
+        assert _ensure_str("hello") == "hello"
+
+    def test_empty_string_passes_through(self) -> None:
+        """Empty string passes through unchanged."""
+        assert _ensure_str("") == ""
+
+    def test_integer_converted(self) -> None:
+        """Integer is converted via str()."""
+        assert _ensure_str(42) == "42"
+
+    def test_boolean_converted(self) -> None:
+        """Boolean is converted via str()."""
+        assert _ensure_str(True) == "True"
+        assert _ensure_str(False) == "False"
+
+    def test_float_converted(self) -> None:
+        """Float is converted via str()."""
+        assert _ensure_str(3.14) == "3.14"
+
+
+class TestNonStringMetadata:
+    """Tests that non-string metadata does not crash the matchers."""
+
+    def test_integer_description_on_shell_check(self) -> None:
+        """An integer description on ShellCheck does not crash _get_field_value."""
+        check = ShellCheck(
+            command="echo hi",
+            json_info={"command": "echo hi"},
+        )
+        # simulate what happens when YAML produces a non-string description
+        object.__setattr__(check, "description", 42)
+        value = _get_field_value(check, FilterBy.DESCRIPTION)
+        assert value == "42"
+        # the value is a string, so matchers work safely
+        assert _contains_match("42", value) is True
+
+    def test_boolean_hint_on_shell_check(self) -> None:
+        """A boolean hint on ShellCheck does not crash _get_field_value."""
+        check = ShellCheck(
+            command="echo hi",
+            description="test",
+            json_info={"command": "echo hi"},
+        )
+        object.__setattr__(check, "hint", True)
+        value = _get_field_value(check, FilterBy.HINT)
+        assert value == "True"
+
+    def test_integer_name_on_gg_check(self) -> None:
+        """An integer name on GatorGraderCheck does not crash."""
+        json_info = {"check": 9001, "description": "test"}
+        check = GatorGraderCheck(
+            gg_args=["--description", "test", "9001"],
+            json_info=json_info,
+        )
+        value = _get_field_value(check, FilterBy.NAME)
+        assert value == "9001"
+
+    def test_none_hint_on_gg_check(self) -> None:
+        """None hint on GatorGraderCheck returns empty and does not crash."""
+        check = GatorGraderCheck(
+            gg_args=["--description", "test", "Check"],
+            json_info={"check": "Check", "description": "test"},
+        )
+        value = _get_field_value(check, FilterBy.HINT)
+        assert value == ""
+
+    def test_none_command_on_shell_check(self) -> None:
+        """None command on ShellCheck returns empty and does not crash."""
+        check = ShellCheck(
+            command="",
+            description="test",
+            json_info={"description": "test"},
+        )
+        object.__setattr__(check, "command", None)
+        value = _get_field_value(check, FilterBy.NAME)
+        assert value == ""
