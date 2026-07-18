@@ -641,6 +641,40 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             console.print()
             console.print(Rule(style="bright_red"))
             sys.exit(FAILURE)
+        # validate auto-hint option combinations;
+        # this catches:
+        #   --auto-hint-model without --auto-hint
+        #   --auto-hint-url without --auto-hint
+        #   --auto-hint-api-key without --auto-hint-url
+        auto_hint_errors = validate_auto_hint_options(
+            auto_hint,
+            auto_hint_model,
+            auto_hint_url,
+            auto_hint_api_key,
+        )
+        if auto_hint_errors:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(
+                    CONFIG_ERROR_LABEL,
+                    style="bright_red",
+                )
+            )
+            # display a blank line if there is
+            # at least one error in configuration
+            # for the auto-hinting feature
+            if auto_hint_errors:
+                console.print()
+            # display the errors in configuration
+            # for the auto-hinting (note that there
+            # could be one or more errors)
+            for error in auto_hint_errors:
+                console.print(error)
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
+            sys.exit(FAILURE)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -736,41 +770,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # a remote OpenAI-compatible API, both of which we
             # do not want to load unless the opt-in was made)
             auto_hint_engine = None
-            # validate auto-hint option combinations make
-            # sure that invalid configurations are not
-            # allowed; this catches invalid combinations:
-            #   --auto-hint-model without --auto-hint
-            #   --auto-hint-url without --auto-hint
-            #   --auto-hint-api-key without --auto-hint-url
-            auto_hint_errors = validate_auto_hint_options(
-                auto_hint,
-                auto_hint_model,
-                auto_hint_url,
-                auto_hint_api_key,
-            )
-            if auto_hint_errors:
-                checks_status = False
-                console.print()
-                console.print(
-                    Rule(
-                        CONFIG_ERROR_LABEL,
-                        style="bright_red",
-                    )
-                )
-                # display a blank line if there is
-                # at least one error in configuration
-                # for the auto-hinting feature
-                if auto_hint_errors:
-                    console.print()
-                # display the errors in configuration
-                # for the auto-hinting (note that there
-                # could be one or more errors)
-                for error in auto_hint_errors:
-                    console.print(error)
-                console.print(Text(EXIT_MESSAGE))
-                console.print()
-                console.print(Rule(style="bright_red"))
-                sys.exit(FAILURE)
             # apply historical filtering before text filtering
             if filter_failed_last is not None:
                 try:
