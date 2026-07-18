@@ -49,6 +49,7 @@ from gatorgrade.report_history import (
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
     filter_checks_by_failed_ids,
+    get_all_check_ids,
     get_failed_check_ids,
     get_history_scope,
     get_report_history_directory,
@@ -63,6 +64,7 @@ from gatorgrade.validate import (
     validate_filter_failed_last,
     validate_filter_fuzzy_threshold,
     validate_filter_options,
+    validate_filter_passed_last,
     validate_github_env,
     validate_output_limit,
     validate_report,
@@ -151,6 +153,7 @@ FILTER_QUERY_FLAG = "--filter-query"
 FILTER_FUZZY_THRESHOLD_FLAG = "--filter-fuzzy-threshold"
 FILTER_TOTAL_FLAG = "--filter-total"
 FILTER_FAILED_LAST_FLAG = "--filter-failed-last"
+FILTER_PASSED_LAST_FLAG = "--filter-passed-last"
 FILTER_HISTORY_REPORTS_FLAG = "--filter-history-reports"
 FILTER_HISTORY_REPORTS_TOTAL_FLAG = "--filter-history-reports-total"
 REPORT_HISTORY_FLAG = "--report-history"
@@ -199,6 +202,7 @@ def _print_verbose_info(  # noqa: PLR0913
     filter_type: FilterType = DEFAULT_FILTER_TYPE,
     filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
     filter_failed_last: int | None = None,
+    filter_passed_last: int | None = None,
     report_history: bool = True,
     report_history_max_count: int = DEFAULT_HISTORY_REPORT_COUNT,
     report_history_max_mib: int = DEFAULT_HISTORY_SIZE_MIB,
@@ -226,6 +230,7 @@ def _print_verbose_info(  # noqa: PLR0913
         filter_type: The filter type, or None.
         filter_fuzzy_threshold: Fuzzy word-matching threshold.
         filter_failed_last: Number of recent reports for failure filtering.
+        filter_passed_last: Number of recent reports for passed filtering.
         report_history: Whether automatic report history is enabled.
         report_history_max_count: Maximum retained report count.
         report_history_max_mib: Maximum retained report size in MiB.
@@ -274,6 +279,8 @@ def _print_verbose_info(  # noqa: PLR0913
         filtering.add(f"Fuzzy threshold: {filter_fuzzy_threshold}")
     if filter_failed_last is not None:
         filtering.add(f"Failed last: {filter_failed_last}")
+    if filter_passed_last is not None:
+        filtering.add(f"Passed last: {filter_passed_last}")
     console.print(filtering)
     # reports tree
     reports = Tree("Reports", guide_style="dim")
@@ -368,6 +375,18 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         ),
         show_default=True,
         callback=validate_filter_failed_last,
+    ),
+    filter_passed_last: Optional[int] = typer.Option(
+        None,
+        "--filter-passed-last",
+        help=(
+            "Only run checks that passed in all of the specified number"
+            " of the most recent reports. When combined with"
+            " --filter-failed-last, runs the intersection: checks that"
+            " normally pass but have recently failed."
+        ),
+        show_default=True,
+        callback=validate_filter_passed_last,
     ),
     report_history: bool = typer.Option(
         True,
@@ -594,6 +613,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             filter_type=filter_type,
             filter_fuzzy_threshold=filter_fuzzy_threshold,
             filter_failed_last=filter_failed_last,
+            filter_passed_last=filter_passed_last,
             report_history=report_history,
             report_history_max_count=report_history_max_count,
             report_history_max_mib=report_history_max_mib,
@@ -605,7 +625,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         history_scope = get_history_scope(resolved_filename, project_name)
         # determine whether any pre-run filter was provided
         filter_was_active = (
-            bool(filter_query) or filter_failed_last is not None
+            bool(filter_query)
+            or filter_failed_last is not None
+            or filter_passed_last is not None
         )
         history_reports_inspected = 0
         history_reports_total = 0
@@ -746,6 +768,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 and resolved_filter_mode == FilterMode.FUZZY
                 else None,
                 FILTER_FAILED_LAST_FLAG: filter_failed_last,
+                FILTER_PASSED_LAST_FLAG: filter_passed_last,
                 FILTER_HISTORY_REPORTS_FLAG: history_reports_inspected,
                 FILTER_HISTORY_REPORTS_TOTAL_FLAG: history_reports_total,
                 REPORT_HISTORY_FLAG: report_history,
@@ -771,27 +794,69 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # do not want to load unless the opt-in was made)
             auto_hint_engine = None
             # apply historical filtering before text filtering
-            if filter_failed_last is not None:
+            # supports --filter-failed-last, --filter-passed-last, and
+            # their combination (intersection)
+            if (
+                filter_failed_last is not None
+                or filter_passed_last is not None
+            ):
                 try:
-                    (
-                        failed_check_ids,
-                        history_reports_inspected,
-                        history_reports_total,
-                    ) = get_failed_check_ids(
-                        get_report_history_directory(),
-                        history_scope,
-                        filter_failed_last,
-                    )
+                    historical_check_ids: set[str] | None = None
+                    if filter_failed_last is not None:
+                        (
+                            failed_ids,
+                            history_reports_inspected,
+                            history_reports_total,
+                        ) = get_failed_check_ids(
+                            get_report_history_directory(),
+                            history_scope,
+                            filter_failed_last,
+                        )
+                        historical_check_ids = failed_ids
+                    if filter_passed_last is not None:
+                        reports_dir = get_report_history_directory()
+                        all_ids = get_all_check_ids(
+                            reports_dir,
+                            history_scope,
+                            filter_passed_last,
+                        )
+                        (
+                            passed_failed_ids,
+                            passed_inspected,
+                            _,
+                        ) = get_failed_check_ids(
+                            reports_dir,
+                            history_scope,
+                            filter_passed_last,
+                        )
+                        passed_ids = all_ids - passed_failed_ids
+                        if historical_check_ids is not None:
+                            historical_check_ids &= passed_ids
+                        else:
+                            historical_check_ids = passed_ids
+                        history_reports_inspected = passed_inspected
+                        (
+                            _,
+                            _,
+                            history_reports_total,
+                        ) = get_failed_check_ids(
+                            reports_dir,
+                            history_scope,
+                            filter_passed_last,
+                        )
                 except (OSError, TypeError, ValueError) as error:
                     console.print(
                         "[yellow]Warning: Could not read report history. "
                         f"Running all checks instead: {error}[/]"
                     )
                 else:
-                    if history_reports_inspected > 0:
+                    if (
+                        historical_check_ids is not None
+                        and len(historical_check_ids) > 0
+                    ):
                         checks = filter_checks_by_failed_ids(
                             checks,
-                            failed_check_ids,
+                            historical_check_ids,
                         )
                     else:
                         console.print(
