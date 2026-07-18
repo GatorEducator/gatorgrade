@@ -182,6 +182,18 @@ class TestFilterCli:
         print(result.stdout)  # noqa: T201
         assert result.exit_code != 0
 
+    def test_nan_filter_fuzzy_threshold_is_error(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """--filter-fuzzy-threshold with NaN exits with error."""
+        chdir("tests/test_assignment")
+        result = runner.invoke(main.app, ["--filter-fuzzy-threshold", "nan"])
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code != 0
+
     def test_whitespace_only_filter_query_is_error(
         self,
         chdir: Any,
@@ -914,8 +926,8 @@ def test_print_verbose_info_shows_info_when_verbose(
     assert "Config file: test.yml" in plain_out
     assert "Config dir:" in plain_out
     assert "tmp" in plain_out
-    assert "Auto-hint:   True" in plain_out
-    assert "Output limit:  10" in plain_out
+    assert "Auto-hint: True" in plain_out
+    assert "Output limit: 10" in plain_out
     assert "Baseline weight: 2" in plain_out
 
 

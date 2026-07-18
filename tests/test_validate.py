@@ -455,3 +455,18 @@ class TestFilterFuzzyThreshold:
         """Threshold above 1.0 raises BadParameter."""
         with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
             validate.validate_filter_fuzzy_threshold(1.5)
+
+    def test_nan_threshold_invalid(self) -> None:
+        """NaN threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("nan"))
+
+    def test_inf_threshold_invalid(self) -> None:
+        """Positive infinity threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("inf"))
+
+    def test_neg_inf_threshold_invalid(self) -> None:
+        """Negative infinity threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("-inf"))
