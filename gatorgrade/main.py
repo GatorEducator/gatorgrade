@@ -858,11 +858,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                             checks,
                             historical_check_ids,
                         )
-                    else:
-                        console.print(
-                            "[yellow]Warning: No usable report history was "
-                            "found. Running all checks instead.[/]"
-                        )
             # apply text filtering after historical filtering
             if filter_query:
                 checks = filter_checks(
