@@ -152,6 +152,7 @@ FILTER_FUZZY_THRESHOLD_FLAG = "--filter-fuzzy-threshold"
 FILTER_TOTAL_FLAG = "--filter-total"
 FILTER_FAILED_LAST_FLAG = "--filter-failed-last"
 FILTER_HISTORY_REPORTS_FLAG = "--filter-history-reports"
+FILTER_HISTORY_REPORTS_TOTAL_FLAG = "--filter-history-reports-total"
 REPORT_HISTORY_FLAG = "--report-history"
 REPORT_HISTORY_MAX_COUNT_FLAG = "--report-history-max-count"
 REPORT_HISTORY_MAX_MIB_FLAG = "--report-history-max-mb"
@@ -607,6 +608,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             bool(filter_query) or filter_failed_last is not None
         )
         history_reports_inspected = 0
+        history_reports_total = 0
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -679,6 +681,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 else None,
                 FILTER_FAILED_LAST_FLAG: filter_failed_last,
                 FILTER_HISTORY_REPORTS_FLAG: history_reports_inspected,
+                FILTER_HISTORY_REPORTS_TOTAL_FLAG: history_reports_total,
                 REPORT_HISTORY_FLAG: report_history,
                 REPORT_HISTORY_MAX_COUNT_FLAG: report_history_max_count,
                 REPORT_HISTORY_MAX_MIB_FLAG: report_history_max_mib,
@@ -768,12 +771,14 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # apply historical filtering before text filtering
             if filter_failed_last is not None:
                 try:
-                    failed_check_ids, history_reports_inspected = (
-                        get_failed_check_ids(
-                            get_report_history_directory(),
-                            history_scope,
-                            filter_failed_last,
-                        )
+                    (
+                        failed_check_ids,
+                        history_reports_inspected,
+                        history_reports_total,
+                    ) = get_failed_check_ids(
+                        get_report_history_directory(),
+                        history_scope,
+                        filter_failed_last,
                     )
                 except (OSError, TypeError, ValueError) as error:
                     console.print(
@@ -802,6 +807,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     fuzzy_threshold=filter_fuzzy_threshold,
                 )
             cli_args[FILTER_HISTORY_REPORTS_FLAG] = history_reports_inspected
+            cli_args[FILTER_HISTORY_REPORTS_TOTAL_FLAG] = history_reports_total
             # if filtering emptied the list, handle it here before
             # auto-hint engine and run_checks are reached
             if filter_was_active and not checks:
