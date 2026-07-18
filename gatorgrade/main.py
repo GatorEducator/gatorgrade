@@ -364,7 +364,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-failed-last",
         help=(
             "Only run checks that failed in at least the specified number of the most recent"
-            " reports. Combines with text filtering by check intersection."
+            " reports. Combines with results from --filter-query by check intersection."
         ),
         show_default=True,
         callback=validate_filter_failed_last,
