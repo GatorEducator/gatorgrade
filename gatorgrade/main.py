@@ -805,13 +805,14 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     if filter_failed_last is not None:
                         (
                             failed_ids,
-                            history_reports_inspected,
+                            failed_inspected,
                             history_reports_total,
                         ) = get_failed_check_ids(
                             get_report_history_directory(),
                             history_scope,
                             filter_failed_last,
                         )
+                        history_reports_inspected = failed_inspected
                         historical_check_ids = failed_ids
                     if filter_passed_last is not None:
                         reports_dir = get_report_history_directory()
@@ -834,16 +835,21 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                             historical_check_ids &= passed_ids
                         else:
                             historical_check_ids = passed_ids
-                        history_reports_inspected = passed_inspected
-                        (
-                            _,
-                            _,
-                            history_reports_total,
-                        ) = get_failed_check_ids(
-                            reports_dir,
-                            history_scope,
-                            filter_passed_last,
+                        # use the larger inspection count for display
+                        history_reports_inspected = max(
+                            history_reports_inspected, passed_inspected
                         )
+                        # set total when there is no failed-last path
+                        if history_reports_total == 0:
+                            (
+                                _,
+                                _,
+                                history_reports_total,
+                            ) = get_failed_check_ids(
+                                reports_dir,
+                                history_scope,
+                                filter_passed_last,
+                            )
                 except (OSError, TypeError, ValueError) as error:
                     console.print(
                         "[yellow]Warning: Could not read report history. "
