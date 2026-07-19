@@ -143,7 +143,7 @@ def validate_filter_failed_last(value: int | None) -> int | None:
 
 # error message for filter passed last validation
 FILTER_PASSED_LAST_ERR_FMT = (
-    "Filter passed last must be a positive integer, got {}"
+    "Passed-check history count must be a positive integer, got {}"
 )
 
 
