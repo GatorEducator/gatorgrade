@@ -327,8 +327,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-mode",
         help=(
             "Matching mode for filtering query with [yellow]EXACT[/yellow] for case-insensitive whole-field"
-            " equality; CONTAINS for case-insensitive substring;"
-            " FUZZY for splitting query into words, each"
+            " equality; [yellow]CONTAINS[/yellow] for case-insensitive substring;"
+            " [yellow]FUZZY[/yellow] for splitting query into words, each"
             " matches as subsequence or by edit-distance"
             " closeness, all words required."
         ),
@@ -338,10 +338,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_BY,
         "--filter-by",
         help=(
-            "Field to match the filter query against. DESCRIPTION"
-            " filters on check description; NAME filters on"
+            "Field to match the filter query against. [yellow]DESCRIPTION[/yellow]"
+            " filters on check description; [yellow]NAME[/yellow] filters on"
             " check name or, as a fallback, check command;"
-            " HINT filters on check's hint; ANY"
+            " [yellow]HINT[/yellow] filters on check's hint; ANY"
             " filters across all three fields."
         ),
         show_default=True,
@@ -350,7 +350,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_TYPE,
         "--filter-type",
         help=(
-            "Whether to INCLUDE (i.e., keep) or EXCLUDE (i.e., drop) the checks"
+            "Whether to [yellow]INCLUDE[/yellow] (i.e., keep) or [yellow]EXCLUDE[/yellow] (i.e., drop) the checks"
             " that match the filter."
         ),
         show_default=True,
@@ -429,12 +429,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--github-env",
         "-g",
         help=(
-            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
-            f" 1. The format of the data (either JSON or MD){NEWLINE}{NEWLINE}"
-            f" 2. The name of the environment variable to set{NEWLINE}{NEWLINE}"
-            f" (Use [green]json JSON_REPORT[/green] to store JSON data or"
-            f" [green]md MD_REPORT[/green] to store Markdown data in the"
-            f" GITHUB_ENV file for downstream steps)."
+            "A tuple containing the following required values:"
+            " 1. The format of the data (either JSON or MD);"
+            " 2. The name of the environment variable to set;"
+            " (Use [green]json JSON_REPORT[/green] to store JSON data or"
+            " [green]md MD_REPORT[/green] to store Markdown data in the"
+            " GITHUB_ENV file for downstream steps)."
         ),
         callback=validate_github_env,
     ),
