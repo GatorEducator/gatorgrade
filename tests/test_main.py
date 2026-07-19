@@ -4,6 +4,8 @@ import builtins
 import io
 import os
 import re
+import sys
+from io import StringIO
 from pathlib import Path
 from typing import Any, Callable, Generator, List
 
@@ -11,6 +13,7 @@ import pytest
 from typer.testing import CliRunner
 
 from gatorgrade import detect, main, report_history
+from gatorgrade.input.filter import FilterBy, FilterMode, FilterType
 from gatorgrade.input.parse_config import parse_config
 
 runner = CliRunner()
@@ -1060,3 +1063,101 @@ def test_gatorgrade_with_config_dir_nonexistent_file(
         print(result.stdout)  # noqa: T201
         # runs all checks since history likely doesn't exist
         assert result.exit_code == 0
+
+
+def test_print_verbose_info_shows_filter_query_when_set() -> None:
+    """_print_verbose_info shows filter query when filter_query is set."""
+    captured = StringIO()
+    old_stdout = sys.stdout
+    sys.stdout = captured
+    try:
+        main._print_verbose_info(
+            verbose=True,
+            config_path=Path("test.yml"),
+            config_dir=Path("/tmp"),
+            auto_hint=False,
+            auto_hint_model="model",
+            auto_hint_url=None,
+            output_limit=5,
+            baseline_weight=1,
+            show_diagnostics=True,
+            progress_bar=False,
+            filter_query="mypy",
+            filter_mode=FilterMode.FUZZY,
+            filter_by=FilterBy.NAME,
+            filter_type=FilterType.INCLUDE,
+            filter_fuzzy_threshold=0.5,
+            filter_failed_last=3,
+            filter_passed_last=10,
+        )
+    finally:
+        sys.stdout = old_stdout
+    plain = ANSI_ESCAPE_PATTERN.sub("", captured.getvalue())
+    assert "Query: mypy" in plain
+    assert "Mode: FUZZY" in plain
+    assert "By: NAME" in plain
+    assert "Type: INCLUDE" in plain
+    assert "Fuzzy threshold: 0.5" in plain
+    assert "Failed last: 3" in plain
+    assert "Passed last: 10" in plain
+
+
+def test_print_verbose_info_skips_filter_query_when_not_set() -> None:
+    """_print_verbose_info does not show query when filter_query is None."""
+    captured = StringIO()
+    old_stdout = sys.stdout
+    sys.stdout = captured
+    try:
+        main._print_verbose_info(
+            verbose=True,
+            config_path=Path("test.yml"),
+            config_dir=Path("/tmp"),
+            auto_hint=False,
+            auto_hint_model="model",
+            auto_hint_url=None,
+            output_limit=5,
+            baseline_weight=1,
+            show_diagnostics=True,
+            progress_bar=False,
+            filter_query=None,
+        )
+    finally:
+        sys.stdout = old_stdout
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", captured.getvalue())
+    assert "Filter query:" not in plain
+
+
+def test_filter_passed_last_without_history_runs_all_checks(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """--filter-passed-last without history runs all checks."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--filter-passed-last", "5", "--no-progress-bar"],
+    )
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
+
+
+def test_filter_failed_and_passed_combined_is_accepted(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """--filter-failed-last and --filter-passed-last together are accepted."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        [
+            "--filter-failed-last",
+            "3",
+            "--filter-passed-last",
+            "5",
+            "--no-progress-bar",
+        ],
+    )
+    capsys.readouterr()
+    print(result.stdout)  # noqa: T201
+    assert result.exit_code == 0
