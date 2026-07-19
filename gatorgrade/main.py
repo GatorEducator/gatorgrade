@@ -517,7 +517,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         is_eager=True,
         help=(
             "Exit after showing the GatorGrade version and other details "
-            "(e.g., active versions Python, GatorGrader, and operating system)."
+            "(e.g., active versions of Python, GatorGrader, and operating system)."
         ),
     ),
 ) -> None:
