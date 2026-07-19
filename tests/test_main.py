@@ -96,7 +96,7 @@ def test_full_integration_creates_valid_output(
     # ✓  Complete all TODOs
     # ✓  Use an if statement
     # ✓  Complete all TODOs
-    result = runner.invoke(main.app)
+    result = runner.invoke(main.app, ["--no-report-history"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -127,7 +127,9 @@ class TestFilterCli:
     ) -> None:
         """--filter-query with TODO filters to only matching checks."""
         chdir("tests/test_assignment")
-        result = runner.invoke(main.app, ["--filter-query", "TODO"])
+        result = runner.invoke(
+            main.app, ["--filter-query", "TODO", "--no-report-history"]
+        )
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
         assert result.exit_code == 0
@@ -145,7 +147,13 @@ class TestFilterCli:
         chdir("tests/test_assignment")
         result = runner.invoke(
             main.app,
-            ["--filter-query", "Complete all TODOs", "--filter-mode", "EXACT"],
+            [
+                "--filter-query",
+                "Complete all TODOs",
+                "--filter-mode",
+                "EXACT",
+                "--no-report-history",
+            ],
         )
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
@@ -162,7 +170,13 @@ class TestFilterCli:
         chdir("tests/test_assignment")
         result = runner.invoke(
             main.app,
-            ["--filter-query", "TODO", "--filter-type", "EXCLUDE"],
+            [
+                "--filter-query",
+                "TODO",
+                "--filter-type",
+                "EXCLUDE",
+                "--no-report-history",
+            ],
         )
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
@@ -281,7 +295,7 @@ class TestFilterCli:
     ) -> None:
         """Running without any filter args behaves exactly as before."""
         chdir("tests/test_assignment")
-        result = runner.invoke(main.app, [])
+        result = runner.invoke(main.app, ["--no-report-history"])
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
         assert result.exit_code == 0
@@ -294,9 +308,21 @@ class TestFilterCli:
         self,
         chdir: Any,
         capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
     ) -> None:
         """Historical filtering with no history yields zero checks."""
         chdir("tests/test_assignment")
+        history_directory = tmp_path / "history"
+        history_directory.mkdir()
+        monkeypatch.setattr(
+            main, "get_report_history_directory", lambda: history_directory
+        )
+        monkeypatch.setattr(
+            report_history,
+            "get_report_history_directory",
+            lambda: history_directory,
+        )
         result = runner.invoke(
             main.app,
             [
@@ -318,13 +344,24 @@ class TestFilterCli:
         self,
         chdir: Any,
         capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
     ) -> None:
         """Historical filtering selects matching current check IDs."""
         chdir("tests/test_assignment")
         checks, parse_error = parse_config(Path("gatorgrade.yml"))
         assert parse_error is None
         selected_check = checks[1]
-        history_directory = main.get_report_history_directory()
+        history_directory = tmp_path / "history"
+        history_directory.mkdir()
+        monkeypatch.setattr(
+            main, "get_report_history_directory", lambda: history_directory
+        )
+        monkeypatch.setattr(
+            report_history,
+            "get_report_history_directory",
+            lambda: history_directory,
+        )
         report_history.save_report_history(
             {
                 "checks": [
@@ -357,12 +394,24 @@ class TestFilterCli:
         self,
         chdir: Any,
         capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
     ) -> None:
         """Historical and text filters narrow checks using intersection."""
         chdir("tests/test_assignment")
         checks, parse_error = parse_config(Path("gatorgrade.yml"))
         assert parse_error is None
         selected_check = checks[1]
+        history_directory = tmp_path / "history"
+        history_directory.mkdir()
+        monkeypatch.setattr(
+            main, "get_report_history_directory", lambda: history_directory
+        )
+        monkeypatch.setattr(
+            report_history,
+            "get_report_history_directory",
+            lambda: history_directory,
+        )
         report_history.save_report_history(
             {
                 "checks": [
@@ -373,7 +422,7 @@ class TestFilterCli:
                 ]
             },
             scope=main.get_history_scope(Path("gatorgrade.yml"), None),
-            history_directory=main.get_report_history_directory(),
+            history_directory=history_directory,
         )
         result = runner.invoke(
             main.app,
@@ -399,27 +448,51 @@ class TestFilterCli:
         self,
         chdir: Any,
         capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
     ) -> None:
         """The no-report-history switch prevents automatic history writes."""
         chdir("tests/test_assignment")
+        history_directory = tmp_path / "history"
+        history_directory.mkdir()
+        monkeypatch.setattr(
+            main, "get_report_history_directory", lambda: history_directory
+        )
+        monkeypatch.setattr(
+            report_history,
+            "get_report_history_directory",
+            lambda: history_directory,
+        )
         result = runner.invoke(main.app, ["--no-report-history"])
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
         assert result.exit_code == 0
-        assert not list(main.get_report_history_directory().glob("*.json"))
+        assert not list(history_directory.glob("*.json"))
 
 
 def test_default_run_saves_report_history(
     chdir: Any,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     """A normal run saves a JSON history file by default."""
     chdir("tests/test_assignment")
+    history_directory = tmp_path / "history"
+    history_directory.mkdir()
+    monkeypatch.setattr(
+        main, "get_report_history_directory", lambda: history_directory
+    )
+    monkeypatch.setattr(
+        report_history,
+        "get_report_history_directory",
+        lambda: history_directory,
+    )
     result = runner.invoke(main.app, ["--no-progress-bar"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
-    history_files = list(main.get_report_history_directory().glob("*.json"))
+    history_files = list(history_directory.glob("*.json"))
     assert len(history_files) == 1
     assert '"checks"' in history_files[0].read_text(encoding="utf-8")
 
@@ -467,7 +540,9 @@ def test_gatorgrade_with_invalid_due_date_format(
         '  command: "echo hello"\n'
     )
     chdir(tmp_path)
-    result = runner.invoke(main.app, ["--config", "bad_due_date.yml"])
+    result = runner.invoke(
+        main.app, ["--config", "bad_due_date.yml", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -488,7 +563,9 @@ def test_gatorgrade_with_multiple_due_date_aliases(
         '  command: "echo hello"\n'
     )
     chdir(tmp_path)
-    result = runner.invoke(main.app, ["--config", "multi_due_date.yml"])
+    result = runner.invoke(
+        main.app, ["--config", "multi_due_date.yml", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -509,7 +586,7 @@ def test_gatorgrade_with_auto_hint_creates_engine(
 ) -> None:
     """Using --auto-hint creates an engine and runs checks."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--auto-hint"])
+    result = runner.invoke(main.app, ["--auto-hint", "--no-report-history"])
     capsys.readouterr()
     assert result.exit_code == 0
 
@@ -574,7 +651,9 @@ def test_gatorgrade_with_output_limit_one(
 ) -> None:
     """Test that output limit of one is accepted."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "1"])
+    result = runner.invoke(
+        main.app, ["--output-limit", "1", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -585,7 +664,9 @@ def test_gatorgrade_with_output_limit_valid(
 ) -> None:
     """Test that a valid output limit is accepted."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--output-limit", "5"])
+    result = runner.invoke(
+        main.app, ["--output-limit", "5", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -619,7 +700,9 @@ def test_gatorgrade_with_baseline_weight_default(
 ) -> None:
     """Test that baseline weight of 1 is accepted and shows correct points."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "1"])
+    result = runner.invoke(
+        main.app, ["--baseline-weight", "1", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -632,7 +715,9 @@ def test_gatorgrade_with_baseline_weight_custom(
 ) -> None:
     """Test that a custom baseline weight affects the points calculation."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--baseline-weight", "5"])
+    result = runner.invoke(
+        main.app, ["--baseline-weight", "5", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -645,7 +730,7 @@ def test_gatorgrade_with_show_diagnostics_default(
 ) -> None:
     """Test that show diagnostics is the default and runs successfully."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, [])
+    result = runner.invoke(main.app, ["--no-report-history"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -656,7 +741,9 @@ def test_gatorgrade_with_show_diagnostics_explicit(
 ) -> None:
     """Test that --show-diagnostics flag is accepted."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--show-diagnostics"])
+    result = runner.invoke(
+        main.app, ["--show-diagnostics", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -670,7 +757,9 @@ def test_gatorgrade_with_no_show_diagnostics(
 ) -> None:
     """Test that --no-show-diagnostics hides diagnostic output."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-show-diagnostics"])
+    result = runner.invoke(
+        main.app, ["--no-show-diagnostics", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -686,7 +775,8 @@ def test_gatorgrade_with_report_option(
     chdir("tests/test_assignment")
     report_file = tmp_path / "report.json"
     result = runner.invoke(
-        main.app, ["--report", "file", "json", str(report_file)]
+        main.app,
+        ["--report", "file", "json", str(report_file), "--no-report-history"],
     )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
@@ -725,7 +815,8 @@ def test_gatorgrade_with_report_uppercase_valid(
     chdir("tests/test_assignment")
     report_file = tmp_path / "report.json"
     result = runner.invoke(
-        main.app, ["--report", "FILE", "JSON", str(report_file)]
+        main.app,
+        ["--report", "FILE", "JSON", str(report_file), "--no-report-history"],
     )
     capsys.readouterr()
     assert result.exit_code == 0
@@ -770,7 +861,10 @@ def test_gatorgrade_with_github_env_valid_json(
 ) -> None:
     """Test that valid github-env format passes validation."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--github-env", "json", "JSON_REPORT"])
+    result = runner.invoke(
+        main.app,
+        ["--github-env", "json", "JSON_REPORT", "--no-report-history"],
+    )
     capsys.readouterr()
     assert result.exit_code == 0
 
@@ -807,7 +901,9 @@ def test_gatorgrade_with_custom_config_name(
 ) -> None:
     """Test that gatorgrade works with custom config file name."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--config", "gatorgrade.yml"])
+    result = runner.invoke(
+        main.app, ["--config", "gatorgrade.yml", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -821,7 +917,9 @@ def test_gatorgrade_with_no_status_bar(
 ) -> None:
     """Test that gatorgrade works with no status bar."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--no-progress-bar"])
+    result = runner.invoke(
+        main.app, ["--no-progress-bar", "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -835,7 +933,7 @@ def test_gatorgrade_with_progress_bar_default(
 ) -> None:
     """Test that gatorgrade shows progress bar by default."""
     chdir("tests/test_assignment")
-    result = runner.invoke(main.app, [])
+    result = runner.invoke(main.app, ["--no-report-history"])
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -971,7 +1069,9 @@ def test_gatorgrade_with_config_dir_no_file(
         '  command: "echo hello"\n'
     )
     chdir(tmp_path)
-    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    result = runner.invoke(
+        main.app, ["--config-dir", str(config_dir), "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -996,7 +1096,13 @@ def test_gatorgrade_with_config_dir_and_explicit_config(
     chdir(tmp_path)
     result = runner.invoke(
         main.app,
-        ["--config-dir", str(config_dir), "--config", "custom.yml"],
+        [
+            "--config-dir",
+            str(config_dir),
+            "--config",
+            "custom.yml",
+            "--no-report-history",
+        ],
     )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
@@ -1028,7 +1134,9 @@ def test_gatorgrade_with_config_dir_cwd_takes_precedence(
         '  command: "echo correct"\n'
     )
     chdir(tmp_path)
-    result = runner.invoke(main.app, ["--config-dir", str(config_dir)])
+    result = runner.invoke(
+        main.app, ["--config-dir", str(config_dir), "--no-report-history"]
+    )
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
@@ -1058,7 +1166,12 @@ def test_gatorgrade_with_config_dir_nonexistent_file(
         chdir("tests/test_assignment")
         result = runner.invoke(
             main.app,
-            ["--filter-passed-last", "10", "--no-progress-bar"],
+            [
+                "--filter-passed-last",
+                "10",
+                "--no-progress-bar",
+                "--no-report-history",
+            ],
         )
         capsys.readouterr()
         print(result.stdout)  # noqa: T201
@@ -1131,9 +1244,21 @@ def test_print_verbose_info_skips_filter_query_when_not_set() -> None:
 def test_filter_passed_last_without_history_runs_all_checks(
     chdir: Any,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     """--filter-passed-last without history runs all checks."""
     chdir("tests/test_assignment")
+    history_directory = tmp_path / "history"
+    history_directory.mkdir()
+    monkeypatch.setattr(
+        main, "get_report_history_directory", lambda: history_directory
+    )
+    monkeypatch.setattr(
+        report_history,
+        "get_report_history_directory",
+        lambda: history_directory,
+    )
     result = runner.invoke(
         main.app,
         ["--filter-passed-last", "5", "--no-progress-bar"],
@@ -1146,9 +1271,21 @@ def test_filter_passed_last_without_history_runs_all_checks(
 def test_filter_failed_and_passed_combined_is_accepted(
     chdir: Any,
     capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     """--filter-failed-last and --filter-passed-last together are accepted."""
     chdir("tests/test_assignment")
+    history_directory = tmp_path / "history"
+    history_directory.mkdir()
+    monkeypatch.setattr(
+        main, "get_report_history_directory", lambda: history_directory
+    )
+    monkeypatch.setattr(
+        report_history,
+        "get_report_history_directory",
+        lambda: history_directory,
+    )
     result = runner.invoke(
         main.app,
         [
