@@ -351,7 +351,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-type",
         help=(
             "Whether to [yellow]INCLUDE[/yellow] (i.e., keep) or [yellow]EXCLUDE[/yellow] (i.e., drop) the checks"
-            " that match the filter."
+            " that match the filter's criteria."
         ),
         show_default=True,
     ),
@@ -382,8 +382,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Only run checks that passed in all of the specified number"
             " of the most recent reports. When combined with"
-            " --filter-failed-last, runs the intersection: checks that"
-            " normally pass but have recently failed."
+            " --filter-failed-last, runs the intersection of checks"
+            " matching both criteria for passing and failing."
         ),
         show_default=True,
         callback=validate_filter_passed_last,
@@ -430,10 +430,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "-g",
         help=(
             "A tuple containing the following required values:"
-            " 1. The format of the data (either JSON or MD);"
+            " 1. The format of the data (either [blue]JSON[/blue] or [blue]MD[/blue]);"
             " 2. The name of the environment variable to set;"
-            " (Use [green]json JSON_REPORT[/green] to store JSON data or"
-            " [green]md MD_REPORT[/green] to store Markdown data in the"
+            " (Use [blue]json JSON_REPORT[/blue] to store [blue]JSON[/blue] data or"
+            " [blue]md MD_REPORT[/blue] to store Markdown data in the"
             " GITHUB_ENV file for downstream steps)."
         ),
         callback=validate_github_env,
@@ -487,8 +487,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Model for auto-hint generation "
             "(requires --auto-hint). Defaults to"
-            f" {REMOTE_MODEL_DEFAULT} when --auto-hint-url is set"
-            f" or {DEFAULT_MODEL_ID} otherwise."
+            f" [blue]{REMOTE_MODEL_DEFAULT}[/blue] when --auto-hint-url is set"
+            f" or [blue]{DEFAULT_MODEL_ID}[/blue] otherwise."
         ),
         show_default=False,
     ),
