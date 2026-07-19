@@ -50,7 +50,7 @@ FILTER_FAILED_LAST_KEY = "--filter-failed-last"
 FILTER_PASSED_LAST_KEY = "--filter-passed-last"
 FILTER_HISTORY_REPORTS_KEY = "--filter-history-reports"
 FILTER_HISTORY_REPORTS_TOTAL_KEY = "--filter-history-reports-total"
-FILTER_LABEL = "Filter"
+FILTER_LABEL = "Query Filter"
 REPORT_HISTORY_WARNING = (
     "[yellow]Warning: Could not save automatic report history: {}[/]"
 )
@@ -231,7 +231,7 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
     label = " and ".join(parts)
     rich.print(
         "[bold]- Historical Filter:[/]"
-        f" Checks {label} (inspected {inspected} of {total})"
+        f" Checks {label} (inspected {inspected} of {total} reports)"
     )
 
 
