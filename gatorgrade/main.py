@@ -415,12 +415,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--report",
         "-r",
         help=(
-            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
-            f" 1. The destination of the report (either FILE or ENV){NEWLINE}{NEWLINE}"
-            f" 2. The format of the report (either JSON or MD){NEWLINE}{NEWLINE}"
-            f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
-            f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
-            f" [green]FILE JSON report.json[/green] to save summary in report.json)."
+            "A tuple containing the following required values:"
+            " 1. The destination of the report (either FILE or ENV);"
+            " 2. The format of the report (either JSON or MD);"
+            " 3. The name of the file or environment variable;"
+            " (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
+            " [green]FILE JSON report.json[/green] to save summary in report.json)."
         ),
         callback=validate_report,
     ),
