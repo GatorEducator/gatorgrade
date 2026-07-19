@@ -10,6 +10,8 @@ import pytest
 from gatorgrade.input.checks import ShellCheck
 from gatorgrade.report_history import (
     BYTES_PER_MIB,
+    CHECK_ID_KEY,
+    CHECKS_KEY,
     HISTORY_FILE_PREFIX,
     HISTORY_FILE_SUFFIX,
     _history_filename,
@@ -21,6 +23,7 @@ from gatorgrade.report_history import (
     _validate_positive_limit,
     _write_json_atomically,
     filter_checks_by_failed_ids,
+    get_all_check_ids,
     get_failed_check_ids,
     get_history_scope,
     load_history_reports,
@@ -256,3 +259,128 @@ def test_history_file_is_json(tmp_path: Path) -> None:
     )
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["history_scope"] == "project-one"
+
+
+def test_get_all_check_ids_returns_distinct_ids(tmp_path: Path) -> None:
+    """get_all_check_ids returns distinct check IDs from reports."""
+    scope = get_history_scope(tmp_path / "config.yml")
+    for day, check_id in [(1, "alpha"), (2, "beta"), (3, "alpha")]:
+        report = {
+            CHECKS_KEY: [
+                {CHECK_ID_KEY: check_id, "status": True, "description": "test"}
+            ]
+        }
+        save_report_history(
+            report,
+            scope=scope,
+            history_directory=tmp_path,
+            current_time=datetime.datetime(2026, 1, day, tzinfo=UTC),
+        )
+    result = get_all_check_ids(tmp_path, scope, report_count=5)
+    assert result == {"alpha", "beta"}
+
+
+def test_get_all_check_ids_empty_directory(tmp_path: Path) -> None:
+    """get_all_check_ids returns empty set for empty directory."""
+    result = get_all_check_ids(tmp_path, "any-scope", report_count=5)
+    assert result == set()
+
+
+def test_write_json_atomically_chmod_failure_is_harmless(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chmod failure in _write_json_atomically is silently ignored."""
+
+    def _broken_chmod(*args: Any, **kwargs: Any) -> None:  # type: ignore[misc]
+        raise OSError("chmod not allowed")
+
+    monkeypatch.setattr(Path, "chmod", _broken_chmod)
+    destination = tmp_path / "report.json"
+    _write_json_atomically(destination, {"key": "value"})
+    assert destination.exists()
+
+
+def test_load_history_file_returns_none_on_os_error(tmp_path: Path) -> None:
+    """_load_history_file returns None when file cannot be read."""
+    path = tmp_path / "nonexistent.json"
+    result = _load_history_file(path, "scope")
+    assert result is None
+
+
+def test_load_history_file_returns_none_on_bad_json(tmp_path: Path) -> None:
+    """_load_history_file returns None for invalid JSON content."""
+    path = tmp_path / "bad.json"
+    path.write_text("not valid json{", encoding="utf-8")
+    result = _load_history_file(path, "scope")
+    assert result is None
+
+
+def test_load_history_file_returns_none_on_wrong_schema(
+    tmp_path: Path,
+) -> None:
+    """_load_history_file returns None for wrong schema version."""
+    path = tmp_path / "bad_schema.json"
+    path.write_text(
+        json.dumps({"history_schema_version": 999, "history_scope": "s"}),
+        encoding="utf-8",
+    )
+    result = _load_history_file(path, "s")
+    assert result is None
+
+
+def test_load_history_file_returns_none_for_wrong_scope(
+    tmp_path: Path,
+) -> None:
+    """_load_history_file returns None when scope does not match."""
+    path = tmp_path / "wrong_scope.json"
+    path.write_text(
+        json.dumps(
+            {
+                "history_schema_version": 1,
+                "history_scope": "project-a",
+                "report": {"checks": []},
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = _load_history_file(path, "project-b")
+    assert result is None
+
+
+def test_load_history_file_returns_none_for_non_dict_payload(
+    tmp_path: Path,
+) -> None:
+    """_load_history_file returns None for non-dict payload."""
+    path = tmp_path / "bad_payload.json"
+    path.write_text(
+        json.dumps(
+            {
+                "history_schema_version": 1,
+                "history_scope": "s",
+                "report": "not a dict",
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = _load_history_file(path, "s")
+    assert result is None
+
+
+def test_load_history_file_returns_none_for_non_list_checks(
+    tmp_path: Path,
+) -> None:
+    """_load_history_file returns None when checks is not a list."""
+    path = tmp_path / "bad_checks.json"
+    path.write_text(
+        json.dumps(
+            {
+                "history_schema_version": 1,
+                "history_scope": "s",
+                "report": {"checks": "not a list"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = _load_history_file(path, "s")
+    assert result is None
