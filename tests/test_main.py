@@ -290,12 +290,12 @@ class TestFilterCli:
         assert "Use an if statement" in plain_stdout
         assert "- Checks: 3/3 (100%)" in plain_stdout
 
-    def test_filter_failed_last_without_history_runs_all_checks(
+    def test_filter_failed_last_without_history_runs_zero_checks(
         self,
         chdir: Any,
         capsys: pytest.CaptureFixture[str],
     ) -> None:
-        """Historical filtering falls back safely when no history exists."""
+        """Historical filtering with no history yields zero checks."""
         chdir("tests/test_assignment")
         result = runner.invoke(
             main.app,
@@ -310,8 +310,9 @@ class TestFilterCli:
         print(result.stdout)  # noqa: T201
         assert result.exit_code == 0
         plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
-        assert "Complete all TODOs" in plain_stdout
-        assert "Use an if statement" in plain_stdout
+        assert "No checks matched the filter" in plain_stdout
+        assert "Complete all TODOs" not in plain_stdout
+        assert "Use an if statement" not in plain_stdout
 
     def test_filter_failed_last_selects_historical_failures(
         self,
