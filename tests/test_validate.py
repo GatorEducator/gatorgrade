@@ -173,40 +173,6 @@ class TestAutoHintOptionsValidation:
         )
         assert errors == []
 
-    def test_threshold_without_fuzzy_is_invalid(self) -> None:
-        """--filter-fuzzy-threshold without --filter-mode FUZZY errors."""
-        errors = validate.validate_filter_options(
-            filter_query="todo",
-            filter_mode=validate.FilterMode.CONTAINS,
-            filter_by=validate.DEFAULT_FILTER_BY,
-            filter_type=validate.DEFAULT_FILTER_TYPE,
-            filter_fuzzy_threshold=0.9,
-        )
-        assert len(errors) >= 1
-        assert "--filter-fuzzy-threshold" in errors[0]
-        assert "FUZZY" in errors[0]
-
-    def test_threshold_with_fuzzy_is_valid(self) -> None:
-        """--filter-fuzzy-threshold with --filter-mode FUZZY is valid."""
-        errors = validate.validate_filter_options(
-            filter_query="todo",
-            filter_mode=validate.FilterMode.FUZZY,
-            filter_by=validate.DEFAULT_FILTER_BY,
-            filter_type=validate.DEFAULT_FILTER_TYPE,
-            filter_fuzzy_threshold=0.9,
-        )
-        assert errors == []
-
-    def test_default_threshold_with_any_mode_is_valid(self) -> None:
-        """Default threshold with any mode is valid (no explicit override)."""
-        errors = validate.validate_filter_options(
-            filter_query="todo",
-            filter_mode=validate.FilterMode.EXACT,
-            filter_by=validate.DEFAULT_FILTER_BY,
-            filter_type=validate.DEFAULT_FILTER_TYPE,
-        )
-        assert errors == []
-
     def test_all_valid_with_default_model(self) -> None:
         """No errors with default model sentinel."""
         errors = validate.validate_auto_hint_options(
@@ -417,6 +383,40 @@ class TestFilterOptionsValidation:
         errors = validate.validate_filter_options(
             filter_query=None,
             filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_threshold_without_fuzzy_is_invalid(self) -> None:
+        """--filter-fuzzy-threshold without --filter-mode FUZZY errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.CONTAINS,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert len(errors) >= 1
+        assert "--filter-fuzzy-threshold" in errors[0]
+        assert "FUZZY" in errors[0]
+
+    def test_threshold_with_fuzzy_is_valid(self) -> None:
+        """--filter-fuzzy-threshold with --filter-mode FUZZY is valid."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.FUZZY,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert errors == []
+
+    def test_default_threshold_with_any_mode_is_valid(self) -> None:
+        """Default threshold with any mode is valid (no explicit override)."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
             filter_by=validate.DEFAULT_FILTER_BY,
             filter_type=validate.DEFAULT_FILTER_TYPE,
         )
