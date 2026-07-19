@@ -341,7 +341,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "Field to match the filter query against. [yellow]DESCRIPTION[/yellow]"
             " filters on check description; [yellow]NAME[/yellow] filters on"
             " check name or, as a fallback, check command;"
-            " [yellow]HINT[/yellow] filters on check's hint; ANY"
+            " [yellow]HINT[/yellow] filters on check's hint; [yellow]ANY[/yellow]"
             " filters across all three fields."
         ),
         show_default=True,
@@ -361,7 +361,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Threshold for fuzzy word matching (0.0 to 1.0). Higher"
             " values result in less stringent (i.e., more fuzzy) matching."
-            " Requires --filter-mode FUZZY."
+            " Requires --filter-mode [yellow]FUZZY[/yellow]."
         ),
         show_default=True,
         callback=validate_filter_fuzzy_threshold,
@@ -416,11 +416,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "-r",
         help=(
             "A tuple containing the following required values:"
-            " 1. The destination of the report (either FILE or ENV);"
-            " 2. The format of the report (either JSON or MD);"
+            " 1. The destination of the report (either [blue]FILE[/blue] or [blue]ENV[/blue]);"
+            " 2. The format of the report (either [blue]JSON[/blue] or [blue]MD[/blue]);"
             " 3. The name of the file or environment variable;"
-            " (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
-            " [green]FILE JSON report.json[/green] to save summary in report.json)."
+            " (Use [blue]ENV MD GITHUB_STEP_SUMMARY[/blue] to make summary in GitHub Actions or"
+            " [blue]FILE JSON report.json[/blue] to save summary in [blue]report.json[/blue])."
         ),
         callback=validate_report,
     ),
