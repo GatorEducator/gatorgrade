@@ -362,8 +362,9 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
             if isinstance(info, dict):
                 return _ensure_str(info.get("description"))
             return ""
-        # ShellCheck has description attribute
-        return _ensure_str(check.description)
+        # fallback to description attribute for checks that are not
+        # GatorGraderCheck
+        return _ensure_str(getattr(check, "description", None))
     if field == FilterBy.NAME:
         if isinstance(check, GatorGraderCheck):
             info = check.json_info
@@ -381,10 +382,11 @@ def _get_field_value(check: Any, field: FilterBy) -> str:  # noqa: PLR0911
                         return combined.strip()
                 return name
             return str(info) if info else ""
-        # ShellCheck has no separate check name; use the command
-        return _ensure_str(check.command)
+        # fallback to command attribute for checks that are not
+        # GatorGraderCheck
+        return _ensure_str(getattr(check, "command", None))
     if field == FilterBy.HINT:
-        return _ensure_str(check.hint)
+        return _ensure_str(getattr(check, "hint", None))
     return ""
 
 
