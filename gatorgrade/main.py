@@ -326,7 +326,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         DEFAULT_FILTER_MODE,
         "--filter-mode",
         help=(
-            "Matching mode for filtering query with EXACT for case-insensitive whole-field"
+            "Matching mode for filtering query with [yellow]EXACT[/yellow] for case-insensitive whole-field"
             " equality; CONTAINS for case-insensitive substring;"
             " FUZZY for splitting query into words, each"
             " matches as subsequence or by edit-distance"
