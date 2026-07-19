@@ -856,6 +856,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         f"Running all checks instead: {error}[/]"
                     )
                 else:
+                    # there were historical check IDs found
+                    # and thus we can filter the checks
                     if (
                         historical_check_ids is not None
                         and len(historical_check_ids) > 0
@@ -864,6 +866,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                             checks,
                             historical_check_ids,
                         )
+                    # there were no historical check IDs found and thus
+                    # it is important to specify an empty list which
+                    # means that there are not checks to run and there
+                    # should be a warning message displayed to the user
+                    elif historical_check_ids is not None:
+                        checks = []
             # apply text filtering after historical filtering
             if filter_query:
                 checks = filter_checks(
