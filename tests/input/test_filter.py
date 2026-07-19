@@ -773,6 +773,86 @@ class TestHintNone:
         assert len(result) == 1
 
 
+class TestUnknownCheckType:
+    """Tests that _get_field_value is defensive with unknown check types."""
+
+    def test_description_on_object_without_description(self) -> None:
+        """_get_field_value returns empty string when description is missing."""
+
+        class UnknownCheck:
+            pass
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.DESCRIPTION)
+        assert result == ""
+
+    def test_name_on_object_without_command(self) -> None:
+        """_get_field_value returns empty string when command is missing."""
+
+        class UnknownCheck:
+            pass
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.NAME)
+        assert result == ""
+
+    def test_hint_on_object_without_hint(self) -> None:
+        """_get_field_value returns empty string when hint is missing."""
+
+        class UnknownCheck:
+            pass
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.HINT)
+        assert result == ""
+
+    def test_description_on_object_with_description(self) -> None:
+        """_get_field_value uses description attribute when present."""
+
+        class UnknownCheck:
+            description = "custom description"
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.DESCRIPTION)
+        assert result == "custom description"
+
+    def test_name_on_object_with_command(self) -> None:
+        """_get_field_value uses command attribute when present."""
+
+        class UnknownCheck:
+            command = "custom command"
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.NAME)
+        assert result == "custom command"
+
+    def test_hint_on_object_with_hint(self) -> None:
+        """_get_field_value uses hint attribute when present."""
+
+        class UnknownCheck:
+            hint = "custom hint"
+
+        check = UnknownCheck()
+        result = _get_field_value(check, FilterBy.HINT)
+        assert result == "custom hint"
+
+    def test_filter_checks_with_unknown_type(self) -> None:
+        """filter_checks does not crash on unknown check types."""
+
+        class UnknownCheck:
+            description = "find me"
+
+        check = UnknownCheck()
+        result = filter_checks(
+            [check],
+            mode=FilterMode.CONTAINS,
+            by=FilterBy.DESCRIPTION,
+            ftype=FilterType.INCLUDE,
+            query="find",
+        )
+        assert len(result) == 1
+
+
 class TestCaseInsensitivity:
     """Tests that all matching modes are case-insensitive."""
 
