@@ -157,7 +157,10 @@ The following options control how GatorGrade runs:
   only checks matching this query are included or excluded. Filtering happens
   before checks run; if the filter keeps 10 of 400 checks, only those 10 run.
   This flag is the trigger for filtering; the other three filter flags have
-  sensible defaults when this one is given.
+  sensible defaults when this one is given. When combined with
+  `--filter-failed-last` or `--filter-passed-last`, the text query runs second,
+  narrowing the already status-filtered pool. The "Selected from N checks"
+  summary line reports the size of that post-status, pre-text pool.
   - Examples:
     - `gatorgrade --filter-query "todo"`
     - `gatorgrade --filter-query "if" --filter-mode FUZZY`
@@ -180,15 +183,16 @@ The following options control how GatorGrade runs:
   keeps most unrelated words apart. Only used with `--filter-mode FUZZY`.
 - `--filter-failed-last`: Select checks that failed in at least one of the
   newest number of retained history reports. Historical matching uses exact check
-  IDs. This option can be combined with `--filter-query`; both filters then apply
-  together. If no usable history exists, all checks are run with a warning. The
-  value must be a positive integer.
+  IDs. This status filter runs first, before any `--filter-query` text filter,
+  which then narrows the already-reduced pool. If no usable history exists, all
+  checks are run with a warning. The value must be a positive integer.
 - `--filter-passed-last`: Select checks that passed in all the newest number of
   retained history reports. Historical matching internally uses exact check
-  identifiers. This option can be combined with `--filter-query` and/or
-  `--filter-failed-last`; when combined, the filters are intersected so that only
-  checks matching all criteria are run. If no usable history exists, all checks
-  are run with a warning. The value must be a positive integer.
+  identifiers. This status filter runs first, before any `--filter-query` text
+  filter. When combined with `--filter-failed-last`, the two status filters
+  intersect their matching checks first; any text filter then narrows that
+  intersection. If no usable history exists, all checks are run with a warning.
+  The value must be a positive integer.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
@@ -360,14 +364,17 @@ history files are separate from reports written with `--report` or
 
 Use `--filter-failed-last` to run only checks that failed in at least one of the
 newest retained reports. Historical matching uses each check's exact `check_id`.
-When combined with `--filter-query`, both filters apply to the checks before
-execution.
+This status filter runs first, narrowing the check list to only those with
+matching history. When `--filter-query` is also supplied, the text query runs
+second on that already-narrowed pool; the "Selected from N checks" summary line
+reports the size of that post-status, pre-text pool.
 
 Use `--filter-passed-last` to run only checks that passed in all of the newest
 retained reports. A check is considered "passed" if it appears in a report
 and did not fail in that report. Historical matching uses each check's exact
-`check_id`. When combined with `--filter-query` and/or `--filter-failed-last`,
-all filters apply to the checks before execution.
+`check_id`. Like `--filter-failed-last`, this status filter runs first; when
+both status filters are supplied together they intersect their matching checks,
+and any `--filter-query` text filter then narrows that intersection second.
 
 ### File Reports
 
