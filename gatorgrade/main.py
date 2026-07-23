@@ -374,7 +374,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Only run checks that failed in at least the specified number of the most recent"
             " reports. This status filter runs first, before any --filter-query text"
-            " filter, which then narrows the already-reduced pool further."
+            " filter, which then narrows the already-reduced pool."
         ),
         show_default=True,
         callback=validate_filter_failed_last,
