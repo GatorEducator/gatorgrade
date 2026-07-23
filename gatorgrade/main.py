@@ -319,7 +319,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Search term for pre-run check filtering. When provided,"
             " the checks matching this query are included or excluded."
-            " Requires at least one non-blank character."
+            " Requires at least one non-blank character. Runs after any"
+            " --filter-failed-last or --filter-passed-last status"
+            " filter, narrowing the already-filtered pool."
         ),
     ),
     filter_mode: FilterMode = typer.Option(
@@ -371,7 +373,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-failed-last",
         help=(
             "Only run checks that failed in at least the specified number of the most recent"
-            " reports. Combines with results from --filter-query by check intersection."
+            " reports. This status filter runs first, before any --filter-query text"
+            " filter, which then narrows the already-reduced pool further."
         ),
         show_default=True,
         callback=validate_filter_failed_last,
@@ -381,9 +384,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--filter-passed-last",
         help=(
             "Only run checks that passed in all of the specified number"
-            " of the most recent reports. When combined with"
-            " --filter-failed-last, runs the intersection of checks"
-            " matching both criteria for passing and failing."
+            " of the most recent reports. This status filter runs first,"
+            " before any --filter-query text filter. When combined with"
+            " --filter-failed-last, the two status filters intersect"
+            " their matching checks before any text filter runs."
         ),
         show_default=True,
         callback=validate_filter_passed_last,
@@ -872,6 +876,17 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     # should be a warning message displayed to the user
                     elif historical_check_ids is not None:
                         checks = []
+            # update the filter-total counts to reflect the
+            # check pool AFTER historical (status) filtering,
+            # which is exactly what the text filter below will
+            # operate on. Without this update, the "Selected
+            # from N checks" display would still report the
+            # original pre-filter count and overstate the pool.
+            # this matters when historical filtering runs first
+            # and narrows the check list before text filtering.
+            cli_args[FILTER_TOTAL_FLAG] = (
+                len(checks) if filter_was_active else None
+            )
             # apply text filtering after historical filtering
             if filter_query:
                 checks = filter_checks(
