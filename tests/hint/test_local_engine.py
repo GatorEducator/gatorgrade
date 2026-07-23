@@ -59,6 +59,12 @@ class TestAutoHintEngineConstruction:
         engine = AutoHintEngine()
         assert engine.is_loaded is False
 
+    def test_is_loaded_true_after_pipe_set(self) -> None:
+        """Return True after _pipe is assigned."""
+        engine = AutoHintEngine()
+        engine._pipe = MagicMock()
+        assert engine.is_loaded is True
+
 
 class TestAutoHintEngineGenerateHint:
     """Tests for AutoHintEngine.generate_hint with mocked pipeline."""

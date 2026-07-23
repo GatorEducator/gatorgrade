@@ -27,6 +27,14 @@ class TestFallbackHintEngine:
         engine = FallbackHintEngine(remote, local, "http://test.url")
         assert engine.is_loaded is True
 
+    def test_is_loaded_returns_false_when_remote_not_loaded(self) -> None:
+        """is_loaded returns False when the remote engine is not loaded."""
+        remote = MagicMock()
+        remote.is_loaded = False
+        local = MagicMock()
+        engine = FallbackHintEngine(remote, local, "http://test.url")
+        assert engine.is_loaded is False
+
     def test_ensure_loaded_delegates_to_remote(self) -> None:
         """ensure_loaded calls the remote engine's method."""
         remote = MagicMock()
