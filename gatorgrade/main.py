@@ -798,13 +798,14 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             auto_hint_engine = None
             # apply historical filtering before text filtering
             # supports --filter-failed-last, --filter-passed-last, and
-            # their combination (intersection)
+            # their combination (intersection of matching checks)
             if (
                 filter_failed_last is not None
                 or filter_passed_last is not None
             ):
                 try:
                     historical_check_ids: set[str] | None = None
+                    # get the failed check IDs
                     if filter_failed_last is not None:
                         (
                             failed_ids,
@@ -817,6 +818,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         )
                         history_reports_inspected = failed_inspected
                         historical_check_ids = failed_ids
+                    # get the passed check IDs by extracting
+                    # all of the checks from the history and then
+                    # using the information about the failed checks
+                    # to indirectly determine which checks passed
                     if filter_passed_last is not None:
                         reports_dir = get_report_history_directory()
                         all_ids = get_all_check_ids(
