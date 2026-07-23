@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.emoji import Emoji
 from rich.rule import Rule
 from rich.text import Text
+from rich.tree import Tree
 
 from gatorgrade.detect import (
     GATORGRADER_DEPENDENCY,
@@ -24,6 +25,16 @@ from gatorgrade.engine import (
 )
 from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
 from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
+from gatorgrade.input.filter import (
+    DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_FUZZY_THRESHOLD,
+    DEFAULT_FILTER_MODE,
+    DEFAULT_FILTER_TYPE,
+    FilterBy,
+    FilterMode,
+    FilterType,
+    filter_checks,
+)
 from gatorgrade.input.parse_config import (
     get_config_dir,
     get_due_date,
@@ -34,6 +45,15 @@ from gatorgrade.input.parse_config import (
     resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.report_history import (
+    DEFAULT_HISTORY_REPORT_COUNT,
+    DEFAULT_HISTORY_SIZE_MIB,
+    filter_checks_by_failed_ids,
+    get_all_check_ids,
+    get_failed_check_ids,
+    get_history_scope,
+    get_report_history_directory,
+)
 from gatorgrade.resolve import (
     resolve_system_prompt,
     resolve_validation_rules,
@@ -41,9 +61,15 @@ from gatorgrade.resolve import (
 from gatorgrade.validate import (
     validate_auto_hint_options,
     validate_baseline_weight,
+    validate_filter_failed_last,
+    validate_filter_fuzzy_threshold,
+    validate_filter_options,
+    validate_filter_passed_last,
     validate_github_env,
     validate_output_limit,
     validate_report,
+    validate_report_history_count,
+    validate_report_history_size,
 )
 
 # import the version from the single-source-of-truth module so that
@@ -59,12 +85,36 @@ from gatorgrade.version import GATORGRADE_VERSION
 # independent as possible, across three major operating systems
 gatorgrade_emoji = Emoji.replace(":crocodile:")
 
+# constants for display of output
+NEWLINE = "\n"
+TAB = "   "
+
 # create a Typer app that
 # --> does not support completion
 # --> has a specified help message with an emoji
+#     followed by usage instructions for uvx/uv run
 app = typer.Typer(
     add_completion=False,
-    help=f"{gatorgrade_emoji} Run the GatorGrader checks in the specified configuration file.",
+    help=(
+        f"{gatorgrade_emoji} Run the GatorGrader checks in the"
+        f" specified configuration file."
+        f"{NEWLINE}{NEWLINE}"
+        "Want to run gatorgrade using uv?"
+        f"{NEWLINE}{NEWLINE}"
+        f"{TAB}- Without auto-hinting:"
+        f"{NEWLINE}"
+        f"{TAB}{TAB}- uvx gatorgrade"
+        f"{NEWLINE}"
+        f"{TAB}{TAB}- uv tool run gatorgrade"
+        f"{NEWLINE}"
+        f"{TAB}- With auto-hinting:"
+        f"{NEWLINE}"
+        f"{TAB}{TAB}- uvx --from 'gatorgrade\\[auto-hint]' gatorgrade"
+        f" --auto-hint"
+        f"{NEWLINE}"
+        f"{TAB}{TAB}- uv tool run --from 'gatorgrade\\[auto-hint]'"
+        f" gatorgrade --auto-hint"
+    ),
 )
 
 # create a default console for printing with rich
@@ -74,14 +124,13 @@ console = Console()
 FILE = "gatorgrade.yml"
 FAILURE = 1
 
-# newline character for joining lines
-NEWLINE = "\n"
 
 # exit message
 EXIT_MESSAGE = "Fix these error(s) before running gatorgrade."
 
 # default config directory computed at module load time for display in help
 DEFAULT_CONFIG_DIR = str(get_config_dir())
+DEFAULT_REPORT_HISTORY_DIR = str(get_report_history_directory())
 
 # cli flag names used in the report
 CONFIG_FLAG = "--config"
@@ -97,6 +146,19 @@ AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_URL_FLAG = "--auto-hint-url"
 AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
 AUTO_HINT_TRACK_FLAG = "--auto-hint-track"
+FILTER_MODE_FLAG = "--filter-mode"
+FILTER_BY_FLAG = "--filter-by"
+FILTER_TYPE_FLAG = "--filter-type"
+FILTER_QUERY_FLAG = "--filter-query"
+FILTER_FUZZY_THRESHOLD_FLAG = "--filter-fuzzy-threshold"
+FILTER_TOTAL_FLAG = "--filter-total"
+FILTER_FAILED_LAST_FLAG = "--filter-failed-last"
+FILTER_PASSED_LAST_FLAG = "--filter-passed-last"
+FILTER_HISTORY_REPORTS_FLAG = "--filter-history-reports"
+FILTER_HISTORY_REPORTS_TOTAL_FLAG = "--filter-history-reports-total"
+REPORT_HISTORY_FLAG = "--report-history"
+REPORT_HISTORY_MAX_COUNT_FLAG = "--report-history-max-count"
+REPORT_HISTORY_MAX_MIB_FLAG = "--report-history-max-mb"
 GITHUB_ENV_FLAG = "--github-env"
 
 # labels for rich rule display
@@ -114,7 +176,11 @@ OS_RELEASE_KEY = "os_release"
 def _version_callback(value: bool) -> None:
     """Print the GatorGrade version and exit when --version is provided."""
     if value:
-        print_version_info(console)
+        tree = Tree("Version", guide_style="dim")
+        env_tree = Tree("Environment", guide_style="dim")
+        print_version_info(console, tree=tree, env_tree=env_tree)
+        console.print(tree)
+        console.print(env_tree)
         raise typer.Exit()
 
 
@@ -130,6 +196,16 @@ def _print_verbose_info(  # noqa: PLR0913
     show_diagnostics: bool,
     progress_bar: bool,
     auto_hint_track: bool | None = None,
+    filter_query: str | None = None,
+    filter_mode: FilterMode = DEFAULT_FILTER_MODE,
+    filter_by: FilterBy = DEFAULT_FILTER_BY,
+    filter_type: FilterType = DEFAULT_FILTER_TYPE,
+    filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
+    filter_failed_last: int | None = None,
+    filter_passed_last: int | None = None,
+    report_history: bool = True,
+    report_history_max_count: int = DEFAULT_HISTORY_REPORT_COUNT,
+    report_history_max_mib: int = DEFAULT_HISTORY_SIZE_MIB,
 ) -> None:
     """Print verbose configuration info before running checks.
 
@@ -148,6 +224,16 @@ def _print_verbose_info(  # noqa: PLR0913
         show_diagnostics: Whether diagnostics are shown.
         progress_bar: Whether the progress bar is shown.
         auto_hint_track: Whether auto-hint tracking is enabled.
+        filter_query: The filter query string, or None.
+        filter_mode: The filter mode, or None.
+        filter_by: The filter-by field, or None.
+        filter_type: The filter type, or None.
+        filter_fuzzy_threshold: Fuzzy word-matching threshold.
+        filter_failed_last: Number of recent reports for failure filtering.
+        filter_passed_last: Number of recent reports for passed filtering.
+        report_history: Whether automatic report history is enabled.
+        report_history_max_count: Maximum retained report count.
+        report_history_max_mib: Maximum retained report size in MiB.
 
     """
     if not verbose:
@@ -155,24 +241,55 @@ def _print_verbose_info(  # noqa: PLR0913
     console.print()
     console.print(Rule("Verbose Mode Information", style="green"))
     console.print()
-    print_version_info(console)
-    console.print(f"Config file: {config_path}")
-    console.print(f"Config dir:  {config_dir}")
-    console.print(f"Output limit:  {output_limit}")
-    console.print(f"Baseline weight: {baseline_weight}")
-    console.print(f"Diagnostics: {show_diagnostics}")
-    console.print(f"Progress:    {progress_bar}")
-    console.print(f"Auto-hint:   {auto_hint}")
+    # version tree (same structure as --version)
+    version_tree = Tree("Version", guide_style="dim")
+    env_tree = Tree("Environment", guide_style="dim")
+    print_version_info(console, tree=version_tree, env_tree=env_tree)
+    console.print(version_tree)
+    console.print(env_tree)
+    # configuration tree
+    config = Tree("Configuration", guide_style="dim")
+    config.add(f"Config file: {config_path}")
+    config.add(f"Config dir: {config_dir}")
+    config.add(f"Output limit: {output_limit}")
+    config.add(f"Baseline weight: {baseline_weight}")
+    config.add(f"Diagnostics: {show_diagnostics}")
+    config.add(f"Progress: {progress_bar}")
+    config.add(f"Auto-hint: {auto_hint}")
+    # auto hinting
     if auto_hint:
         model_display = auto_hint_model
         if auto_hint_model == AUTO_HINT_MODEL_DEFAULT:
             model_display = (
                 REMOTE_MODEL_DEFAULT if auto_hint_url else DEFAULT_MODEL_ID
             )
-        console.print(f"Model:       {model_display}")
+        config.add(f"Model: {model_display}")
         if auto_hint_url:
-            console.print(f"Remote URL:  {auto_hint_url}")
-        console.print(f"Auto-hint track:  {auto_hint_track}")
+            config.add(f"Remote URL: {auto_hint_url}")
+        config.add(f"Auto-hint track: {auto_hint_track}")
+    console.print(config)
+    # filtering tree
+    filtering = Tree("Filtering", guide_style="dim")
+    if filter_query:
+        filtering.add(f"Query: {filter_query}")
+    filtering.add(f"Mode: {filter_mode.value}")
+    filtering.add(f"By: {filter_by.value}")
+    filtering.add(f"Type: {filter_type.value}")
+    if filter_mode == FilterMode.FUZZY:
+        filtering.add(f"Fuzzy threshold: {filter_fuzzy_threshold}")
+    if filter_failed_last is not None:
+        filtering.add(f"Failed last: {filter_failed_last}")
+    if filter_passed_last is not None:
+        filtering.add(f"Passed last: {filter_passed_last}")
+    console.print(filtering)
+    # reports tree
+    reports = Tree("Reports", guide_style="dim")
+    reports.add(f"History: {report_history}")
+    if report_history:
+        reports.add(f"Max count: {report_history_max_count}")
+        reports.add(f"Max MiB: {report_history_max_mib}")
+        reports.add(f"Directory: {DEFAULT_REPORT_HISTORY_DIR}")
+    console.print(reports)
     console.print()
     console.print(Rule(style="green"))
 
@@ -196,17 +313,118 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         ),
         show_default=DEFAULT_CONFIG_DIR,
     ),
+    filter_query: Optional[str] = typer.Option(
+        None,
+        "--filter-query",
+        help=(
+            "Search term for pre-run check filtering. When provided,"
+            " the checks matching this query are included or excluded."
+            " Requires at least one non-blank character. Runs after any"
+            " --filter-failed-last or --filter-passed-last status"
+            " filter, narrowing the already-filtered pool."
+        ),
+    ),
+    filter_mode: FilterMode = typer.Option(
+        DEFAULT_FILTER_MODE,
+        "--filter-mode",
+        help=(
+            "Matching mode for filtering query with [yellow]EXACT[/yellow] for case-insensitive whole-field"
+            " equality; [yellow]CONTAINS[/yellow] for case-insensitive substring;"
+            " [yellow]FUZZY[/yellow] for splitting query into words, each"
+            " matches as subsequence or by edit-distance"
+            " closeness, all words required."
+        ),
+        show_default=True,
+    ),
+    filter_by: FilterBy = typer.Option(
+        DEFAULT_FILTER_BY,
+        "--filter-by",
+        help=(
+            "Field to match the filter query against. [yellow]DESCRIPTION[/yellow]"
+            " filters on check description; [yellow]NAME[/yellow] filters on"
+            " check name or, as a fallback, check command;"
+            " [yellow]HINT[/yellow] filters on check's hint; [yellow]ANY[/yellow]"
+            " filters across all three fields."
+        ),
+        show_default=True,
+    ),
+    filter_type: FilterType = typer.Option(
+        DEFAULT_FILTER_TYPE,
+        "--filter-type",
+        help=(
+            "Whether to [yellow]INCLUDE[/yellow] (i.e., keep) or [yellow]EXCLUDE[/yellow] (i.e., drop) the checks"
+            " that match the filter's criteria."
+        ),
+        show_default=True,
+    ),
+    filter_fuzzy_threshold: float = typer.Option(
+        DEFAULT_FILTER_FUZZY_THRESHOLD,
+        "--filter-fuzzy-threshold",
+        help=(
+            "Threshold for fuzzy word matching (0.0 to 1.0). Higher"
+            " values result in less stringent (i.e., more fuzzy) matching."
+            " Requires --filter-mode [yellow]FUZZY[/yellow]."
+        ),
+        show_default=True,
+        callback=validate_filter_fuzzy_threshold,
+    ),
+    filter_failed_last: Optional[int] = typer.Option(
+        None,
+        "--filter-failed-last",
+        help=(
+            "Only run checks that failed in at least the specified number of the most recent"
+            " reports. This status filter runs first, before any --filter-query text"
+            " filter, which then narrows the already-reduced pool further."
+        ),
+        show_default=True,
+        callback=validate_filter_failed_last,
+    ),
+    filter_passed_last: Optional[int] = typer.Option(
+        None,
+        "--filter-passed-last",
+        help=(
+            "Only run checks that passed in all of the specified number"
+            " of the most recent reports. This status filter runs first,"
+            " before any --filter-query text filter. When combined with"
+            " --filter-failed-last, the two status filters intersect"
+            " their matching checks before any text filter runs."
+        ),
+        show_default=True,
+        callback=validate_filter_passed_last,
+    ),
+    report_history: bool = typer.Option(
+        True,
+        "--report-history/--no-report-history",
+        help=(
+            "Save bounded amount of JSON report history in the user data directory"
+            f" ({DEFAULT_REPORT_HISTORY_DIR})."
+        ),
+    ),
+    report_history_max_count: int = typer.Option(
+        DEFAULT_HISTORY_REPORT_COUNT,
+        "--report-history-max-count",
+        help="Maximum number of automatic JSON reports to retain.",
+        show_default=True,
+        callback=validate_report_history_count,
+    ),
+    report_history_max_mib: int = typer.Option(
+        DEFAULT_HISTORY_SIZE_MIB,
+        "--report-history-max-mb",
+        help="Maximum total size of automatic reports in MiB.",
+        show_default=True,
+        callback=validate_report_history_size,
+    ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
         "--report",
         "-r",
         help=(
-            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
-            f" 1. The destination of the report (either FILE or ENV){NEWLINE}{NEWLINE}"
-            f" 2. The format of the report (either JSON or MD){NEWLINE}{NEWLINE}"
-            f" 3. The name of the file or environment variable{NEWLINE}{NEWLINE}"
-            f" (Use [green]ENV MD GITHUB_STEP_SUMMARY[/green] to make summary in GitHub Actions or"
-            f" [green]FILE JSON report.json[/green] to save summary in report.json)."
+            "A tuple containing the following required values:"
+            " 1. The destination of the report (either [blue]FILE[/blue] or [blue]ENV[/blue]);"
+            " 2. The format of the report (either [blue]JSON[/blue] or [blue]MD[/blue]);"
+            " 3. The name of the file or environment variable;"
+            " (Use [blue]ENV MD GITHUB_STEP_SUMMARY[/blue] to make summary in GitHub Actions or"
+            " [blue]FILE JSON report.json[/blue] to save summary in [blue]report.json[/blue])."
         ),
         callback=validate_report,
     ),
@@ -215,12 +433,12 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--github-env",
         "-g",
         help=(
-            f"A tuple containing the following required values:{NEWLINE}{NEWLINE}"
-            f" 1. The format of the data (either JSON or MD){NEWLINE}{NEWLINE}"
-            f" 2. The name of the environment variable to set{NEWLINE}{NEWLINE}"
-            f" (Use [green]json JSON_REPORT[/green] to store JSON data or"
-            f" [green]md MD_REPORT[/green] to store Markdown data in the"
-            f" GITHUB_ENV file for downstream steps)."
+            "A tuple containing the following required values:"
+            " 1. The format of the data (either [blue]JSON[/blue] or [blue]MD[/blue]);"
+            " 2. The name of the environment variable to set;"
+            " (Use [blue]json JSON_REPORT[/blue] to store [blue]JSON[/blue] data or"
+            " [blue]md MD_REPORT[/blue] to store Markdown data in the"
+            " GITHUB_ENV file for downstream steps)."
         ),
         callback=validate_github_env,
     ),
@@ -273,8 +491,8 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help=(
             "Model for auto-hint generation "
             "(requires --auto-hint). Defaults to"
-            f" {REMOTE_MODEL_DEFAULT} when --auto-hint-url is set"
-            f" or {DEFAULT_MODEL_ID} otherwise."
+            f" [blue]{REMOTE_MODEL_DEFAULT}[/blue] when --auto-hint-url is set"
+            f" or [blue]{DEFAULT_MODEL_ID}[/blue] otherwise."
         ),
         show_default=False,
     ),
@@ -301,7 +519,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         "--version",
         callback=_version_callback,
         is_eager=True,
-        help="Exit after show the GatorGrade version and other details.",
+        help=(
+            "Exit after showing the GatorGrade version and other details "
+            "(e.g., active versions of Python, GatorGrader, and operating system)."
+        ),
     ),
 ) -> None:
     """Run the GatorGrader checks in the specified configuration file."""
@@ -393,11 +614,96 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             show_diagnostics,
             progress_bar,
             auto_hint_track=auto_hint_track,
+            filter_query=filter_query,
+            filter_mode=filter_mode,
+            filter_by=filter_by,
+            filter_type=filter_type,
+            filter_fuzzy_threshold=filter_fuzzy_threshold,
+            filter_failed_last=filter_failed_last,
+            filter_passed_last=filter_passed_last,
+            report_history=report_history,
+            report_history_max_count=report_history_max_count,
+            report_history_max_mib=report_history_max_mib,
         )
         # parse the provided configuration file
         checks, parse_error = parse_config(resolved_filename, baseline_weight)
         # extract the optional project name from the config file
         project_name = get_project_name(resolved_filename)
+        history_scope = get_history_scope(resolved_filename, project_name)
+        # determine whether any pre-run filter was provided
+        filter_was_active = (
+            bool(filter_query)
+            or filter_failed_last is not None
+            or filter_passed_last is not None
+        )
+        history_reports_inspected = 0
+        history_reports_total = 0
+        # validate filter option combinations;
+        # this catches:
+        #   --filter-mode/--filter-by/--filter-type without
+        #     --filter-query
+        #   --filter-query with empty or whitespace-only string
+        #   --filter-fuzzy-threshold without --filter-mode FUZZY
+        # happens before config parsing so errors are independent
+        # of whether the config file exists or is valid
+        filter_errors = validate_filter_options(
+            filter_query,
+            filter_mode,
+            filter_by,
+            filter_type,
+            filter_fuzzy_threshold=filter_fuzzy_threshold,
+        )
+        if filter_errors:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(
+                    CONFIG_ERROR_LABEL,
+                    style="bright_red",
+                )
+            )
+            if filter_errors:
+                console.print()
+            for error in filter_errors:
+                console.print(error)
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
+            sys.exit(FAILURE)
+        # validate auto-hint option combinations;
+        # this catches:
+        #   --auto-hint-model without --auto-hint
+        #   --auto-hint-url without --auto-hint
+        #   --auto-hint-api-key without --auto-hint-url
+        auto_hint_errors = validate_auto_hint_options(
+            auto_hint,
+            auto_hint_model,
+            auto_hint_url,
+            auto_hint_api_key,
+        )
+        if auto_hint_errors:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(
+                    CONFIG_ERROR_LABEL,
+                    style="bright_red",
+                )
+            )
+            # display a blank line if there is
+            # at least one error in configuration
+            # for the auto-hinting feature
+            if auto_hint_errors:
+                console.print()
+            # display the errors in configuration
+            # for the auto-hinting (note that there
+            # could be one or more errors)
+            for error in auto_hint_errors:
+                console.print(error)
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
+            sys.exit(FAILURE)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -413,6 +719,19 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         # there are valid checks and thus the
         # tool should run them with run_checks
         elif len(checks) > 0:
+            # capture the original check count before filtering
+            pre_filter_count = len(checks)
+            # resolve filter defaults when filter_query is active
+            # (must happen before cli_args dict references them)
+            resolved_filter_mode = (
+                filter_mode if filter_mode is not None else DEFAULT_FILTER_MODE
+            )
+            resolved_filter_by = (
+                filter_by if filter_by is not None else DEFAULT_FILTER_BY
+            )
+            resolved_filter_type = (
+                filter_type if filter_type is not None else DEFAULT_FILTER_TYPE
+            )
             # create a dictionary of the CLI arguments to pass to the report
             # (this will enable them to be saved inside of a report)
             cli_args = {
@@ -438,6 +757,30 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if auto_hint_api_key
                 else None,
                 AUTO_HINT_TRACK_FLAG: auto_hint_track,
+                FILTER_QUERY_FLAG: filter_query,
+                FILTER_MODE_FLAG: resolved_filter_mode.value
+                if filter_was_active
+                else None,
+                FILTER_BY_FLAG: resolved_filter_by.value
+                if filter_was_active
+                else None,
+                FILTER_TYPE_FLAG: resolved_filter_type.value
+                if filter_was_active
+                else None,
+                FILTER_TOTAL_FLAG: pre_filter_count
+                if filter_was_active
+                else None,
+                FILTER_FUZZY_THRESHOLD_FLAG: filter_fuzzy_threshold
+                if filter_was_active
+                and resolved_filter_mode == FilterMode.FUZZY
+                else None,
+                FILTER_FAILED_LAST_FLAG: filter_failed_last,
+                FILTER_PASSED_LAST_FLAG: filter_passed_last,
+                FILTER_HISTORY_REPORTS_FLAG: history_reports_inspected,
+                FILTER_HISTORY_REPORTS_TOTAL_FLAG: history_reports_total,
+                REPORT_HISTORY_FLAG: report_history,
+                REPORT_HISTORY_MAX_COUNT_FLAG: report_history_max_count,
+                REPORT_HISTORY_MAX_MIB_FLAG: report_history_max_mib,
             }
             version_info = {
                 GATORGRADE_VERSION_KEY: GATORGRADE_VERSION,
@@ -457,84 +800,163 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             # a remote OpenAI-compatible API, both of which we
             # do not want to load unless the opt-in was made)
             auto_hint_engine = None
-            # validate auto-hint option combinations make
-            # sure that invalid configurations are not
-            # allowed; this catches invalid combinations:
-            #   --auto-hint-model without --auto-hint
-            #   --auto-hint-url without --auto-hint
-            #   --auto-hint-api-key without --auto-hint-url
-            auto_hint_errors = validate_auto_hint_options(
-                auto_hint,
-                auto_hint_model,
-                auto_hint_url,
-                auto_hint_api_key,
-            )
-            if auto_hint_errors:
-                checks_status = False
-                console.print()
-                console.print(
-                    Rule(
-                        CONFIG_ERROR_LABEL,
-                        style="bright_red",
+            # apply historical filtering before text filtering
+            # supports --filter-failed-last, --filter-passed-last, and
+            # their combination (intersection of matching checks)
+            if (
+                filter_failed_last is not None
+                or filter_passed_last is not None
+            ):
+                try:
+                    historical_check_ids: set[str] | None = None
+                    # get the failed check IDs
+                    if filter_failed_last is not None:
+                        (
+                            failed_ids,
+                            failed_inspected,
+                            history_reports_total,
+                        ) = get_failed_check_ids(
+                            get_report_history_directory(),
+                            history_scope,
+                            filter_failed_last,
+                        )
+                        history_reports_inspected = failed_inspected
+                        historical_check_ids = failed_ids
+                    # get the passed check IDs by extracting
+                    # all of the checks from the history and then
+                    # using the information about the failed checks
+                    # to indirectly determine which checks passed
+                    if filter_passed_last is not None:
+                        reports_dir = get_report_history_directory()
+                        all_ids = get_all_check_ids(
+                            reports_dir,
+                            history_scope,
+                            filter_passed_last,
+                        )
+                        (
+                            passed_failed_ids,
+                            passed_inspected,
+                            passed_total_reports,
+                        ) = get_failed_check_ids(
+                            reports_dir,
+                            history_scope,
+                            filter_passed_last,
+                        )
+                        passed_ids = all_ids - passed_failed_ids
+                        if historical_check_ids is not None:
+                            historical_check_ids &= passed_ids
+                        else:
+                            historical_check_ids = passed_ids
+                        # use the larger inspection count for display
+                        history_reports_inspected = max(
+                            history_reports_inspected, passed_inspected
+                        )
+                        # set total when there is no failed-last path
+                        if history_reports_total == 0:
+                            history_reports_total = passed_total_reports
+                except (OSError, TypeError, ValueError) as error:
+                    console.print(
+                        "[yellow]Warning: Could not read report history. "
+                        f"Running all checks instead: {error}[/]"
                     )
-                )
-                # display a blank line if there is
-                # at least one error in configuration
-                # for the auto-hinting feature
-                if auto_hint_errors:
-                    console.print()
-                # display the errors in configuration
-                # for the auto-hinting (note that there
-                # could be one or more errors)
-                for error in auto_hint_errors:
-                    console.print(error)
-                console.print(Text(EXIT_MESSAGE))
-                console.print()
-                console.print(Rule(style="bright_red"))
-                sys.exit(FAILURE)
-            # auto-hint engine: try to create it if --auto-hint is passed;
-            # the engine sources hints from a remote OpenAI-compatible API
-            # (i.e., when --auto-hint-url is provided) or from a local
-            # huggingface transformers model (i.e., when no URL is provided).
-            # remote engine fails to initialise or returns None for a hint,
-            # the program falls back to the local engine; resolve the system prompt
-            # and validation rules if specified in the config front matter
-            if auto_hint:
-                system_prompt = resolve_system_prompt(
-                    resolved_filename, resolved_config_dir
-                )
-                validation_rules = resolve_validation_rules(
-                    resolved_filename, resolved_config_dir
-                )
-                auto_hint_engine = create_auto_hint_engine(
-                    resolved_filename,
-                    auto_hint_model,
-                    auto_hint_url,
-                    auto_hint_api_key,
-                    system_prompt=system_prompt,
-                    validation_rules=validation_rules,
-                    auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
-                    console=console,
-                )
-            # run the checks that were specified in a way
-            # that adheres to the configuration both in
-            # the command-line arguments and also in the
-            # gatorgrade.yml file
-            checks_status = run_checks(
-                checks,
-                report,
-                not progress_bar,
-                show_diagnostics,
-                output_limit,
-                cli_args,
-                version_info,
-                github_env,
-                project_name,
-                due_date,
-                auto_hint_engine=auto_hint_engine,
-                auto_hint_url=auto_hint_url,
-                auto_hint_track=auto_hint_track,
+                else:
+                    # there were historical check IDs found
+                    # and thus we can filter the checks
+                    if (
+                        historical_check_ids is not None
+                        and len(historical_check_ids) > 0
+                    ):
+                        checks = filter_checks_by_failed_ids(
+                            checks,
+                            historical_check_ids,
+                        )
+                    # there were no historical check IDs found and thus
+                    # it is important to specify an empty list which
+                    # means that there are not checks to run and there
+                    # should be a warning message displayed to the user
+                    elif historical_check_ids is not None:
+                        checks = []
+            # update the filter-total counts to reflect the
+            # check pool AFTER historical (status) filtering,
+            # which is exactly what the text filter below will
+            # operate on. Without this update, the "Selected
+            # from N checks" display would still report the
+            # original pre-filter count and overstate the pool.
+            # this matters when historical filtering runs first
+            # and narrows the check list before text filtering.
+            cli_args[FILTER_TOTAL_FLAG] = (
+                len(checks) if filter_was_active else None
             )
+            # apply text filtering after historical filtering
+            if filter_query:
+                checks = filter_checks(
+                    checks,
+                    mode=resolved_filter_mode,
+                    by=resolved_filter_by,
+                    ftype=resolved_filter_type,
+                    query=filter_query,
+                    fuzzy_threshold=filter_fuzzy_threshold,
+                )
+            cli_args[FILTER_HISTORY_REPORTS_FLAG] = history_reports_inspected
+            cli_args[FILTER_HISTORY_REPORTS_TOTAL_FLAG] = history_reports_total
+            # if filtering emptied the list, handle it here before
+            # auto-hint engine and run_checks are reached
+            if filter_was_active and not checks:
+                checks_status = True
+                console.print()
+                console.print(Rule("Filter Results", style="green"))
+                console.print()
+                console.print("No checks matched the filter; nothing to run.")
+                console.print()
+                console.print(Rule(style="green"))
+            else:
+                # auto-hint engine: try to create it if --auto-hint is passed;
+                # the engine sources hints from a remote OpenAI-compatible API
+                # (i.e., when --auto-hint-url is provided) or from a local
+                # huggingface transformers model (i.e., when no URL is provided).
+                # remote engine fails to initialise or returns None for a hint,
+                # the program falls back to the local engine; resolve the system prompt
+                # and validation rules if specified in the config front matter
+                if auto_hint:
+                    system_prompt = resolve_system_prompt(
+                        resolved_filename, resolved_config_dir
+                    )
+                    validation_rules = resolve_validation_rules(
+                        resolved_filename, resolved_config_dir
+                    )
+                    auto_hint_engine = create_auto_hint_engine(
+                        resolved_filename,
+                        auto_hint_model,
+                        auto_hint_url,
+                        auto_hint_api_key,
+                        system_prompt=system_prompt,
+                        validation_rules=validation_rules,
+                        auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
+                        console=console,
+                    )
+                # run the checks that were specified in a way
+                # that adheres to the configuration both in
+                # the command-line arguments and also in the
+                # gatorgrade.yml file
+                checks_status = run_checks(
+                    checks,
+                    report,
+                    not progress_bar,
+                    show_diagnostics,
+                    output_limit,
+                    cli_args,
+                    version_info,
+                    github_env,
+                    project_name,
+                    due_date,
+                    auto_hint_engine=auto_hint_engine,
+                    auto_hint_url=auto_hint_url,
+                    auto_hint_track=auto_hint_track,
+                    report_history=report_history,
+                    report_history_max_count=report_history_max_count,
+                    report_history_max_mib=report_history_max_mib,
+                    history_scope=history_scope,
+                )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks

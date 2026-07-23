@@ -9,18 +9,31 @@ which Typer converts into a user-friendly error message.
 Usage:
     from gatorgrade.validate import (
         VALID_ENV_VAR_NAME,
+        validate_auto_hint_options,
         validate_baseline_weight,
+        validate_filter_options,
         validate_github_env,
         validate_output_limit,
         validate_report,
     )
 """
 
+import math
 import re
 from pathlib import Path
 from typing import Optional, Tuple
 
 from click import BadParameter
+
+from gatorgrade.input.filter import (
+    DEFAULT_FILTER_BY,
+    DEFAULT_FILTER_FUZZY_THRESHOLD,
+    DEFAULT_FILTER_MODE,
+    DEFAULT_FILTER_TYPE,
+    FilterBy,
+    FilterMode,
+    FilterType,
+)
 
 # validation constants for the --report option
 REPORT_DEST_FILE = "FILE"
@@ -94,6 +107,55 @@ def validate_baseline_weight(value: int) -> int:
     return value
 
 
+REPORT_HISTORY_COUNT_ERR_FMT = (
+    "Report history maximum count must be a positive integer, got {}"
+)
+REPORT_HISTORY_SIZE_ERR_FMT = (
+    "Report history maximum size must be a positive integer, got {}"
+)
+FILTER_FAILED_LAST_ERR_FMT = (
+    "Failed-check history count must be a positive integer, got {}"
+)
+
+
+def validate_report_history_count(value: int) -> int:
+    """Validate the maximum number of retained history reports."""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise BadParameter(REPORT_HISTORY_COUNT_ERR_FMT.format(value))
+    return value
+
+
+def validate_report_history_size(value: int) -> int:
+    """Validate the maximum report-history size in MiB."""
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise BadParameter(REPORT_HISTORY_SIZE_ERR_FMT.format(value))
+    return value
+
+
+def validate_filter_failed_last(value: int | None) -> int | None:
+    """Validate the number of recent reports used for failure filtering."""
+    if value is not None and (
+        isinstance(value, bool) or not isinstance(value, int) or value <= 0
+    ):
+        raise BadParameter(FILTER_FAILED_LAST_ERR_FMT.format(value))
+    return value
+
+
+# error message for filter passed last validation
+FILTER_PASSED_LAST_ERR_FMT = (
+    "Passed-check history count must be a positive integer, got {}"
+)
+
+
+def validate_filter_passed_last(value: int | None) -> int | None:
+    """Validate the number of recent reports used for passed filtering."""
+    if value is not None and (
+        isinstance(value, bool) or not isinstance(value, int) or value <= 0
+    ):
+        raise BadParameter(FILTER_PASSED_LAST_ERR_FMT.format(value))
+    return value
+
+
 def validate_report(
     value: Tuple[Optional[str], Optional[str], Optional[str]],
 ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
@@ -148,6 +210,110 @@ def validate_report(
         if errors:
             raise BadParameter(";\n".join(errors))
     return value
+
+
+# error message for filter fuzzy threshold validation
+FILTER_FUZZY_THRESHOLD_ERR_FMT = (
+    "Filter fuzzy threshold must be between 0.0 and 1.0, got {}"
+)
+
+
+def validate_filter_fuzzy_threshold(value: float | None) -> float | None:
+    """Validate the filter fuzzy threshold is between 0.0 and 1.0.
+
+    Args:
+        value: The threshold value to validate, or None.
+
+    Returns:
+        The validated value unchanged.
+
+    Raises:
+        BadParameter: If value is outside the valid range.
+
+    """
+    if value is not None and (
+        not math.isfinite(value) or value < 0.0 or value > 1.0
+    ):
+        raise BadParameter(FILTER_FUZZY_THRESHOLD_ERR_FMT.format(value))
+    return value
+
+
+# filter validation constants
+FILTER_QUERY_REQUIRED_FMT = (
+    "The {} flag requires --filter-query to be specified."
+)
+FILTER_QUERY_EMPTY_MSG = (
+    "Filter query must not be empty or contain only blank spaces."
+)
+
+# flag display names for filter error messages
+FILTER_MODE_DISPLAY = "--filter-mode"
+FILTER_BY_DISPLAY = "--filter-by"
+FILTER_TYPE_DISPLAY = "--filter-type"
+FILTER_FUZZY_THRESHOLD_DISPLAY = "--filter-fuzzy-threshold"
+
+# error message format for threshold without FUZZY mode
+FILTER_FUZZY_THRESHOLD_REQUIRES_FUZZY_FMT = (
+    "The {} flag requires --filter-mode FUZZY to influence filtering."
+)
+
+
+def validate_filter_options(
+    filter_query: str | None,
+    filter_mode: FilterMode,
+    filter_by: FilterBy,
+    filter_type: FilterType,
+    filter_fuzzy_threshold: float = DEFAULT_FILTER_FUZZY_THRESHOLD,
+) -> list[str]:
+    """Validate filter CLI option combinations.
+
+    Checks the following rules:
+    - If any of --filter-mode, --filter-by, or --filter-type is
+      provided without a non-empty --filter-query, it is an error.
+    - If --filter-query is empty or contains only blank space, it is
+      an error.
+    - If --filter-fuzzy-threshold is set to a non-default value
+      without --filter-mode FUZZY, it is an error.
+
+    Args:
+        filter_query: The --filter-query value, or None.
+        filter_mode: The --filter-mode value.
+        filter_by: The --filter-by value.
+        filter_type: The --filter-type value.
+        filter_fuzzy_threshold: The --filter-fuzzy-threshold value.
+
+    Returns:
+        A list of error message strings. Empty if all checks pass.
+
+    """
+    errors: list[str] = []
+    # --filter-query explicitly empty or whitespace-only is an error
+    if filter_query is not None and filter_query.strip() == "":
+        errors.append(FILTER_QUERY_EMPTY_MSG)
+    # mode/by/type without query is an error (only if non-default)
+    if not filter_query:
+        if filter_mode != DEFAULT_FILTER_MODE:
+            errors.append(
+                FILTER_QUERY_REQUIRED_FMT.format(FILTER_MODE_DISPLAY)
+            )
+        if filter_by != DEFAULT_FILTER_BY:
+            errors.append(FILTER_QUERY_REQUIRED_FMT.format(FILTER_BY_DISPLAY))
+        if filter_type != DEFAULT_FILTER_TYPE:
+            errors.append(
+                FILTER_QUERY_REQUIRED_FMT.format(FILTER_TYPE_DISPLAY)
+            )
+    # --filter-fuzzy-threshold requires --filter-mode FUZZY (only when
+    # the threshold is explicitly set to a non-default value)
+    if (
+        filter_fuzzy_threshold != DEFAULT_FILTER_FUZZY_THRESHOLD
+        and filter_mode != FilterMode.FUZZY
+    ):
+        errors.append(
+            FILTER_FUZZY_THRESHOLD_REQUIRES_FUZZY_FMT.format(
+                FILTER_FUZZY_THRESHOLD_DISPLAY
+            )
+        )
+    return errors
 
 
 # error message format strings for auto-hint validation

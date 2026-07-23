@@ -1,5 +1,7 @@
 """Tests for the gatorgrade.validate module."""
 
+import math
+
 import pytest
 from click import BadParameter
 from hypothesis import given
@@ -117,6 +119,47 @@ def test_invalid_env_var_names_do_not_match_property(value: str) -> None:
     assert validate.VALID_ENV_VAR_NAME.match(value) is None
 
 
+class TestReportHistoryValidation:
+    """Tests for report-history and historical-filter validators."""
+
+    def test_positive_report_history_count_is_valid(self) -> None:
+        """Positive report-history counts pass validation."""
+        assert validate.validate_report_history_count(1) == 1
+
+    def test_non_positive_report_history_count_is_invalid(self) -> None:
+        """Non-positive report-history counts fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_report_history_count(0)
+
+    def test_positive_report_history_size_is_valid(self) -> None:
+        """Positive report-history sizes pass validation."""
+        assert validate.validate_report_history_size(1) == 1
+
+    def test_non_positive_report_history_size_is_invalid(self) -> None:
+        """Non-positive report-history sizes fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_report_history_size(0)
+
+    def test_positive_failed_last_count_is_valid(self) -> None:
+        """Positive historical-filter counts pass validation."""
+        assert validate.validate_filter_failed_last(1) == 1
+
+    def test_non_positive_failed_last_count_is_invalid(self) -> None:
+        """Non-positive historical-filter counts fail validation."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_failed_last(0)
+
+    def test_missing_failed_last_count_is_valid(self) -> None:
+        """An omitted historical-filter count disables that selector."""
+        assert validate.validate_filter_failed_last(None) is None
+
+    def test_non_finite_fuzzy_threshold_is_invalid(self) -> None:
+        """Non-finite fuzzy thresholds fail validation."""
+        for value in (math.nan, math.inf, -math.inf):
+            with pytest.raises(BadParameter):
+                validate.validate_filter_fuzzy_threshold(value)
+
+
 class TestAutoHintOptionsValidation:
     """Tests for validate_auto_hint_options."""
 
@@ -197,3 +240,262 @@ class TestAutoHintOptionsValidation:
             auto_hint_api_key="sk-test-key",
         )
         assert len(errors) >= 2  # noqa: PLR2004
+
+
+class TestFilterOptionsValidation:
+    """Tests for validate_filter_options."""
+
+    def test_no_args_is_valid(self) -> None:
+        """No filter args at all returns no errors (filtering off)."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_query_only_is_valid(self) -> None:
+        """--filter-query alone returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_query_with_mode_is_valid(self) -> None:
+        """--filter-query plus --filter-mode returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_query_with_by_is_valid(self) -> None:
+        """--filter-query plus --filter-by returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_query_with_type_is_valid(self) -> None:
+        """--filter-query plus --filter-type returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert errors == []
+
+    def test_query_with_all_four_is_valid(self) -> None:
+        """All four filter args together returns no errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert errors == []
+
+    def test_mode_without_query_is_invalid(self) -> None:
+        """--filter-mode without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "--filter-mode" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_by_without_query_is_invalid(self) -> None:
+        """--filter-by without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.FilterBy.DESCRIPTION,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "--filter-by" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_type_without_query_is_invalid(self) -> None:
+        """--filter-type without --filter-query returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.FilterType.EXCLUDE,
+        )
+        assert len(errors) >= 1
+        assert "--filter-type" in errors[0]
+        assert "--filter-query" in errors[0]
+
+    def test_empty_query_is_invalid(self) -> None:
+        """--filter-query with empty string returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "empty" in errors[0]
+
+    def test_whitespace_only_query_is_invalid(self) -> None:
+        """--filter-query with spaces only returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="   ",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "blank space" in errors[0]
+
+    def test_tab_only_query_is_invalid(self) -> None:
+        """--filter-query with tabs only returns an error."""
+        errors = validate.validate_filter_options(
+            filter_query="\t\t",
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert len(errors) >= 1
+        assert "blank space" in errors[0]
+
+    def test_default_values_are_not_flagged(self) -> None:
+        """Passing default enum values without query does not error.
+
+        The validation should only error when a non-default value is
+        explicitly passed without --filter-query.
+        """
+        errors = validate.validate_filter_options(
+            filter_query=None,
+            filter_mode=validate.DEFAULT_FILTER_MODE,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+    def test_threshold_without_fuzzy_is_invalid(self) -> None:
+        """--filter-fuzzy-threshold without --filter-mode FUZZY errors."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.CONTAINS,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert len(errors) >= 1
+        assert "--filter-fuzzy-threshold" in errors[0]
+        assert "FUZZY" in errors[0]
+
+    def test_threshold_with_fuzzy_is_valid(self) -> None:
+        """--filter-fuzzy-threshold with --filter-mode FUZZY is valid."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.FUZZY,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+            filter_fuzzy_threshold=0.9,
+        )
+        assert errors == []
+
+    def test_default_threshold_with_any_mode_is_valid(self) -> None:
+        """Default threshold with any mode is valid (no explicit override)."""
+        errors = validate.validate_filter_options(
+            filter_query="todo",
+            filter_mode=validate.FilterMode.EXACT,
+            filter_by=validate.DEFAULT_FILTER_BY,
+            filter_type=validate.DEFAULT_FILTER_TYPE,
+        )
+        assert errors == []
+
+
+class TestFilterFuzzyThreshold:
+    """Tests for validate_filter_fuzzy_threshold."""
+
+    def test_valid_threshold_zero(self) -> None:
+        """Threshold of 0.0 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(0.0)
+        assert result == 0.0
+
+    def test_valid_threshold_default(self) -> None:
+        """Threshold of 0.4 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(0.4)
+        assert result == 0.4  # noqa: PLR2004
+
+    def test_valid_threshold_one(self) -> None:
+        """Threshold of 1.0 is valid."""
+        result = validate.validate_filter_fuzzy_threshold(1.0)
+        assert result == 1.0
+
+    def test_valid_threshold_none(self) -> None:
+        """None threshold is valid (flag not provided)."""
+        result = validate.validate_filter_fuzzy_threshold(None)
+        assert result is None
+
+    def test_negative_threshold_invalid(self) -> None:
+        """Negative threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(-0.1)
+
+    def test_threshold_above_one_invalid(self) -> None:
+        """Threshold above 1.0 raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(1.5)
+
+    def test_nan_threshold_invalid(self) -> None:
+        """NaN threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("nan"))
+
+    def test_inf_threshold_invalid(self) -> None:
+        """Positive infinity threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("inf"))
+
+    def test_neg_inf_threshold_invalid(self) -> None:
+        """Negative infinity threshold raises BadParameter."""
+        with pytest.raises(BadParameter, match=r"0\.0 and 1\.0"):
+            validate.validate_filter_fuzzy_threshold(float("-inf"))
+
+
+class TestFilterPassedLast:
+    """Tests for validate_filter_passed_last."""
+
+    def test_valid_positive_int(self) -> None:
+        """Positive integer is valid."""
+        result = validate.validate_filter_passed_last(5)
+        assert result == 5  # noqa: PLR2004
+
+    def test_none_is_valid(self) -> None:
+        """None is valid (flag not provided)."""
+        result = validate.validate_filter_passed_last(None)
+        assert result is None
+
+    def test_zero_invalid(self) -> None:
+        """Zero raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(0)
+
+    def test_negative_invalid(self) -> None:
+        """Negative raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(-1)
+
+    def test_bool_invalid(self) -> None:
+        """Boolean raises BadParameter."""
+        with pytest.raises(BadParameter):
+            validate.validate_filter_passed_last(True)

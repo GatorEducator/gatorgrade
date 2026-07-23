@@ -22,6 +22,11 @@ from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.report_history import (
+    DEFAULT_HISTORY_REPORT_COUNT,
+    DEFAULT_HISTORY_SIZE_MIB,
+    save_report_history,
+)
 from gatorgrade.track import append_track_entry, build_track_entry
 
 # disable rich's default highlight to stop number coloring
@@ -35,6 +40,20 @@ SPACE = " "
 # output labels
 CHECKS_LABEL = "Checks"
 FAILING_CHECKS_LABEL = "Failing Check(s)"
+FILTER_QUERY_KEY = "--filter-query"
+FILTER_MODE_KEY = "--filter-mode"
+FILTER_BY_KEY = "--filter-by"
+FILTER_TYPE_KEY = "--filter-type"
+FILTER_TOTAL_KEY = "--filter-total"
+FILTER_FUZZY_THRESHOLD_KEY = "--filter-fuzzy-threshold"
+FILTER_FAILED_LAST_KEY = "--filter-failed-last"
+FILTER_PASSED_LAST_KEY = "--filter-passed-last"
+FILTER_HISTORY_REPORTS_KEY = "--filter-history-reports"
+FILTER_HISTORY_REPORTS_TOTAL_KEY = "--filter-history-reports-total"
+FILTER_LABEL = "Query Filter"
+REPORT_HISTORY_WARNING = (
+    "[yellow]Warning: Could not save automatic report history: {}[/]"
+)
 OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
 PROJECT_LABEL = "Project"
@@ -192,6 +211,28 @@ def _truncate_diagnostic(diagnostic: str, limit: int | None) -> str:
     total = len(lines)
     truncated = lines[:limit]
     return NEWLINE.join(truncated) + TRUNCATED_MSG.format(total, limit)
+
+
+def _print_historical_filter_summary(cli_args: dict | None) -> None:
+    """Print historical filtering details when that selector was used."""
+    if cli_args is None:
+        return
+    failed_last = cli_args.get(FILTER_FAILED_LAST_KEY)
+    passed_last = cli_args.get(FILTER_PASSED_LAST_KEY)
+    if failed_last is None and passed_last is None:
+        return
+    inspected = cli_args.get(FILTER_HISTORY_REPORTS_KEY, 0)
+    total = cli_args.get(FILTER_HISTORY_REPORTS_TOTAL_KEY, 0)
+    parts = []
+    if failed_last is not None:
+        parts.append(f"failed in last {failed_last}")
+    if passed_last is not None:
+        parts.append(f"passed in last {passed_last}")
+    label = " and ".join(parts)
+    rich.print(
+        "[bold]- Historical Filter:[/]"
+        f" Checks {label} (inspected {inspected} of {total} reports)"
+    )
 
 
 def _run_shell_check(
@@ -774,6 +815,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     auto_hint_engine: Any = None,
     auto_hint_url: str | None = None,
     auto_hint_track: bool = False,
+    report_history: bool = False,
+    report_history_max_count: int = DEFAULT_HISTORY_REPORT_COUNT,
+    report_history_max_mib: int = DEFAULT_HISTORY_SIZE_MIB,
+    history_scope: str | None = None,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -800,6 +845,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             Displayed in the summary when remote hints were used.
         auto_hint_track: Whether to write tracking data to
             autohints.json in the current working directory.
+        report_history: Whether to save an automatic JSON report.
+        report_history_max_count: Maximum number of retained reports.
+        report_history_max_mib: Maximum total history size in MiB.
+        history_scope: Scope identifier for the current configuration.
 
     """
 
@@ -1053,9 +1102,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         weighted_percent = 0
     else:
         weighted_percent = round(passed_weight / total_weight * 100)
-    # if the report or github-env is wanted, create the JSON report data
+    # create JSON whenever an output destination or history needs it
     report_display_name = None
-    need_report_data = all(report) or all(github_env)
+    need_report_data = all(report) or all(github_env) or report_history
     if need_report_data:
         report_output_data = create_report_json(
             passed_count,
@@ -1067,6 +1116,16 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             display_project_name,
             due_date,
         )
+        if report_history:
+            try:
+                save_report_history(
+                    report_output_data,
+                    scope=history_scope or "",
+                    max_report_count=report_history_max_count,
+                    max_size_mib=report_history_max_mib,
+                )
+            except (OSError, TypeError, ValueError) as error:
+                rich.print(REPORT_HISTORY_WARNING.format(error))
     # track report format for summary display
     report_type_str = None
     if all(report):
@@ -1148,6 +1207,23 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if filtering was active, show a reminder line
+        if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
+            fq = cli_args[FILTER_QUERY_KEY]
+            fm = cli_args.get(FILTER_MODE_KEY, "")
+            fb = cli_args.get(FILTER_BY_KEY, "")
+            ft = cli_args.get(FILTER_TYPE_KEY, "")
+            ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
+            fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
+            filter_line = (
+                f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
+                f' checks with query="{fq}",'
+                f" mode={fm}, by={fb}, type={ft}"
+            )
+            if fthreshold is not None:
+                filter_line += f", fuzzy-threshold={fthreshold}"
+            rich.print(filter_line)
+        _print_historical_filter_summary(cli_args)
         # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
@@ -1248,6 +1324,23 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
+        # --> if filtering was active, show a reminder line
+        if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
+            fq = cli_args[FILTER_QUERY_KEY]
+            fm = cli_args.get(FILTER_MODE_KEY, "")
+            fb = cli_args.get(FILTER_BY_KEY, "")
+            ft = cli_args.get(FILTER_TYPE_KEY, "")
+            ftotal = cli_args.get(FILTER_TOTAL_KEY, "")
+            fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
+            filter_line = (
+                f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
+                f' checks with query="{fq}",'
+                f" mode={fm}, by={fb}, type={ft}"
+            )
+            if fthreshold is not None:
+                filter_line += f", fuzzy-threshold={fthreshold}"
+            rich.print(filter_line)
+        _print_historical_filter_summary(cli_args)
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "

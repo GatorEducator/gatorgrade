@@ -5,9 +5,12 @@ import io
 import os
 import subprocess
 import sys
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+from gatorgrade import main, report_history
 
 # disable the garbage collector at module load time to avoid intermittent
 # segfaults on CPython 3.14 when numpy C extensions interact with
@@ -64,6 +67,25 @@ def redirect_output_streams(
         return original_run(*args, **kwargs)
 
     monkeypatch.setattr(subprocess, "run", quiet_run)
+
+
+@pytest.fixture(autouse=True)
+def isolate_report_history(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Keep automatic report history inside each test's temporary directory."""
+    history_directory = tmp_path / "report-history"
+    monkeypatch.setattr(
+        report_history,
+        "get_report_history_directory",
+        lambda: history_directory,
+    )
+    monkeypatch.setattr(
+        main,
+        "get_report_history_directory",
+        lambda: history_directory,
+    )
 
 
 @pytest.fixture

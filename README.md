@@ -86,8 +86,9 @@ the assignment directory with the command `gatorgrade`. Alternatively, if you
 use `uvx`, run GatorGrade with the command `uvx gatorgrade`. GatorGrade will run
 each check and display a summary of passing and failing checks along with a
 weighted score and additional diagnostic information. If you want to use
-GatorGrade's auto-hinting feature, you need to run it with `uvx --from
-'gatorgrade[auto-hint]' gatorgrade` as this will load in the optional
+GatorGrade's auto-hinting feature, you need to run it with
+`uvx --from 'gatorgrade[auto-hint]' gatorgrade` as this will load in the
+optional
 dependencies that support hint generation.
 
 ## Command-Line Options
@@ -95,49 +96,103 @@ dependencies that support hint generation.
 The following options control how GatorGrade runs:
 
 - `--config`, `-c`: Specify a custom configuration file. The default is
-  `gatorgrade.yml`.
+  `gatorgrade.yml`. If the file is not found in the current working
+  directory, gatorgrade also looks in the directory specified by
+  `--config-dir` (or the default platform-specific config directory).
 - `--report`, `-r`: Generate a report with three arguments in the format
   `destination format name`. The destination is `FILE` or `ENV`. The format is
   `JSON` or `MD`. The name is the output file path or the environment variable
   name. Examples:
   - `gatorgrade --report FILE JSON report.json`
   - `gatorgrade --report ENV MD GITHUB_STEP_SUMMARY`
+- `--report-history`, `--no-report-history`: Enable or disable automatic JSON
+  report history. History is enabled by default and is saved in the
+  platform-specific user data directory. Automatic history is independent of
+  `--report`.
+- `--report-history-max-count`: Set the maximum number of automatic reports to
+  retain. The default is 100. The value must be a positive integer.
+- `--report-history-max-mb`: Set the maximum total size of automatic reports in
+  MiB. The default is 100. The value must be a positive integer. Oldest history
+  files are removed when either retention limit is exceeded.
 - `--github-env`, `-g`: Write report data to the `GITHUB_ENV` file in GitHub
-  Actions. Takes two arguments: the format (`JSON` or `MD`) and the name of
-  the environment variable to set. When provided and the `GITHUB_ENV`
-  environment variable is set, the report data is appended to that file for
-  use by downstream workflow steps. This flag is independent of `--report`.
-  Examples:
+  Actions. Takes two arguments: the format (`JSON` or `MD`) and the name of the
+  environment variable to set. When provided and the `GITHUB_ENV` environment
+  variable is set, the report data is appended to that file for use by downstream
+  workflow steps. This flag is independent of `--report`. Examples:
   - `gatorgrade --github-env json JSON_REPORT`
   - `gatorgrade --github-env md MD_REPORT`
-- `--output-limit`, `-o`: Set the maximum number of diagnostic lines to
-  display for a failing check. The default is 5. Must be at least 1.
+- `--output-limit`, `-o`: Set the maximum number of diagnostic lines to display
+  for a failing check. The default is 5. Must be at least 1.
 - `--baseline-weight`, `-b`: Set the default weight for checks that do not
   specify an explicit weight. The default is 1. Must be at least 1.
 - `--progress-bar`, `--no-progress-bar`: Show or hide the progress bar while
   checks run. The default is to show the progress bar.
-- `--show-diagnostics`, `--no-show-diagnostics`: Show or hide diagnostic details
-  for failing checks. The default is to show diagnostics.
+- `--show-diagnostics`, `--no-show-diagnostics`: Show or hide diagnostic
+  details for failing checks. The default is to show diagnostics.
 - `--config-dir`, `-d`: Specify the directory for configuration files. The
-  default is the platform-specific user config directory for gatorgrade. When
-  the configuration file is not found in the current directory, gatorgrade
-  looks in this directory.
+  default is the platform-specific user config directory for gatorgrade. When the
+  configuration file is not found in the current directory, gatorgrade looks in
+  this directory.
 - `--verbose`, `--no-verbose`: Show detailed configuration information before
-  running checks. The default is to not show verbose information. Use this to
-  see which config file, config directory, and CLI options are active.
+  running checks. The default is to not show verbose information. Use this to see
+  which config file, config directory, and CLI options are active.
 - `--auto-hint`, `--no-auto-hint`: Automatically generate hints for failing
   checks using a local language model. The default is to not generate hints.
-  Requires the `auto-hint` extra. Use together with `--auto-hint-model` to
-  choose a different model.
+  Requires the `auto-hint` extra. Use together with `--auto-hint-model` to choose
+  a different model.
 - `--auto-hint-model`: Model identifier for auto-hint generation. The default
   for local models is `Qwen/Qwen2.5-0.5B-Instruct`. The default for remote
   servers is `Qwen/Qwen3.6-35B-A3B`. This option requires `--auto-hint`.
 - `--auto-hint-url`: URL of an OpenAI-compatible API server for remote hint
-  generation. When provided, the remote model is used instead of the local
-  model. Falls back to the default local model on any remote server errors.
-  This option requires `--auto-hint`.
+  generation. When provided, the remote model is used instead of the local model.
+  Falls back to the default local model on any remote server errors. This option
+  requires `--auto-hint`.
 - `--auto-hint-api-key`: API key for the remote auto-hint server. This option
   requires `--auto-hint-url`.
+- `--auto-hint-track`, `--no-auto-hint-track`: Save or skip saving auto-hint
+  generation details to `autohints.json` in the current working directory.
+  Tracking is enabled by default and only applies when `--auto-hint` is active
+  and hints are generated.
+- `--filter-query`: Search term for pre-run check filtering. When provided,
+  only checks matching this query are included or excluded. Filtering happens
+  before checks run; if the filter keeps 10 of 400 checks, only those 10 run.
+  This flag is the trigger for filtering; the other three filter flags have
+  sensible defaults when this one is given. When combined with
+  `--filter-failed-last` or `--filter-passed-last`, the text query runs second,
+  narrowing the already status-filtered pool. The "Selected from N checks"
+  summary line reports the size of that post-status, pre-text pool.
+  - Examples:
+    - `gatorgrade --filter-query "todo"`
+    - `gatorgrade --filter-query "if" --filter-mode FUZZY`
+- `--filter-mode`: Matching mode for the filter query. One of `EXACT`
+  (case-insensitive whole-field equality), `CONTAINS` (case-insensitive substring
+  containment, the default), or `FUZZY` (split query into words, each word
+  matches as subsequence or by edit-distance closeness, all words required).
+  Requires `--filter-query`.
+- `--filter-by`: Field to match the filter query against. One of `DESCRIPTION`
+  (the check description), `NAME` (the check name, or the shell command for
+  top-level shell checks), `HINT` (the optional hint), or `ANY` (all three
+  fields, the default). Requires `--filter-query`.
+- `--filter-type`: Whether to keep or discard matching checks. `INCLUDE` (the
+  default) keeps only the matching checks; `EXCLUDE` drops the matching checks
+  and keeps the rest. Requires `--filter-query`.
+- `--filter-fuzzy-threshold`: How aggressively the Levenshtein distance
+  fallback matches words in FUZZY mode. A float between `0.0` (only exact
+  subsequence matches, no typo tolerance) and `1.0` (any two words are considered
+  close). The default is `0.4`, which allows "checking" to match "check" but
+  keeps most unrelated words apart. Only used with `--filter-mode FUZZY`.
+- `--filter-failed-last`: Select checks that failed in at least one of the
+  newest number of retained history reports. Historical matching uses exact check
+  IDs. This status filter runs first, before any `--filter-query` text filter,
+  which then narrows the already-reduced pool. If no usable history exists, all
+  checks are run with a warning. The value must be a positive integer.
+- `--filter-passed-last`: Select checks that passed in all the newest number of
+  retained history reports. Historical matching internally uses exact check
+  identifiers. This status filter runs first, before any `--filter-query` text
+  filter. When combined with `--filter-failed-last`, the two status filters
+  intersect their matching checks first; any text filter then narrows that
+  intersection. If no usable history exists, all checks are run with a warning.
+  The value must be a positive integer.
 - `--version`: Show the GatorGrade version and exit.
 
 ## Configuring Checks
@@ -288,6 +343,38 @@ by `--output-limit`.
 ## Reports
 
 GatorGrade can generate reports in JSON or Markdown format.
+
+### Automatic Report History
+
+GatorGrade automatically saves one JSON report for each completed run in the
+platform-specific user data directory. Automatic history is enabled by default
+and can be disabled with `--no-report-history`.
+
+Each saved report is tagged with a **project scope**, consisting of a hash of
+the config file path and optional project name. When you use the history-based
+`--filter-failed-last` or `--filter-passed-last`, only reports matching the
+current project's scope are considered. This keeps history from different
+projects isolated even though all reports share the same directory.
+
+History is limited to 100 reports and 100 MiB by default. The limits can be
+changed with `--report-history-max-count` and `--report-history-max-mb`. The
+oldest history files are removed when either limit is exceeded. These automatic
+history files are separate from reports written with `--report` or
+`--github-env`.
+
+Use `--filter-failed-last` to run only checks that failed in at least one of the
+newest retained reports. Historical matching uses each check's exact `check_id`.
+This status filter runs first, narrowing the check list to only those with
+matching history. When `--filter-query` is also supplied, the text query runs
+second on that already-narrowed pool; the "Selected from N checks" summary line
+reports the size of that post-status, pre-text pool.
+
+Use `--filter-passed-last` to run only checks that passed in all of the newest
+retained reports. A check is considered "passed" if it appears in a report
+and did not fail in that report. Historical matching uses each check's exact
+`check_id`. Like `--filter-failed-last`, this status filter runs first; when
+both status filters are supplied together they intersect their matching checks,
+and any `--filter-query` text filter then narrows that intersection second.
 
 ### File Reports
 
