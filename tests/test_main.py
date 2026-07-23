@@ -444,6 +444,73 @@ class TestFilterCli:
         assert "Use an if statement" in plain_stdout
         assert "Complete all TODOs" not in plain_stdout
 
+    def test_filter_query_ftotal_excludes_checks_dropped_by_history(
+        self,
+        chdir: Any,
+        capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        """Query filter ftotal reflects the post-history pool, not all checks.
+
+        When --filter-failed-last narrows the check list before
+        --filter-query runs, the "Selected from N checks" reminder
+        must report the size of the already-narrowed pool (the checks
+        the text filter actually operated on), not the original
+        pre-filter count of every check in the configuration.
+        """
+        chdir("tests/test_assignment")
+        checks, parse_error = parse_config(Path("gatorgrade.yml"))
+        assert parse_error is None
+        total_check_count = len(checks)
+        # seed history for only one of the checks so that
+        # --filter-failed-last narrows the pool from total to 1
+        selected_check = checks[1]
+        history_directory = tmp_path / "history"
+        history_directory.mkdir()
+        monkeypatch.setattr(
+            main, "get_report_history_directory", lambda: history_directory
+        )
+        monkeypatch.setattr(
+            report_history,
+            "get_report_history_directory",
+            lambda: history_directory,
+        )
+        report_history.save_report_history(
+            {
+                "checks": [
+                    {
+                        "check_id": selected_check.check_id,
+                        "status": False,
+                    }
+                ]
+            },
+            scope=main.get_history_scope(Path("gatorgrade.yml"), None),
+            history_directory=history_directory,
+        )
+        result = runner.invoke(
+            main.app,
+            [
+                "--filter-failed-last",
+                "1",
+                "--filter-query",
+                "if",
+                "--filter-by",
+                "DESCRIPTION",
+                "--no-report-history",
+                "--no-progress-bar",
+            ],
+        )
+        capsys.readouterr()
+        print(result.stdout)  # noqa: T201
+        assert result.exit_code == 0
+        plain_stdout = ANSI_ESCAPE_PATTERN.sub("", result.stdout)
+        # the text filter operated on 1 check (the survivor of
+        # historical filtering), so ftotal must be 1, not the
+        # original total_check_count of every configured check
+        assert "Selected from 1 checks" in plain_stdout
+        assert f"Selected from {total_check_count} checks" not in plain_stdout
+
     def test_report_history_can_be_disabled(
         self,
         chdir: Any,
