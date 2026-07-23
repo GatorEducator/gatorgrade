@@ -2,6 +2,7 @@
 
 import platform as platform_module
 from io import StringIO
+from pathlib import Path
 
 import pytest
 from rich.console import Console
@@ -194,3 +195,20 @@ def test_gatorgrade_get_os_release_linux_no_release(
     monkeypatch.setattr(detect.platform, "system", lambda: "Linux")
     monkeypatch.setattr(detect.platform, "release", lambda: "")
     assert detect.get_os_release() == ""
+
+
+def test__check_auto_hint_installed_returns_text() -> None:
+    """_check_auto_hint_installed returns a Text object with expected content."""
+    result = detect._check_auto_hint_installed()
+    result_str = str(result)
+    assert "Auto-hint extra:" in result_str
+    # the status is either installed or not installed
+    assert "installed" in result_str or "not installed" in result_str
+
+
+def test_platform_model_cache_dir_returns_path() -> None:
+    """platform_model_cache_dir returns a Path with expected properties."""
+    cache_dir = detect.platform_model_cache_dir()
+    assert isinstance(cache_dir, Path)
+    assert cache_dir.name == "models"
+    assert "gatorgrade" in str(cache_dir).lower()

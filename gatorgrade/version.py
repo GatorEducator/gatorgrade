@@ -10,4 +10,4 @@ Use it anywhere you need the version string:
     from gatorgrade.version import GATORGRADE_VERSION
 """
 
-GATORGRADE_VERSION = "0.12.0"
+GATORGRADE_VERSION = "0.12.1"

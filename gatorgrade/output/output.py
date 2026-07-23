@@ -231,7 +231,7 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
     label = " and ".join(parts)
     rich.print(
         "[bold]- Historical Filter:[/]"
-        f" Checks {label} (inspected {inspected} of {total} reports)"
+        f" Check(s) {label} (inspected {inspected} of {total} reports)"
     )
 
 
@@ -1207,7 +1207,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
-        # --> if filtering was active, show a reminder line
+        # --> if filtering was active, show the historical filter
+        #     summary first (status filtering runs before text
+        #     filtering), then the query filter reminder line
+        _print_historical_filter_summary(cli_args)
         if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
             fq = cli_args[FILTER_QUERY_KEY]
             fm = cli_args.get(FILTER_MODE_KEY, "")
@@ -1217,13 +1220,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
             filter_line = (
                 f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
-                f' checks with query="{fq}",'
+                f' check(s) with query="{fq}",'
                 f" mode={fm}, by={fb}, type={ft}"
             )
             if fthreshold is not None:
                 filter_line += f", fuzzy-threshold={fthreshold}"
             rich.print(filter_line)
-        _print_historical_filter_summary(cli_args)
         # --> if a report was specified, display it and the type
         if report_display_name is not None and report_type_str is not None:
             rich.print(
@@ -1324,7 +1326,10 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             f"[bold]- {POINTS_LABEL}:[/] {passed_weight}/{total_weight} "
             f"[{summary_color}]({weighted_percent}%)[/]"
         )
-        # --> if filtering was active, show a reminder line
+        # --> if filtering was active, show the historical filter
+        #     summary first (status filtering runs before text
+        #     filtering), then the query filter reminder line
+        _print_historical_filter_summary(cli_args)
         if cli_args is not None and cli_args.get(FILTER_QUERY_KEY):
             fq = cli_args[FILTER_QUERY_KEY]
             fm = cli_args.get(FILTER_MODE_KEY, "")
@@ -1334,13 +1339,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             fthreshold = cli_args.get(FILTER_FUZZY_THRESHOLD_KEY)
             filter_line = (
                 f"[bold]- {FILTER_LABEL}:[/] Selected from {ftotal}"
-                f' checks with query="{fq}",'
+                f' check(s) with query="{fq}",'
                 f" mode={fm}, by={fb}, type={ft}"
             )
             if fthreshold is not None:
                 filter_line += f", fuzzy-threshold={fthreshold}"
             rich.print(filter_line)
-        _print_historical_filter_summary(cli_args)
         if report_display_name is not None and report_type_str is not None:
             rich.print(
                 f"[bold]- {REPORT_LABEL}:[/] "

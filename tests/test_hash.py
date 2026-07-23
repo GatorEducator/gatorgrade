@@ -2,10 +2,13 @@
 
 import json
 
-from gatorgrade.hash import compute_check_id
+from gatorgrade.hash import _ensure_json_safe, compute_check_id
 
 # well-known hex string length
 SHA256_HEX_LENGTH = 64
+
+SAMPLE_INT = 42
+SAMPLE_FLOAT = 3.14
 
 
 def test_hash_is_64_hex_chars() -> None:
@@ -254,3 +257,30 @@ def test_hash_with_no_description_provided() -> None:
         check_data={"command": "echo test"},
     )
     assert len(cid) == SHA256_HEX_LENGTH
+
+
+def test__ensure_json_safe_preserves_primitives() -> None:
+    """_ensure_json_safe returns primitives unchanged."""
+    assert _ensure_json_safe("hello") == "hello"
+    assert _ensure_json_safe(SAMPLE_INT) == SAMPLE_INT
+    assert _ensure_json_safe(SAMPLE_FLOAT) == SAMPLE_FLOAT
+    assert _ensure_json_safe(True) is True
+    assert _ensure_json_safe(None) is None
+
+
+def test__ensure_json_safe_converts_dict_keys_to_strings() -> None:
+    """_ensure_json_safe converts non-string dict keys to strings."""
+    result = _ensure_json_safe({1: "one", 2: "two"})
+    assert result == {"1": "one", "2": "two"}
+
+
+def test__ensure_json_safe_converts_nested_structures() -> None:
+    """_ensure_json_safe recursively converts nested dicts and lists."""
+    result = _ensure_json_safe({"items": [{"id": 1}, {"id": 2}]})
+    assert result == {"items": [{"id": 1}, {"id": 2}]}
+
+
+def test__ensure_json_safe_converts_non_serialisable_to_str() -> None:
+    """_ensure_json_safe converts arbitrary objects to strings."""
+    result = _ensure_json_safe({"key": object()})
+    assert isinstance(result["key"], str)

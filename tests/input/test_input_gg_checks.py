@@ -10,6 +10,7 @@ from hypothesis import strategies as st
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.in_file_path import reformat_yaml_data
 from gatorgrade.input.parse_config import (
+    _platform_config_dir,
     get_auto_hint_model,
     get_config_dir,
     get_due_date,
@@ -281,6 +282,16 @@ class TestGetConfigDir:
         monkeypatch.setenv("GATORGRADE_CONFIG_DIR", "/tmp/my-config")
         result = get_config_dir()
         assert result == Path("/tmp/my-config")
+
+
+class TestPlatformConfigDir:
+    """Tests for the _platform_config_dir function."""
+
+    def test_returns_path(self) -> None:
+        """_platform_config_dir always returns a Path."""
+        result = _platform_config_dir()
+        assert isinstance(result, Path)
+        assert "gatorgrade" in str(result).lower()
 
 
 class TestResolveConfigPath:
