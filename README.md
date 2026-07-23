@@ -149,6 +149,10 @@ The following options control how GatorGrade runs:
   requires `--auto-hint`.
 - `--auto-hint-api-key`: API key for the remote auto-hint server. This option
   requires `--auto-hint-url`.
+- `--auto-hint-track`, `--no-auto-hint-track`: Save or skip saving auto-hint
+  generation details to `autohints.json` in the current working directory.
+  Tracking is enabled by default and only applies when `--auto-hint` is active
+  and hints are generated.
 - `--filter-query`: Search term for pre-run check filtering. When provided,
   only checks matching this query are included or excluded. Filtering happens
   before checks run; if the filter keeps 10 of 400 checks, only those 10 run.
