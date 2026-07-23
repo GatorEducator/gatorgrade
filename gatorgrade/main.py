@@ -827,7 +827,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         (
                             passed_failed_ids,
                             passed_inspected,
-                            _,
+                            passed_total_reports,
                         ) = get_failed_check_ids(
                             reports_dir,
                             history_scope,
@@ -844,15 +844,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         )
                         # set total when there is no failed-last path
                         if history_reports_total == 0:
-                            (
-                                _,
-                                _,
-                                history_reports_total,
-                            ) = get_failed_check_ids(
-                                reports_dir,
-                                history_scope,
-                                filter_passed_last,
-                            )
+                            history_reports_total = passed_total_reports
                 except (OSError, TypeError, ValueError) as error:
                     console.print(
                         "[yellow]Warning: Could not read report history. "
