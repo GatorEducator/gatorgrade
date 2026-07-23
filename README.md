@@ -96,7 +96,9 @@ dependencies that support hint generation.
 The following options control how GatorGrade runs:
 
 - `--config`, `-c`: Specify a custom configuration file. The default is
-  `gatorgrade.yml`.
+  `gatorgrade.yml`. If the file is not found in the current working
+  directory, gatorgrade also looks in the directory specified by
+  `--config-dir` (or the default platform-specific config directory).
 - `--report`, `-r`: Generate a report with three arguments in the format
   `destination format name`. The destination is `FILE` or `ENV`. The format is
   `JSON` or `MD`. The name is the output file path or the environment variable
