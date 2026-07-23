@@ -508,8 +508,10 @@ class TestFilterCli:
         # the text filter operated on 1 check (the survivor of
         # historical filtering), so ftotal must be 1, not the
         # original total_check_count of every configured check
-        assert "Selected from 1 checks" in plain_stdout
-        assert f"Selected from {total_check_count} checks" not in plain_stdout
+        assert "Selected from 1 check(s)" in plain_stdout
+        assert (
+            f"Selected from {total_check_count} check(s)" not in plain_stdout
+        )
 
     def test_report_history_can_be_disabled(
         self,
