@@ -483,6 +483,28 @@ Run tests with direct coverage checks:
 uv run task test-coverage-check-verbose
 ```
 
+### Testing Locally - Editable Install
+
+Fork the gatorgrade repository and clone it. Once you have made some changes
+you wish to test, move to the directory of the project you wish to run the
+editable install of gatorgrade in and run the following commands in your
+terminal:
+
+```bash
+uv add --editable ./relative/path/to/your/gatorgrade/fork
+```
+
+Once the necessary packages have installed run:
+
+```bash
+uv run gatorgrade
+```
+
+Any changes made to your fork afterwards will automatically be added when
+you save them - no need to reinstall gatorgrade every time! Compare the
+live version to your local version by running `uvx gatorgrade` and
+`uv run gatorgrade` respectively.
+
 ### Linting and Formatting
 
 Run all linting checks:
