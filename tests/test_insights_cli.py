@@ -33,7 +33,6 @@ from gatorgrade.validate import (
     validate_insights_input,
     validate_insights_last,
     validate_insights_output,
-    validate_insights_output_dir,
 )
 
 runner = CliRunner()
@@ -81,6 +80,7 @@ BAD_CHECK_ENTRY_JSON = (
 )
 NOT_A_REPORT_TEXT = "not a valid insights report"
 CANNOT_COMBINE_TEXT = "cannot be combined"
+NO_SUCH_OPTION_TEXT = "No such option"
 
 CHECK_ALPHA = "check-alpha"
 CHECK_BETA = "check-beta"
@@ -336,56 +336,31 @@ def test_validate_insights_output_allows_a_missing_parent(
     assert validate_insights_output(destination) == destination
 
 
-def test_validate_insights_output_dir_allows_new_and_existing_directories(
-    tmp_path: Path,
-) -> None:
-    """A directory that exists or does not exist yet is both acceptable."""
-    assert validate_insights_output_dir(tmp_path) == tmp_path
-    fresh = tmp_path / SAVE_DIR_NAME
-    assert validate_insights_output_dir(fresh) == fresh
-
-
-def test_validate_insights_output_dir_rejects_an_existing_file(
-    tmp_path: Path,
-) -> None:
-    """A path that already names a file cannot hold saved reports."""
-    occupied = tmp_path / OUTPUT_NAME
-    occupied.write_text(NOT_AN_OBJECT_JSON, encoding=ENCODING)
-    with pytest.raises(BadParameter):
-        validate_insights_output_dir(occupied)
-
-
 def test_insights_destination_prefers_an_explicit_output_path(
     tmp_path: Path,
 ) -> None:
     """An explicit output path is used ahead of the save directory."""
     explicit = tmp_path / OUTPUT_NAME
     assert (
-        _insights_destination(explicit, True, tmp_path, InsightsFormat.JSON)
-        == explicit
+        _insights_destination(explicit, True, InsightsFormat.JSON) == explicit
     )
 
 
-def test_insights_destination_names_the_file_for_the_format(
-    tmp_path: Path,
-) -> None:
-    """Saving chooses a filename that matches the chosen output format."""
+def test_insights_destination_names_the_file_for_the_format() -> None:
+    """Saving chooses a filename inside the fixed insights directory."""
     assert (
-        _insights_destination(None, True, tmp_path, InsightsFormat.JSON)
-        == tmp_path / SAVED_JSON_NAME
+        _insights_destination(None, True, InsightsFormat.JSON)
+        == Path(SAVE_DIR_NAME) / SAVED_JSON_NAME
     )
     assert (
-        _insights_destination(None, True, tmp_path, InsightsFormat.TEXT)
-        == tmp_path / SAVED_TEXT_NAME
+        _insights_destination(None, True, InsightsFormat.TEXT)
+        == Path(SAVE_DIR_NAME) / SAVED_TEXT_NAME
     )
 
 
-def test_insights_destination_is_none_without_saving(tmp_path: Path) -> None:
+def test_insights_destination_is_none_without_saving() -> None:
     """Displaying the analysis alone writes no file at all."""
-    assert (
-        _insights_destination(None, False, tmp_path, InsightsFormat.TEXT)
-        is None
-    )
+    assert _insights_destination(None, False, InsightsFormat.TEXT) is None
 
 
 def test_resolve_insights_config_returns_an_existing_file(
@@ -712,12 +687,13 @@ def test_insights_command_creates_a_missing_output_directory(
     assert destination.is_file()
 
 
-def test_insights_command_saves_into_the_output_directory(
+def test_insights_command_saves_into_the_insights_directory(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Saving writes a named report into a directory created on demand."""
+    """Saving writes a named report into the fixed insights directory."""
+    monkeypatch.chdir(tmp_path)
     config_path, history_dir = _project(tmp_path)
-    save_dir = tmp_path / SAVE_DIR_NAME
     result = _invoke(
         INSIGHTS_COMMAND,
         CONFIG_FLAG,
@@ -727,11 +703,9 @@ def test_insights_command_saves_into_the_output_directory(
         FORMAT_FLAG,
         InsightsFormat.JSON.value,
         SAVE_FLAG,
-        OUTPUT_DIR_FLAG,
-        str(save_dir),
     )
     assert result.exit_code == EXIT_SUCCESS
-    saved = save_dir / SAVED_JSON_NAME
+    saved = tmp_path / SAVE_DIR_NAME / SAVED_JSON_NAME
     assert saved.is_file()
     assert (
         json.loads(saved.read_text(encoding=ENCODING))["reports_inspected"]
@@ -741,10 +715,28 @@ def test_insights_command_saves_into_the_output_directory(
 
 def test_insights_command_saves_text_under_a_text_filename(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Saving a text analysis names the file for the text format."""
+    monkeypatch.chdir(tmp_path)
     config_path, history_dir = _project(tmp_path)
-    save_dir = tmp_path / SAVE_DIR_NAME
+    result = _invoke(
+        INSIGHTS_COMMAND,
+        CONFIG_FLAG,
+        str(config_path),
+        HISTORY_DIR_FLAG,
+        str(history_dir),
+        SAVE_FLAG,
+    )
+    assert result.exit_code == EXIT_SUCCESS
+    assert (tmp_path / SAVE_DIR_NAME / SAVED_TEXT_NAME).is_file()
+
+
+def test_insights_command_rejects_an_output_directory_option(
+    tmp_path: Path,
+) -> None:
+    """A custom output directory is rejected so checks keep one path."""
+    config_path, history_dir = _project(tmp_path)
     result = _invoke(
         INSIGHTS_COMMAND,
         CONFIG_FLAG,
@@ -753,10 +745,11 @@ def test_insights_command_saves_text_under_a_text_filename(
         str(history_dir),
         SAVE_FLAG,
         OUTPUT_DIR_FLAG,
-        str(save_dir),
+        str(tmp_path / SAVE_DIR_NAME),
     )
-    assert result.exit_code == EXIT_SUCCESS
-    assert (save_dir / SAVED_TEXT_NAME).is_file()
+    assert result.exit_code != EXIT_SUCCESS
+    assert NO_SUCH_OPTION_TEXT in result.output
+    assert not (tmp_path / SAVE_DIR_NAME / SAVED_JSON_NAME).exists()
 
 
 def test_insights_command_rejects_saving_with_an_output_path(

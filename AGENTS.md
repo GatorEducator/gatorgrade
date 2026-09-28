@@ -231,3 +231,6 @@ The coding agent should write the notes as a Markdown list.
 - `tests/test_insights_cli.py` builds a `TextIOWrapper` with
   `newline=""`. Without it, `\n` becomes `\r\n` on Windows and the
   byte-comparison tests pass in CI while failing locally.
+- `--save` always writes `insights/insights.json` or
+  `insights/insights.txt`. There is no `--output-dir`, because a check
+  that looks only in `insights/` cannot verify a report saved elsewhere.

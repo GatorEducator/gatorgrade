@@ -428,7 +428,6 @@ INSIGHTS_LAST_ERR_FMT = (
     "Insights report count must be a positive integer, got {}"
 )
 INSIGHTS_OUTPUT_DIRECTORY_ERR_FMT = "Output path is a directory: {}"
-INSIGHTS_OUTPUT_DIR_ERR_FMT = "Output directory is not a directory: {}"
 INSIGHTS_INPUT_MISSING_ERR_FMT = "Input file does not exist: {}"
 INSIGHTS_INPUT_DIRECTORY_ERR_FMT = "Input path is a directory: {}"
 
@@ -448,13 +447,6 @@ def validate_insights_output(value: Optional[Path]) -> Optional[Path]:
     # only a path that already names a directory is rejected here
     if value.is_dir():
         raise BadParameter(INSIGHTS_OUTPUT_DIRECTORY_ERR_FMT.format(value))
-    return value
-
-
-def validate_insights_output_dir(value: Path) -> Path:
-    """Validate the directory that saved insights reports are written into."""
-    if value.exists() and not value.is_dir():
-        raise BadParameter(INSIGHTS_OUTPUT_DIR_ERR_FMT.format(value))
     return value
 
 

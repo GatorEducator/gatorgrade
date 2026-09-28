@@ -409,10 +409,9 @@ custom.yml insights` analyzes the default `gatorgrade.yml` instead of
   5. The value must be a positive integer.
 - `--format`, `-f`: Either `text` for a readable summary or `json` for
   machine-readable results. The default is `text`.
-- `--save`, `-s`: Write the analysis into the output directory, creating it
-  when needed, as `insights.json` or `insights.txt` to match the format.
-- `--output-dir`: The directory that `--save` writes into. The default is
-  `insights`.
+- `--save`, `-s`: Write the analysis into the `insights` directory,
+  creating it when needed, as `insights.json` or `insights.txt`. The
+  directory name is fixed so a check can always find the file.
 - `--output`, `-o`: Write the analysis to an exact path, creating any missing
   parent directories.
 - `--input`, `-i`: Render a previously saved JSON report instead of reading

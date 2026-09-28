@@ -80,7 +80,6 @@ from gatorgrade.validate import (
     validate_insights_input,
     validate_insights_last,
     validate_insights_output,
-    validate_insights_output_dir,
     validate_output_limit,
     validate_report,
     validate_report_history_count,
@@ -226,12 +225,11 @@ INSIGHTS_INVALID_FMT = (
 INSIGHTS_LAST_FLAG = "--last"
 INSIGHTS_HISTORY_DIR_FLAG = "--history-dir"
 INSIGHTS_OUTPUT_FLAG = "--output"
-INSIGHTS_OUTPUT_DIR_FLAG = "--output-dir"
 INSIGHTS_SAVE_FLAG = "--save"
 INSIGHTS_INPUT_FLAG = "--input"
-# a saved report lands in a predictable directory that is created on
-# demand, so that an assignment can require the file at a known path
-INSIGHTS_DEFAULT_OUTPUT_DIR = Path("insights")
+# a saved report always lands in this directory, created on demand, so
+# that a check can require the file at one known path
+INSIGHTS_SAVE_DIRECTORY = Path("insights")
 INSIGHTS_SAVE_CONFLICT_FMT = (
     "The {} option writes to a chosen path and cannot be combined with {}."
 )
@@ -1157,14 +1155,13 @@ def _load_insights_report(input_file: Path) -> InsightsReport:
 def _insights_destination(
     output_file: Optional[Path],
     save: bool,
-    output_dir: Path,
     output_format: InsightsFormat,
 ) -> Optional[Path]:
     """Return where a report should be written, or None to only display it."""
     if output_file is not None:
         return output_file
     if save:
-        return output_dir / INSIGHTS_SAVE_NAMES[output_format]
+        return INSIGHTS_SAVE_DIRECTORY / INSIGHTS_SAVE_NAMES[output_format]
     return None
 
 
@@ -1243,7 +1240,6 @@ def _run_insights(  # noqa: PLR0913
     instructor: bool,
     input_file: Optional[Path],
     save: bool,
-    output_dir: Path,
 ) -> None:
     """Render insights from a saved report or from saved report history."""
     if save and output_file is not None:
@@ -1251,7 +1247,6 @@ def _run_insights(  # noqa: PLR0913
     destination = _insights_destination(
         output_file,
         save,
-        output_dir,
         output_format,
     )
     if input_file is not None:
@@ -1335,16 +1330,9 @@ def _insights_entry(  # noqa: PLR0913
         INSIGHTS_SAVE_FLAG,
         "-s",
         help=(
-            "Save the analysis into the output directory, creating it when"
-            " needed, so that the report sits at a predictable path."
+            "Save the analysis into the insights directory, creating it"
+            " when needed, so the report stays at the path checks expect."
         ),
-    ),
-    output_dir: Path = typer.Option(
-        INSIGHTS_DEFAULT_OUTPUT_DIR,
-        INSIGHTS_OUTPUT_DIR_FLAG,
-        help="Directory that --save writes the analysis into.",
-        show_default=True,
-        callback=validate_insights_output_dir,
     ),
     history_dir: Path = typer.Option(
         get_report_history_directory(),
@@ -1383,7 +1371,6 @@ def _insights_entry(  # noqa: PLR0913
         instructor,
         input_file,
         save,
-        output_dir,
     )
 
 
