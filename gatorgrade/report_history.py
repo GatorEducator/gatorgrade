@@ -7,7 +7,7 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, cast
 
 import platformdirs
 
@@ -40,6 +40,12 @@ HISTORY_FILE_MODE_WRITE = "w"
 HISTORY_FILE_ENCODING = "utf-8"
 HISTORY_JSON_INDENT = 4
 HISTORY_TEMPORARY_SUFFIX = ".tmp"
+HISTORY_SKIP_UNREADABLE = "unreadable"
+HISTORY_SKIP_INVALID_JSON = "invalid_json"
+HISTORY_SKIP_NOT_OBJECT = "not_object"
+HISTORY_SKIP_UNSUPPORTED_SCHEMA = "unsupported_schema"
+HISTORY_SKIP_DIFFERENT_SCOPE = "different_scope"
+HISTORY_SKIP_MALFORMED_STRUCTURE = "malformed_structure"
 
 
 def get_report_history_directory() -> Path:
@@ -226,27 +232,55 @@ def save_report_history(  # noqa: PLR0913
     return destination
 
 
-def _load_history_file(  # noqa: PLR0911
+def _classify_history_file(  # noqa: PLR0911
     path: Path, scope: str
-) -> dict[str, Any] | None:
-    """Load one valid in-scope history file, or return None."""
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Classify one history file as valid payload or skip reason."""
     try:
         payload = json.loads(path.read_text(encoding=HISTORY_FILE_ENCODING))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return None
+    except (OSError, UnicodeDecodeError):
+        return None, HISTORY_SKIP_UNREADABLE
+    except json.JSONDecodeError:
+        return None, HISTORY_SKIP_INVALID_JSON
     if not isinstance(payload, dict):
-        return None
+        return None, HISTORY_SKIP_NOT_OBJECT
     if payload.get(HISTORY_SCHEMA_KEY) != HISTORY_SCHEMA_VERSION:
-        return None
+        return None, HISTORY_SKIP_UNSUPPORTED_SCHEMA
     if payload.get(HISTORY_SCOPE_KEY) != scope:
         # report belongs to a different project scope — skip it
-        return None
+        return None, HISTORY_SKIP_DIFFERENT_SCOPE
     report = payload.get(HISTORY_REPORT_KEY)
     if not isinstance(report, dict):
-        return None
+        return None, HISTORY_SKIP_MALFORMED_STRUCTURE
     if not isinstance(report.get(CHECKS_KEY), list):
-        return None
-    return payload
+        return None, HISTORY_SKIP_MALFORMED_STRUCTURE
+    return payload, None
+
+
+def _load_history_file(path: Path, scope: str) -> dict[str, Any] | None:
+    """Load one valid in-scope history file, or return None."""
+    return _classify_history_file(path, scope)[0]
+
+
+def load_history_reports_with_diagnostics(
+    history_directory: Path,
+    scope: str,
+    maximum_reports: int | None = None,
+) -> tuple[list[dict[str, Any]], list[tuple[Path, str]]]:
+    """Load valid in-scope reports newest first, plus skip diagnostics."""
+    if maximum_reports is not None:
+        _validate_positive_limit(maximum_reports, "Maximum reports to load")
+    reports: list[dict[str, Any]] = []
+    diagnostics: list[tuple[Path, str]] = []
+    for path in reversed(_history_files(history_directory)):
+        payload, reason = _classify_history_file(path, scope)
+        if payload is not None:
+            reports.append(payload)
+            if maximum_reports is not None and len(reports) >= maximum_reports:
+                break
+        else:
+            diagnostics.append((path, cast(str, reason)))
+    return reports, diagnostics
 
 
 def load_history_reports(
@@ -255,15 +289,11 @@ def load_history_reports(
     maximum_reports: int | None = None,
 ) -> list[dict[str, Any]]:
     """Load valid in-scope reports, newest first."""
-    if maximum_reports is not None:
-        _validate_positive_limit(maximum_reports, "Maximum reports to load")
-    reports: list[dict[str, Any]] = []
-    for path in reversed(_history_files(history_directory)):
-        payload = _load_history_file(path, scope)
-        if payload is not None:
-            reports.append(payload)
-            if maximum_reports is not None and len(reports) >= maximum_reports:
-                break
+    reports, _ = load_history_reports_with_diagnostics(
+        history_directory,
+        scope,
+        maximum_reports=maximum_reports,
+    )
     return reports
 
 

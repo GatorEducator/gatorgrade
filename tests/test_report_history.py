@@ -14,6 +14,17 @@ from gatorgrade.report_history import (
     CHECKS_KEY,
     HISTORY_FILE_PREFIX,
     HISTORY_FILE_SUFFIX,
+    HISTORY_REPORT_KEY,
+    HISTORY_SCHEMA_KEY,
+    HISTORY_SCHEMA_VERSION,
+    HISTORY_SCOPE_KEY,
+    HISTORY_SKIP_DIFFERENT_SCOPE,
+    HISTORY_SKIP_INVALID_JSON,
+    HISTORY_SKIP_MALFORMED_STRUCTURE,
+    HISTORY_SKIP_NOT_OBJECT,
+    HISTORY_SKIP_UNREADABLE,
+    HISTORY_SKIP_UNSUPPORTED_SCHEMA,
+    _classify_history_file,
     _history_filename,
     _history_files,
     _load_history_file,
@@ -27,6 +38,7 @@ from gatorgrade.report_history import (
     get_failed_check_ids,
     get_history_scope,
     load_history_reports,
+    load_history_reports_with_diagnostics,
     prune_report_history,
     save_report_history,
 )
@@ -34,6 +46,11 @@ from gatorgrade.report_history import (
 UTC = datetime.timezone.utc
 EXPECTED_RETAINED_REPORTS = 2
 EXPECTED_INSPECTED_REPORTS = 2
+EXPECTED_ONE_REPORT = 1
+EXPECTED_TWO_REPORTS = 2
+UNSUPPORTED_SCHEMA_VERSION = 999
+SCOPE_ONE = "project-one"
+SCOPE_TWO = "project-two"
 
 
 def _report(
@@ -384,3 +401,279 @@ def test_load_history_file_returns_none_for_non_list_checks(
     )
     result = _load_history_file(path, "s")
     assert result is None
+
+
+def _write_owned_history_file(
+    tmp_path: Path,
+    filename_stem: str,
+    payload: Any,
+) -> Path:
+    """Write one owned history filename with arbitrary JSON payload."""
+    destination = (
+        tmp_path / f"{HISTORY_FILE_PREFIX}{filename_stem}{HISTORY_FILE_SUFFIX}"
+    )
+    if isinstance(payload, str):
+        destination.write_text(payload, encoding="utf-8")
+    else:
+        destination.write_text(json.dumps(payload), encoding="utf-8")
+    return destination
+
+
+def test_classify_history_file_unreadable(tmp_path: Path) -> None:
+    """Unreadable paths classify as HISTORY_SKIP_UNREADABLE."""
+    path = tmp_path / "missing.json"
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_UNREADABLE
+
+
+def test_classify_history_file_invalid_json(tmp_path: Path) -> None:
+    """Invalid JSON classifies as HISTORY_SKIP_INVALID_JSON."""
+    path = _write_owned_history_file(tmp_path, "bad-json", "not valid json{")
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_INVALID_JSON
+
+
+def test_classify_history_file_not_object(tmp_path: Path) -> None:
+    """Non-object top-level JSON classifies as HISTORY_SKIP_NOT_OBJECT."""
+    path = _write_owned_history_file(tmp_path, "array", [])
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_NOT_OBJECT
+
+
+def test_classify_history_file_unsupported_schema(tmp_path: Path) -> None:
+    """Unsupported schema versions classify as HISTORY_SKIP_UNSUPPORTED_SCHEMA."""
+    path = _write_owned_history_file(
+        tmp_path,
+        "bad-schema",
+        {
+            HISTORY_SCHEMA_KEY: UNSUPPORTED_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_ONE,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: []},
+        },
+    )
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_UNSUPPORTED_SCHEMA
+
+
+def test_classify_history_file_different_scope(tmp_path: Path) -> None:
+    """Out-of-scope files classify as HISTORY_SKIP_DIFFERENT_SCOPE."""
+    path = _write_owned_history_file(
+        tmp_path,
+        "other-scope",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_TWO,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: []},
+        },
+    )
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_DIFFERENT_SCOPE
+
+
+def test_classify_history_file_malformed_non_dict_report(
+    tmp_path: Path,
+) -> None:
+    """Non-dict report classifies as HISTORY_SKIP_MALFORMED_STRUCTURE."""
+    path = _write_owned_history_file(
+        tmp_path,
+        "bad-report",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_ONE,
+            HISTORY_REPORT_KEY: "not-a-dict",
+        },
+    )
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_MALFORMED_STRUCTURE
+
+
+def test_classify_history_file_malformed_non_list_checks(
+    tmp_path: Path,
+) -> None:
+    """Non-list checks classifies as HISTORY_SKIP_MALFORMED_STRUCTURE."""
+    path = _write_owned_history_file(
+        tmp_path,
+        "bad-checks",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_ONE,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: "not-a-list"},
+        },
+    )
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert payload is None
+    assert reason == HISTORY_SKIP_MALFORMED_STRUCTURE
+
+
+def test_classify_history_file_success_returns_payload(
+    tmp_path: Path,
+) -> None:
+    """Valid in-scope files return the payload with no skip reason."""
+    path = save_report_history(
+        _report("ok", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    payload, reason = _classify_history_file(path, SCOPE_ONE)
+    assert reason is None
+    assert payload is not None
+    assert payload[HISTORY_SCOPE_KEY] == SCOPE_ONE
+
+
+def test_load_history_reports_with_diagnostics_newest_first(
+    tmp_path: Path,
+) -> None:
+    """Diagnostics loader returns valid reports newest first."""
+    save_report_history(
+        _report("older", False),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    save_report_history(
+        _report("newer", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 2, tzinfo=UTC),
+    )
+    reports, diagnostics = load_history_reports_with_diagnostics(
+        tmp_path,
+        SCOPE_ONE,
+    )
+    assert diagnostics == []
+    assert len(reports) == EXPECTED_TWO_REPORTS
+    assert [
+        report["report"]["checks"][0][CHECK_ID_KEY] for report in reports
+    ] == ["newer", "older"]
+
+
+def test_load_history_reports_with_diagnostics_maximum_counts_only_valid(
+    tmp_path: Path,
+) -> None:
+    """maximum_reports counts only valid payloads and still records skips."""
+    save_report_history(
+        _report("oldest-valid", False),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    _write_owned_history_file(tmp_path, "20260101T120000.000000Z-bad", "{")
+    save_report_history(
+        _report("middle-valid", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 2, tzinfo=UTC),
+    )
+    _write_owned_history_file(
+        tmp_path,
+        "20260102T120000.000000Z-scope",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_TWO,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: []},
+        },
+    )
+    save_report_history(
+        _report("newest-valid", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 3, tzinfo=UTC),
+    )
+    reports, diagnostics = load_history_reports_with_diagnostics(
+        tmp_path,
+        SCOPE_ONE,
+        maximum_reports=EXPECTED_TWO_REPORTS,
+    )
+    assert len(reports) == EXPECTED_TWO_REPORTS
+    assert [
+        report["report"]["checks"][0][CHECK_ID_KEY] for report in reports
+    ] == ["newest-valid", "middle-valid"]
+    reasons = {reason for _, reason in diagnostics}
+    assert (
+        HISTORY_SKIP_INVALID_JSON in reasons
+        or HISTORY_SKIP_DIFFERENT_SCOPE in reasons
+    )
+
+
+def test_load_history_reports_with_diagnostics_collects_skip_reasons(
+    tmp_path: Path,
+) -> None:
+    """Each skip reason is reported for owned history files."""
+    _write_owned_history_file(tmp_path, "invalid", "not-json")
+    _write_owned_history_file(tmp_path, "array", [])
+    _write_owned_history_file(
+        tmp_path,
+        "schema",
+        {
+            HISTORY_SCHEMA_KEY: UNSUPPORTED_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_ONE,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: []},
+        },
+    )
+    _write_owned_history_file(
+        tmp_path,
+        "scope",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_TWO,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: []},
+        },
+    )
+    _write_owned_history_file(
+        tmp_path,
+        "malformed",
+        {
+            HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
+            HISTORY_SCOPE_KEY: SCOPE_ONE,
+            HISTORY_REPORT_KEY: {CHECKS_KEY: {}},
+        },
+    )
+    save_report_history(
+        _report("valid", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    reports, diagnostics = load_history_reports_with_diagnostics(
+        tmp_path,
+        SCOPE_ONE,
+    )
+    assert len(reports) == EXPECTED_ONE_REPORT
+    reasons = {reason for _, reason in diagnostics}
+    assert HISTORY_SKIP_INVALID_JSON in reasons
+    assert HISTORY_SKIP_NOT_OBJECT in reasons
+    assert HISTORY_SKIP_UNSUPPORTED_SCHEMA in reasons
+    assert HISTORY_SKIP_DIFFERENT_SCOPE in reasons
+    assert HISTORY_SKIP_MALFORMED_STRUCTURE in reasons
+
+
+def test_load_history_reports_delegates_to_diagnostics_loader(
+    tmp_path: Path,
+) -> None:
+    """load_history_reports remains newest-first after the refactor."""
+    save_report_history(
+        _report("first", False),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    save_report_history(
+        _report("second", True),
+        scope=SCOPE_ONE,
+        history_directory=tmp_path,
+        current_time=datetime.datetime(2026, 1, 2, tzinfo=UTC),
+    )
+    reports = load_history_reports(
+        tmp_path,
+        SCOPE_ONE,
+        maximum_reports=EXPECTED_ONE_REPORT,
+    )
+    assert len(reports) == EXPECTED_ONE_REPORT
+    assert reports[0]["report"]["checks"][0][CHECK_ID_KEY] == "second"
