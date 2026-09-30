@@ -27,22 +27,20 @@ To fulfill our standards of Transparency and Human Accountability,
 contributors must document AI assistance directly in their git commit
 messages using a multi-line format (Subject, Body, and Trailer). 
 
-Instead of using `git commit -m`, type `git commit` to open your text
-editor and format your message with the following structure:
+You can format this easily in the terminal by stacking multiple `-m`
+flags in your `git commit` command. Git will automatically separate
+each flag with a blank line.
 
-1. **Subject:** Your standard conventional commit (e.g., `fix: ...`)
-2. **Body:** A brief explanation of what AI generated and how you
-   human-verified it.
-3. **Trailer:** An `AI-Assisted:` tag at the very bottom.
+1. **First `-m` (Subject):** Your conventional commit message.
+2. **Second `-m` (Body):** A brief explanation of what the AI generated
+   and how you human-verified it.
+3. **Third `-m` (Trailer):** An `AI-Assisted:` tag.
 
 **Example:**
-```text
-fix: update the over general exceptions in .pylintrc
-
-Used GitHub Copilot to identify the specific exceptions needed. 
-Manually verified the list against the pylint docs and ran local tests.
-
-AI-Assisted: GitHub Copilot
+```bash
+git commit -m "docs: add AI usage instructions to Code of Conduct" \
+-m "Updated the Code of Conduct to explain how to format commit messages." \
+-m "AI-Assisted: ChatGPT"
 ```
 
 Examples of unacceptable AI usage include:
