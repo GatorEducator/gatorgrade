@@ -41,7 +41,9 @@
         "gatorgradle",
         "worktree",
         "systemprompt",
-        "socio"
+        "socio",
+        "Inclusivity",
+        "inclusivity"
     ],
     "ignorePaths": [
         ".github/**",
