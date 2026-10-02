@@ -649,32 +649,20 @@ def test_configure_report_env_missing_env_vars(
     output.configure_report(report_params, report_data)
 
 
-def test_run_checks_with_no_status_bar(
-    capsys: pytest.CaptureFixture[str],
+@pytest.mark.parametrize("no_progress_bar", [True, False])
+def test_run_checks_passing_shell_check_both_modes(
+    capsys: pytest.CaptureFixture[str], no_progress_bar: bool
 ) -> None:
-    """Test run_checks with no_status_bar flag enabled."""
+    """Test run_checks with a passing shell check with and without a progress bar."""
     checks: List[Union[ShellCheck, GatorGraderCheck]] = [
         ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
     ]
-    report = (None, None, None)
-    result = output.run_checks(checks, report, no_progress_bar=True)  # type: ignore
-    assert result is True
-    out, _ = capsys.readouterr()
-    plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "Project: gatorgrade" in plain_stdout
-    assert "Checks: 1/1 (100%)" in plain_stdout
-    assert "Points: 1/1 (100%)" in plain_stdout
-
-
-def test_run_checks_with_running_mode(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """Test run_checks with running_mode flag enabled."""
-    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
-        ShellCheck(description='Echo "Hello!"', command='echo "hello"'),
-    ]
-    report = (None, None, None)
-    result = output.run_checks(checks, report)  # type: ignore
+    report: Tuple[str, str, str] = ("", "", "")
+    result = output.run_checks(
+        checks,
+        report,
+        no_progress_bar=no_progress_bar,
+    )
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
