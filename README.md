@@ -91,6 +91,54 @@ GatorGrade's auto-hinting feature, you need to run it with
 optional
 dependencies that support hint generation.
 
+### Local Auto-Hint Compatibility
+
+Local auto-hints are enabled only on Python 3.10–3.14, subject to compatible
+Torch wheels and the exclusions below. Python 3.15 and later are awaiting
+validation and are disabled for local hints, even where Torch wheels already
+exist, such as Linux on Python 3.15. This is a reviewed support policy, not a
+claim that every newer Python version lacks wheels. The current dependency
+selection also excludes these environments:
+
+- Intel macOS (`darwin`, `x86_64`), on every Python version: Torch 2.13 has no
+  macOS x86-64 wheel.
+- Windows ARM64 (`win32`, `ARM64`), on Python 3.10: PyTorch maintainers cite
+  the absence of an official native Windows ARM64 Python 3.10 build.
+- Windows ARM64 (`win32`, `ARM64`), on Python 3.14: Torch 2.13 has no matching
+  wheel. Maintainers cite build-runner cost as a concern when extending
+  Windows ARM64 coverage. See the
+  [upstream discussion](https://github.com/pytorch/pytorch/issues/161516).
+
+Windows ARM64 on Python 3.11–3.13 remains eligible for local auto-hints.
+Eligibility does not guarantee that dependencies are installed or that a
+model can load. These exclusions describe the current dependency selection,
+not permanent hardware limitations. Before enabling a newer Python version,
+review Torch wheels and the other dependencies, validate actual imports and
+model loading, and update the runtime Python bounds, Torch dependency marker,
+and tests together. Review the platform exclusions when upgrading Torch.
+
+On excluded environments, a local-only auto-hint request warns that local
+auto-hints are not supported on this device and continues grading without
+generated hints. Ordinary grading is unaffected. Remote auto-hints do not
+require Torch: use `--auto-hint --auto-hint-url <server-url>` with the
+`auto-hint` extra installed. A working remote engine produces no local-support
+warning. Local fallback is available only where local auto-hints are supported.
+If no remote engine can be created on an excluded environment, GatorGrade
+warns and continues grading without generated hints.
+
+Removing Torch does not guarantee a build-free remote installation on every
+environment. In particular, the locked OpenAI dependency uses `jiter` 0.16.0,
+which has no native Windows ARM64/Python 3.10 wheel. A source distribution
+exists, but may require additional build tools. See its
+[published distributions](https://pypi.org/project/jiter/0.16.0/#files).
+
+The rules match raw platform marker values. Windows can report its native
+hardware architecture even when Python runs under emulation, so x86-64 Python
+on ARM hardware is not automatically exempt. See the
+[CPython implementation][cpython-platform].
+
+[cpython-platform]: https://github.com/python/cpython/blob/3.14/Lib/platform.py
+
 ## Command-Line Options
 
 The following options control how GatorGrade runs:
@@ -145,8 +193,8 @@ The following options control how GatorGrade runs:
   servers is `Qwen/Qwen3.6-35B-A3B`. This option requires `--auto-hint`.
 - `--auto-hint-url`: URL of an OpenAI-compatible API server for remote hint
   generation. When provided, the remote model is used instead of the local model.
-  Falls back to the default local model on any remote server errors. This option
-  requires `--auto-hint`.
+  Falls back to the default local model on remote server errors only where
+  local auto-hints are supported. This option requires `--auto-hint`.
 - `--auto-hint-api-key`: API key for the remote auto-hint server. This option
   requires `--auto-hint-url`.
 - `--auto-hint-track`, `--no-auto-hint-track`: Save or skip saving auto-hint

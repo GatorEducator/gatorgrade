@@ -19,7 +19,7 @@ def _mock_transformers_pipeline() -> Generator[None, None, None]:
     """Replace transformers.pipeline with a mock before any test runs.
 
     The lazy from transformers import pipeline inside
-    AutoHintEngine.ensure_loaded triggers the full
+    LocalAutoHintEngine.ensure_loaded triggers the full
     transformers / torch / numpy dependency chain (a
     several-second hit per test).  By inserting a fake transformers
     module into sys.modules we prevent the real packages from ever

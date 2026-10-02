@@ -5,7 +5,7 @@ Provides two classes:
 - FallbackHintEngine: wraps a primary and fallback engine, trying the
   primary first and falling back on failure.
 - RemoteEngineAdapter: adapts the RemoteHintEngine interface to match
-  the AutoHintEngine interface expected by the display code.
+  the LocalAutoHintEngine interface expected by the display code.
 """
 
 from typing import Any, Optional
@@ -195,7 +195,7 @@ class FallbackHintEngine:
 
 
 class RemoteEngineAdapter:
-    """Adapter for wrapping RemoteHintEngine with the AutoHintEngine interface.
+    """Adapt RemoteHintEngine to the LocalAutoHintEngine interface.
 
     The display logic in output.py calls:
     - engine.is_loaded

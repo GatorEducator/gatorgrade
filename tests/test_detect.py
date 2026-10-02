@@ -206,6 +206,51 @@ def test__check_auto_hint_installed_returns_text() -> None:
     assert "installed" in result_str or "not installed" in result_str
 
 
+def test__check_auto_hint_installed_omits_torch_when_unsupported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unsupported platforms report remote-only auto-hint availability."""
+    checked_packages: list[str] = []
+
+    def record_distribution(package: str) -> object:
+        """Record each package whose metadata is checked."""
+        checked_packages.append(package)
+        return object()
+
+    monkeypatch.setattr(detect, "supports_local_auto_hints", lambda: False)
+    monkeypatch.setattr(
+        detect.importlib.metadata,
+        "distribution",
+        record_distribution,
+    )
+    result = str(detect._check_auto_hint_installed())
+    assert detect.TORCH_PACKAGE not in checked_packages
+    assert detect.REMOTE_AUTO_HINTS_AVAILABLE_STATUS in result
+
+
+def test__check_auto_hint_installed_checks_torch_when_supported(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Supported platforms include torch in the dependency check."""
+    checked_packages: list[str] = []
+
+    def record_distribution(package: str) -> object:
+        """Record each package whose metadata is checked."""
+        checked_packages.append(package)
+        return object()
+
+    monkeypatch.setattr(detect, "supports_local_auto_hints", lambda: True)
+    monkeypatch.setattr(
+        detect.importlib.metadata,
+        "distribution",
+        record_distribution,
+    )
+    result = str(detect._check_auto_hint_installed())
+    assert checked_packages == detect.AUTO_HINT_PACKAGES
+    assert detect.REMOTE_AUTO_HINTS_AVAILABLE_STATUS not in result
+    assert detect.LOCAL_AUTO_HINTS_UNSUPPORTED_STATUS not in result
+
+
 def test_platform_model_cache_dir_returns_path() -> None:
     """platform_model_cache_dir returns a Path with expected properties."""
     cache_dir = detect.platform_model_cache_dir()

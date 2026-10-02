@@ -5,11 +5,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import gatorgrade.hint as hint_package
 from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
     HINT_REPETITION_PENALTY,
     HINT_TOP_P,
+    UNSUPPORTED_LOCAL_AUTO_HINT_MESSAGE,
     AutoHintEngine,
+    LocalAutoHintEngine,
+    UnsupportedLocalAutoHintPlatformError,
     model_cache_dir,
 )
 from gatorgrade.hint.support import HINT_DIAG_TRUNCATE, HINT_FILE_LINES
@@ -34,44 +38,53 @@ class TestHfCacheDir:
         assert model_cache_dir(override=custom) == custom
 
 
-class TestAutoHintEngineConstruction:
-    """Tests for AutoHintEngine construction and basic properties."""
+class TestLocalAutoHintEngineConstruction:
+    """Tests for LocalAutoHintEngine construction and basic properties."""
+
+    def test_legacy_module_name_is_alias(self) -> None:
+        """Keep the previous local-engine import compatible."""
+        assert AutoHintEngine is LocalAutoHintEngine
+
+    def test_legacy_package_export_is_alias(self) -> None:
+        """Keep the previous package export compatible."""
+        assert hint_package.AutoHintEngine is LocalAutoHintEngine
+        assert "AutoHintEngine" in hint_package.__all__
 
     def test_default_construction(self) -> None:
         """Engine constructed with defaults uses the correct model ID."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert engine.model_id == DEFAULT_MODEL_ID
         assert not engine.is_loaded
 
     def test_custom_construction(self) -> None:
         """Engine constructed with a custom model ID."""
-        engine = AutoHintEngine(model_id="custom/model")
+        engine = LocalAutoHintEngine(model_id="custom/model")
         assert engine.model_id == "custom/model"
         assert not engine.is_loaded
 
     def test_model_id_property(self) -> None:
         """Return the model_id passed to the constructor."""
-        engine = AutoHintEngine(model_id="custom/model")
+        engine = LocalAutoHintEngine(model_id="custom/model")
         assert engine.model_id == "custom/model"
 
     def test_is_loaded_property(self) -> None:
         """Return False before the model is loaded."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert engine.is_loaded is False
 
     def test_is_loaded_true_after_pipe_set(self) -> None:
         """Return True after _pipe is assigned."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         engine._pipe = MagicMock()
         assert engine.is_loaded is True
 
 
-class TestAutoHintEngineGenerateHint:
-    """Tests for AutoHintEngine.generate_hint with mocked pipeline."""
+class TestLocalAutoHintEngineGenerateHint:
+    """Tests for LocalAutoHintEngine.generate_hint with mocked pipeline."""
 
     def test_generate_hint_with_mocked_pipeline(self) -> None:
         """Generate hint returns the assistant's reply from the pipeline."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [
             {"generated_text": "Check your file path and try again."}
@@ -90,7 +103,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_passes_correct_messages(self) -> None:
         """Verify the messages sent to the pipeline contain expected content."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [{"generated_text": "A hint."}]
         engine._pipe = mock_pipe
@@ -110,14 +123,14 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_returns_safely_when_not_loaded(self) -> None:
         """Returns safely when engine not loaded — None or a hint string."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         # must not raise regardless of whether deps are installed
         hint, _ = engine.generate_hint(description="test", diagnostic="error")
         assert hint is None or (isinstance(hint, str) and len(hint) > 0)
 
     def test_generate_hint_returns_none_on_pipeline_exception(self) -> None:
         """Returns None when the pipeline raises."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.side_effect = RuntimeError("OOM")
         engine._pipe = mock_pipe
@@ -127,7 +140,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_returns_none_for_empty_reply(self) -> None:
         """Returns None when the assistant reply is empty."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [{"generated_text": "   "}]
         engine._pipe = mock_pipe
@@ -137,7 +150,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_returns_none_for_empty_list(self) -> None:
         """Returns None when the pipeline returns an empty list."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = []
         engine._pipe = mock_pipe
@@ -147,7 +160,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_uses_repetition_penalty(self) -> None:
         """Pipeline is called with repetition_penalty parameter."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [{"generated_text": "A hint."}]
         engine._pipe = mock_pipe
@@ -159,7 +172,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_uses_top_p(self) -> None:
         """Pipeline is called with top_p parameter."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [{"generated_text": "A hint."}]
         engine._pipe = mock_pipe
@@ -177,7 +190,7 @@ class TestAutoHintEngineGenerateHint:
         decide how to display it.
 
         """
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [
             {"generated_text": "The test incorrectly asserts equality."}
@@ -192,7 +205,7 @@ class TestAutoHintEngineGenerateHint:
 
     def test_generate_hint_accepts_valid_hint(self) -> None:
         """Returns the hint when it correctly describes a code fix."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         mock_pipe = MagicMock()
         mock_pipe.return_value = [
             {
@@ -217,32 +230,32 @@ class TestIsValidHint:
         hint = (
             "Your function returns 1 but the test expects 2; check your logic."
         )
-        assert AutoHintEngine._is_valid_hint(hint)
+        assert LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_test_incorrectly_rejected(self) -> None:
         """A hint suggesting the test is incorrect is rejected."""
         hint = "The test incorrectly asserts equality."
-        assert not AutoHintEngine._is_valid_hint(hint)
+        assert not LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_modify_the_test_rejected(self) -> None:
         """A hint suggesting modifying the test is rejected."""
         hint = "Modify the test to handle edge cases."
-        assert not AutoHintEngine._is_valid_hint(hint)
+        assert not LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_change_the_assertion_rejected(self) -> None:
         """A hint suggesting changing the assertion is rejected."""
         hint = "Change the assertion to expect None instead."
-        assert not AutoHintEngine._is_valid_hint(hint)
+        assert not LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_change_expected_rejected(self) -> None:
         """A hint suggesting changing expected results is rejected."""
         hint = "Change the expected result from 2 to 1."
-        assert not AutoHintEngine._is_valid_hint(hint)
+        assert not LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_case_insensitive(self) -> None:
         """Validation is case-insensitive."""
         hint = "The TEST INCORRECTLY asserts the value."
-        assert not AutoHintEngine._is_valid_hint(hint)
+        assert not LocalAutoHintEngine._is_valid_hint(hint)
 
     def test_mentioning_test_name_is_ok(self) -> None:
         """Mentioning a test name without criticizing it is accepted."""
@@ -250,27 +263,27 @@ class TestIsValidHint:
             "The test test_count_punctuation expects 2 but got 1; "
             "check the counting logic in count_punctuation."
         )
-        assert AutoHintEngine._is_valid_hint(hint)
+        assert LocalAutoHintEngine._is_valid_hint(hint)
 
 
-class TestAutoHintEngineLazyLoading:
+class TestLocalAutoHintEngineLazyLoading:
     """Tests for the lazy-loading behaviour."""
 
     def test_not_loaded_after_construction(self) -> None:
         """Engine is not loaded immediately after construction."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert not engine.is_loaded
 
     def test_ensure_loaded_stays_lazy(self) -> None:
         """Engine stays lazy until _ensure_loaded is called."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert not engine.is_loaded
 
     def test_generate_hint_survives_ensure_loaded_error(
         self,
     ) -> None:
         """Return None gracefully when _ensure_loaded raises unexpectedly."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         with patch.object(
             engine,
             "_ensure_loaded",
@@ -282,12 +295,12 @@ class TestAutoHintEngineLazyLoading:
         assert hint is None
 
 
-class TestAutoHintEngineMessageBuilding:
+class TestLocalAutoHintEngineMessageBuilding:
     """Tests for the message building logic."""
 
     def test_build_messages_includes_system_role(self) -> None:
         """Messages include a system prompt."""
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="Check file exists"
         )
         assert msgs[0]["role"] == "system"
@@ -295,14 +308,14 @@ class TestAutoHintEngineMessageBuilding:
 
     def test_build_messages_includes_description(self) -> None:
         """User message contains the check description."""
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="Check file exists"
         )
         assert "Check file exists" in msgs[1]["content"]
 
     def test_build_messages_includes_command(self) -> None:
         """User message includes the command when provided."""
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="test",
             command="ls hello.py",
         )
@@ -310,7 +323,7 @@ class TestAutoHintEngineMessageBuilding:
 
     def test_build_messages_includes_diagnostic(self) -> None:
         """User message includes the diagnostic output."""
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="test",
             diagnostic="File not found: hello.py",
         )
@@ -319,7 +332,7 @@ class TestAutoHintEngineMessageBuilding:
     def test_build_messages_truncates_long_diagnostic(self) -> None:
         """Diagnostic longer than HINT_DIAG_TRUNCATE is truncated."""
         long_diag = "x" * (HINT_DIAG_TRUNCATE + 100)
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="test",
             diagnostic=long_diag,
         )
@@ -329,7 +342,7 @@ class TestAutoHintEngineMessageBuilding:
         """File content is truncated to HINT_FILE_LINES complete lines."""
         # create 100 lines of content
         many_lines = "\n".join([f"line_{i}" for i in range(100)])
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="test",
             file_content=many_lines,
         )
@@ -340,20 +353,20 @@ class TestAutoHintEngineMessageBuilding:
 
     def test_build_messages_includes_rules(self) -> None:
         """System prompt includes NEVER/INSTEAD guidance for the model."""
-        msgs = AutoHintEngine()._build_messages(description="test")
+        msgs = LocalAutoHintEngine()._build_messages(description="test")
         system_content = msgs[0]["content"]
         assert "NEVER suggest modifying tests" in system_content
         assert "INSTEAD say:" in system_content
 
     def test_build_messages_empty_diagnostic(self) -> None:
         """Messages are still valid when diagnostic is empty."""
-        msgs = AutoHintEngine()._build_messages(description="test")
+        msgs = LocalAutoHintEngine()._build_messages(description="test")
         assert "test" in msgs[1]["content"]
         assert "diagnostic" not in msgs[1]["content"].lower()
 
     def test_build_messages_includes_file_content(self) -> None:
         """User message includes file content when provided."""
-        msgs = AutoHintEngine()._build_messages(
+        msgs = LocalAutoHintEngine()._build_messages(
             description="test",
             file_content="def hello():\n    pass",
         )
@@ -361,12 +374,12 @@ class TestAutoHintEngineMessageBuilding:
         assert "pass" in msgs[1]["content"]
 
 
-class TestAutoHintEngineGracefulDegradation:
+class TestLocalAutoHintEngineGracefulDegradation:
     """Tests that generate_hint returns None gracefully when deps missing."""
 
     def test_default_engine_not_loaded(self) -> None:
         """Engine is not loaded by default (lazy)."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert not engine.is_loaded
 
     def test_generate_hint_never_crashes(self) -> None:
@@ -378,7 +391,7 @@ class TestAutoHintEngineGracefulDegradation:
         raise.
 
         """
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         # this must not raise even when deps are missing.
         hint, is_low_quality = engine.generate_hint(
             description="test", diagnostic="error"
@@ -389,12 +402,12 @@ class TestAutoHintEngineGracefulDegradation:
             assert isinstance(is_low_quality, bool)
 
 
-class TestAutoHintEngineCacheDir:
+class TestLocalAutoHintEngineCacheDir:
     """Tests for the model cache directory resolution."""
 
     def test_cache_dir_property_uses_default(self) -> None:
         """The cache_dir property returns a path ending in 'models'."""
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         result = engine.cache_dir
         assert isinstance(result, Path)
         assert "gatorgrade" in str(result)
@@ -403,7 +416,7 @@ class TestAutoHintEngineCacheDir:
     def test_cache_dir_constructor_override(self, tmp_path: Path) -> None:
         """Explicit cache_dir in the constructor is honoured."""
         custom = tmp_path / "my-models"
-        engine = AutoHintEngine(cache_dir=custom)
+        engine = LocalAutoHintEngine(cache_dir=custom)
         assert engine.cache_dir == custom
 
     def test_cache_dir_env_var_override(
@@ -412,7 +425,7 @@ class TestAutoHintEngineCacheDir:
         """$GATORGRADE_MODELS_DIR overrides the default."""
         custom = tmp_path / "env-models"
         monkeypatch.setenv("GATORGRADE_MODELS_DIR", str(custom))
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         assert engine.cache_dir == custom
 
     def test_cache_dir_constructor_beats_env_var(
@@ -422,7 +435,7 @@ class TestAutoHintEngineCacheDir:
         env_dir = tmp_path / "env-dir"
         con_dir = tmp_path / "con-dir"
         monkeypatch.setenv("GATORGRADE_MODELS_DIR", str(env_dir))
-        engine = AutoHintEngine(cache_dir=con_dir)
+        engine = LocalAutoHintEngine(cache_dir=con_dir)
         assert engine.cache_dir == con_dir
 
 
@@ -438,20 +451,33 @@ class TestModelCacheDirFallback:
         assert result == tmp_path
 
 
-class TestAutoHintEngineDeps:
+class TestLocalAutoHintEngineDeps:
     """Tests for dependency checking via patches."""
+
+    def test_ensure_loaded_raises_when_platform_unsupported(self) -> None:
+        """ensure_loaded rejects unsupported local auto-hint platforms."""
+        with patch(
+            "gatorgrade.hint.local_engine.supports_local_auto_hints",
+            return_value=False,
+        ):
+            engine = LocalAutoHintEngine()
+            with pytest.raises(
+                UnsupportedLocalAutoHintPlatformError
+            ) as exc_info:
+                engine.ensure_loaded()
+        assert str(exc_info.value) == UNSUPPORTED_LOCAL_AUTO_HINT_MESSAGE
 
     def test_check_deps_raises_when_transformers_missing(self) -> None:
         """check_deps raises ImportError when transformers is missing."""
         with patch.dict("sys.modules", {"transformers": None}, clear=False):
             with pytest.raises(ImportError, match="auto-hint"):
-                AutoHintEngine.check_deps()
+                LocalAutoHintEngine.check_deps()
 
     def test_check_deps_raises_when_torch_missing(self) -> None:
         """check_deps raises ImportError when torch is missing."""
         with patch.dict("sys.modules", {"torch": None}, clear=False):
             with pytest.raises(ImportError, match="auto-hint"):
-                AutoHintEngine.check_deps()
+                LocalAutoHintEngine.check_deps()
 
     def test_check_deps_raises_when_both_missing(self) -> None:
         """check_deps raises ImportError when both extras are missing."""
@@ -461,11 +487,17 @@ class TestAutoHintEngineDeps:
             clear=False,
         ):
             with pytest.raises(ImportError, match="auto-hint"):
-                AutoHintEngine.check_deps()
+                LocalAutoHintEngine.check_deps()
 
     def test_ensure_loaded_raises_when_transformers_missing(self) -> None:
         """_ensure_loaded raises ImportError when transformers missing."""
-        with patch.dict("sys.modules", {"transformers": None}, clear=False):
-            engine = AutoHintEngine()
-            with pytest.raises(ImportError, match="auto-hint"):
-                engine._ensure_loaded()
+        with patch(
+            "gatorgrade.hint.local_engine.supports_local_auto_hints",
+            return_value=True,
+        ):
+            with patch.dict(
+                "sys.modules", {"transformers": None}, clear=False
+            ):
+                engine = LocalAutoHintEngine()
+                with pytest.raises(ImportError, match="auto-hint"):
+                    engine._ensure_loaded()

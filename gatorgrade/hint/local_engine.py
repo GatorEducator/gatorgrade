@@ -1,5 +1,6 @@
 """Auto-hint engine for generating hints with local transformers models."""
 
+import importlib
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
@@ -11,6 +12,7 @@ from gatorgrade.hint.support import (
     build_hint_messages,
     is_valid_hint,
 )
+from gatorgrade.platform_support import supports_local_auto_hints
 
 if TYPE_CHECKING:
     import transformers  # noqa: F401
@@ -32,6 +34,10 @@ HINT_TOP_P = 0.9
 
 # default task for the local LLM
 TEXT_GENERATION_TASK: Literal["text-generation"] = "text-generation"
+TORCH_PACKAGE = "torch"
+UNSUPPORTED_LOCAL_AUTO_HINT_MESSAGE = (
+    "Local auto-hints are not supported on this platform."
+)
 
 # default locations in the file system
 CACHE_DIR_KEY = "cache_dir"
@@ -42,6 +48,10 @@ HF_HUB_DISABLE_PROGRESS_VALUE = "1"
 MODEL_KWARGS_KEY = "model_kwargs"
 TRUST_REMOTE_CODE_KEY = "trust_remote_code"
 TRUST_REMOTE_CODE_VALUE = True
+
+
+class UnsupportedLocalAutoHintPlatformError(RuntimeError):
+    """Indicate that the platform cannot run local auto-hints."""
 
 
 def model_cache_dir(override: Optional[Path] = None) -> Path:
@@ -84,7 +94,7 @@ def platform_model_cache_dir() -> Path:
     )
 
 
-class AutoHintEngine:
+class LocalAutoHintEngine:
     """Lazy-loading engine that generates hints for failing checks.
 
     The model is not downloaded or loaded when the engine is
@@ -94,7 +104,7 @@ class AutoHintEngine:
 
     Usage::
 
-        engine = AutoHintEngine()
+        engine = LocalAutoHintEngine()
         hint = engine.generate_hint(
             description="Check that hello.py exists",
             diagnostic="File not found",
@@ -154,9 +164,9 @@ class AutoHintEngine:
         except ImportError:
             missing.append("transformers")
         try:
-            import torch  # noqa: PLC0415, F401
+            importlib.import_module(TORCH_PACKAGE)
         except ImportError:
-            missing.append("torch")
+            missing.append(TORCH_PACKAGE)
 
         if missing:
             names = " and ".join(missing)
@@ -193,6 +203,8 @@ class AutoHintEngine:
         are a no-op once the model is already loaded.
 
         Raises:
+            UnsupportedLocalAutoHintPlatformError: If local auto-hints are
+                not supported on the current platform.
             ImportError: If transformers is not installed.
             Exception: Any exception from the download or load process
                 (caught by generate_hint and turned into None).
@@ -200,6 +212,10 @@ class AutoHintEngine:
         """
         if self._pipe is not None:
             return
+        if not supports_local_auto_hints():
+            raise UnsupportedLocalAutoHintPlatformError(
+                UNSUPPORTED_LOCAL_AUTO_HINT_MESSAGE
+            )
         # ensure the cache directory exists.
         cache_dir = self.cache_dir
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -415,3 +431,6 @@ class AutoHintEngine:
             system_prompt=system_prompt,
             details=details,
         )
+
+
+AutoHintEngine = LocalAutoHintEngine

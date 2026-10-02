@@ -23,6 +23,7 @@ from gatorgrade.input.parse_config import (
     ENV_CONFIG_DIR,
     _platform_config_dir,
 )
+from gatorgrade.platform_support import supports_local_auto_hints
 from gatorgrade.version import GATORGRADE_VERSION
 
 # constants for the platform information that is displayed
@@ -70,6 +71,13 @@ AUTO_HINT_PACKAGES = [
     "torch",
     "transformers",
 ]
+TORCH_PACKAGE = "torch"
+LOCAL_AUTO_HINTS_UNSUPPORTED_STATUS = (
+    " (local auto-hints unsupported on this platform)"
+)
+REMOTE_AUTO_HINTS_AVAILABLE_STATUS = (
+    " (remote auto-hints available; local auto-hints unsupported)"
+)
 
 
 def get_platform_info() -> str:
@@ -168,18 +176,26 @@ def _check_auto_hint_installed() -> Text:
     result = Text()
     result.append("Auto-hint extra: ")
     missing: list[str] = []
-    present: list[str] = []
-    for pkg in AUTO_HINT_PACKAGES:
+    local_auto_hints_supported = supports_local_auto_hints()
+    required_packages = [
+        package
+        for package in AUTO_HINT_PACKAGES
+        if local_auto_hints_supported or package != TORCH_PACKAGE
+    ]
+    for pkg in required_packages:
         try:
             importlib.metadata.distribution(pkg)
-            present.append(pkg)
         except importlib.metadata.PackageNotFoundError:
             missing.append(pkg)
     if not missing:
         result.append("installed", style="green")
+        if not local_auto_hints_supported:
+            result.append(REMOTE_AUTO_HINTS_AVAILABLE_STATUS, style="dim")
     else:
         result.append("not installed", style="bright_red")
         result.append(f" ({', '.join(missing)})", style="dim")
+        if not local_auto_hints_supported:
+            result.append(LOCAL_AUTO_HINTS_UNSUPPORTED_STATUS, style="dim")
     return result
 
 

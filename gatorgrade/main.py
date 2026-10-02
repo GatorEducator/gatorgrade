@@ -474,7 +474,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     auto_hint: bool = typer.Option(
         False,
         "--auto-hint/--no-auto-hint",
-        help="Automatically generate hints for failing checks.",
+        help=(
+            "Automatically generate hints for failing checks. "
+            "Local auto-hints are not supported on Intel Mac (x86_64); "
+            "use --auto-hint-url for remote hints on those platforms."
+        ),
     ),
     auto_hint_track: bool = typer.Option(
         True,

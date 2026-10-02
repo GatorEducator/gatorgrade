@@ -1,7 +1,7 @@
 """Engine factory functions for creating auto-hint engines.
 
 Provides factory functions that create the appropriate auto-hint
-engine based on CLI arguments: either a local AutoHintEngine,
+engine based on CLI arguments: either a local LocalAutoHintEngine,
 a remote one via RemoteHintEngine, or a FallbackHintEngine that
 tries remote first and falls back to local.
 """
@@ -17,7 +17,7 @@ from gatorgrade.hint.fallback import (
 )
 from gatorgrade.hint.local_engine import (
     DEFAULT_MODEL_ID,
-    AutoHintEngine,
+    LocalAutoHintEngine,
 )
 from gatorgrade.hint.remote_engine import (
     REMOTE_API_KEY_DEFAULT,
@@ -25,11 +25,23 @@ from gatorgrade.hint.remote_engine import (
     RemoteHintEngine,
 )
 from gatorgrade.input.parse_config import get_auto_hint_model
+from gatorgrade.platform_support import supports_local_auto_hints
 
 # sentinel value used when the user does not specify --auto-hint-model;
 # the CLI code passes this sentinel and the engine builder resolves
 # the actual model from the config file or engine defaults.
 AUTO_HINT_MODEL_DEFAULT = "__default_model__"
+LOCAL_AUTO_HINT_UNSUPPORTED_WARNING = (
+    "Warning: Local auto-hints are not supported on this device. "
+    "Grading will continue without auto-hints. Use --auto-hint-url "
+    "to connect to a remote model."
+)
+REMOTE_AUTO_HINT_UNAVAILABLE_WARNING = (
+    "Warning: The remote auto-hint engine could not be created, and "
+    "local auto-hints are not supported on this device. Grading will "
+    "continue without auto-hints."
+)
+WARNING_STYLE = "yellow"
 
 
 def create_auto_hint_engine(  # noqa: PLR0913
@@ -48,10 +60,11 @@ def create_auto_hint_engine(  # noqa: PLR0913
     attempted first. If it succeeds, it is returned. If it
     fails (e.g., the URL is unreachable or the openai library is not
     installed), a warning is printed and the engine falls back
-    to a local AutoHintEngine.
+    to a local LocalAutoHintEngine when the platform supports one.
 
-    When no URL is provided, a local AutoHintEngine is created
-    directly, using the default configuration for auto-hinting.
+    When no URL is provided, a local LocalAutoHintEngine is created
+    directly, using the default configuration for auto-hinting. On an
+    unsupported platform, a warning is printed and no engine is returned.
 
     Args:
         filename: Path to the config file (for reading
@@ -72,11 +85,19 @@ def create_auto_hint_engine(  # noqa: PLR0913
             If not provided, a new Console() is created.
 
     Returns:
-        An AutoHintEngine instance, or None if creation fails.
+        A LocalAutoHintEngine instance, or None if creation fails.
 
     """
     effective_console = console or Console()
     effective_default = auto_hint_model_default or AUTO_HINT_MODEL_DEFAULT
+    local_auto_hints_supported = supports_local_auto_hints()
+    if not local_auto_hints_supported and not auto_hint_url:
+        effective_console.print()
+        effective_console.print(
+            LOCAL_AUTO_HINT_UNSUPPORTED_WARNING,
+            style=WARNING_STYLE,
+        )
+        effective_console.print()
     # resolve the model ID from the CLI, config file, or default;
     # the remote engine has its own default model, separate from
     # the local engine default
@@ -86,25 +107,28 @@ def create_auto_hint_engine(  # noqa: PLR0913
         config_model = get_auto_hint_model(filename)
         model_id = config_model or DEFAULT_MODEL_ID
         remote_model_id = config_model or REMOTE_MODEL_DEFAULT
-    # build the primary and fallback local engines
+    # build local engines only on platforms that support them
     primary_local_model = DEFAULT_MODEL_ID if auto_hint_url else model_id
     fallback_local_model = DEFAULT_MODEL_ID
-    try:
-        primary_engine = AutoHintEngine(
-            model_id=primary_local_model,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-    except Exception:
-        primary_engine = None
-    try:
-        fallback_engine = AutoHintEngine(
-            model_id=fallback_local_model,
-            system_prompt=system_prompt,
-            validation_rules=validation_rules,
-        )
-    except Exception:
-        fallback_engine = None
+    primary_engine: Any = None
+    fallback_engine: Any = None
+    if local_auto_hints_supported:
+        try:
+            primary_engine = LocalAutoHintEngine(
+                model_id=primary_local_model,
+                system_prompt=system_prompt,
+                validation_rules=validation_rules,
+            )
+        except Exception:
+            primary_engine = None
+        try:
+            fallback_engine = LocalAutoHintEngine(
+                model_id=fallback_local_model,
+                system_prompt=system_prompt,
+                validation_rules=validation_rules,
+            )
+        except Exception:
+            fallback_engine = None
     if auto_hint_url:
         # attempt to create the remote engine
         remote_engine = try_create_remote_engine(
@@ -129,6 +153,13 @@ def create_auto_hint_engine(  # noqa: PLR0913
                 "[yellow]Warning: Could not create remote hint engine for"
                 f" {auto_hint_url}. Using local model."
                 "[/]"
+            )
+            effective_console.print()
+        elif not local_auto_hints_supported:
+            effective_console.print()
+            effective_console.print(
+                REMOTE_AUTO_HINT_UNAVAILABLE_WARNING,
+                style=WARNING_STYLE,
             )
             effective_console.print()
         return fallback_engine
@@ -156,13 +187,14 @@ def try_create_remote_engine(
 
     Returns the engine wrapped in an adapter that unifies the
     RemoteHintEngine interface (is_loaded, ensure_loaded, model_id,
-    generate_hint) with the existing AutoHintEngine interface.
+    generate_hint) with the existing LocalAutoHintEngine interface.
 
     Returns None if the engine cannot be created (missing deps,
     connection error, etc.).
 
     """
     try:
+        RemoteHintEngine.check_deps()
         remote = RemoteHintEngine(
             base_url=url,
             api_key=api_key or REMOTE_API_KEY_DEFAULT,
