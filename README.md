@@ -146,9 +146,16 @@ The following options control how GatorGrade runs:
 - `--auto-hint-url`: URL of an OpenAI-compatible API server for remote hint
   generation. When provided, the remote model is used instead of the local model.
   Falls back to the default local model on any remote server errors. This option
-  requires `--auto-hint`.
-- `--auto-hint-api-key`: API key for the remote auto-hint server. This option
-  requires `--auto-hint-url`.
+  requires `--auto-hint`. Requests use the standard Chat Completions `model`
+  and `messages` fields without provider-specific extensions. Sampling,
+  thinking, and output-token limits use server defaults; GatorGrade does not
+  impose a remote output-token cap. Configure server-side limits as needed
+  to control latency and cost.
+- `--auto-hint-key-env`, `-k`: Name of the environment variable containing the
+  remote API key. Defaults to `AUTO_HINT_KEY_ENV`. This option requires
+  `--auto-hint-url`. See
+  [Persistent Remote API Key](#persistent-remote-api-key) for setup. For a
+  keyless local server, omit this option.
 - `--auto-hint-track`, `--no-auto-hint-track`: Save or skip saving auto-hint
   generation details to `autohints.json` in the current working directory.
   Tracking is enabled by default and only applies when `--auto-hint` is active
@@ -194,6 +201,51 @@ The following options control how GatorGrade runs:
   intersection. If no usable history exists, all checks are run with a warning.
   The value must be a positive integer.
 - `--version`: Show the GatorGrade version and exit.
+
+### Persistent Remote API Key
+
+New to API keys? Follow [How to get an API key](docs/openai-api-key.md).
+
+For an authenticated remote auto-hint server, store the API key persistently in
+`AUTO_HINT_KEY_ENV`. This keeps the key out of the command line and makes it
+available to GatorGrade in new terminal sessions.
+
+On Linux or macOS, running `export` in a terminal sets the key only for that
+shell session. To make it available in future sessions, open your shell startup
+file in a text editor, add the following line, and save the file. Use `~/.zshrc`
+for zsh (the macOS default) or `~/.bashrc` for bash; some bash setups use
+`~/.bash_profile` instead.
+
+```bash
+export AUTO_HINT_KEY_ENV="<your_api_key>"
+```
+
+On Windows, run this command in PowerShell to save the variable permanently for
+your user account. Setting `$env:AUTO_HINT_KEY_ENV` alone lasts only for the
+current PowerShell session.
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+    "AUTO_HINT_KEY_ENV",
+    "<your_api_key>",
+    "User"
+)
+```
+
+Open a new terminal after saving the variable. On Windows, restart an
+already-running terminal app or IDE; a new tab may inherit its parent's old
+environment. To use a different variable name, save the key under that name
+and pass it to `--auto-hint-key-env` or `-k`. For a keyless local server, omit
+this option and leave `AUTO_HINT_KEY_ENV` unset.
+
+Environment variables reduce accidental exposure, but they are not a secret
+manager. Programs launched from a shell normally inherit its environment.
+GatorGrade temporarily hides `AUTO_HINT_KEY_ENV` and the selected custom key
+variable while configuration setup commands and checks run. This prevents
+ordinary inherited-environment exposure, but it is not a sandbox: code running
+as the same user may still read persistent shell profiles or Windows user
+settings. Use a dedicated, restricted API key and an operating-system secret
+manager when stronger protection is required.
 
 ## Configuring Checks
 

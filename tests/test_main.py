@@ -4,10 +4,11 @@ import builtins
 import io
 import os
 import re
+import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Callable, Generator, List
+from typing import Any, Callable, Generator, List, cast
 
 import pytest
 from typer.testing import CliRunner
@@ -19,6 +20,22 @@ from gatorgrade.input.parse_config import parse_config
 runner = CliRunner()
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
+CUSTOM_AUTO_HINT_KEY_ENV = "TEST_CUSTOM_AUTO_HINT_KEY"
+DEFAULT_AUTO_HINT_KEY = "default-test-api-key"
+CUSTOM_AUTO_HINT_KEY = "custom-test-api-key"
+UNRELATED_ENV = "TEST_UNRELATED_ENV"
+UNRELATED_VALUE = "unrelated-value"
+MISSING_ENV = "TEST_MISSING_ENV"
+EMPTY_ENV = "TEST_EMPTY_ENV"
+REPLACEMENT_VALUE = "replacement-value"
+CREATED_VALUE = "created-value"
+TEST_AUTO_HINT_URL = "http://localhost:4000"
+TEST_ENVIRONMENT_ERROR = "test environment error"
+SECURITY_CONFIG_NAME = "security-test.yml"
+SETUP_PROBE_COMMAND = "setup-probe"
+SHELL_PROBE_COMMAND = "shell-probe"
+INVALID_AUTO_HINT_KEY_ENV = "BAD=NAME"
+RUN_CHECKS_CLI_ARGS_INDEX = 5
 
 
 def patch_open(
@@ -50,6 +67,36 @@ def patch_open(
         )
 
     return open_patched
+
+
+def test_hide_environment_variables_restores_exact_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Hidden environment variables are restored even after an error."""
+    monkeypatch.setenv(main.REMOTE_KEY_ENV_DEFAULT, DEFAULT_AUTO_HINT_KEY)
+    monkeypatch.setenv(CUSTOM_AUTO_HINT_KEY_ENV, CUSTOM_AUTO_HINT_KEY)
+    monkeypatch.setenv(EMPTY_ENV, "")
+    monkeypatch.delenv(MISSING_ENV, raising=False)
+    with pytest.raises(RuntimeError, match=TEST_ENVIRONMENT_ERROR):
+        with main._hide_environment_variables(
+            {
+                main.REMOTE_KEY_ENV_DEFAULT,
+                CUSTOM_AUTO_HINT_KEY_ENV,
+                EMPTY_ENV,
+                MISSING_ENV,
+            }
+        ):
+            assert main.REMOTE_KEY_ENV_DEFAULT not in os.environ
+            assert CUSTOM_AUTO_HINT_KEY_ENV not in os.environ
+            assert EMPTY_ENV not in os.environ
+            assert MISSING_ENV not in os.environ
+            os.environ[main.REMOTE_KEY_ENV_DEFAULT] = REPLACEMENT_VALUE
+            os.environ[MISSING_ENV] = CREATED_VALUE
+            raise RuntimeError(TEST_ENVIRONMENT_ERROR)
+    assert os.environ[main.REMOTE_KEY_ENV_DEFAULT] == DEFAULT_AUTO_HINT_KEY
+    assert os.environ[CUSTOM_AUTO_HINT_KEY_ENV] == CUSTOM_AUTO_HINT_KEY
+    assert os.environ[EMPTY_ENV] == ""
+    assert MISSING_ENV not in os.environ
 
 
 @pytest.fixture(autouse=True)
@@ -660,6 +707,176 @@ def test_gatorgrade_with_auto_hint_creates_engine(
     assert result.exit_code == 0
 
 
+def test_gatorgrade_hides_default_key_from_setup_and_checks(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Real setup and check boundaries cannot read the persistent key."""
+    monkeypatch.setenv(main.REMOTE_KEY_ENV_DEFAULT, DEFAULT_AUTO_HINT_KEY)
+    monkeypatch.setenv(UNRELATED_ENV, UNRELATED_VALUE)
+    observed_commands = []
+    gatorgrader_key_was_hidden = False
+    original_subprocess_run = subprocess.run
+
+    def fake_subprocess_run(
+        command: str, **_kwargs: Any
+    ) -> subprocess.CompletedProcess[Any]:
+        # platform detection on Windows 3.11 runs a subprocess before checks.
+        # intercept only the assignment commands this test is probing.
+        if command not in (SETUP_PROBE_COMMAND, SHELL_PROBE_COMMAND):
+            return cast(
+                subprocess.CompletedProcess[Any],
+                original_subprocess_run(command, **_kwargs),
+            )
+        assert main.REMOTE_KEY_ENV_DEFAULT not in os.environ
+        assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+        observed_commands.append(command)
+        return subprocess.CompletedProcess(
+            command, returncode=0, stdout=b"", stderr=b""
+        )
+
+    def fake_grader(_arguments: List[str]) -> tuple[str, bool, str]:
+        nonlocal gatorgrader_key_was_hidden
+        assert main.REMOTE_KEY_ENV_DEFAULT not in os.environ
+        assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+        gatorgrader_key_was_hidden = True
+        return "GatorGrader probe", True, ""
+
+    config_file = tmp_path / SECURITY_CONFIG_NAME
+    config_file.write_text(
+        "setup: |\n"
+        f"  {SETUP_PROBE_COMMAND}\n"
+        "---\n"
+        "- description: GatorGrader probe\n"
+        "  check: MatchFileFragment\n"
+        "  options:\n"
+        "    fragment: probe\n"
+        "    count: 0\n"
+        "    exact: true\n"
+        "- description: Shell probe\n"
+        f"  command: {SHELL_PROBE_COMMAND}\n"
+    )
+    monkeypatch.setattr(subprocess, "run", fake_subprocess_run)
+    monkeypatch.setattr("gator.grader", fake_grader)
+    chdir(tmp_path)
+    result = runner.invoke(
+        main.app,
+        ["--config", SECURITY_CONFIG_NAME, "--no-report-history"],
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert observed_commands == [SETUP_PROBE_COMMAND, SHELL_PROBE_COMMAND]
+    assert gatorgrader_key_was_hidden is True
+    assert os.environ[main.REMOTE_KEY_ENV_DEFAULT] == DEFAULT_AUTO_HINT_KEY
+    assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+
+
+def test_gatorgrade_hides_default_and_custom_keys_from_assignment_code(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Custom remote keys are visible only while creating the hint engine."""
+    monkeypatch.setenv(main.REMOTE_KEY_ENV_DEFAULT, DEFAULT_AUTO_HINT_KEY)
+    monkeypatch.setenv(CUSTOM_AUTO_HINT_KEY_ENV, CUSTOM_AUTO_HINT_KEY)
+    monkeypatch.setenv(UNRELATED_ENV, UNRELATED_VALUE)
+    fake_engine = object()
+
+    def fake_parse_config(
+        _filename: Path, _baseline_weight: int
+    ) -> tuple[List[Any], None]:
+        assert main.REMOTE_KEY_ENV_DEFAULT not in os.environ
+        assert CUSTOM_AUTO_HINT_KEY_ENV not in os.environ
+        assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+        return [object()], None
+
+    def fake_create_auto_hint_engine(
+        _filename: Path,
+        _auto_hint_model: str,
+        _auto_hint_url: str | None,
+        auto_hint_key_env: str | None,
+        **_kwargs: Any,
+    ) -> object:
+        assert auto_hint_key_env == CUSTOM_AUTO_HINT_KEY_ENV
+        assert os.environ[main.REMOTE_KEY_ENV_DEFAULT] == DEFAULT_AUTO_HINT_KEY
+        assert os.environ[CUSTOM_AUTO_HINT_KEY_ENV] == CUSTOM_AUTO_HINT_KEY
+        assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+        return fake_engine
+
+    def fake_run_checks(*_args: Any, **kwargs: Any) -> bool:
+        assert main.REMOTE_KEY_ENV_DEFAULT not in os.environ
+        assert CUSTOM_AUTO_HINT_KEY_ENV not in os.environ
+        assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+        assert (
+            _args[RUN_CHECKS_CLI_ARGS_INDEX][main.AUTO_HINT_KEY_ENV_FLAG]
+            == CUSTOM_AUTO_HINT_KEY_ENV
+        )
+        assert kwargs["auto_hint_engine"] is fake_engine
+        return True
+
+    monkeypatch.setattr(main, "parse_config", fake_parse_config)
+    monkeypatch.setattr(
+        main, "create_auto_hint_engine", fake_create_auto_hint_engine
+    )
+    monkeypatch.setattr(main, "run_checks", fake_run_checks)
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        [
+            "--auto-hint",
+            "--auto-hint-url",
+            TEST_AUTO_HINT_URL,
+            "--auto-hint-key-env",
+            CUSTOM_AUTO_HINT_KEY_ENV,
+            "--no-report-history",
+        ],
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+    assert os.environ[main.REMOTE_KEY_ENV_DEFAULT] == DEFAULT_AUTO_HINT_KEY
+    assert os.environ[CUSTOM_AUTO_HINT_KEY_ENV] == CUSTOM_AUTO_HINT_KEY
+    assert os.environ[UNRELATED_ENV] == UNRELATED_VALUE
+
+
+def test_gatorgrade_records_effective_default_key_environment(
+    chdir: Any,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Remote report metadata records the effective default key variable."""
+    fake_engine = object()
+
+    def fake_create_auto_hint_engine(*_args: Any, **_kwargs: Any) -> object:
+        return fake_engine
+
+    def fake_run_checks(*args: Any, **kwargs: Any) -> bool:
+        assert (
+            args[RUN_CHECKS_CLI_ARGS_INDEX][main.AUTO_HINT_KEY_ENV_FLAG]
+            == main.REMOTE_KEY_ENV_DEFAULT
+        )
+        assert kwargs["auto_hint_engine"] is fake_engine
+        return True
+
+    monkeypatch.setattr(
+        main, "create_auto_hint_engine", fake_create_auto_hint_engine
+    )
+    monkeypatch.setattr(main, "run_checks", fake_run_checks)
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        [
+            "--auto-hint",
+            "--auto-hint-url",
+            TEST_AUTO_HINT_URL,
+            "--no-report-history",
+        ],
+    )
+    capsys.readouterr()
+    assert result.exit_code == 0
+
+
 def test_gatorgrade_with_auto_hint_url_requires_auto_hint(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -672,27 +889,50 @@ def test_gatorgrade_with_auto_hint_url_requires_auto_hint(
     assert result.exit_code != 0
 
 
-def test_gatorgrade_with_auto_hint_api_key_requires_auto_hint(
+def test_gatorgrade_with_auto_hint_key_env_requires_auto_hint(
     chdir: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Using --auto-hint-api-key without --auto-hint exits with an error."""
-    chdir("tests/test_assignment")
-    result = runner.invoke(main.app, ["--auto-hint-api-key", "sk-test-key"])
-    capsys.readouterr()
-    assert result.exit_code != 0
-
-
-def test_gatorgrade_with_auto_hint_api_key_requires_url(
-    chdir: Any, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Using --auto-hint-api-key without --auto-hint-url exits with an error."""
+    """Using --auto-hint-key-env without --auto-hint exits with an error."""
     chdir("tests/test_assignment")
     result = runner.invoke(
-        main.app,
-        ["--auto-hint", "--auto-hint-api-key", "sk-test-key"],
+        main.app, ["--auto-hint-key-env", "TEST_AUTO_HINT_API_KEY"]
     )
     capsys.readouterr()
     assert result.exit_code != 0
+
+
+def test_gatorgrade_with_auto_hint_key_env_requires_url(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using --auto-hint-key-env without --auto-hint-url exits with an error."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        ["--auto-hint", "--auto-hint-key-env", "TEST_AUTO_HINT_API_KEY"],
+    )
+    capsys.readouterr()
+    assert result.exit_code != 0
+
+
+def test_gatorgrade_rejects_invalid_auto_hint_key_env_alias(
+    chdir: Any, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Using -k with an OS-invalid environment variable name exits cleanly."""
+    chdir("tests/test_assignment")
+    result = runner.invoke(
+        main.app,
+        [
+            "--auto-hint",
+            "--auto-hint-url",
+            "http://localhost:4000",
+            "-k",
+            INVALID_AUTO_HINT_KEY_ENV,
+        ],
+    )
+    capsys.readouterr()
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert "valid environment variable name" in result.stdout
 
 
 def test_gatorgrade_with_output_limit_zero(
