@@ -22,6 +22,7 @@ from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.privacy import sanitize_report
 from gatorgrade.report_history import (
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
@@ -1085,7 +1086,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 cli_args=cli_args,
             )
             if track_entry:
-                append_track_entry(track_entry)
+                # redact a copy so that the file never stores raw secrets
+                append_track_entry(sanitize_report(track_entry))
 
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
@@ -1106,15 +1108,20 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     report_display_name = None
     need_report_data = all(report) or all(github_env) or report_history
     if need_report_data:
-        report_output_data = create_report_json(
-            passed_count,
-            results,
-            percent,
-            weighted_percent,
-            cli_args,
-            version_info,
-            display_project_name,
-            due_date,
+        # redact a copy of the report once so that every destination
+        # (file, environment, and history) receives the same safe data;
+        # the checks have already run with their original values
+        report_output_data = sanitize_report(
+            create_report_json(
+                passed_count,
+                results,
+                percent,
+                weighted_percent,
+                cli_args,
+                version_info,
+                display_project_name,
+                due_date,
+            )
         )
         if report_history:
             try:
