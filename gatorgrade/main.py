@@ -782,6 +782,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if resolved_config_dir
                 else None,
                 REPORT_FLAG: list(report),
+                REPORT_SAFE_FLAG: report_safe,
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
@@ -994,6 +995,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         auto_hint_url=auto_hint_url,
                         auto_hint_track=auto_hint_track,
                         report_history=report_history,
+                        report_safe=report_safe,
                         report_history_max_count=report_history_max_count,
                         report_history_max_mib=report_history_max_mib,
                         history_scope=history_scope,
