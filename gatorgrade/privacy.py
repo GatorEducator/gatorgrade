@@ -18,7 +18,7 @@ REDACTED_VALUE = "[redacted]"
 MODE_DEFAULT = "default"
 MODE_SAFE = "safe"
 SUPPORTED_MODES = frozenset({MODE_DEFAULT, MODE_SAFE})
-# Fields that may expose source code, student data, or private details
+# fields that may expose source code, student data, or private details
 # when a report is shared publicly.
 SAFE_MODE_FIELDS = frozenset(
     {
@@ -168,6 +168,7 @@ def _sanitize_value(value: Any, sensitive: bool) -> Any:
         return sanitize_text(value)
     return copy.deepcopy(value)
 
+
 def _sanitize_safe_mode(value: Any) -> Any:
     """Hide potentially private report fields in public reports."""
     if isinstance(value, dict):
@@ -188,6 +189,7 @@ def _sanitize_safe_mode(value: Any) -> Any:
 
     return value
 
+
 def sanitize_report(
     report: dict[str, Any],
     mode: str = MODE_DEFAULT,
@@ -201,6 +203,8 @@ def sanitize_report(
     }
 
     if mode == MODE_SAFE:
-        return _sanitize_safe_mode(sanitized)
+        return {
+            key: _sanitize_safe_mode(value) for key, value in sanitized.items()
+        }
 
     return sanitized

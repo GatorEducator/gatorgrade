@@ -372,7 +372,7 @@ def test_safe_mode_hides_private_report_details() -> None:
                 "diagnostic": "Student submitted private content",
                 "hint": "Look at line 15 of the student's code",
                 "status": True,
-                "weight": 2,
+                "weight": WEIGHT,
             }
         ]
     }
@@ -385,7 +385,7 @@ def test_safe_mode_hides_private_report_details() -> None:
     assert check["diagnostic"] == REDACTED_VALUE
     assert check["hint"] == REDACTED_VALUE
     assert check["status"] is True
-    assert check["weight"] == 2
+    assert check["weight"] == WEIGHT
 
-    # The original report must remain unchanged.
+    # the original report must remain unchanged.
     assert report["checks"][0]["command"] == "python private_script.py"

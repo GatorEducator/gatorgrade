@@ -442,11 +442,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         callback=validate_report_history_size,
     ),
     report_safe: bool = typer.Option(
-    False,
-    "--report-safe",
-    help=(
-        "Use privacy-safe mode for reports intended for public sharing. "
-        "Hide commands, diagnostics, hints, and source-derived content."
+        False,
+        "--report-safe",
+        help=(
+            "Use privacy-safe mode for reports intended for public sharing. "
+            "Hide commands, diagnostics, hints, and source-derived content."
         ),
     ),
     report: Tuple[str, str, str] = typer.Option(
