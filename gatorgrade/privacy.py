@@ -18,6 +18,24 @@ REDACTED_VALUE = "[redacted]"
 MODE_DEFAULT = "default"
 MODE_SAFE = "safe"
 SUPPORTED_MODES = frozenset({MODE_DEFAULT, MODE_SAFE})
+# Fields that may expose source code, student data, or private details
+# when a report is shared publicly.
+SAFE_MODE_FIELDS = frozenset(
+    {
+        "command",
+        "options",
+        "diagnostic",
+        "diagnostics",
+        "hint",
+        "hints",
+        "stdout",
+        "stderr",
+        "output",
+        "setup_output",
+        "source",
+        "source_code",
+    }
+)
 UNSUPPORTED_MODE_ERROR = "Unsupported privacy mode: {}"
 
 # basic string constants
@@ -150,6 +168,25 @@ def _sanitize_value(value: Any, sensitive: bool) -> Any:
         return sanitize_text(value)
     return copy.deepcopy(value)
 
+def _sanitize_safe_mode(value: Any) -> Any:
+    """Hide potentially private report fields in public reports."""
+    if isinstance(value, dict):
+        return {
+            key: (
+                REDACTED_VALUE
+                if str(key).lower() in SAFE_MODE_FIELDS
+                else _sanitize_safe_mode(item)
+            )
+            for key, item in value.items()
+        }
+
+    if isinstance(value, list):
+        return [_sanitize_safe_mode(item) for item in value]
+
+    if isinstance(value, tuple):
+        return tuple(_sanitize_safe_mode(item) for item in value)
+
+    return value
 
 def sanitize_report(
     report: dict[str, Any],
@@ -158,7 +195,12 @@ def sanitize_report(
     """Return a redacted deep copy of a report and leave the input unchanged."""
     if mode not in SUPPORTED_MODES:
         raise ValueError(UNSUPPORTED_MODE_ERROR.format(mode))
-    return {
+    sanitized = {
         key: _sanitize_value(item, _is_sensitive_key(key))
         for key, item in report.items()
     }
+
+    if mode == MODE_SAFE:
+        return _sanitize_safe_mode(sanitized)
+
+    return sanitized
