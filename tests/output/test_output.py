@@ -2957,3 +2957,64 @@ def test_run_checks_redacts_secrets_in_hint_tracking(
     assert "[redacted]" in tracked
     assert SECRET_OUTPUT_TOKEN in engine_arguments["diagnostic"]
     assert engine_arguments["command"] == SECRET_OUTPUT_CMD
+
+
+@pytest.mark.parametrize("report_type", ["json", "md"])
+def test_safe_mode_applies_to_all_report_destinations(
+    report_type: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Safe mode hides private details in every report destination."""
+    save_history = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+
+    github_env_path = tmp_path / "github_env"
+    monkeypatch.setenv("GITHUB_ENV", str(github_env_path))
+
+    report_path = tmp_path / f"safe-report.{report_type}"
+
+    private_command = "echo private-student-information"
+
+    check = ShellCheck(
+        description="Test private command",
+        command=private_command,
+        json_info={
+            "description": "Test private command",
+            "command": private_command,
+        },
+        check_id="safe-mode-check",
+    )
+
+    output.run_checks(
+        [check],
+        ("file", report_type, str(report_path)),
+        no_progress_bar=True,
+        github_env=(report_type, "GATORGRADE_REPORT"),
+        report_history=True,
+        history_scope="safe-test",
+        report_safe=True,
+    )
+
+    history_report = save_history.call_args.args[0]
+
+    saved_outputs = (
+        report_path.read_text(encoding="utf-8"),
+        github_env_path.read_text(encoding="utf-8"),
+        json.dumps(history_report),
+    )
+
+    for content in saved_outputs:
+        assert private_command not in content
+
+    assert history_report["checks"][0]["command"] == "[redacted]"
+
+    if report_type == "json":
+        assert "[redacted]" in saved_outputs[0]
+        assert "[redacted]" in saved_outputs[1]
+
+    assert history_report["checks"][0]["status"] is True
+    assert history_report["checks"][0]["check_id"] == "safe-mode-check"
+
+    # the original command remains available for execution
+    assert check.command == private_command

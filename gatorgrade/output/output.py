@@ -563,11 +563,14 @@ def create_markdown_report_file(  # noqa: PLR0912, PLR0915
                 markdown_contents += (
                     f"{NEWLINE}{MD_LIST_INDENT}- {MD_OPTIONS_LABEL}"
                 )
-                for opt_key, opt_val in value.items():
-                    markdown_contents += (
-                        f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
-                        f"- **{opt_key}:** {opt_val}"
-                    )
+                if isinstance(value, dict):
+                    for opt_key, opt_val in value.items():
+                        markdown_contents += (
+                            f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
+                            f"- **{opt_key}:** {opt_val}"
+                        )
+                else:
+                    markdown_contents += f" {value}"
             elif key == DIAGNOSTIC_KEY:
                 markdown_contents += (
                     f"{NEWLINE}{MD_LIST_INDENT}- {MD_DIAGNOSTIC_LABEL}"
