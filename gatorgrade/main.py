@@ -142,6 +142,7 @@ DEFAULT_REPORT_HISTORY_DIR = str(get_report_history_directory())
 CONFIG_FLAG = "--config"
 CONFIG_DIR_FLAG = "--config-dir"
 REPORT_FLAG = "--report"
+REPORT_SAFE_FLAG = "--report-safe"
 OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
@@ -439,6 +440,14 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help="Maximum total size of automatic reports in MiB.",
         show_default=True,
         callback=validate_report_history_size,
+    ),
+    report_safe: bool = typer.Option(
+    False,
+    "--report-safe",
+    help=(
+        "Use privacy-safe mode for reports intended for public sharing. "
+        "Hide commands, diagnostics, hints, and source-derived content."
+        ),
     ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),

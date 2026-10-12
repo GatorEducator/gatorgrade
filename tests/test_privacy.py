@@ -361,3 +361,31 @@ def test_sanitize_text_handles_long_output_quickly(text: str) -> None:
     started = time.perf_counter()
     sanitize_text(text)
     assert time.perf_counter() - started < LONG_TEXT_SECONDS
+
+
+def test_safe_mode_hides_private_report_details() -> None:
+    """Safe mode hides private details but preserves check results."""
+    report = {
+        "checks": [
+            {
+                "command": "python private_script.py",
+                "diagnostic": "Student submitted private content",
+                "hint": "Look at line 15 of the student's code",
+                "status": True,
+                "weight": 2,
+            }
+        ]
+    }
+
+    safe_report = sanitize_report(report, mode=MODE_SAFE)
+
+    check = safe_report["checks"][0]
+
+    assert check["command"] == REDACTED_VALUE
+    assert check["diagnostic"] == REDACTED_VALUE
+    assert check["hint"] == REDACTED_VALUE
+    assert check["status"] is True
+    assert check["weight"] == 2
+
+    # The original report must remain unchanged.
+    assert report["checks"][0]["command"] == "python private_script.py"
