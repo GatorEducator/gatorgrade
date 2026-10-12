@@ -2,6 +2,7 @@
 
 import builtins
 import io
+import json
 import os
 import re
 import subprocess
@@ -1608,3 +1609,57 @@ def test_filter_failed_and_passed_combined_is_accepted(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
+
+
+def test_report_safe_cli_redacts_saved_report(
+    chdir: Any,
+    tmp_path: Path,
+) -> None:
+    """Verify safe mode hides report details without changing check results."""
+    chdir("tests/test_assignment")
+
+    normal_file = tmp_path / "normal.json"
+    safe_file = tmp_path / "safe.json"
+
+    normal_result = runner.invoke(
+        main.app,
+        [
+            "--report",
+            "file",
+            "json",
+            str(normal_file),
+            "--no-report-history",
+        ],
+    )
+
+    safe_result = runner.invoke(
+        main.app,
+        [
+            "--report-safe",
+            "--report",
+            "file",
+            "json",
+            str(safe_file),
+            "--no-report-history",
+        ],
+    )
+
+    assert normal_result.exit_code == 0
+    assert safe_result.exit_code == 0
+
+    normal_report = json.loads(normal_file.read_text(encoding="utf-8"))
+    safe_report = json.loads(safe_file.read_text(encoding="utf-8"))
+
+    # safe mode must hide check options
+    assert normal_report["checks"][0]["options"] != "[redacted]"
+    assert safe_report["checks"][0]["options"] == "[redacted]"
+
+    # check results must remain unchanged
+    assert safe_report["amount_correct"] == normal_report["amount_correct"]
+    assert safe_report["percentage_score"] == normal_report["percentage_score"]
+
+    # all checks must retain their original pass/fail statuses
+    normal_statuses = [check["status"] for check in normal_report["checks"]]
+    safe_statuses = [check["status"] for check in safe_report["checks"]]
+
+    assert safe_statuses == normal_statuses
