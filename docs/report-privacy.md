@@ -37,6 +37,9 @@ gatorgrade --report FILE MD report.md --report-safe
 Safe mode applies the default credential redaction and additionally
 replaces supported source-derived fields, including commands, check
 options, diagnostics, hints, and output, with `[redacted]`.
+Safe mode also redacts values under common file-path fields, including
+`path`, `file_path`, `directory`, and `cwd`. Paths embedded in other
+text may still remain.
 
 Check results, scores, and check identifiers remain available.
 

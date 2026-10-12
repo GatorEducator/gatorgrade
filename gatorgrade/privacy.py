@@ -34,6 +34,10 @@ SAFE_MODE_FIELDS = frozenset(
         "setup_output",
         "source",
         "source_code",
+        "path",
+        "file_path",
+        "directory",
+        "cwd",
     }
 )
 UNSUPPORTED_MODE_ERROR = "Unsupported privacy mode: {}"

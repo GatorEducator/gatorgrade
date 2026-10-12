@@ -371,6 +371,7 @@ def test_safe_mode_hides_private_report_details() -> None:
                 "command": "python private_script.py",
                 "diagnostic": "Student submitted private content",
                 "hint": "Look at line 15 of the student's code",
+                "path": "/Users/student/Documents/private_assignment.py",
                 "status": True,
                 "weight": WEIGHT,
             }
@@ -386,6 +387,13 @@ def test_safe_mode_hides_private_report_details() -> None:
     assert check["hint"] == REDACTED_VALUE
     assert check["status"] is True
     assert check["weight"] == WEIGHT
+    assert check["path"] == REDACTED_VALUE
 
     # the original report must remain unchanged.
     assert report["checks"][0]["command"] == "python private_script.py"
+
+    default_report = sanitize_report(report, mode=MODE_DEFAULT)
+
+    assert default_report["checks"][0]["path"] == (
+        "/Users/student/Documents/private_assignment.py"
+    )
