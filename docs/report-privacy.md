@@ -47,6 +47,11 @@ Safe mode changes the saved report data, not the values used to execute
 checks. Checks still run using their original commands and options.
 Terminal output is not automatically hidden by this flag.
 
+Safe mode also hides configuration paths stored in the `--config`
+and `--config-dir` CLI arguments and the destination stored in
+`--report`. The report destination type and format remain visible.
+Other CLI arguments and arbitrary text may still contain paths.
+
 ## Saved Output Destinations
 
 The privacy filter applies to these persisted outputs:

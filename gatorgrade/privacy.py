@@ -45,6 +45,9 @@ UNSUPPORTED_MODE_ERROR = "Unsupported privacy mode: {}"
 # basic string constants
 EMPTY = ""
 
+# the number of parts in a report destination path
+REPORT_DESTINATION_PARTS = 3
+
 # separators removed from a key before it is compared, which means
 # that api_key, api-key, and apiKey are all treated in the same way
 KEY_SEPARATOR_PATTERN = re.compile(r"[-_\s]")
@@ -184,13 +187,10 @@ def _sanitize_safe_mode(value: Any) -> Any:
             )
             for key, item in value.items()
         }
-
     if isinstance(value, list):
         return [_sanitize_safe_mode(item) for item in value]
-
     if isinstance(value, tuple):
         return tuple(_sanitize_safe_mode(item) for item in value)
-
     return value
 
 
@@ -207,8 +207,20 @@ def sanitize_report(
     }
 
     if mode == MODE_SAFE:
-        return {
+        safe_report = {
             key: _sanitize_safe_mode(value) for key, value in sanitized.items()
         }
-
+        cli_args = safe_report.get("cli_args")
+        if isinstance(cli_args, dict):
+            for flag in ("--config", "--config-dir"):
+                if cli_args.get(flag):
+                    cli_args[flag] = REDACTED_VALUE
+            report_destination = cli_args.get("--report")
+            if (
+                isinstance(report_destination, list)
+                and len(report_destination) == REPORT_DESTINATION_PARTS
+                and report_destination[2]
+            ):
+                report_destination[2] = REDACTED_VALUE
+        return safe_report
     return sanitized

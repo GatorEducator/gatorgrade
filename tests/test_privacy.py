@@ -31,6 +31,8 @@ PRIVATE_KEY = (
 )
 PLAIN_SECRET = "hunter2-plain-value"
 WEIGHT = 3
+EXPECTED_AMOUNT_CORRECT = 2
+EXPECTED_PERCENTAGE_SCORE = 100
 OUTPUT_LIMIT = 5
 LONG_TEXT_REPEATS = 20000
 LONG_TEXT_SECONDS = 5
@@ -397,4 +399,39 @@ def test_safe_mode_hides_private_report_details() -> None:
 
     assert default_report["checks"][0]["path"] == (
         "/Users/student/Documents/private_assignment.py"
+    )
+
+
+def test_safe_mode_redacts_cli_paths() -> None:
+    """Safe mode hides CLI paths while preserving report metadata."""
+    report: dict[str, Any] = {
+        "cli_args": {
+            "--config": "/Users/student/private/gatorgrade.yml",
+            "--config-dir": "/Users/student/private",
+            "--report": [
+                "FILE",
+                "JSON",
+                "/Users/student/private/report.json",
+            ],
+        },
+        "amount_correct": EXPECTED_AMOUNT_CORRECT,
+        "percentage_score": EXPECTED_PERCENTAGE_SCORE,
+    }
+    default_report = sanitize_report(report, mode=MODE_DEFAULT)
+    safe_report = sanitize_report(report, mode=MODE_SAFE)
+    default_args = default_report["cli_args"]
+    safe_args = safe_report["cli_args"]
+    assert default_args["--config"] == report["cli_args"]["--config"]
+    assert default_args["--report"][2] == report["cli_args"]["--report"][2]
+    assert safe_args["--config"] == REDACTED_VALUE
+    assert safe_args["--config-dir"] == REDACTED_VALUE
+    assert safe_args["--report"] == [
+        "FILE",
+        "JSON",
+        REDACTED_VALUE,
+    ]
+    assert safe_report["amount_correct"] == EXPECTED_AMOUNT_CORRECT
+    assert safe_report["percentage_score"] == EXPECTED_PERCENTAGE_SCORE
+    assert report["cli_args"]["--report"][2] == (
+        "/Users/student/private/report.json"
     )
