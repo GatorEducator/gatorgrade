@@ -1,6 +1,6 @@
 """Generates a dictionary of shell and GatorGrader command options from a list of dictionary-based checks."""
 
-import os
+from pathlib import Path
 from typing import List, Union
 
 from gatorgrade.hash import compute_check_id
@@ -128,10 +128,12 @@ def generate_checks(  # noqa: PLR0912
                         gg_args.extend([f"--{option}", str(option_value)])
             # add directory and file if file context in data
             if check_data.file_context is not None:
-                # get the file and directory using os
-                dirname, filename = os.path.split(check_data.file_context)
-                if dirname == EMPTY:
+                # get the file and directory using pathlib.Path for cross-platform support
+                context_path = Path(check_data.file_context)
+                dirname = str(context_path.parent)
+                if dirname == ".":
                     dirname = DEFAULT_DIRECTORY
+                filename = context_path.name
                 gg_args.extend([ARG_DIRECTORY, dirname, ARG_FILE, filename])
             description = check_data.check.get(DESCRIPTION_KEY, UNNAMED_CHECK)
             # compute the check identifier using a SHA256 hash,
