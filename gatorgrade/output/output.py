@@ -22,7 +22,7 @@ from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
-from gatorgrade.privacy import sanitize_report
+from gatorgrade.privacy import MODE_DEFAULT, MODE_SAFE, sanitize_report
 from gatorgrade.report_history import (
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
@@ -563,11 +563,14 @@ def create_markdown_report_file(  # noqa: PLR0912, PLR0915
                 markdown_contents += (
                     f"{NEWLINE}{MD_LIST_INDENT}- {MD_OPTIONS_LABEL}"
                 )
-                for opt_key, opt_val in value.items():
-                    markdown_contents += (
-                        f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
-                        f"- **{opt_key}:** {opt_val}"
-                    )
+                if isinstance(value, dict):
+                    for opt_key, opt_val in value.items():
+                        markdown_contents += (
+                            f"{NEWLINE}{MD_LIST_INDENT}{MD_LIST_INDENT}"
+                            f"- **{opt_key}:** {opt_val}"
+                        )
+                else:
+                    markdown_contents += f" {value}"
             elif key == DIAGNOSTIC_KEY:
                 markdown_contents += (
                     f"{NEWLINE}{MD_LIST_INDENT}- {MD_DIAGNOSTIC_LABEL}"
@@ -820,6 +823,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     report_history_max_count: int = DEFAULT_HISTORY_REPORT_COUNT,
     report_history_max_mib: int = DEFAULT_HISTORY_SIZE_MIB,
     history_scope: str | None = None,
+    report_safe: bool = False,
 ) -> bool:
     """Run shell and GatorGrader checks and display whether each has passed or failed.
 
@@ -850,6 +854,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         report_history_max_count: Maximum number of retained reports.
         report_history_max_mib: Maximum total history size in MiB.
         history_scope: Scope identifier for the current configuration.
+        report_safe: Whether to use safe mode for persisted report data.
 
     """
 
@@ -1087,7 +1092,12 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             )
             if track_entry:
                 # redact a copy so that the file never stores raw secrets
-                append_track_entry(sanitize_report(track_entry))
+                append_track_entry(
+                    sanitize_report(
+                        track_entry,
+                        mode=MODE_SAFE if report_safe else MODE_DEFAULT,
+                    )
+                )
 
     # determine how many of the checks passed and then
     # compute the total percentage of checks passed
@@ -1111,6 +1121,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         # redact a copy of the report once so that every destination
         # (file, environment, and history) receives the same safe data;
         # the checks have already run with their original values
+        privacy_mode = MODE_SAFE if report_safe else MODE_DEFAULT
         report_output_data = sanitize_report(
             create_report_json(
                 passed_count,
@@ -1121,7 +1132,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 version_info,
                 display_project_name,
                 due_date,
-            )
+            ),
+            mode=privacy_mode,
         )
         if report_history:
             try:

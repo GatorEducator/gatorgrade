@@ -31,6 +31,8 @@ PRIVATE_KEY = (
 )
 PLAIN_SECRET = "hunter2-plain-value"
 WEIGHT = 3
+EXPECTED_AMOUNT_CORRECT = 2
+EXPECTED_PERCENTAGE_SCORE = 100
 OUTPUT_LIMIT = 5
 LONG_TEXT_REPEATS = 20000
 LONG_TEXT_SECONDS = 5
@@ -355,9 +357,81 @@ def test_redact_assignments_skips_name_inside_redacted_value() -> None:
         "a:" * LONG_TEXT_REPEATS,
         "line of output 123\n" * LONG_TEXT_REPEATS,
     ],
+    ids=["repeated-token", "repeated-colon", "repeated-lines"],
 )
 def test_sanitize_text_handles_long_output_quickly(text: str) -> None:
     """Long diagnostic output is processed without slow backtracking."""
     started = time.perf_counter()
     sanitize_text(text)
     assert time.perf_counter() - started < LONG_TEXT_SECONDS
+
+
+def test_safe_mode_hides_private_report_details() -> None:
+    """Safe mode hides private details but preserves check results."""
+    report = {
+        "checks": [
+            {
+                "command": "python private_script.py",
+                "diagnostic": "Student submitted private content",
+                "hint": "Look at line 15 of the student's code",
+                "path": "/Users/student/Documents/private_assignment.py",
+                "status": True,
+                "weight": WEIGHT,
+            }
+        ]
+    }
+
+    safe_report = sanitize_report(report, mode=MODE_SAFE)
+
+    check = safe_report["checks"][0]
+
+    assert check["command"] == REDACTED_VALUE
+    assert check["diagnostic"] == REDACTED_VALUE
+    assert check["hint"] == REDACTED_VALUE
+    assert check["status"] is True
+    assert check["weight"] == WEIGHT
+    assert check["path"] == REDACTED_VALUE
+
+    # the original report must remain unchanged.
+    assert report["checks"][0]["command"] == "python private_script.py"
+
+    default_report = sanitize_report(report, mode=MODE_DEFAULT)
+
+    assert default_report["checks"][0]["path"] == (
+        "/Users/student/Documents/private_assignment.py"
+    )
+
+
+def test_safe_mode_redacts_cli_paths() -> None:
+    """Safe mode hides CLI paths while preserving report metadata."""
+    report: dict[str, Any] = {
+        "cli_args": {
+            "--config": "/Users/student/private/gatorgrade.yml",
+            "--config-dir": "/Users/student/private",
+            "--report": [
+                "FILE",
+                "JSON",
+                "/Users/student/private/report.json",
+            ],
+        },
+        "amount_correct": EXPECTED_AMOUNT_CORRECT,
+        "percentage_score": EXPECTED_PERCENTAGE_SCORE,
+    }
+    default_report = sanitize_report(report, mode=MODE_DEFAULT)
+    safe_report = sanitize_report(report, mode=MODE_SAFE)
+    default_args = default_report["cli_args"]
+    safe_args = safe_report["cli_args"]
+    assert default_args["--config"] == report["cli_args"]["--config"]
+    assert default_args["--report"][2] == report["cli_args"]["--report"][2]
+    assert safe_args["--config"] == REDACTED_VALUE
+    assert safe_args["--config-dir"] == REDACTED_VALUE
+    assert safe_args["--report"] == [
+        "FILE",
+        "JSON",
+        REDACTED_VALUE,
+    ]
+    assert safe_report["amount_correct"] == EXPECTED_AMOUNT_CORRECT
+    assert safe_report["percentage_score"] == EXPECTED_PERCENTAGE_SCORE
+    assert report["cli_args"]["--report"][2] == (
+        "/Users/student/private/report.json"
+    )

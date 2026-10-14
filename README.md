@@ -105,6 +105,11 @@ The following options control how GatorGrade runs:
   name. Examples:
   - `gatorgrade --report FILE JSON report.json`
   - `gatorgrade --report ENV MD GITHUB_STEP_SUMMARY`
+- `--report-safe`: Enable privacy-safe mode for saved reports. In addition
+  to the default credential redaction, this mode hides commands, check
+  options, diagnostics, hints, and source-derived output. Check results
+  and scores are preserved. Use this option when preparing reports for
+  public sharing.
 - `--report-history`, `--no-report-history`: Enable or disable automatic JSON
   report history. History is enabled by default and is saved in the
   platform-specific user data directory. Automatic history is independent of
@@ -395,6 +400,13 @@ by `--output-limit`.
 ## Reports
 
 GatorGrade can generate reports in JSON or Markdown format.
+
+GatorGrade automatically redacts recognizable credentials from saved reports.
+Use `--report-safe` to hide additional potentially sensitive content when
+preparing reports for public sharing.
+
+See the [Report Privacy and Safe Mode](docs/report-privacy.md) guide for
+details about redaction, saved output destinations, and privacy limitations.
 
 ### Automatic Report History
 
