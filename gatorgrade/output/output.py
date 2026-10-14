@@ -625,6 +625,7 @@ def configure_report(
         due_date: Optional due date from the config file.
 
     """
+    report_output_data_json = sanitize_report(report_output_data_json)
     # normalize to uppercase for case-insensitive matching
     # as the tool expects capitalized versions of these fields
     # as in "JSON" or "MD". With that said, a prior version of the
@@ -701,6 +702,7 @@ def write_github_env(
     github_env_path = os.getenv(GITHUB_ENV_VAR)
     if github_env_path is None:
         return False
+    report_output_data_json = sanitize_report(report_output_data_json)
     # both values are guaranteed non-None by the caller
     fmt: str = github_env[0] if github_env[0] is not None else EMPTY
     fmt = fmt.upper()

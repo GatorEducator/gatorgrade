@@ -15,7 +15,6 @@ from hypothesis import strategies as st
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output import output
 from gatorgrade.output.check_result import CheckResult
-from gatorgrade.privacy import sanitize_report
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
@@ -2862,9 +2861,7 @@ def test_configure_report_json_file_excludes_cli_secret(
 ) -> None:
     """A sanitized report written to a JSON file does not hold a CLI secret."""
     cli_args = {"--auto-hint-api-key": SECRET_CLI_VALUE}
-    report = sanitize_report(
-        output.create_report_json(0, [], 0, cli_args=cli_args)
-    )
+    report = output.create_report_json(0, [], 0, cli_args=cli_args)
     report_path = tmp_path / "report.json"
     output.configure_report(("FILE", "JSON", str(report_path)), report)
     assert SECRET_CLI_VALUE not in report_path.read_text(encoding="utf-8")
