@@ -66,17 +66,8 @@ gatorgrade
 
 ### Installing from Source
 
-Install in editable mode for development:
-
-```bash
-uv pip install -e .
-```
-
-Or use `uv sync` if the repository contains a `uv.lock` file:
-
-```bash
-uv sync
-```
+See the [contribution guide](CONTRIBUTING.md#development-setup) for editable
+installation, development dependencies, and running your local checkout.
 
 ## Configuration Overview
 
@@ -457,63 +448,30 @@ Failing Check(s)
 
 ## Development
 
+See [Contributing to GatorGrade](CONTRIBUTING.md) for setup, standards,
+issue tracking, and the pull request workflow.
+
 ### Testing
 
-Run all tests:
-
-```bash
-uv run task test
-```
-
-Run tests without output:
-
-```bash
-uv run task test-silent
-```
-
-Run tests with coverage:
-
-```bash
-uv run task test-coverage
-```
-
-Run tests with direct coverage checks:
-
-```bash
-uv run task test-coverage-check-verbose
-```
+See [testing and checks](CONTRIBUTING.md#testing-and-checks) for test commands
+and coverage requirements.
 
 ### Linting and Formatting
 
-Run all linting checks:
-
-```bash
-uv run task lint
-```
-
-Fix code formatting:
-
-```bash
-uv run task format-fix
-```
+See the [check command table](CONTRIBUTING.md#testing-and-checks) and
+[coding standards](CONTRIBUTING.md#coding-standards).
 
 ### Type Checking
 
-Run all type checkers:
-
-```bash
-uv run task typecheck
-```
+See [testing and checks](CONTRIBUTING.md#testing-and-checks) for the type
+checking tools and commands.
 
 ### Complete Check
 
-Run all linting and testing commands:
-
-```bash
-uv run task all
-```
+Run the [required checks](CONTRIBUTING.md#testing-and-checks) before submitting
+or updating a pull request.
 
 ### Mutation Testing
 
-For information about mutation testing with GatorGrade, see
-[MUTATION.md](scripts/MUTATION.md).
+See [contributor scripts](CONTRIBUTING.md#contributor-scripts) for the optional
+mutation workflow and its specialist guide.
