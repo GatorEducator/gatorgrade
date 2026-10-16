@@ -80,6 +80,36 @@ def test_run_checks_history_write_failure_does_not_change_status(
     assert "Could not save automatic report history" in out
 
 
+def test_run_checks_warns_when_newest_history_report_exceeds_limit(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Oversized newest history reports are retained with a warning."""
+    history_path = tmp_path / "report.json"
+    history_path.write_bytes(b"x" * (1024 * 1024 + 1))
+    monkeypatch.setattr(
+        output,
+        "save_report_history",
+        MagicMock(return_value=history_path),
+    )
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        report_history_max_mib=1,
+        history_scope="project-one",
+    )
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "newest automatic report" in out
+    assert "retained" in out
+    assert out.index("Points:") < out.index("newest automatic report")
+
+
 def test_run_checks_invalid_gg_args_prints_exception(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

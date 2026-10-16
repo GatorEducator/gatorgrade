@@ -23,6 +23,7 @@ from rich.rule import Rule
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.output.check_result import CheckResult
 from gatorgrade.report_history import (
+    BYTES_PER_MIB,
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
     save_report_history,
@@ -53,6 +54,11 @@ FILTER_HISTORY_REPORTS_TOTAL_KEY = "--filter-history-reports-total"
 FILTER_LABEL = "Query Filter"
 REPORT_HISTORY_WARNING = (
     "[yellow]Warning: Could not save automatic report history: {}[/]"
+)
+REPORT_HISTORY_SIZE_WARNING = (
+    "[yellow]Warning: The newest automatic report is {} bytes, which "
+    "exceeds the configured report history limit of {} bytes. It was "
+    "retained as the newest report exception.[/]"
 )
 OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
@@ -1116,16 +1122,6 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             display_project_name,
             due_date,
         )
-        if report_history:
-            try:
-                save_report_history(
-                    report_output_data,
-                    scope=history_scope or "",
-                    max_report_count=report_history_max_count,
-                    max_size_mib=report_history_max_mib,
-                )
-            except (OSError, TypeError, ValueError) as error:
-                rich.print(REPORT_HISTORY_WARNING.format(error))
     # track report format for summary display
     report_type_str = None
     if all(report):
@@ -1366,6 +1362,25 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         # close the running checks section with an outcome-colored rule
         rich.print()
         rich.print(Rule(style=summary_color))
+    if report_history:
+        try:
+            history_path = save_report_history(
+                report_output_data,
+                scope=history_scope or "",
+                max_report_count=report_history_max_count,
+                max_size_mib=report_history_max_mib,
+            )
+            history_size = history_path.stat().st_size
+            history_limit = report_history_max_mib * BYTES_PER_MIB
+            if history_size > history_limit:
+                rich.print(
+                    REPORT_HISTORY_SIZE_WARNING.format(
+                        history_size,
+                        history_limit,
+                    )
+                )
+        except (OSError, TypeError, ValueError) as error:
+            rich.print(REPORT_HISTORY_WARNING.format(error))
     # determine whether or not the run was a success or not:
     # if all of the tests pass then the function returns True;
     # otherwise the function must return False since run did not pass
