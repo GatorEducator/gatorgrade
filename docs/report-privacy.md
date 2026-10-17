@@ -32,6 +32,7 @@ Use `--report-safe` when preparing a report for public sharing:
 ```bash
 uv run gatorgrade --report FILE JSON report.json --report-safe
 ```
+
 You can also use safe mode with Markdown reports:
 
 ```bash
