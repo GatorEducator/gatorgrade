@@ -10,28 +10,32 @@ sharing them.
 By default, GatorGrade uses best-effort redaction before saving reports.
 It replaces recognizable sensitive values with `[redacted]`, including:
 
-- API keys, tokens, passwords, and credentials stored under sensitive
-  option or field names.
-- Common credential formats, including recognizable provider tokens.
+- Values stored under names that suggest a secret, such as `api_key`,
+  `token`, `password`, `secret`, `credential`, or `authorization`. Case,
+  dashes, and underscores are ignored, so `API-KEY` and `apiKey` match.
+- Common credential formats inside any text, including OpenAI-style `sk-`
+  keys, GitHub `ghp_` and `github_pat_` tokens, AWS access key IDs,
+  Slack `xox` tokens, `Bearer` tokens, and private key blocks.
+- Values assigned to a secret name inside text, such as `API_KEY=value`
+  or `"password": "value"`.
 - Bearer tokens and credentials embedded in URLs.
-- Sensitive values appearing in commands, diagnostics, and hints when
-  they match supported redaction patterns.
 
 Default mode generally preserves commands, check options, diagnostics,
 hints, and file paths when they do not match a redaction pattern.
+Redaction changes only the saved report data. Checks still run with their
+original values, and terminal output is not redacted in either mode.
 
 ## Safe Mode for Public Reports
 
 Use `--report-safe` when preparing a report for public sharing:
 
 ```bash
-gatorgrade --report FILE JSON report.json --report-safe
+uv run gatorgrade --report FILE JSON report.json --report-safe
 ```
-
 You can also use safe mode with Markdown reports:
 
 ```bash
-gatorgrade --report FILE MD report.md --report-safe
+uv run gatorgrade --report FILE MD report.md --report-safe
 ```
 
 Safe mode applies the default credential redaction and additionally
