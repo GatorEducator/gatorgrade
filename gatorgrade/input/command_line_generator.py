@@ -130,7 +130,7 @@ def generate_checks(  # noqa: PLR0912
             if check_data.file_context is not None:
                 # get the file and directory using pathlib.Path for cross-platform support
                 context_path = Path(check_data.file_context)
-                dirname = str(context_path.parent)
+                dirname = context_path.parent.as_posix()
                 if dirname == ".":
                     dirname = DEFAULT_DIRECTORY
                 filename = context_path.name

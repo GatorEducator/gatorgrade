@@ -353,7 +353,7 @@ def _run_gg_check(
                 if i + 3 < len(check.gg_args):
                     dir_name = check.gg_args[i + 1]
                     file_name = check.gg_args[i + 3]
-                    file_path = str(Path(dir_name) / file_name)
+                    file_path = (Path(dir_name) / file_name).as_posix()
                 break
     # if arguments are formatted incorrectly, catch the exception and
     # return it as the diagnostic message
