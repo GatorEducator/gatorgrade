@@ -197,3 +197,40 @@ The coding agent should write the notes as a Markdown list.
   in a bit of flair like a pun, a limerick, a dad joke, a haiku about
   test cases, or anything else that might make the developer smile.
   Don't force it; let it come naturally when the moment feels right.
+- The `insights` command in `gatorgrade/insights.py` renders **plain
+  ASCII only**, escaping anything else with `backslashreplace`. This is
+  deliberate. GatorGrade never sets the encoding of its own output
+  streams, so when `sys.stdout.encoding` is not UTF-8, which is the case
+  in Git Bash on Windows where it is `cp1252`, any non-ASCII character
+  makes redirected output die with `UnicodeEncodeError`. The bug is
+  pre-existing and tool-wide: a run in which every check passes also
+  crashes, on the check mark, and then exits 1 even though nothing
+  failed. The `Rule` in every error box and the crocodile emoji in
+  `--help` fail the same way. Do not introduce rich tables, panels, or
+  rules into insights output until this is fixed.
+  - Verified fix, not yet applied: call
+    `sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")`
+    on both standard streams at import time in `main.py`, before the
+    shared `Console` is built, so that the help renderer built into
+    Typer is covered too.
+  - Unaffected, and not to be confused with the above: an interactive
+    UTF-8 terminal, Linux and macOS, and therefore CI. Mojibake such as
+    `Γ£ô` in PowerShell is a different problem entirely and is not a
+    GatorGrade defect; it happens when `[Console]::OutputEncoding` is
+    `IBM437`, and neither `chcp 65001` nor `PYTHONIOENCODING` changes
+    it.
+- Headings, heading rules, and the struggle-threshold wording in
+  `insights.py` are **derived from their constants**, never typed out.
+  Hand-typed underlines had already drifted a character short of their
+  headings, and `85%` had been duplicated away from
+  `STRUGGLE_THRESHOLD`.
+- A project's history scope is a hash of the **resolved absolute**
+  config path, so a scope can never be matched across two machines.
+  Any feature that tries to verify a committed report is authentic, or
+  current, on a grading machine cannot work.
+- `tests/test_insights_cli.py` builds a `TextIOWrapper` with
+  `newline=""`. Without it, `\n` becomes `\r\n` on Windows and the
+  byte-comparison tests pass in CI while failing locally.
+- `--save` always writes `insights/insights.json` or
+  `insights/insights.txt`. There is no `--output-dir`, because a check
+  that looks only in `insights/` cannot verify a report saved elsewhere.

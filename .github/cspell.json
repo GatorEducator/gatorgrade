@@ -23,11 +23,13 @@
         "isort",
         "pathlib",
         "Pydantic",
+        "typer",
         "pipx",
         "pytest",
         "pylint",
         "taskipy",
         "markdownlint",
+        "rumdl",
         "pyproject",
         "virtualenvs",
         "git",
@@ -41,7 +43,11 @@
         "gatorgradle",
         "worktree",
         "systemprompt",
-        "socio"
+        "socio",
+        "backslashreplace",
+        "chcp",
+        "mojibake",
+        "pythonioencoding"
     ],
     "ignorePaths": [
         ".github/**",
