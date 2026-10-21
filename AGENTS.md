@@ -211,8 +211,8 @@ The coding agent should write the notes as a Markdown list.
   - Verified fix, not yet applied: call
     `sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")`
     on both standard streams at import time in `main.py`, before the
-    shared `Console` is built, so that Typer's own help renderer is
-    covered too.
+    shared `Console` is built, so that the help renderer built into
+    Typer is covered too.
   - Unaffected, and not to be confused with the above: an interactive
     UTF-8 terminal, Linux and macOS, and therefore CI. Mojibake such as
     `Γ£ô` in PowerShell is a different problem entirely and is not a
