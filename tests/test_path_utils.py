@@ -47,4 +47,16 @@ def test_to_portable_display_path_does_not_make_path_absolute() -> None:
     assert result == "folder/file.txt"
     assert not result.startswith("/")
 
+def test_to_portable_display_path_handles_filename() -> None:
+    assert to_portable_display_path("README.md") == "README.md"
+
+def test_to_portable_display_path_handles_current_directory() -> None:
+    assert to_portable_display_path(".") == "."
+
+
+def test_to_filesystem_path_handles_current_directory() -> None:
+    result = to_filesystem_path(".")
+
+    assert result == Path.cwd()
+
 
