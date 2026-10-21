@@ -33,3 +33,18 @@ def test_to_filesystem_path_expands_home_directory(
     result = to_filesystem_path("~/example.txt")
 
     assert result == (tmp_path / "example.txt").resolve()
+
+def test_to_portable_display_path_uses_forward_slashes() -> None:
+    input_path = Path("folder") / "subfolder" / "file.txt"
+
+    result = to_portable_display_path(input_path)
+
+    assert result == "folder/subfolder/file.txt"
+
+def test_to_portable_display_path_does_not_make_path_absolute() -> None:
+    result = to_portable_display_path("folder/file.txt")
+
+    assert result == "folder/file.txt"
+    assert not result.startswith("/")
+
+
