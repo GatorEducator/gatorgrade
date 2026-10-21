@@ -80,9 +80,6 @@ DIAGNOSTIC_INDENT = "\n     "
 # diagnostic shown when a shell check runs longer than its timeout
 TIMEOUT_DIAGNOSTIC_FMT = "Command timed out after {} second(s)"
 
-# name of the optional per-check timeout attribute on a shell check
-TIMEOUT_ATTRIBUTE = "timeout"
-
 # argument strings used in GatorGrader checks
 GG_DIRECTORY_ARG = "--directory"
 GG_COMMAND_ARG = "--command"
@@ -282,9 +279,7 @@ def _run_shell_check(
         The result of running the shell check as a CheckResult.
 
     """
-    effective_timeout = _resolve_timeout(
-        getattr(check, TIMEOUT_ATTRIBUTE, None), timeout
-    )
+    effective_timeout = _resolve_timeout(check.timeout, timeout)
     # run the shell command and capture its output and return code;
     # STDOUT and STDERR are merged so they can be captured together
     # as diagnostic, and a timeout is reported instead of raised
@@ -851,6 +846,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     no_progress_bar: bool = False,
     show_diagnostics: bool = True,
     output_limit: int | None = None,
+    timeout: int | None = None,
     cli_args: dict | None = None,
     version_info: dict | None = None,
     github_env: Tuple[str | None, str | None] = (None, None),
@@ -876,6 +872,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         show_diagnostics: Show diagnostic details for failing checks.
         output_limit: The maximum number of diagnostic lines to display
             for each check.
+        timeout: The default number of seconds a shell check may run when
+            the check does not set its own timeout.
         cli_args: The command-line arguments to include in the report.
         version_info: Version and platform information to include in the report.
         github_env: Optional tuple of (format, key) for writing report data
@@ -950,7 +948,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             # inside of a CheckResult object but
             # not initialized in the constructor
             if isinstance(check, ShellCheck):
-                result = _run_shell_check(check, output_limit)
+                result = _run_shell_check(check, output_limit, timeout)
                 command_ran = check.command
                 result.run_command = command_ran
             # run a check that GatorGrader implements
@@ -999,7 +997,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 result = None
                 # command_ran = None
                 if isinstance(check, ShellCheck):
-                    result = _run_shell_check(check, output_limit)
+                    result = _run_shell_check(check, output_limit, timeout)
                     command_ran = check.command
                     result.run_command = command_ran
                 # run a check that GatorGrader implements

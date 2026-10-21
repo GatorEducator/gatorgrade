@@ -2965,8 +2965,9 @@ def test_run_shell_check_passes_cli_timeout_to_runner() -> None:
 
 def test_run_shell_check_per_check_timeout_overrides_cli() -> None:
     """Test that a timeout set on the check wins over the command-line value."""
-    check = ShellCheck(description="Check", command='echo "hi"')
-    setattr(check, "timeout", CHECK_TIMEOUT)
+    check = ShellCheck(
+        description="Check", command='echo "hi"', timeout=CHECK_TIMEOUT
+    )
     result = output._run_shell_check(check, timeout=CLI_TIMEOUT)
     assert result.passed is True
     assert result.timeout == CHECK_TIMEOUT

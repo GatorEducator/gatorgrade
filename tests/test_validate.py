@@ -35,6 +35,14 @@ def test_validate_baseline_weight_valid_property(value: int) -> None:
 
 
 @pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=1000))
+def test_validate_timeout_valid_property(value: int) -> None:
+    """Property: positive timeouts pass validation unchanged."""
+    result = validate.validate_timeout(value)
+    assert result == value
+
+
+@pytest.mark.propertybased
 @given(st.integers(max_value=0))
 def test_validate_baseline_weight_invalid_property(value: int) -> None:
     """Property: non-positive ints cause BadParameter."""

@@ -89,6 +89,13 @@ def validate_output_limit(value: int | None) -> int | None:
     return value
 
 
+def validate_timeout(value: int | None) -> int | None:
+    """Validate shell timeouts are at least 1 second when provided."""
+    if value is not None and value < 1:
+        raise BadParameter("Timeout must be at least 1.")
+    return value
+
+
 def validate_baseline_weight(value: int) -> int:
     """Validate baseline weight is greater than 0.
 
