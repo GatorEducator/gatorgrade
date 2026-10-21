@@ -28,12 +28,13 @@ documentation, tests, bug reports, and pull request reviews. Start with the
 
 ## Use of AI
 
-<!-- rumdl-disable-next-line MD057 -->
-The dedicated [AI contribution policy (coming soon)](AI_CODE_OF_CONDUCT.md)
-will document expectations for AI-assisted contributions.
+You are responsible for reviewing and testing AI-assisted code,
+documentation, and communication for accuracy, safety, and respectful language.
+Do not submit unreviewed output or claim verification you did not perform.
 
-**Placeholder:** the linked policy has not been published. Update this link
-when the dedicated policy is available.
+Disclose substantial AI assistance in contributions and project communication.
+In affected commits, describe what the tool contributed and how you verified
+it in the body, and add an `AI-Assisted: <tool name>` trailer.
 
 ## Finding ways to help
 
