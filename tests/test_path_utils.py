@@ -18,3 +18,8 @@ def test_to_filesystem_path_accepts_path_object() -> None:
 
     assert isinstance(result, Path)
     assert result == input_path.expanduser().resolve()
+
+def test_to_filesystem_path_resolves_relative_path() -> None:
+    result = to_filesystem_path("folder/example.txt")
+
+    assert result.is_absolute()
