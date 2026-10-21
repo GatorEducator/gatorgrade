@@ -23,3 +23,13 @@ def test_to_filesystem_path_resolves_relative_path() -> None:
     result = to_filesystem_path("folder/example.txt")
 
     assert result.is_absolute()
+
+def test_to_filesystem_path_expands_home_directory(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    result = to_filesystem_path("~/example.txt")
+
+    assert result == (tmp_path / "example.txt").resolve()
