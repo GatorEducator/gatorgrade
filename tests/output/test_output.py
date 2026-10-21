@@ -982,7 +982,9 @@ def test_run_gg_check_extracts_correct_file_path() -> None:
         json_info={"check": "test"},
     )
     result = output._run_gg_check(check)
-    assert result.path == "tests/test_assignment/src/hello-world.py"
+    assert result.path == str(
+        Path("tests/test_assignment/src") / "hello-world.py"
+    )
 
 
 def test_run_gg_check_path_extraction_with_different_order() -> None:
@@ -1004,7 +1006,7 @@ def test_run_gg_check_path_extraction_with_different_order() -> None:
         json_info={"check": "test"},
     )
     result = output._run_gg_check(check)
-    assert result.path == "gatorgrade/input/checks.py"
+    assert result.path == str(Path("gatorgrade/input") / "checks.py")
 
 
 def test_run_gg_check_path_with_directory_missing_args() -> None:
