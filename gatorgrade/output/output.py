@@ -56,8 +56,8 @@ REPORT_HISTORY_WARNING = (
     "[yellow]Warning: Could not save automatic report history: {}[/]"
 )
 REPORT_HISTORY_SIZE_WARNING = (
-    "[yellow]Warning: The newest automatic report is {} bytes, which "
-    "exceeds the configured report history limit of {} bytes. It was "
+    "[yellow]Warning: The newest automatic report is {:.6f} MiB, which "
+    "exceeds the configured report history limit of {:.6f} MiB. It was "
     "retained as the newest report exception.[/]"
 )
 OVERDUE_LABEL = "Overdue"
@@ -1375,8 +1375,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             if history_size > history_limit:
                 rich.print(
                     REPORT_HISTORY_SIZE_WARNING.format(
-                        history_size,
-                        history_limit,
+                        history_size / BYTES_PER_MIB,
+                        history_limit / BYTES_PER_MIB,
                     )
                 )
         except (OSError, TypeError, ValueError) as error:

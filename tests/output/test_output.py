@@ -106,6 +106,7 @@ def test_run_checks_warns_when_newest_history_report_exceeds_limit(
     out, _ = capsys.readouterr()
     assert result is True
     assert "newest automatic report" in out
+    assert "MiB" in out
     assert "retained" in out
     assert out.index("Points:") < out.index("newest automatic report")
 
