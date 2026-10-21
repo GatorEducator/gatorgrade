@@ -27,6 +27,11 @@ FAILING_CMD_WITH_LINES = (
 
 EXPECTED_AMOUNT = 2
 EXPECTED_PERCENTAGE = 100
+# values that stand in for credentials in the privacy tests; the token is
+# split so that the complete value only exists while the tests are running
+SECRET_CLI_VALUE = "secret-token"
+SECRET_OUTPUT_TOKEN = "ghp_" + "abcdefghijklmnopqrstuvwxyz0123456789"
+SECRET_OUTPUT_CMD = f"python -c \"print('{SECRET_OUTPUT_TOKEN}'); exit(1)\""
 
 
 @pytest.fixture
@@ -2849,3 +2854,164 @@ def test_run_checks_generates_low_quality_hint(
         [check], report, auto_hint_engine=mock_engine, no_progress_bar=True
     )
     mock_engine.generate_hint.assert_called_once()
+
+
+def test_configure_report_json_file_excludes_cli_secret(
+    tmp_path: Path,
+) -> None:
+    """A sanitized report written to a JSON file does not hold a CLI secret."""
+    cli_args = {"--auto-hint-api-key": SECRET_CLI_VALUE}
+    report = output.create_report_json(0, [], 0, cli_args=cli_args)
+    report_path = tmp_path / "report.json"
+    output.configure_report(("FILE", "JSON", str(report_path)), report)
+    assert SECRET_CLI_VALUE not in report_path.read_text(encoding="utf-8")
+    assert cli_args == {"--auto-hint-api-key": SECRET_CLI_VALUE}
+
+
+@pytest.mark.parametrize("report_type", ["json", "md"])
+def test_run_checks_redacts_secrets_in_every_destination(
+    report_type: str,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Report files, GITHUB_ENV, and history never receive raw secrets."""
+    save_history = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+    github_env_path = tmp_path / "github_env"
+    monkeypatch.setenv("GITHUB_ENV", str(github_env_path))
+    report_path = tmp_path / f"report.{report_type}"
+    json_info: dict[str, Any] = {
+        "description": "leak a token",
+        "command": SECRET_OUTPUT_CMD,
+    }
+    check = ShellCheck(
+        description="leak a token",
+        command=SECRET_OUTPUT_CMD,
+        json_info=json_info,
+        check_id="check-one",
+    )
+    cli_args = {"--auto-hint-api-key": SECRET_CLI_VALUE, "--config": "g.yml"}
+    result = output.run_checks(
+        [check],
+        ("file", report_type, str(report_path)),
+        no_progress_bar=True,
+        cli_args=cli_args,
+        github_env=(report_type, "GATORGRADE_REPORT"),
+        report_history=True,
+        history_scope="project-one",
+    )
+    out, _ = capsys.readouterr()
+    history_report = save_history.call_args.args[0]
+    persisted = (
+        report_path.read_text(encoding="utf-8"),
+        github_env_path.read_text(encoding="utf-8"),
+        json.dumps(history_report),
+    )
+    assert result is False
+    for content in persisted:
+        assert SECRET_OUTPUT_TOKEN not in content
+        assert SECRET_CLI_VALUE not in content
+        assert "[redacted]" in content
+    assert SECRET_OUTPUT_TOKEN not in history_report["checks"][0]["command"]
+    assert "[redacted]" in history_report["checks"][0]["diagnostic"]
+    assert history_report["checks"][0]["check_id"] == "check-one"
+    assert history_report["checks"][0]["status"] is False
+    assert history_report["cli_args"]["--config"] == "g.yml"
+    assert SECRET_OUTPUT_TOKEN in out
+    assert check.command == SECRET_OUTPUT_CMD
+    assert json_info["command"] == SECRET_OUTPUT_CMD
+    assert cli_args["--auto-hint-api-key"] == SECRET_CLI_VALUE
+
+
+def test_run_checks_redacts_secrets_in_hint_tracking(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The tracking entry is redacted while the engine sees raw output."""
+    append_entry = MagicMock()
+    monkeypatch.setattr(output, "append_track_entry", append_entry)
+    check = ShellCheck(description="leak a token", command=SECRET_OUTPUT_CMD)
+    mock_engine = MagicMock()
+    mock_engine.is_loaded = True
+    mock_engine.generate_hint.return_value = (
+        f"Remove {SECRET_OUTPUT_TOKEN} from the program.",
+        False,
+    )
+    mock_engine.has_fallback = False
+    mock_engine.model_id = "local-model"
+    output.run_checks(
+        [check],
+        ("", "", ""),
+        no_progress_bar=True,
+        cli_args={"--auto-hint-api-key": SECRET_CLI_VALUE},
+        auto_hint_engine=mock_engine,
+        auto_hint_track=True,
+    )
+    tracked = json.dumps(append_entry.call_args.args[0])
+    engine_arguments = mock_engine.generate_hint.call_args.kwargs
+    assert SECRET_OUTPUT_TOKEN not in tracked
+    assert SECRET_CLI_VALUE not in tracked
+    assert "[redacted]" in tracked
+    assert SECRET_OUTPUT_TOKEN in engine_arguments["diagnostic"]
+    assert engine_arguments["command"] == SECRET_OUTPUT_CMD
+
+
+@pytest.mark.parametrize("report_type", ["json", "md"])
+def test_safe_mode_applies_to_all_report_destinations(
+    report_type: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Safe mode hides private details in every report destination."""
+    save_history = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+
+    github_env_path = tmp_path / "github_env"
+    monkeypatch.setenv("GITHUB_ENV", str(github_env_path))
+
+    report_path = tmp_path / f"safe-report.{report_type}"
+
+    private_command = "echo private-student-information"
+
+    check = ShellCheck(
+        description="Test private command",
+        command=private_command,
+        json_info={
+            "description": "Test private command",
+            "command": private_command,
+        },
+        check_id="safe-mode-check",
+    )
+
+    output.run_checks(
+        [check],
+        ("file", report_type, str(report_path)),
+        no_progress_bar=True,
+        github_env=(report_type, "GATORGRADE_REPORT"),
+        report_history=True,
+        history_scope="safe-test",
+        report_safe=True,
+    )
+
+    history_report = save_history.call_args.args[0]
+
+    saved_outputs = (
+        report_path.read_text(encoding="utf-8"),
+        github_env_path.read_text(encoding="utf-8"),
+        json.dumps(history_report),
+    )
+
+    for content in saved_outputs:
+        assert private_command not in content
+
+    assert history_report["checks"][0]["command"] == "[redacted]"
+
+    if report_type == "json":
+        assert "[redacted]" in saved_outputs[0]
+        assert "[redacted]" in saved_outputs[1]
+
+    assert history_report["checks"][0]["status"] is True
+    assert history_report["checks"][0]["check_id"] == "safe-mode-check"
+
+    # the original command remains available for execution
+    assert check.command == private_command

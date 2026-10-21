@@ -105,6 +105,14 @@ The following options control how GatorGrade runs:
   name. Examples:
   - `gatorgrade --report FILE JSON report.json`
   - `gatorgrade --report ENV MD GITHUB_STEP_SUMMARY`
+- `--report-safe`: Hide more content in saved reports when preparing them
+  for public sharing. Every saved report already has recognizable secrets
+  replaced with `[redacted]`; safe mode also hides commands, check options,
+  diagnostics, hints, file paths, and the configuration and report paths in
+  the command-line arguments. Check results, scores, and check identifiers
+  stay visible. Safe mode applies to `--report`, `--github-env`, automatic
+  history, and `autohints.json`, and does not change terminal output or the
+  values used to run checks. See [Report Privacy](docs/report-privacy.md).
 - `--report-history`, `--no-report-history`: Enable or disable automatic JSON
   report history. History is enabled by default and is saved in the
   platform-specific user data directory. Automatic history is independent of
@@ -395,6 +403,13 @@ by `--output-limit`.
 ## Reports
 
 GatorGrade can generate reports in JSON or Markdown format.
+
+GatorGrade automatically redacts recognizable credentials from saved reports.
+Use `--report-safe` to hide additional potentially sensitive content when
+preparing reports for public sharing.
+
+See the [Report Privacy and Safe Mode](docs/report-privacy.md) guide for
+details about redaction, saved output destinations, and privacy limitations.
 
 ### Automatic Report History
 
