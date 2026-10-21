@@ -3,7 +3,7 @@
 import datetime
 import json as json_module
 import os
-import subprocess
+import subprocess  # noqa: F401
 import threading
 import time
 from pathlib import Path
@@ -27,6 +27,7 @@ from gatorgrade.report_history import (
     DEFAULT_HISTORY_SIZE_MIB,
     save_report_history,
 )
+from gatorgrade.shell_runner import DEFAULT_TIMEOUT_SECONDS, run_shell_command
 from gatorgrade.track import append_track_entry, build_track_entry
 
 # disable rich's default highlight to stop number coloring
@@ -236,45 +237,49 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
 
 
 def _run_shell_check(
-    check: ShellCheck, output_limit: int | None = None
+    check: ShellCheck,
+    output_limit: int | None = None,
+    timeout: int | None = None,
 ) -> CheckResult:
     """Run a shell check.
 
     Args:
         check: The shell check to run.
         output_limit: The maximum number of diagnostic lines to display.
+        timeout: The timeout in seconds to use for the command.
 
     Returns:
         The result of running the shell check as a CheckResult.
 
     """
-    # run the shell command and capture its output and return code
-    result = subprocess.run(
+    effective_timeout = (
+        check.timeout
+        if check.timeout is not None
+        else timeout
+        if timeout is not None
+        else DEFAULT_TIMEOUT_SECONDS
+    )
+    outcome = run_shell_command(
         check.command,
-        shell=True,
-        check=False,
-        timeout=300,
-        stdout=subprocess.PIPE,
-        # redirect STDERR to STDOUT so STDOUT and STDERR can be captured
-        # together as diagnostic
-        stderr=subprocess.STDOUT,
+        timeout=effective_timeout,
+        merge_stderr=True,
     )
-    passed = result.returncode == 0
-    # add spaces after each newline to indent all lines of diagnostic
-    raw_diagnostic = (
-        EMPTY
-        if passed
-        else result.stdout.decode().strip().replace(NEWLINE, DIAGNOSTIC_INDENT)
-    )
+    passed = outcome.returncode == 0
+    stdout = outcome.stdout.strip()
+    if outcome.timed_out:
+        raw_diagnostic = (
+            f"Command timed out after {effective_timeout} second(s)"
+            if not stdout
+            else f"Command timed out after {effective_timeout} second(s)\n{stdout}"
+        )
+    else:
+        raw_diagnostic = EMPTY if passed else stdout
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
     )
-    # truncate the diagnostic message if it is too long (note that this
-    # limit can be specified on a per-check basis or, alternatively, it
-    # can be provided by the person running gatorgrade on the command-line)
-    diagnostic = _truncate_diagnostic(raw_diagnostic, limit)
-    # create and return the CheckResult arising from the
-    # execution of the shell check
+    diagnostic = _truncate_diagnostic(
+        raw_diagnostic.replace(NEWLINE, DIAGNOSTIC_INDENT), limit
+    )
     return CheckResult(
         passed=passed,
         description=check.description,
@@ -282,6 +287,8 @@ def _run_shell_check(
         diagnostic=diagnostic,
         weight=check.weight,
         outputlimit=limit,
+        timeout=effective_timeout,
+        timed_out=outcome.timed_out,
         hint=check.hint,
         raw_diagnostic=raw_diagnostic,
         check_id=check.check_id,
@@ -441,6 +448,8 @@ def create_report_json(  # noqa: PLR0913
             results_json[STATUS_KEY] = checkResults[i].passed
             results_json[WEIGHT_KEY] = checkResults[i].weight
             results_json[OUTPUTLIMIT_KEY] = checkResults[i].outputlimit
+            if checkResults[i].timeout is not None:
+                results_json["timeout"] = checkResults[i].timeout
             if checkResults[i].path:
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
@@ -807,6 +816,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
     no_progress_bar: bool = False,
     show_diagnostics: bool = True,
     output_limit: int | None = None,
+    timeout: int | None = None,
     cli_args: dict | None = None,
     version_info: dict | None = None,
     github_env: Tuple[str | None, str | None] = (None, None),
@@ -832,6 +842,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         show_diagnostics: Show diagnostic details for failing checks.
         output_limit: The maximum number of diagnostic lines to display
             for each check.
+        timeout: The default timeout in seconds to apply to shell checks.
         cli_args: The command-line arguments to include in the report.
         version_info: Version and platform information to include in the report.
         github_env: Optional tuple of (format, key) for writing report data
@@ -906,7 +917,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
             # inside of a CheckResult object but
             # not initialized in the constructor
             if isinstance(check, ShellCheck):
-                result = _run_shell_check(check, output_limit)
+                result = _run_shell_check(check, output_limit, timeout)
                 command_ran = check.command
                 result.run_command = command_ran
             # run a check that GatorGrader implements
@@ -955,7 +966,7 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                 result = None
                 # command_ran = None
                 if isinstance(check, ShellCheck):
-                    result = _run_shell_check(check, output_limit)
+                    result = _run_shell_check(check, output_limit, timeout)
                     command_ran = check.command
                     result.run_command = command_ran
                 # run a check that GatorGrader implements

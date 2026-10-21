@@ -5,6 +5,7 @@ from typing import Any, List
 NEWLINE = "\n"
 WEIGHT_FIELD = "weight"
 OUTPUTLIMIT_FIELD = "outputlimit"
+TIMEOUT_FIELD = "timeout"
 
 
 def validate_positive_nonzero_int(value: int, name: str) -> str | None:
@@ -38,6 +39,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
         json_info: dict[str, Any] | str | None = None,
         weight: int = 1,
         outputlimit: int | None = None,
+        timeout: int | None = None,
         hint: str | None = None,
         check_id: str | None = None,
     ):
@@ -51,11 +53,12 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
                 If none is given, command is used
             weight: The weight of the check. Must be a positive integer.
             outputlimit: The maximum number of diagnostic lines to display.
+            timeout: The timeout in seconds for the shell command.
             hint: An optional hint message shown when the check fails.
             check_id: An optional SHA-256 hash uniquely identifying this check.
 
         """
-        # validate the weight and the outputlimit so that they
+        # validate the weight, outputlimit, and timeout so that they
         # are confirmed to be positive integers before setting any attributes
         errors = []
         error = validate_positive_nonzero_int(weight, WEIGHT_FIELD)
@@ -67,16 +70,18 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             )
             if error:
                 errors.append(error)
-        # if there are any errors, raise a ValueError with all
-        # of the error messages joined by newlines
+        if timeout is not None:
+            error = validate_positive_nonzero_int(timeout, TIMEOUT_FIELD)
+            if error:
+                errors.append(error)
         if errors:
             raise ValueError(NEWLINE.join(errors))
-        # otherwise, set the attributes
         self.command = command
         self.description = description if description is not None else command
         self.json_info = json_info
         self.weight = weight
         self.outputlimit = outputlimit
+        self.timeout = timeout
         self.hint = hint
         self.check_id = check_id
 

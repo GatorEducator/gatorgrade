@@ -27,6 +27,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         diagnostic: str = "No diagnostic message available",
         weight: int = 1,
         outputlimit: int | None = None,
+        timeout: int | None = None,
+        timed_out: bool = False,
         hint: str | None = None,
         raw_diagnostic: str | None = None,
         is_low_quality: bool = False,
@@ -47,6 +49,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             weight: The weight of the check result.
             outputlimit: The maximum number of diagnostic lines
                 displayed for this check.
+            timeout: The effective timeout for a shell check.
+            timed_out: Whether a shell command timed out.
             hint: An optional hint shown when the check fails.
             raw_diagnostic: The un-truncated diagnostic output.
                 When omitted, the truncated ``diagnostic`` value
@@ -68,6 +72,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.run_command = EMPTY
         self.weight = weight
         self.outputlimit = outputlimit
+        self.timeout = timeout
+        self.timed_out = timed_out
         self.hint = hint
         self.is_auto_hint = False
         self.is_low_quality = is_low_quality
@@ -124,6 +130,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"run_command='{self.run_command}', "
             f"weight={self.weight}, "
             f"outputlimit={self.outputlimit}, "
+            f"timeout={self.timeout}, "
+            f"timed_out={self.timed_out}, "
             f"hint={self.hint})"
         )
 

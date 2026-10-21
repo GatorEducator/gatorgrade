@@ -1,10 +1,13 @@
 """Test suite for set_up_shell.py."""
 
+import subprocess
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from typer import Exit
 
+from gatorgrade.input import set_up_shell
 from gatorgrade.input.set_up_shell import run_setup
 
 
@@ -70,6 +73,23 @@ def test_run_setup_with_mixed_commands() -> None:
     with pytest.raises(Exit) as exc_info:
         run_setup(front_matter)
     assert exc_info.value.exit_code == 1
+
+
+def test_run_setup_timeout_exits_cleanly(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Setup timeouts stop setup without a traceback and report the command."""
+
+    def fake_run(*args: object, **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired(cmd="sleep 301", timeout=300)
+
+    monkeypatch.setattr(set_up_shell.subprocess, "run", fake_run)
+    with pytest.raises(Exit) as exc_info:
+        run_setup({"setup": "sleep 301", "setup_timeout": 300})
+    assert exc_info.value.exit_code == 1
+    out, _ = capsys.readouterr()
+    assert "sleep 301" in out
+    assert "timed out after 300 second(s)" in out
 
 
 @pytest.mark.propertybased

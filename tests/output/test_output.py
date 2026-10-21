@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any, List, Tuple, Union
 from unittest.mock import MagicMock, patch
@@ -18,6 +19,7 @@ from gatorgrade.output.check_result import CheckResult
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
+TIMEOUT_SECONDS = 300
 
 # cross-platform shell commands for testing failing checks
 FAILING_CMD = 'python -c "exit(1)"'
@@ -54,6 +56,22 @@ def test_print_historical_filter_summary_displays_report_count(
     out, _ = capsys.readouterr()
     assert "failed in last 3" in out
     assert "inspected 2" in out
+
+
+def test_run_shell_check_timeout_returns_failed_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Timed-out shell checks become failed results instead of crashing."""
+
+    def fake_run(*args: Any, **kwargs: Any) -> Any:
+        raise subprocess.TimeoutExpired(cmd="sleep 301", timeout=300)
+
+    monkeypatch.setattr(output.subprocess, "run", fake_run)
+    result = output._run_shell_check(ShellCheck(command="sleep 301"))
+    assert result.passed is False
+    assert result.timed_out is True
+    assert result.timeout == TIMEOUT_SECONDS
+    assert f"timed out after {TIMEOUT_SECONDS} second(s)" in result.diagnostic
 
 
 def test_run_checks_history_write_failure_does_not_change_status(

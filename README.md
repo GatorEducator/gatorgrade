@@ -123,6 +123,10 @@ The following options control how GatorGrade runs:
   - `gatorgrade --github-env md MD_REPORT`
 - `--output-limit`, `-o`: Set the maximum number of diagnostic lines to display
   for a failing check. The default is 5. Must be at least 1.
+- `--timeout`, `-t`: Set the default timeout in seconds for shell checks. The
+  default is 300 seconds, and each shell check may override it with a per-check
+  `timeout` value. The per-check value takes precedence over the CLI value, and
+  the CLI value takes precedence over the built-in default.
 - `--baseline-weight`, `-b`: Set the default weight for checks that do not
   specify an explicit weight. The default is 1. Must be at least 1.
 - `--progress-bar`, `--no-progress-bar`: Show or hide the progress bar while
@@ -249,7 +253,15 @@ setup: |
 ### Setup Commands
 
 The `setup` section runs shell commands before the checks. If a setup command
-fails, GatorGrade exits immediately.
+fails, GatorGrade exits immediately. You can also set a `setup_timeout` value in
+front matter to override the default 300-second timeout for those setup commands.
+
+```yaml
+setup_timeout: 600
+setup: |
+  uv sync --dev --no-install-project
+---
+```
 
 ### Project Name
 
@@ -339,6 +351,22 @@ Each check can have an optional output limit that controls how many diagnostic
 lines are displayed if the check fails. The limit must be a positive integer. If
 a check does not specify an output limit, GatorGrade uses the global limit set
 by `--output-limit`.
+
+### Timeout
+
+Each shell check can also specify an optional `timeout` value in seconds. This
+value must be a positive integer. If a check does not specify a timeout,
+GatorGrade uses the CLI value from `--timeout` when provided, otherwise it uses
+300 seconds. Shell commands always decode output as UTF-8 with replacement for
+invalid bytes so that non-UTF-8 output never crashes GatorGrade. When a command
+times out, GatorGrade reports a concise failure such as:
+
+```text
+Command timed out after 300 second(s)
+```
+
+The timeout is reported in the verbose configuration section and in the JSON
+report metadata for shell checks.
 
 ## Reports
 

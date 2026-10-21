@@ -70,6 +70,7 @@ from gatorgrade.validate import (
     validate_report,
     validate_report_history_count,
     validate_report_history_size,
+    validate_timeout,
 )
 
 # import the version from the single-source-of-truth module so that
@@ -137,6 +138,7 @@ CONFIG_FLAG = "--config"
 CONFIG_DIR_FLAG = "--config-dir"
 REPORT_FLAG = "--report"
 OUTPUT_LIMIT_FLAG = "--output-limit"
+TIMEOUT_FLAG = "--timeout"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
 SHOW_DIAGNOSTICS_FLAG = "--show-diagnostics"
@@ -192,9 +194,10 @@ def _print_verbose_info(  # noqa: PLR0913
     auto_hint_model: str,
     auto_hint_url: Optional[str],
     output_limit: int,
-    baseline_weight: int,
-    show_diagnostics: bool,
-    progress_bar: bool,
+    timeout: int | None = None,
+    baseline_weight: int = 1,
+    show_diagnostics: bool = True,
+    progress_bar: bool = True,
     auto_hint_track: bool | None = None,
     filter_query: str | None = None,
     filter_mode: FilterMode = DEFAULT_FILTER_MODE,
@@ -220,6 +223,7 @@ def _print_verbose_info(  # noqa: PLR0913
         auto_hint_model: The auto-hint model identifier.
         auto_hint_url: The remote auto-hint URL, if any.
         output_limit: The output limit value.
+        timeout: The default timeout in seconds for shell checks.
         baseline_weight: The baseline weight value.
         show_diagnostics: Whether diagnostics are shown.
         progress_bar: Whether the progress bar is shown.
@@ -252,6 +256,7 @@ def _print_verbose_info(  # noqa: PLR0913
     config.add(f"Config file: {config_path}")
     config.add(f"Config dir: {config_dir}")
     config.add(f"Output limit: {output_limit}")
+    config.add(f"Timeout: {300 if timeout is None else timeout}")
     config.add(f"Baseline weight: {baseline_weight}")
     config.add(f"Diagnostics: {show_diagnostics}")
     config.add(f"Progress: {progress_bar}")
@@ -449,6 +454,13 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         help="Maximum number of diagnostic lines to display for a check (>= 1).",
         callback=validate_output_limit,
     ),
+    timeout: int | None = typer.Option(
+        None,
+        "--timeout",
+        "-t",
+        help="Default timeout in seconds for shell checks (>= 1).",
+        callback=validate_timeout,
+    ),
     baseline_weight: int = typer.Option(
         1,
         "--baseline-weight",
@@ -610,6 +622,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             auto_hint_model,
             auto_hint_url,
             output_limit,
+            300 if timeout is None else timeout,
             baseline_weight,
             show_diagnostics,
             progress_bar,
@@ -742,6 +755,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 REPORT_FLAG: list(report),
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
+                TIMEOUT_FLAG: 300 if timeout is None else timeout,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
                 VERBOSE_FLAG: verbose,
                 PROGRESS_BAR_FLAG: progress_bar,
@@ -944,6 +958,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                     not progress_bar,
                     show_diagnostics,
                     output_limit,
+                    timeout,
                     cli_args,
                     version_info,
                     github_env,
