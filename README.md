@@ -64,6 +64,11 @@ After installation, run `gatorgrade` directly without `pipx`:
 gatorgrade
 ```
 
+### AI Agent Permissions
+
+For the notification system to work, set the default permissions for AI agents
+to **Allow All**.
+
 ### Installing from Source
 
 Install in editable mode for development:

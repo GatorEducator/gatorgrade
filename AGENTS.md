@@ -25,32 +25,52 @@ This document provides guidelines for AI agents contributing to this repository.
 
 ## Notification Instructions
 
-- The user has given permission to use the `notify-send` command to signal task
-  completion. Here is an example of the command:
+- The user has given permission to use a desktop notification when a task is
+  complete, feedback is needed, or a question is required. Use the command for
+  the current operating system:
 
   ```bash
+  # Linux
   notify-send "Question from Coding Agent" \
     "Please clarify how to complete the testing task."
+
+  # macOS
+  osascript -e 'display notification \
+    "Please clarify how to complete the testing task." with title \
+    "Question from Coding Agent"'
   ```
 
-- The user wants a `notify-send` notification whenever I ask a question.
+  On Windows, install and use the PowerShell notification support from
+  BurntToast. Run the setup once in a regular PowerShell terminal:
 
-- Always notify the user with `notify-send` when a task is complete or when
-  feedback is needed. I have standing permission to use the notification tool.
+  ```powershell
+  Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 `
+    -Scope CurrentUser -Force -Confirm:$false
+  Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+  Install-Module -Name BurntToast -Scope CurrentUser -Force `
+    -AllowClobber -Confirm:$false
+  ```
 
-- You should also use the following command to notify the user when you are
-  finished with a task or need further help:
+  ```powershell
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -Command `
+    "Import-Module BurntToast; `
+    New-BurntToastNotification -Text 'Question from Coding Agent', `
+    'Please clarify how to complete the testing task.'"
+  ```
+
+- The user wants a desktop notification whenever I ask a question and when a
+  task is complete. Use the platform-specific command above as appropriate.
+
+- If the current session is running inside Zellij, also use this command when
+  finished with a task or when further help is needed:
 
   ```bash
   timeout 2 zellij pipe -- \
-    "zjstatus::notify::󰵰 Agent finished. This is really fun. "
+    "zjstatus::notify::Agent finished. This is really fun. "
   ```
 
-- Note that this command will only display in the current Zellij session.
-  Please also note that you need to add a space at the end of the notification.
-
-- You should use both notification methods as appropriate, making sure that the
-  Zellij command is always prefaced with a timeout of 2 seconds.
+- The Zellij command only displays in the current Zellij session. It is
+  optional outside Zellij and should not replace the desktop notification.
 
 ## Build, Lint, and Test Commands
 
