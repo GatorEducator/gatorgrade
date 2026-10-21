@@ -193,6 +193,24 @@ The coding agent should write the notes as a Markdown list.
   uncommitted work. If you need to temporarily set aside changes, create a
   commit or use `git worktree` instead. The developer will handle any
   rebasing or history cleanup.
+- Shell checks run through `run_shell_command()` in
+  `gatorgrade/shell_runner.py`, which returns a frozen `CommandOutcome`,
+  decodes output as UTF-8 with `errors="replace"`, never raises on timeout,
+  and kills the whole process tree (`taskkill /F /T` on Windows, `os.killpg`
+  on POSIX). `DEFAULT_TIMEOUT_SECONDS = 300` lives there.
+- Platform branches must use the literal `sys.platform == "win32"` with an
+  explicit `else:` block (not an early `return`), or zuban reports the other
+  platform's code as unreachable and type checkers cannot narrow names like
+  `os.killpg` or `subprocess.CREATE_NEW_PROCESS_GROUP`.
+- `_run_shell_check()` resolves the timeout with `_resolve_timeout()`:
+  per-check `timeout` attribute, then the CLI value, then the default. It
+  reads the per-check value with `getattr()` until `ShellCheck` gains a
+  `timeout` attribute (issue #218, Person B's half).
+- `uv run task ty` reports `unresolved-import` errors for `torch`,
+  `transformers`, and `openai` unless the optional `auto-hint` extra is
+  installed; these are not caused by code changes.
+- On Windows, piping `gatorgrade` output in Git Bash can crash with a cp1252
+  `UnicodeEncodeError` on the check mark; set `PYTHONIOENCODING=utf-8`.
 - **Creativity is welcome:** Every once in a while, feel free to slip
   in a bit of flair like a pun, a limerick, a dad joke, a haiku about
   test cases, or anything else that might make the developer smile.

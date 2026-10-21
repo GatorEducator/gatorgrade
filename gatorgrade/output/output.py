@@ -3,7 +3,6 @@
 import datetime
 import json as json_module
 import os
-import subprocess  # noqa: F401
 import threading
 import time
 from pathlib import Path
@@ -78,6 +77,9 @@ RUN_COMMAND_LABEL = "Run this command"
 TRUNCATED_MSG = "\n   ... (output truncated from {} to {} line(s))"
 DIAGNOSTIC_INDENT = "\n     "
 
+# diagnostic shown when a shell check runs longer than its timeout
+TIMEOUT_DIAGNOSTIC_FMT = "Command timed out after {} second(s)"
+
 # argument strings used in GatorGrader checks
 GG_DIRECTORY_ARG = "--directory"
 GG_COMMAND_ARG = "--command"
@@ -104,6 +106,7 @@ DIAGNOSTIC_KEY = "diagnostic"
 HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
+TIMEOUT_KEY = "timeout"
 CHECK_ID_KEY = "check_id"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -236,6 +239,29 @@ def _print_historical_filter_summary(cli_args: dict | None) -> None:
     )
 
 
+def _resolve_timeout(
+    check_timeout: int | None, cli_timeout: int | None
+) -> int:
+    """Return the effective timeout for a shell check.
+
+    Args:
+        check_timeout: The timeout given for this check in the configuration.
+        cli_timeout: The timeout given for every check on the command-line.
+
+    Returns:
+        The per-check timeout if set, otherwise the command-line timeout if
+        set, otherwise the default timeout.
+
+    """
+    # the per-check value wins so that a check that an instructor gave more
+    # time cannot be cut short by a smaller value on the command-line
+    if check_timeout is not None:
+        return check_timeout
+    if cli_timeout is not None:
+        return cli_timeout
+    return DEFAULT_TIMEOUT_SECONDS
+
+
 def _run_shell_check(
     check: ShellCheck,
     output_limit: int | None = None,
@@ -246,40 +272,44 @@ def _run_shell_check(
     Args:
         check: The shell check to run.
         output_limit: The maximum number of diagnostic lines to display.
-        timeout: The timeout in seconds to use for the command.
+        timeout: The number of seconds the check may run when the check
+            does not set its own timeout.
 
     Returns:
         The result of running the shell check as a CheckResult.
 
     """
-    effective_timeout = (
-        check.timeout
-        if check.timeout is not None
-        else timeout
-        if timeout is not None
-        else DEFAULT_TIMEOUT_SECONDS
-    )
+    effective_timeout = _resolve_timeout(check.timeout, timeout)
+    # run the shell command and capture its output and return code;
+    # STDOUT and STDERR are merged so they can be captured together
+    # as diagnostic, and a timeout is reported instead of raised
     outcome = run_shell_command(
-        check.command,
-        timeout=effective_timeout,
-        merge_stderr=True,
+        check.command, timeout=effective_timeout, merge_stderr=True
     )
-    passed = outcome.returncode == 0
-    stdout = outcome.stdout.strip()
+    passed = not outcome.timed_out and outcome.returncode == 0
+    output_text = outcome.stdout.strip()
+    # put the timeout message first so that it is visible even when the
+    # partial output of the command is truncated
     if outcome.timed_out:
-        raw_diagnostic = (
-            f"Command timed out after {effective_timeout} second(s)"
-            if not stdout
-            else f"Command timed out after {effective_timeout} second(s)\n{stdout}"
+        timeout_line = TIMEOUT_DIAGNOSTIC_FMT.format(effective_timeout)
+        output_text = (
+            timeout_line + NEWLINE + output_text
+            if output_text
+            else timeout_line
         )
-    else:
-        raw_diagnostic = EMPTY if passed else stdout
+    # add spaces after each newline to indent all lines of diagnostic
+    raw_diagnostic = (
+        EMPTY if passed else output_text.replace(NEWLINE, DIAGNOSTIC_INDENT)
+    )
     limit = (
         check.outputlimit if check.outputlimit is not None else output_limit
     )
-    diagnostic = _truncate_diagnostic(
-        raw_diagnostic.replace(NEWLINE, DIAGNOSTIC_INDENT), limit
-    )
+    # truncate the diagnostic message if it is too long (note that this
+    # limit can be specified on a per-check basis or, alternatively, it
+    # can be provided by the person running gatorgrade on the command-line)
+    diagnostic = _truncate_diagnostic(raw_diagnostic, limit)
+    # create and return the CheckResult arising from the
+    # execution of the shell check
     return CheckResult(
         passed=passed,
         description=check.description,
@@ -287,11 +317,11 @@ def _run_shell_check(
         diagnostic=diagnostic,
         weight=check.weight,
         outputlimit=limit,
-        timeout=effective_timeout,
-        timed_out=outcome.timed_out,
         hint=check.hint,
         raw_diagnostic=raw_diagnostic,
         check_id=check.check_id,
+        timeout=effective_timeout,
+        timed_out=outcome.timed_out,
     )
 
 
@@ -449,7 +479,7 @@ def create_report_json(  # noqa: PLR0913
             results_json[WEIGHT_KEY] = checkResults[i].weight
             results_json[OUTPUTLIMIT_KEY] = checkResults[i].outputlimit
             if checkResults[i].timeout is not None:
-                results_json["timeout"] = checkResults[i].timeout
+                results_json[TIMEOUT_KEY] = checkResults[i].timeout
             if checkResults[i].path:
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
@@ -842,7 +872,8 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         show_diagnostics: Show diagnostic details for failing checks.
         output_limit: The maximum number of diagnostic lines to display
             for each check.
-        timeout: The default timeout in seconds to apply to shell checks.
+        timeout: The default number of seconds a shell check may run when
+            the check does not set its own timeout.
         cli_args: The command-line arguments to include in the report.
         version_info: Version and platform information to include in the report.
         github_env: Optional tuple of (format, key) for writing report data
