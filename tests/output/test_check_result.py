@@ -311,3 +311,42 @@ def test_check_result_passing_hint_not_shown() -> None:
     )
     result = check_result.display_result(show_diagnostic=True)
     assert "This should not appear" not in result
+
+
+def test_check_result_timeout_defaults() -> None:
+    """Test that CheckResult has no timeout and is not timed out by default."""
+    check_result = CheckResult(
+        passed=True,
+        description="Test passed",
+        json_info={"check": "test"},
+    )
+    assert check_result.timeout is None
+    assert check_result.timed_out is False
+
+
+def test_check_result_with_explicit_timeout() -> None:
+    """Test CheckResult with an explicit timeout and timed out status."""
+    expected_timeout = 300
+    check_result = CheckResult(
+        passed=False,
+        description="Test",
+        json_info={"check": "test"},
+        timeout=expected_timeout,
+        timed_out=True,
+    )
+    assert check_result.timeout == expected_timeout
+    assert check_result.timed_out is True
+
+
+def test_check_result_repr_includes_timeout() -> None:
+    """Test that __repr__ includes the timeout fields."""
+    check_result = CheckResult(
+        passed=False,
+        description="Test",
+        json_info={"check": "test"},
+        timeout=7,
+        timed_out=True,
+    )
+    repr_str = repr(check_result)
+    assert "timeout=7" in repr_str
+    assert "timed_out=True" in repr_str
