@@ -73,6 +73,11 @@ def generate_checks(  # noqa: PLR0912
     for check_data in check_data_list:
         weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
         outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
+        file_context_posix = (
+            Path(check_data.file_context).as_posix()
+            if check_data.file_context
+            else None
+        )
         # if the check has a command key, then it is a shell check
         # which means that it will be run by the computer's shell
         if COMMAND_KEY in check_data.check:
@@ -87,7 +92,7 @@ def generate_checks(  # noqa: PLR0912
             check_id = compute_check_id(
                 description=effective_desc,
                 check_data=check_data.check,
-                file_context=check_data.file_context,
+                file_context=file_context_posix,
                 weight=weight,
                 outputlimit=outputlimit,
                 hint=check_data.check.get(HINT_KEY),
@@ -116,10 +121,9 @@ def generate_checks(  # noqa: PLR0912
             # add any additional options
             options = check_data.check.get(OPTIONS_KEY)
             if options is not None:
-                for option in options:
+                for option, option_value in options.items():
                     # if option should be a flag (i.e., its value is the True boolean),
                     # then add only the option without a value
-                    option_value = options[option]
                     if isinstance(option_value, bool):
                         if option_value:
                             gg_args.append(f"--{option}")
@@ -143,7 +147,7 @@ def generate_checks(  # noqa: PLR0912
             check_id = compute_check_id(
                 description=description,
                 check_data=check_data.check,
-                file_context=check_data.file_context,
+                file_context=file_context_posix,
                 weight=weight,
                 outputlimit=outputlimit,
                 hint=check_data.check.get(HINT_KEY),
