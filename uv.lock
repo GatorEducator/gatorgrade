@@ -1,14 +1,14 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10, <4.0"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform != 'darwin'",
-    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
-    "python_full_version < '3.11' and sys_platform != 'darwin'",
     "python_full_version >= '3.15' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and sys_platform != 'darwin'",
     "python_full_version < '3.11' and sys_platform == 'darwin'",
 ]
 
@@ -842,14 +842,14 @@ wheels = [
 
 [[package]]
 name = "gitpython"
-version = "3.1.51"
+version = "3.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "gitdb" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/59/30/a8a0c15f9480dc91b5b7f11ebd26105e5f80898d7ff02da197fef35d8395/gitpython-3.1.51.tar.gz", hash = "sha256:22c9c94bb6b0b9f3c7157c684fece45a414cea204586b600beae6cd4570dcd6d", size = 223519, upload-time = "2026-07-12T13:40:07.922Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/ff/fee293f1ec3e1b64db6eb270e00964f29c086d769201474cedb8d1608930/gitpython-3.2.1.tar.gz", hash = "sha256:0f1229ec5c057bdabdeeda8bda4f17bda679ab33dbccc00f24e6a480553c8613", size = 241688, upload-time = "2026-10-14T12:20:20.589Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/11/1232bb1ba52a230f20ff08e1b3df7cd9d43a71b61cc0a1c37941064fe4c7/gitpython-3.1.51-py3-none-any.whl", hash = "sha256:d5b29685708f3c80a56db040b665bfd69492c8e150b5848532af8013b686c5a4", size = 215246, upload-time = "2026-07-12T13:40:06.43Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/50/2a923c4dc02522ff9567f07c67ed1deca6d5fa9474f4708168b8088dfa37/gitpython-3.2.1-py3-none-any.whl", hash = "sha256:d66b0832aa8755c1a84892937282df0befb16c97e5a64aeebd68be9c5e323f53", size = 231548, upload-time = "2026-10-14T12:20:18.844Z" },
 ]
 
 [[package]]
@@ -1644,10 +1644,10 @@ version = "3.6.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform != 'darwin'",
-    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version >= '3.15' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version == '3.11.*' and sys_platform == 'darwin'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6a/51/63fe664f3908c97be9d2e4f1158eb633317598cfa6e1fc14af5383f17512/networkx-3.6.1.tar.gz", hash = "sha256:26b7c357accc0c8cde558ad486283728b65b6a95d85ee1cd66bafab4c8168509", size = 2517025, upload-time = "2025-12-08T17:02:39.908Z" }
@@ -1822,8 +1822,8 @@ version = "2.5.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform != 'darwin'",
-    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version >= '3.15' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform == 'darwin'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/22/fd/89965aa4ac08c74998539fcbf24fa3540f3e15237fbeb6bcf9c908f4aade/numpy-2.5.1.tar.gz", hash = "sha256:a48a113e6afea91f5608793bafa7ef2ad481fefbda87ec5069f483de61cb9fa3", size = 20755553, upload-time = "2026-07-04T17:08:00.933Z" }
@@ -2753,10 +2753,10 @@ version = "5.9.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform != 'darwin'",
-    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version >= '3.15' and sys_platform == 'darwin'",
+    "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version == '3.11.*' and sys_platform == 'darwin'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d7/dd/04d56c2a5232358df41f3d0f0e31833d378b6c8ed7803a6b1b7867b0eba6/stevedore-5.9.0.tar.gz", hash = "sha256:abbd0af7a38a8bbb1d6adea2e35b17609cf004eaac323e88a8d8963640dd2b3c", size = 514850, upload-time = "2026-07-02T11:38:08.509Z" }
@@ -2939,10 +2939,10 @@ version = "2.13.0+cpu"
 source = { registry = "https://download.pytorch.org/whl/cpu" }
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform != 'darwin'",
+    "python_full_version >= '3.15' and sys_platform == 'darwin'",
     "python_full_version >= '3.12' and python_full_version < '3.15' and sys_platform != 'darwin'",
     "python_full_version == '3.11.*' and sys_platform != 'darwin'",
     "python_full_version < '3.11' and sys_platform != 'darwin'",
-    "python_full_version >= '3.15' and sys_platform == 'darwin'",
 ]
 dependencies = [
     { name = "filelock" },
