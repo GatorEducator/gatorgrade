@@ -4,6 +4,7 @@ import datetime
 import json as json_module
 import os
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -18,6 +19,7 @@ from rich.progress import (
     TextColumn,
     TimeElapsedColumn,
 )
+from rich.prompt import Confirm
 from rich.rule import Rule
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
@@ -26,6 +28,7 @@ from gatorgrade.report_history import (
     BYTES_PER_MIB,
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
+    get_report_history_size_bytes,
     save_report_history,
 )
 from gatorgrade.track import append_track_entry, build_track_entry
@@ -56,9 +59,12 @@ REPORT_HISTORY_WARNING = (
     "[yellow]Warning: Could not save automatic report history: {}[/]"
 )
 REPORT_HISTORY_SIZE_WARNING = (
-    "[yellow]Warning: The newest automatic report is {:.6f} MiB, which "
-    "exceeds the configured report history limit of {:.6f} MiB. It was "
-    "retained as the newest report exception.[/]"
+    "[yellow]Warning: This automatic report is {:.6f} MiB, exceeding the "
+    "configured report history limit of {:.6f} MiB.[/]"
+)
+REPORT_HISTORY_DISCARDED_WARNING = (
+    "[yellow]Automatic report history was discarded because no interactive "
+    "terminal is available.[/]"
 )
 OVERDUE_LABEL = "Overdue"
 POINTS_LABEL = "Points"
@@ -1364,20 +1370,36 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
         rich.print(Rule(style=summary_color))
     if report_history:
         try:
-            history_path = save_report_history(
+            history_scope_value = history_scope or ""
+            history_size = get_report_history_size_bytes(
                 report_output_data,
-                scope=history_scope or "",
-                max_report_count=report_history_max_count,
-                max_size_mib=report_history_max_mib,
+                history_scope_value,
             )
-            history_size = history_path.stat().st_size
             history_limit = report_history_max_mib * BYTES_PER_MIB
+            keep_report = True
             if history_size > history_limit:
                 rich.print(
                     REPORT_HISTORY_SIZE_WARNING.format(
                         history_size / BYTES_PER_MIB,
                         history_limit / BYTES_PER_MIB,
                     )
+                )
+                if not (sys.stdin.isatty() and sys.stdout.isatty()):
+                    rich.print(REPORT_HISTORY_DISCARDED_WARNING)
+                    keep_report = False
+                else:
+                    keep_report = Confirm.ask(
+                        "Keep this report in automatic history?",
+                        default=False,
+                    )
+                    if not keep_report:
+                        rich.print("Discarded oversized automatic report history.")
+            if keep_report:
+                save_report_history(
+                    report_output_data,
+                    scope=history_scope_value,
+                    max_report_count=report_history_max_count,
+                    max_size_mib=report_history_max_mib,
                 )
         except (OSError, TypeError, ValueError) as error:
             rich.print(REPORT_HISTORY_WARNING.format(error))

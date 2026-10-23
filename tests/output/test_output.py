@@ -83,16 +83,22 @@ def test_run_checks_history_write_failure_does_not_change_status(
 def test_run_checks_warns_when_newest_history_report_exceeds_limit(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
 ) -> None:
-    """Oversized newest history reports are retained with a warning."""
-    history_path = tmp_path / "report.json"
-    history_path.write_bytes(b"x" * (1024 * 1024 + 1))
+    """Oversized history reports prompt to be kept or discarded."""
+    save_history = MagicMock()
     monkeypatch.setattr(
         output,
         "save_report_history",
-        MagicMock(return_value=history_path),
+        save_history,
     )
+    monkeypatch.setattr(
+        output,
+        "get_report_history_size_bytes",
+        MagicMock(return_value=1024 * 1024 + 1),
+    )
+    monkeypatch.setattr(output.Confirm, "ask", MagicMock(return_value=True))
+    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: True)
+    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: True)
     check = ShellCheck(command="echo hello", check_id="check-one")
     report: Tuple[str, str, str] = ("", "", "")
     result = output.run_checks(
@@ -105,10 +111,77 @@ def test_run_checks_warns_when_newest_history_report_exceeds_limit(
     )
     out, _ = capsys.readouterr()
     assert result is True
-    assert "newest automatic report" in out
+    assert "automatic report is" in out
     assert "MiB" in out
-    assert "retained" in out
-    assert out.index("Points:") < out.index("newest automatic report")
+    assert "Keep this report in automatic history?" in str(
+        output.Confirm.ask.call_args
+    )
+    save_history.assert_called_once()
+
+
+def test_run_checks_discards_oversized_history_when_user_declines(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Declining the oversized report prompt skips history saving."""
+    save_history = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+    monkeypatch.setattr(
+        output,
+        "get_report_history_size_bytes",
+        MagicMock(return_value=1024 * 1024 + 1),
+    )
+    monkeypatch.setattr(output.Confirm, "ask", MagicMock(return_value=False))
+    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: True)
+    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: True)
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        report_history_max_mib=1,
+        history_scope="project-one",
+    )
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "Discarded oversized automatic report history." in out
+    save_history.assert_not_called()
+
+
+def test_run_checks_discards_oversized_history_without_terminal(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-interactive runs warn and discard oversized history without prompting."""
+    save_history = MagicMock()
+    confirm = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+    monkeypatch.setattr(
+        output,
+        "get_report_history_size_bytes",
+        MagicMock(return_value=1024 * 1024 + 1),
+    )
+    monkeypatch.setattr(output.Confirm, "ask", confirm)
+    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: False)
+    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: False)
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        report_history_max_mib=1,
+        history_scope="project-one",
+    )
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "Automatic report history was discarded" in out
+    assert "no interactive terminal" in out
+    confirm.assert_not_called()
+    save_history.assert_not_called()
 
 
 def test_run_checks_invalid_gg_args_prints_exception(
