@@ -11,7 +11,8 @@
 
 ## Linked Issues
 
-<!-- Every PR needs a linked issue. Use Closes for resolved issues. -->
+<!-- Link relevant issues. Minor changes may omit an issue case by case; -->
+<!-- explain the scope and reason here. Use Closes for resolved issues. -->
 <!-- Use Refs for related or partially addressed issues. -->
 
 Closes #00
@@ -32,9 +33,9 @@ Closes #00
 
 ## Reminder
 
-- [ ] Announced ownership and teammates in the issue comments.
-- [ ] Linked the issues and commented this PR's URL on each linked issue.
-- [ ] Recorded new problems as issues, including during an open PR.
+- [ ] Announced ownership and teammates in issue comments, if applicable.
+- [ ] Linked issues and added PR backlinks, or explained the minor exception.
+- [ ] Tracked new problems as required by the guide, including during a PR.
 - [ ] Ran the required checks and reported verification results.
 - [ ] Followed the [contribution guide][guide].
 - [ ] GitHub Actions pass and the guide's required reviews are complete.

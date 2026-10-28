@@ -1,19 +1,5 @@
-# This GitHub Actions workflow contains six jobs:
-# -- First, Lint Code runs on Ubuntu with Python 3.11, 3.12, 3.13, and 3.14
-# to check the code for formatting and linting defects using the uv lint
-# task.
-# -- Second, Type Check runs on Ubuntu with Python 3.11, 3.12, 3.13, and
-# 3.14 to check for type errors using the uv typecheck task (mypy, ty,
-# pyrefly, symbex).
-# -- Third, Test uses a strategy matrix to test the code with different
-# operating systems (Ubuntu, macOS, Windows) and Python versions (3.11,
-# 3.12, 3.13, 3.14), using the uv test task.
-# -- Fourth, Test Coverage runs on Ubuntu with Python 3.11, 3.12, 3.13, and
-# 3.14 to check that test coverage meets the minimum threshold of 85%.
-# -- Fifth, Lint Markdown uses the latest Ubuntu image and markdownlint to
-# check markdown files for defects.
-# -- Sixth, Check Spelling uses the latest Ubuntu image and cspell to check
-# for spelling defects in the markdown.
+# Check Python, coverage, Markdown, and spelling.
+# Commit-message lint runs for pull requests.
 
 name: Lint and Test
 
@@ -148,3 +134,17 @@ jobs:
         with:
           paths: "**/*.md"
           config: .github/cspell.json
+
+  commits:
+    name: Check Commit Messages
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .github/commitlint.config.mjs
+          helpURL: https://www.conventionalcommits.org/en/v1.0.0/

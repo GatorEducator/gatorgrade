@@ -30,7 +30,7 @@ documentation, tests, bug reports, and pull request reviews. Start with the
 
 You are responsible for reviewing and testing AI-assisted code,
 documentation, and communication for accuracy, safety, and respectful language.
-Do not submit unreviewed output or claim verification you did not perform.
+Review output before submitting it; only claim verification you performed.
 
 Disclose substantial AI assistance in contributions and project communication.
 In affected commits, describe what the tool contributed and how you verified
@@ -50,11 +50,15 @@ changes that reviewers can understand and verify.
 
 ## Raising and tracking issues
 
-Every proposed change needs an issue, including small documentation fixes.
+Proposed changes normally need an issue. Decide case by case whether a minor
+change, such as a typo or small documentation fix, needs a separate issue.
+If you proceed without one, explain the scope and reason in the PR. Ask a
+maintainer when uncertain.
+
 Search existing issues and pull requests first, then [open an issue][new-issue]
-if the problem or proposal has not been reported. Before starting work,
-comment on the issue to identify yourself and any teammates working on it.
-Broader design discussion in the issue comments is encouraged but optional.
+when needed. When working on an issue, comment before starting to identify
+yourself and any teammates. Broader design discussion is encouraged but
+optional.
 
 Choose the bug report or feature request template in the issue chooser and
 complete its prompts. These templates request the environment, reproduction
@@ -67,7 +71,7 @@ If you discover another problem while working, search for an existing report
 and create an issue if needed, even when your pull request is already open.
 Link related work and keep the current pull request focused.
 
-Every pull request must link its issue or issues. Comment the pull request URL
+Every pull request must link any relevant issues. Comment the pull request URL
 on **each linked issue**. Repeat this for any issues linked after the pull
 request opens. Use a closing keyword only when the pull request resolves the
 issue; use a reference when it addresses only part of the work.
@@ -113,7 +117,8 @@ changes and their lockfile updates together.
 
 ### Auto-hint and CI environment
 
-For auto-hint work or to reproduce CI's dependency setup, run:
+Documentation-only contributors do not need auto-hint dependencies. For code
+changes or to reproduce CI's dependency setup, run:
 
 ```bash
 uv sync --dev --extra auto-hint
@@ -205,7 +210,9 @@ breaking changes and their migration path in the pull request.
 
 ## Testing and checks
 
-Run tasks from the repository root. Start with focused tests while developing,
+Run tasks from the repository root. For documentation-only changes, run
+Markdown checks locally and use CI for the full suite; report checks you did
+not run locally. For code changes, start with focused tests while developing,
 then run the required checks before submitting or updating a pull request:
 
 ```bash
@@ -317,15 +324,12 @@ when changing files to trigger a check, and remove credentials from output.
 
 ## Making a pull request
 
-1. Create or find the issue and comment with your name and teammates.
+1. Create or find an issue when required; comment with your name and
+   teammates. For a minor change without an issue, explain why in the PR.
 1. Work on a descriptive branch in your fork and keep the change focused.
 1. Add tests and documentation, then run the required checks.
-1. Use [Conventional Commits 1.0.0][conventional-commits] for commit messages.
-   For example: `docs: explain editable installs` or
-   `fix(reports): preserve check metadata`. Use feat for features and fix for
-   bug fixes; other useful types include docs, test, refactor, and chore.
-   Scopes are optional. Mark breaking changes with ! before the colon or a
-   BREAKING CHANGE footer, as described in the specification.
+1. Follow the [commit message standards](docs/COMMIT_MESSAGES.md), based on
+   Conventional Commits 1.0.0, including body and breaking-change footers.
 1. Push your branch and open a pull request targeting
    GatorEducator/gatorgrade's main branch. Use a draft if work is incomplete.
 1. Complete the [pull request template](.github/pull_request_template.md).
