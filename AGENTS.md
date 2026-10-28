@@ -203,9 +203,14 @@ The coding agent should write the notes as a Markdown list.
   platform's code as unreachable and type checkers cannot narrow names like
   `os.killpg` or `subprocess.CREATE_NEW_PROCESS_GROUP`.
 - `_run_shell_check()` resolves the timeout with `_resolve_timeout()`:
-  per-check `timeout` attribute, then the CLI value, then the default. It
-  reads the per-check value with `getattr()` until `ShellCheck` gains a
-  `timeout` attribute (issue #218, Person B's half).
+  per-check `check.timeout`, then the `--timeout` value passed through
+  `run_checks()`, then the default. Setup commands use the front matter
+  `setup_timeout` key and call `run_shell_command(..., merge_stderr=False)`.
+- Tests that assert on text printed by `rich` must collapse whitespace
+  first, because `rich` wraps long lines at the console width and a long
+  path (such as `sys.executable`) can split a phrase across lines.
+- `.github/cspell.json` spell-checks every Markdown file, including this
+  one, in CI. Add new technical terms to its `words` list.
 - `uv run task ty` reports `unresolved-import` errors for `torch`,
   `transformers`, and `openai` unless the optional `auto-hint` extra is
   installed; these are not caused by code changes.

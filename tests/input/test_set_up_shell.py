@@ -3,7 +3,7 @@
 import sys
 
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from typer import Exit
 
@@ -39,6 +39,11 @@ def _outcome(  # noqa: PLR0913
         timed_out=timed_out,
         timeout=timeout,
     )
+
+
+def _flatten(text: str) -> str:
+    """Collapse all whitespace so rich line wrapping cannot split a phrase."""
+    return " ".join(text.split())
 
 
 def test_run_setup_with_no_setup_commands() -> None:
@@ -116,7 +121,7 @@ def test_run_setup_timeout_exits_cleanly(
     with pytest.raises(Exit) as exc_info:
         run_setup({"setup": "sleep 301", "setup_timeout": 300})
     assert exc_info.value.exit_code == 1
-    out, _ = capsys.readouterr()
+    out = _flatten(capsys.readouterr().out)
     assert "sleep 301" in out
     assert "timed out after 300 second(s)" in out
 
@@ -133,7 +138,7 @@ def test_run_setup_timeout_shows_partial_output(
     )
     with pytest.raises(Exit):
         run_setup({"setup": "slow"})
-    out, _ = capsys.readouterr()
+    out = _flatten(capsys.readouterr().out)
     assert "installing" in out
     assert "warn" in out
     assert out.index("installing") < out.index("timed out after")
@@ -146,7 +151,7 @@ def test_run_setup_real_timeout_exits_cleanly(
     with pytest.raises(Exit) as exc_info:
         run_setup({"setup": SLEEP_CMD, "setup_timeout": SHORT_TIMEOUT})
     assert exc_info.value.exit_code == 1
-    out, _ = capsys.readouterr()
+    out = _flatten(capsys.readouterr().out)
     assert f"timed out after {SHORT_TIMEOUT} second(s)" in out
 
 
@@ -239,6 +244,9 @@ def test_run_setup_no_setup_key_property(front_matter: dict) -> None:
         max_size=4,
     ).map("\n".join),
 )
+# each example starts up to four real processes, which can take longer than
+# the default per-example deadline on a slow or busy machine
+@settings(deadline=None)
 def test_run_setup_with_commands_property(commands: str) -> None:
     """Property: run_setup with setup commands never raises outside of typer.Exit."""
     front_matter = {"setup": commands}
