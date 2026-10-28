@@ -17,9 +17,7 @@ from gatorgrade.shell_runner import (
 
 PYTHON = f'"{sys.executable}"'
 SLEEP_CMD = f'{PYTHON} -c "import time; time.sleep(5)"'
-PARTIAL_THEN_SLEEP_CMD = (
-    f"{PYTHON} -c \"import time; print('started', flush=True); time.sleep(5)\""
-)
+PARTIAL_THEN_SLEEP_CMD = f"{PYTHON} -c \"import time; print('started', flush=True); time.sleep(30)\""
 MIXED_CMD = (
     f"{PYTHON} -c \"import sys; print('to-out'); "
     "print('to-err', file=sys.stderr); sys.exit(3)\""
@@ -28,6 +26,9 @@ INVALID_BYTES_CMD = (
     f"{PYTHON} -c \"import sys; sys.stdout.buffer.write(b'valid\\xffoutput')\""
 )
 SHORT_TIMEOUT = 1
+# long enough for a new Python process to start and print on a slow or busy
+# machine, such as during a coverage run, before the timeout stops it
+PARTIAL_OUTPUT_TIMEOUT = 3
 CUSTOM_TIMEOUT = 42
 NONZERO_EXIT = 3
 FAKE_PID = 12345
@@ -137,8 +138,11 @@ def test_run_shell_command_real_timeout() -> None:
 
 def test_run_shell_command_real_timeout_keeps_partial_output() -> None:
     """Test that output written before a real timeout is kept."""
-    outcome = run_shell_command(PARTIAL_THEN_SLEEP_CMD, timeout=SHORT_TIMEOUT)
+    outcome = run_shell_command(
+        PARTIAL_THEN_SLEEP_CMD, timeout=PARTIAL_OUTPUT_TIMEOUT
+    )
     assert outcome.timed_out is True
+    assert outcome.timeout == PARTIAL_OUTPUT_TIMEOUT
     assert "started" in outcome.stdout
 
 

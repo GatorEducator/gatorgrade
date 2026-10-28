@@ -41,7 +41,12 @@
         "gatorgradle",
         "worktree",
         "systemprompt",
-        "socio"
+        "socio",
+        "taskkill",
+        "killpg",
+        "POSIX",
+        "openai",
+        "PYTHONIOENCODING"
     ],
     "ignorePaths": [
         ".github/**",
