@@ -26,6 +26,7 @@ from gatorgrade.report_history import (
     get_all_check_ids,
     get_failed_check_ids,
     get_history_scope,
+    get_report_history_size_bytes,
     load_history_reports,
     prune_report_history,
     save_report_history,
@@ -114,6 +115,18 @@ def test_save_and_load_history_redacts_api_key(tmp_path: Path) -> None:
     saved_report = reports[0]["report"]
     assert saved_report["cli_args"]["--auto-hint-api-key"] == "[redacted]"
     assert "secret-key" not in path.read_text(encoding="utf-8")
+
+
+def test_report_history_size_matches_saved_file(tmp_path: Path) -> None:
+    """The pre-save history size matches the resulting file size."""
+    report = _report("check-one", False, api_key="secret-key")
+    expected_size = get_report_history_size_bytes(report, "project-one")
+    path = save_report_history(
+        report,
+        scope="project-one",
+        history_directory=tmp_path,
+    )
+    assert path.stat().st_size == expected_size
 
 
 def test_history_retains_newest_reports_by_count(tmp_path: Path) -> None:
