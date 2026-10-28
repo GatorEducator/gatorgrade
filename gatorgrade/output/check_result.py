@@ -32,6 +32,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         is_low_quality: bool = False,
         details: str = "",
         check_id: str | None = None,
+        timeout: int | None = None,
+        timed_out: bool = False,
     ):
         """Construct a CheckResult.
 
@@ -57,6 +59,10 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 configuration (e.g. options and expected values).
             check_id: An optional SHA-256 hash uniquely identifying
                 this check.
+            timeout: The number of seconds a shell check was allowed to
+                run, or None for checks that do not run a command.
+            timed_out: Whether the shell check was stopped because it
+                ran longer than its timeout.
 
         """
         self.passed = passed
@@ -73,6 +79,8 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.is_low_quality = is_low_quality
         self.details = details
         self.check_id = check_id
+        self.timeout = timeout
+        self.timed_out = timed_out
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
@@ -124,7 +132,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"run_command='{self.run_command}', "
             f"weight={self.weight}, "
             f"outputlimit={self.outputlimit}, "
-            f"hint={self.hint})"
+            f"hint={self.hint}, "
+            f"timeout={self.timeout}, "
+            f"timed_out={self.timed_out})"
         )
 
     def __str__(self) -> str:

@@ -123,6 +123,10 @@ The following options control how GatorGrade runs:
   - `gatorgrade --github-env md MD_REPORT`
 - `--output-limit`, `-o`: Set the maximum number of diagnostic lines to display
   for a failing check. The default is 5. Must be at least 1.
+- `--timeout`, `-t`: Set the default timeout in seconds for shell checks. The
+  default is 300 seconds, and each shell check may override it with a per-check
+  `timeout` value. The per-check value takes precedence over the CLI value, and
+  the CLI value takes precedence over the built-in default.
 - `--baseline-weight`, `-b`: Set the default weight for checks that do not
   specify an explicit weight. The default is 1. Must be at least 1.
 - `--progress-bar`, `--no-progress-bar`: Show or hide the progress bar while
@@ -249,7 +253,16 @@ setup: |
 ### Setup Commands
 
 The `setup` section runs shell commands before the checks. If a setup command
-fails, GatorGrade exits immediately.
+fails or times out, GatorGrade exits immediately. You can also set a
+`setup_timeout` value in front matter to override the default 300-second
+timeout for those setup commands.
+
+```yaml
+setup_timeout: 600
+setup: |
+  uv sync --dev --no-install-project
+---
+```
 
 ### Project Name
 
@@ -339,6 +352,39 @@ Each check can have an optional output limit that controls how many diagnostic
 lines are displayed if the check fails. The limit must be a positive integer. If
 a check does not specify an output limit, GatorGrade uses the global limit set
 by `--output-limit`.
+
+### Timeout
+
+Each shell check can also specify an optional `timeout` value in seconds. This
+value must be a positive integer. If a check does not specify a timeout,
+GatorGrade uses the CLI value from `--timeout` when provided, otherwise it uses
+300 seconds. Because the per-check value wins, a smaller `--timeout` cannot cut
+short a check that the configuration gave more time. The timeout is reported in
+the verbose configuration section and in the JSON report metadata for shell
+checks.
+
+### Timeouts and Output Encoding
+
+GatorGrade runs every shell check and setup command through one shared runner.
+When a command runs longer than its timeout, GatorGrade stops the command along
+with every process that it started, such as a test runner launched by the
+shell. A shell check then appears as a normal failing check instead of crashing
+the whole report. Its diagnostic starts with one line that names the timeout,
+followed by any output that the command wrote before it was stopped:
+
+```text
+✕  Run the test suite
+   → Diagnostic:
+     Command timed out after 300 second(s)
+     ==================== test session starts ====================
+```
+
+The usual output limit still applies to this diagnostic. The JSON and Markdown
+reports also include a `timeout` value for each shell check.
+
+GatorGrade decodes all command output as UTF-8. Any bytes that are not valid
+UTF-8 are replaced with the `�` character, so a command that prints binary data
+or text in another encoding still produces a readable diagnostic.
 
 ## Reports
 

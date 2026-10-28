@@ -22,6 +22,7 @@ DESCRIPTION_KEY = "description"
 UNNAMED_CHECK = "unnamed check"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
+TIMEOUT_KEY = "timeout"
 COMMAND_KEY = "command"
 CHECK_KEY = "check"
 OPTIONS_KEY = "options"
@@ -54,6 +55,7 @@ def generate_checks(  # noqa: PLR0912
         desc = check_data.check.get(DESCRIPTION_KEY, UNNAMED_CHECK)
         weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
         outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
+        timeout = check_data.check.get(TIMEOUT_KEY)
         weight_error = validate_positive_nonzero_int(weight, WEIGHT_KEY)
         if weight_error:
             errors.append(
@@ -67,12 +69,19 @@ def generate_checks(  # noqa: PLR0912
                 errors.append(
                     CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, ol_error)
                 )
+        if timeout is not None:
+            timeout_error = validate_positive_nonzero_int(timeout, TIMEOUT_KEY)
+            if timeout_error:
+                errors.append(
+                    CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, timeout_error)
+                )
     if errors:
         raise ValueError(NEWLINE.join(errors))
     checks: List[Union[ShellCheck, GatorGraderCheck]] = []
     for check_data in check_data_list:
         weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
         outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
+        timeout = check_data.check.get(TIMEOUT_KEY)
         # if the check has a command key, then it is a shell check
         # which means that it will be run by the computer's shell
         if COMMAND_KEY in check_data.check:
@@ -99,6 +108,7 @@ def generate_checks(  # noqa: PLR0912
                     json_info=check_data.check,
                     weight=weight,
                     outputlimit=outputlimit,
+                    timeout=timeout,
                     hint=check_data.check.get(HINT_KEY),
                     check_id=check_id,
                 )
