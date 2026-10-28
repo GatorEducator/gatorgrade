@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from path_utils import (
+from gatorgrade.path_utils import (
     to_filesystem_path,
     to_portable_display_path,
 )
