@@ -313,7 +313,7 @@ must also pass Markdown linting and CI spelling checks. Keep specialized
 mutation instructions in their existing guide and link to them here.
 
 For debugging, start with the smallest failing test or assignment. Use
-gatorgrade's --version and --verbose options to inspect the environment and
+GatorGrade with --version and --verbose to inspect the environment and
 configuration. Record the working directory: selecting a configuration by
 path does not automatically relocate the assignment's files.
 
@@ -331,7 +331,7 @@ when changing files to trigger a check, and remove credentials from output.
 1. Follow the [commit message standards](docs/COMMIT_MESSAGES.md), based on
    Conventional Commits 1.0.0, including body and breaking-change footers.
 1. Push your branch and open a pull request targeting
-   GatorEducator/gatorgrade's main branch. Use a draft if work is incomplete.
+   the main branch of GatorEducator/gatorgrade. Use a draft if work is incomplete.
 1. Complete the [pull request template](.github/pull_request_template.md).
    Explain the problem, resulting behavior, compatibility changes, and tests.
    List contributors and link every relevant issue. Use `Closes #123` only
