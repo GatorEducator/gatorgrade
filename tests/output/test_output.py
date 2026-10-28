@@ -96,7 +96,8 @@ def test_run_checks_warns_when_newest_history_report_exceeds_limit(
         "get_report_history_size_bytes",
         MagicMock(return_value=1024 * 1024 + 1),
     )
-    monkeypatch.setattr(output.Confirm, "ask", MagicMock(return_value=True))
+    confirm_ask = MagicMock(return_value=True)
+    monkeypatch.setattr(output.Confirm, "ask", confirm_ask)
     monkeypatch.setattr(output.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(output.sys.stdout, "isatty", lambda: True)
     check = ShellCheck(command="echo hello", check_id="check-one")
@@ -113,8 +114,9 @@ def test_run_checks_warns_when_newest_history_report_exceeds_limit(
     assert result is True
     assert "automatic report is" in out
     assert "MiB" in out
-    assert "Keep this report in automatic history?" in str(
-        output.Confirm.ask.call_args
+    confirm_ask.assert_called_once_with(
+        "Keep this report in automatic history?",
+        default=False,
     )
     save_history.assert_called_once()
 
@@ -131,7 +133,8 @@ def test_run_checks_discards_oversized_history_when_user_declines(
         "get_report_history_size_bytes",
         MagicMock(return_value=1024 * 1024 + 1),
     )
-    monkeypatch.setattr(output.Confirm, "ask", MagicMock(return_value=False))
+    confirm_ask = MagicMock(return_value=False)
+    monkeypatch.setattr(output.Confirm, "ask", confirm_ask)
     monkeypatch.setattr(output.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(output.sys.stdout, "isatty", lambda: True)
     check = ShellCheck(command="echo hello", check_id="check-one")
@@ -148,7 +151,6 @@ def test_run_checks_discards_oversized_history_when_user_declines(
     assert result is True
     assert "Discarded oversized automatic report history." in out
     save_history.assert_not_called()
-
 
 
 def test_run_checks_invalid_gg_args_prints_exception(
