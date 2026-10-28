@@ -1,7 +1,7 @@
 """Tests for the path utility helpers."""
 
 from pathlib import Path
-
+import pytest
 from gatorgrade.path_utils import (
     to_filesystem_path,
     to_portable_display_path,
@@ -34,7 +34,7 @@ def test_to_filesystem_path_resolves_relative_path() -> None:
 
 
 def test_to_filesystem_path_expands_home_directory(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """Verify a leading tilde expands to the home directory."""
