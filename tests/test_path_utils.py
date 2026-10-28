@@ -5,11 +5,13 @@ from path_utils import (
     to_portable_display_path,
 )
 
+
 def test_to_filesystem_path_accepts_string() -> None:
     result = to_filesystem_path("example.txt")
 
     assert isinstance(result, Path)
     assert result == Path("example.txt").expanduser().resolve()
+
 
 def test_to_filesystem_path_accepts_path_object() -> None:
     input_path = Path("folder") / "example.txt"
@@ -19,10 +21,12 @@ def test_to_filesystem_path_accepts_path_object() -> None:
     assert isinstance(result, Path)
     assert result == input_path.expanduser().resolve()
 
+
 def test_to_filesystem_path_resolves_relative_path() -> None:
     result = to_filesystem_path("folder/example.txt")
 
     assert result.is_absolute()
+
 
 def test_to_filesystem_path_expands_home_directory(
     monkeypatch,
@@ -34,6 +38,7 @@ def test_to_filesystem_path_expands_home_directory(
 
     assert result == (tmp_path / "example.txt").resolve()
 
+
 def test_to_portable_display_path_uses_forward_slashes() -> None:
     input_path = Path("folder") / "subfolder" / "file.txt"
 
@@ -41,14 +46,17 @@ def test_to_portable_display_path_uses_forward_slashes() -> None:
 
     assert result == "folder/subfolder/file.txt"
 
+
 def test_to_portable_display_path_does_not_make_path_absolute() -> None:
     result = to_portable_display_path("folder/file.txt")
 
     assert result == "folder/file.txt"
     assert not result.startswith("/")
 
+
 def test_to_portable_display_path_handles_filename() -> None:
     assert to_portable_display_path("README.md") == "README.md"
+
 
 def test_to_portable_display_path_handles_current_directory() -> None:
     assert to_portable_display_path(".") == "."
@@ -58,5 +66,3 @@ def test_to_filesystem_path_handles_current_directory() -> None:
     result = to_filesystem_path(".")
 
     assert result == Path.cwd()
-
-
