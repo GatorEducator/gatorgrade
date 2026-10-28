@@ -4,19 +4,22 @@
 
 ## Description
 
-<!-- TODO: Write a description of the proposed changes -->
+<!-- Describe the problem, resulting behavior, compatibility, and tests. -->
+<!-- For documentation moves/removals, identify replacement locations. -->
 
 <!-- Remember to check the reminders! -->
 
 ## Linked Issues
 
-<!-- Fill in which issue number this PR closes, if there is none, just remove this section! -->
+<!-- Link relevant issues. Minor changes may omit an issue case by case; -->
+<!-- explain the scope and reason here. Use Closes for resolved issues. -->
+<!-- Use Refs for related or partially addressed issues. -->
 
-closes: #00
+Closes #00
 
 ## Type of Change
 
-<!-- TODO: Fill in the brackets with an `x` next to all types that apply to the proposed changes -->
+<!-- Mark all types that apply to the proposed changes. -->
 
 - [ ] Feature
 - [ ] Bug fix
@@ -24,13 +27,17 @@ closes: #00
 
 ## Contributors
 
-<!-- TODO: Add your GitHub username below and the GitHub usernames of all other contributors to the proposed changes -->
+<!-- List the GitHub usernames of everyone contributing to this PR. -->
 
 - `@`
 
 ## Reminder
 
-- All GitHub Actions should be in a passing state before any pull request is merged.
-- All PRs must be reviewed by at least one team member and one member of the
-  Integration team (e.g., a senior member of the GatorGrader team).
-- Any issues this PR closes are tagged in the description!
+- [ ] Announced ownership and teammates in issue comments, if applicable.
+- [ ] Linked issues and added PR backlinks, or explained the minor exception.
+- [ ] Tracked new problems as required by the guide, including during a PR.
+- [ ] Ran the required checks and reported verification results.
+- [ ] Followed the [contribution guide][guide].
+- [ ] GitHub Actions pass and the guide's required reviews are complete.
+
+[guide]: https://github.com/GatorEducator/gatorgrade/blob/main/CONTRIBUTING.md

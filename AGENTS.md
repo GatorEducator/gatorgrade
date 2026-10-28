@@ -8,6 +8,7 @@ This document provides guidelines for AI agents contributing to this repository.
   virtual environments, and task running. Do not use `pip` or `venv` directly.
 - **Follow all guidelines:** This document contains the complete set of
   guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
+- **Commit messages:** Follow the [commit message standards](docs/COMMIT_MESSAGES.md).
 - **Verify your changes:** Before committing any changes, you must run all
   linters and tests to ensure your changes are correct and follow the project's
   style. Use `uv run task all`.
