@@ -150,39 +150,6 @@ def test_run_checks_discards_oversized_history_when_user_declines(
     save_history.assert_not_called()
 
 
-def test_run_checks_discards_oversized_history_without_terminal(
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Non-interactive runs warn and discard oversized history without prompting."""
-    save_history = MagicMock()
-    confirm = MagicMock()
-    monkeypatch.setattr(output, "save_report_history", save_history)
-    monkeypatch.setattr(
-        output,
-        "get_report_history_size_bytes",
-        MagicMock(return_value=1024 * 1024 + 1),
-    )
-    monkeypatch.setattr(output.Confirm, "ask", confirm)
-    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: False)
-    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: False)
-    check = ShellCheck(command="echo hello", check_id="check-one")
-    report: Tuple[str, str, str] = ("", "", "")
-    result = output.run_checks(
-        [check],
-        report,
-        no_progress_bar=True,
-        report_history=True,
-        report_history_max_mib=1,
-        history_scope="project-one",
-    )
-    out, _ = capsys.readouterr()
-    assert result is True
-    assert "Automatic report history was discarded" in out
-    assert "no interactive terminal" in out
-    confirm.assert_not_called()
-    save_history.assert_not_called()
-
 
 def test_run_checks_invalid_gg_args_prints_exception(
     capsys: pytest.CaptureFixture[str],

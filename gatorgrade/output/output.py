@@ -1393,7 +1393,9 @@ def run_checks(  # noqa: PLR0912, PLR0913, PLR0915
                         default=False,
                     )
                     if not keep_report:
-                        rich.print("Discarded oversized automatic report history.")
+                        rich.print(
+                            "Discarded oversized automatic report history."
+                        )
             if keep_report:
                 save_report_history(
                     report_output_data,
