@@ -15,5 +15,5 @@ def to_portable_display_path(path_input: Union[str, Path]) -> str:
     Guarantees consistent JSON/Markdown output and check ID hashing across operating systems.
     """
     p = Path(path_input)
-    # Convert backslashed to forward slashed without making absolute if relative
+    # convert backslashed to forward slashed without making absolute if relative
     return p.as_posix()
