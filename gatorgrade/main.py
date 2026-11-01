@@ -1,7 +1,10 @@
 """Use GatorGrade to run checks and generate helpful output."""
 
+import contextlib
 import importlib.metadata
+import os
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -24,7 +27,10 @@ from gatorgrade.engine import (
     create_auto_hint_engine,
 )
 from gatorgrade.hint.local_engine import DEFAULT_MODEL_ID
-from gatorgrade.hint.remote_engine import REMOTE_MODEL_DEFAULT
+from gatorgrade.hint.remote_engine import (
+    REMOTE_KEY_ENV_DEFAULT,
+    REMOTE_MODEL_DEFAULT,
+)
 from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
     DEFAULT_FILTER_FUZZY_THRESHOLD,
@@ -136,6 +142,7 @@ DEFAULT_REPORT_HISTORY_DIR = str(get_report_history_directory())
 CONFIG_FLAG = "--config"
 CONFIG_DIR_FLAG = "--config-dir"
 REPORT_FLAG = "--report"
+REPORT_SAFE_FLAG = "--report-safe"
 OUTPUT_LIMIT_FLAG = "--output-limit"
 BASELINE_WEIGHT_FLAG = "--baseline-weight"
 PROGRESS_BAR_FLAG = "--progress-bar"
@@ -144,7 +151,7 @@ VERBOSE_FLAG = "--verbose"
 AUTO_HINT_FLAG = "--auto-hint"
 AUTO_HINT_MODEL_FLAG = "--auto-hint-model"
 AUTO_HINT_URL_FLAG = "--auto-hint-url"
-AUTO_HINT_API_KEY_FLAG = "--auto-hint-api-key"
+AUTO_HINT_KEY_ENV_FLAG = "--auto-hint-key-env"
 AUTO_HINT_TRACK_FLAG = "--auto-hint-track"
 FILTER_MODE_FLAG = "--filter-mode"
 FILTER_BY_FLAG = "--filter-by"
@@ -171,6 +178,26 @@ GATORGRADER_VERSION_KEY = "gatorgrader_version"
 PYTHON_INFO_KEY = "python_info"
 PLATFORM_INFO_KEY = "platform_info"
 OS_RELEASE_KEY = "os_release"
+
+
+@contextlib.contextmanager
+def _hide_environment_variables(
+    variable_names: set[str],
+) -> Iterator[None]:
+    """Hide environment variables and restore values tracked by os.environ."""
+    original_values = {
+        name: os.environ[name] for name in variable_names if name in os.environ
+    }
+    for name in variable_names:
+        os.environ.pop(name, None)
+        os.unsetenv(name)
+    try:
+        yield
+    finally:
+        for name in variable_names:
+            os.environ.pop(name, None)
+            os.unsetenv(name)
+        os.environ.update(original_values)
 
 
 def _version_callback(value: bool) -> None:
@@ -414,6 +441,14 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         show_default=True,
         callback=validate_report_history_size,
     ),
+    report_safe: bool = typer.Option(
+        False,
+        "--report-safe",
+        help=(
+            "Use privacy-safe mode for reports intended for public sharing. "
+            "Hide commands, diagnostics, hints, and source-derived content."
+        ),
+    ),
     report: Tuple[str, str, str] = typer.Option(
         (None, None, None),
         "--report",
@@ -506,12 +541,19 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             "back to default local model on any remote URL errors."
         ),
     ),
-    auto_hint_api_key: Optional[str] = typer.Option(
+    auto_hint_key_env: Optional[str] = typer.Option(
         None,
-        "--auto-hint-api-key",
+        "--auto-hint-key-env",
+        "-k",
         help=(
-            "API key for the remote auto-hint server "
-            "(requires --auto-hint-url)."
+            "Name of the environment variable containing the remote API "
+            "key (default: AUTO_HINT_KEY_ENV). "
+            "Requires --auto-hint-url. "
+            "Configure the variable persistently using your operating "
+            "system or shell settings; see the README. "
+            "GatorGrade hides it from setup and check code. "
+            "For a keyless server, omit this option and leave the default "
+            "variable unset."
         ),
     ),
     _version: bool = typer.Option(
@@ -544,6 +586,32 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     # also note that the output of the tool is now segmented
     # into sections that are demarcated by horizintal rules
     if ctx.invoked_subcommand is None:
+        # validate auto-hint options before configuration setup commands run
+        auto_hint_errors = validate_auto_hint_options(
+            auto_hint,
+            auto_hint_model,
+            auto_hint_url,
+            auto_hint_key_env,
+        )
+        if auto_hint_errors:
+            checks_status = False
+            console.print()
+            console.print(
+                Rule(
+                    CONFIG_ERROR_LABEL,
+                    style="bright_red",
+                )
+            )
+            console.print()
+            for error in auto_hint_errors:
+                console.print(error)
+            console.print(Text(EXIT_MESSAGE))
+            console.print()
+            console.print(Rule(style="bright_red"))
+            sys.exit(FAILURE)
+        protected_auto_hint_envs = {REMOTE_KEY_ENV_DEFAULT}
+        if auto_hint_key_env is not None:
+            protected_auto_hint_envs.add(auto_hint_key_env)
         # check the due date before parsing config so warnings appear before setup;
         # this returns both the due date and any errors that might have arisen
         # when parsing the due date (i.e., due to an incorrect time/date format)
@@ -626,7 +694,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             report_history_max_mib=report_history_max_mib,
         )
         # parse the provided configuration file
-        checks, parse_error = parse_config(resolved_filename, baseline_weight)
+        with _hide_environment_variables(protected_auto_hint_envs):
+            checks, parse_error = parse_config(
+                resolved_filename, baseline_weight
+            )
         # extract the optional project name from the config file
         project_name = get_project_name(resolved_filename)
         history_scope = get_history_scope(resolved_filename, project_name)
@@ -670,40 +741,6 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             console.print()
             console.print(Rule(style="bright_red"))
             sys.exit(FAILURE)
-        # validate auto-hint option combinations;
-        # this catches:
-        #   --auto-hint-model without --auto-hint
-        #   --auto-hint-url without --auto-hint
-        #   --auto-hint-api-key without --auto-hint-url
-        auto_hint_errors = validate_auto_hint_options(
-            auto_hint,
-            auto_hint_model,
-            auto_hint_url,
-            auto_hint_api_key,
-        )
-        if auto_hint_errors:
-            checks_status = False
-            console.print()
-            console.print(
-                Rule(
-                    CONFIG_ERROR_LABEL,
-                    style="bright_red",
-                )
-            )
-            # display a blank line if there is
-            # at least one error in configuration
-            # for the auto-hinting feature
-            if auto_hint_errors:
-                console.print()
-            # display the errors in configuration
-            # for the auto-hinting (note that there
-            # could be one or more errors)
-            for error in auto_hint_errors:
-                console.print(error)
-            console.print(Text(EXIT_MESSAGE))
-            console.print()
-            console.print(Rule(style="bright_red"))
-            sys.exit(FAILURE)
         # a YAML parsing error occurred and thus the
         # tool should display the error and exit
         if parse_error is not None:
@@ -732,6 +769,11 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             resolved_filter_type = (
                 filter_type if filter_type is not None else DEFAULT_FILTER_TYPE
             )
+            effective_auto_hint_key_env = (
+                (auto_hint_key_env or REMOTE_KEY_ENV_DEFAULT)
+                if auto_hint_url
+                else None
+            )
             # create a dictionary of the CLI arguments to pass to the report
             # (this will enable them to be saved inside of a report)
             cli_args = {
@@ -740,6 +782,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 if resolved_config_dir
                 else None,
                 REPORT_FLAG: list(report),
+                REPORT_SAFE_FLAG: report_safe,
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
                 BASELINE_WEIGHT_FLAG: baseline_weight,
@@ -753,9 +796,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 AUTO_HINT_URL_FLAG: str(auto_hint_url)
                 if auto_hint_url
                 else None,
-                AUTO_HINT_API_KEY_FLAG: str(auto_hint_api_key)
-                if auto_hint_api_key
-                else None,
+                AUTO_HINT_KEY_ENV_FLAG: effective_auto_hint_key_env,
                 AUTO_HINT_TRACK_FLAG: auto_hint_track,
                 FILTER_QUERY_FLAG: filter_query,
                 FILTER_MODE_FLAG: resolved_filter_mode.value
@@ -928,7 +969,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                         resolved_filename,
                         auto_hint_model,
                         auto_hint_url,
-                        auto_hint_api_key,
+                        auto_hint_key_env,
                         system_prompt=system_prompt,
                         validation_rules=validation_rules,
                         auto_hint_model_default=AUTO_HINT_MODEL_DEFAULT,
@@ -938,25 +979,27 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 # that adheres to the configuration both in
                 # the command-line arguments and also in the
                 # gatorgrade.yml file
-                checks_status = run_checks(
-                    checks,
-                    report,
-                    not progress_bar,
-                    show_diagnostics,
-                    output_limit,
-                    cli_args,
-                    version_info,
-                    github_env,
-                    project_name,
-                    due_date,
-                    auto_hint_engine=auto_hint_engine,
-                    auto_hint_url=auto_hint_url,
-                    auto_hint_track=auto_hint_track,
-                    report_history=report_history,
-                    report_history_max_count=report_history_max_count,
-                    report_history_max_mib=report_history_max_mib,
-                    history_scope=history_scope,
-                )
+                with _hide_environment_variables(protected_auto_hint_envs):
+                    checks_status = run_checks(
+                        checks,
+                        report,
+                        not progress_bar,
+                        show_diagnostics,
+                        output_limit,
+                        cli_args,
+                        version_info,
+                        github_env,
+                        project_name,
+                        due_date,
+                        auto_hint_engine=auto_hint_engine,
+                        auto_hint_url=auto_hint_url,
+                        auto_hint_track=auto_hint_track,
+                        report_history=report_history,
+                        report_safe=report_safe,
+                        report_history_max_count=report_history_max_count,
+                        report_history_max_mib=report_history_max_mib,
+                        history_scope=history_scope,
+                    )
         # no checks were created and this means
         # that, most likely, the file was not
         # valid and thus the tool cannot run checks
