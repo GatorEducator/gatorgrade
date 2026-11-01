@@ -138,6 +138,8 @@ def _is_sensitive_key(key: object) -> bool:
 ENTROPY_NAMES = frozenset({"key", "auth", "sig", "session", "sessionid"})
 MIN_ENTROPY_LENGTH = 24
 MAX_ENTROPY_LENGTH = 512
+# allow two quote characters and one extra character to reject long values
+ENTROPY_VALUE_LOOKAHEAD = MAX_ENTROPY_LENGTH + 3
 MIN_ENTROPY = 4.3
 
 
@@ -174,12 +176,23 @@ def _redact_assignments(text: str) -> str:
         if name.start() < position:
             continue
         key = name.group(1)
-        value = ASSIGNMENT_VALUE_PATTERN.match(text, name.end())
+        key_is_sensitive = _is_sensitive_key(key)
+        if (
+            not key_is_sensitive
+            and KEY_SEPARATOR_PATTERN.sub(EMPTY, key).lower()
+            not in ENTROPY_NAMES
+        ):
+            continue
+        match_end = (
+            len(text)
+            if key_is_sensitive
+            else min(len(text), name.end() + ENTROPY_VALUE_LOOKAHEAD)
+        )
+        value = ASSIGNMENT_VALUE_PATTERN.match(text, name.end(), match_end)
         if value is None:
             continue
         if not (
-            _is_sensitive_key(key)
-            or _is_high_entropy_secret(key, value.group(0))
+            key_is_sensitive or _is_high_entropy_secret(key, value.group(0))
         ):
             continue
         parts.append(text[position : name.end()])

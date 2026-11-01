@@ -395,9 +395,15 @@ def test_redact_assignments_skips_name_inside_redacted_value() -> None:
     [
         "token" * LONG_TEXT_REPEATS,
         "a:" * LONG_TEXT_REPEATS,
+        "session:" * LONG_TEXT_REPEATS,
         "line of output 123\n" * LONG_TEXT_REPEATS,
     ],
-    ids=["repeated-token", "repeated-colon", "repeated-lines"],
+    ids=[
+        "repeated-token",
+        "repeated-colon",
+        "repeated-session",
+        "repeated-lines",
+    ],
 )
 def test_sanitize_text_handles_long_output_quickly(text: str) -> None:
     """Long diagnostic output is processed without slow backtracking."""
