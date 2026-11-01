@@ -8,6 +8,8 @@ so a sanitized report may still contain private content.
 
 import copy
 import re
+from collections import Counter
+from math import log2
 from typing import Any
 
 # marker that replaces every redacted value
@@ -133,15 +135,52 @@ def _is_sensitive_key(key: object) -> bool:
     return any(fragment in normalized for fragment in SENSITIVE_KEY_FRAGMENTS)
 
 
+ENTROPY_NAMES = frozenset({"key", "auth", "sig", "session", "sessionid"})
+MIN_ENTROPY_LENGTH = 24
+MAX_ENTROPY_LENGTH = 512
+MIN_ENTROPY = 4.3
+
+
+def _is_high_entropy_secret(name: str, raw_value: str) -> bool:
+    """Detect random-looking values associated with possible credentials."""
+    normalized = KEY_SEPARATOR_PATTERN.sub(EMPTY, name).lower()
+    if normalized not in ENTROPY_NAMES:
+        return False
+    value = raw_value.strip("\"'")
+    if not MIN_ENTROPY_LENGTH <= len(value) <= MAX_ENTROPY_LENGTH:
+        return False
+    if not all(c.isascii() and (c.isalnum() or c in "-_+/=") for c in value):
+        return False
+    counts = Counter(value)
+    length = len(value)
+    entropy = -sum(
+        (count / length) * log2(count / length) for count in counts.values()
+    )
+    return entropy >= MIN_ENTROPY
+
+
+def _is_sensitive_value(key: object, value: Any) -> bool:
+    """Detect secrets stored under a report key."""
+    return _is_sensitive_key(key) or (
+        isinstance(value, str) and _is_high_entropy_secret(str(key), value)
+    )
+
+
 def _redact_assignments(text: str) -> str:
-    """Return text with the values assigned to sensitive names replaced."""
+    """Redact sensitive assignments and likely high-entropy credentials."""
     parts: list[str] = []
     position = 0
     for name in ASSIGNMENT_NAME_PATTERN.finditer(text):
-        if name.start() < position or not _is_sensitive_key(name.group(1)):
+        if name.start() < position:
             continue
+        key = name.group(1)
         value = ASSIGNMENT_VALUE_PATTERN.match(text, name.end())
         if value is None:
+            continue
+        if not (
+            _is_sensitive_key(key)
+            or _is_high_entropy_secret(key, value.group(0))
+        ):
             continue
         parts.append(text[position : name.end()])
         parts.append(REDACTED_VALUE)
@@ -162,7 +201,9 @@ def _sanitize_value(value: Any, sensitive: bool) -> Any:
     """Return a redacted copy of a value nested anywhere inside a report."""
     if isinstance(value, dict):
         return {
-            key: _sanitize_value(item, sensitive or _is_sensitive_key(key))
+            key: _sanitize_value(
+                item, sensitive or _is_sensitive_value(key, item)
+            )
             for key, item in value.items()
         }
     if isinstance(value, list):
@@ -202,7 +243,7 @@ def sanitize_report(
     if mode not in SUPPORTED_MODES:
         raise ValueError(UNSUPPORTED_MODE_ERROR.format(mode))
     sanitized = {
-        key: _sanitize_value(item, _is_sensitive_key(key))
+        key: _sanitize_value(item, _is_sensitive_value(key, item))
         for key, item in report.items()
     }
 

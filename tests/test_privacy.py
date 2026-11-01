@@ -30,6 +30,7 @@ PRIVATE_KEY = (
     "-----END RSA PRIVATE KEY-----"
 )
 PLAIN_SECRET = "hunter2-plain-value"
+HIGH_ENTROPY_SECRET = "uQ7pL2vZ9mR4xT8kB6nW3sY5"
 WEIGHT = 3
 EXPECTED_AMOUNT_CORRECT = 2
 EXPECTED_PERCENTAGE_SCORE = 100
@@ -138,6 +139,24 @@ def test_sanitize_text_redacts_unterminated_private_key() -> None:
     sanitized = sanitize_text(f"output: {truncated}")
     assert "examplekeymaterial" not in sanitized
     assert sanitized == f"output: {REDACTED_VALUE}"
+
+
+def test_entropy_redacts_unknown_secret() -> None:
+    """Redact a high-entropy session credential."""
+    text = f"session={HIGH_ENTROPY_SECRET}"
+    assert sanitize_text(text) == "session=[redacted]"
+
+
+def test_entropy_preserves_normal_session() -> None:
+    """Keep an ordinary session value."""
+    text = "session=normal-value"
+    assert sanitize_text(text) == text
+
+
+def test_entropy_preserves_git_hash() -> None:
+    """Keep an unrelated hexadecimal identifier."""
+    text = "commit=d4e8a7c9f1b2036e5a8d7c4b9f1023ae"
+    assert sanitize_text(text) == text
 
 
 @pytest.mark.parametrize(
@@ -256,6 +275,27 @@ def test_sanitize_report_redacts_cli_args() -> None:
     assert cli_args["--report"] == ("file", "json", "reports/report.json")
     assert cli_args["--auto-hint"] is True
     assert cli_args["--output-limit"] == OUTPUT_LIMIT
+
+
+@pytest.mark.parametrize("mode", [MODE_DEFAULT, MODE_SAFE])
+def test_sanitize_report_redacts_high_entropy_session_fields(
+    mode: str,
+) -> None:
+    """Random session values are hidden at every report depth."""
+    report = {
+        "session": HIGH_ENTROPY_SECRET,
+        "checks": [{"metadata": {"session_id": HIGH_ENTROPY_SECRET}}],
+    }
+    sanitized = sanitize_report(report, mode=mode)
+    assert sanitized["session"] == REDACTED_VALUE
+    assert sanitized["checks"][0]["metadata"]["session_id"] == REDACTED_VALUE
+    assert report["session"] == HIGH_ENTROPY_SECRET
+
+
+def test_sanitize_report_preserves_normal_session_field() -> None:
+    """Ordinary session labels remain visible in reports."""
+    report = {"session": "normal-value"}
+    assert sanitize_report(report) == report
 
 
 def test_sanitize_report_redacts_check_fields() -> None:

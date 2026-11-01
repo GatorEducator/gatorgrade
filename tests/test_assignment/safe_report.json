@@ -1,0 +1,86 @@
+{
+    "amount_correct": 3,
+    "percentage_score": 100,
+    "weighted_amount_correct": 3,
+    "weighted_total": 3,
+    "weighted_percentage_score": 100,
+    "project_name": "test_assignment",
+    "due_date": "",
+    "cli_args": {
+        "--config": "[redacted]",
+        "--config-dir": null,
+        "--report": [
+            "FILE",
+            "JSON",
+            "[redacted]"
+        ],
+        "--report-safe": true,
+        "--github-env": [
+            null,
+            null
+        ],
+        "--output-limit": 5,
+        "--baseline-weight": 1,
+        "--verbose": false,
+        "--progress-bar": true,
+        "--show-diagnostics": true,
+        "--auto-hint": false,
+        "--auto-hint-model": "__default_model__",
+        "--auto-hint-url": null,
+        "--auto-hint-key-env": null,
+        "--auto-hint-track": true,
+        "--filter-query": null,
+        "--filter-mode": null,
+        "--filter-by": null,
+        "--filter-type": null,
+        "--filter-total": null,
+        "--filter-fuzzy-threshold": null,
+        "--filter-failed-last": null,
+        "--filter-passed-last": null,
+        "--filter-history-reports": 0,
+        "--filter-history-reports-total": 0,
+        "--report-history": true,
+        "--report-history-max-count": 100,
+        "--report-history-max-mb": 100
+    },
+    "version_info": {
+        "gatorgrade_version": "0.12.1",
+        "gatorgrader_version": "1.1.3",
+        "python_info": "Python 3.13.11 (main, Jan 27 2026 23:31:20, Clang 21.1.4)",
+        "platform_info": "arm64-darwin-none",
+        "os_release": "MacOS 15.7.4 (arm64-darwin-none)"
+    },
+    "report_time": "2026-10-21 14:35:17",
+    "checks": [
+        {
+            "description": "Complete all TODOs",
+            "check": "MatchFileFragment",
+            "options": "[redacted]",
+            "status": true,
+            "weight": 1,
+            "outputlimit": 5,
+            "path": "[redacted]",
+            "check_id": "7ca1f052af8b4a20588f6d376289b259078a2fb62e97de48ba9c7476e9919b17"
+        },
+        {
+            "description": "Use an if statement",
+            "check": "MatchFileRegex",
+            "options": "[redacted]",
+            "status": true,
+            "weight": 1,
+            "outputlimit": 5,
+            "path": "[redacted]",
+            "check_id": "37f48db94d0be88158c0502cee0fc82bd03ced63083e1dc24018376184c20d78"
+        },
+        {
+            "description": "Complete all TODOs",
+            "check": "MatchFileFragment",
+            "options": "[redacted]",
+            "status": true,
+            "weight": 1,
+            "outputlimit": 5,
+            "path": "[redacted]",
+            "check_id": "34f56df6f04af3ed2285624c32a37f32b0a3710eacb3740c74c7403e8df722f8"
+        }
+    ]
+}
