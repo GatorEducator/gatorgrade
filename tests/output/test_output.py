@@ -982,9 +982,9 @@ def test_run_gg_check_extracts_correct_file_path() -> None:
         json_info={"check": "test"},
     )
     result = output._run_gg_check(check)
-    assert result.path == str(
+    assert result.path == (
         Path("tests/test_assignment/src") / "hello-world.py"
-    )
+    ).as_posix()
 
 
 def test_run_gg_check_path_extraction_with_different_order() -> None:

@@ -39,6 +39,7 @@ def test_to_filesystem_path_expands_home_directory(
 ) -> None:
     """Verify a leading tilde expands to the home directory."""
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
 
     result = to_filesystem_path("~/example.txt")
 
