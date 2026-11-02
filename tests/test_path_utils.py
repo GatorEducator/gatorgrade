@@ -1,7 +1,9 @@
 """Tests for the path utility helpers."""
 
 from pathlib import Path
+
 import pytest
+
 from gatorgrade.path_utils import (
     to_filesystem_path,
     to_portable_display_path,
