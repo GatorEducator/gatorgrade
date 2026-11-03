@@ -10,9 +10,10 @@ def to_filesystem_path(path_input: Union[str, Path]) -> Path:
 
 
 def to_portable_display_path(path_input: Union[str, Path]) -> str:
-    """Convert a path into a portable forward-slash normalized string.
+    """Convert a path into a forward-slash string for reports and check IDs.
 
-    Guarantees consistent JSON/Markdown output and check ID hashing across operating systems.
+    Follows the host's path rules: backslashes become "/" on Windows but are
+    kept on Linux and macOS, where they are valid filename characters.
     """
     p = Path(path_input)
     # convert backslashed to forward slashed without making absolute if relative
