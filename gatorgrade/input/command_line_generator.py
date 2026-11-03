@@ -1,6 +1,6 @@
 """Generates a dictionary of shell and GatorGrader command options from a list of dictionary-based checks."""
 
-import os
+from pathlib import Path
 from typing import List, Union
 
 from gatorgrade.hash import compute_check_id
@@ -73,6 +73,11 @@ def generate_checks(  # noqa: PLR0912
     for check_data in check_data_list:
         weight = check_data.check.get(WEIGHT_KEY, baseline_weight)
         outputlimit = check_data.check.get(OUTPUTLIMIT_KEY)
+        file_context_posix = (
+            Path(check_data.file_context).as_posix()
+            if check_data.file_context
+            else None
+        )
         # if the check has a command key, then it is a shell check
         # which means that it will be run by the computer's shell
         if COMMAND_KEY in check_data.check:
@@ -87,7 +92,7 @@ def generate_checks(  # noqa: PLR0912
             check_id = compute_check_id(
                 description=effective_desc,
                 check_data=check_data.check,
-                file_context=check_data.file_context,
+                file_context=file_context_posix,
                 weight=weight,
                 outputlimit=outputlimit,
                 hint=check_data.check.get(HINT_KEY),
@@ -116,10 +121,9 @@ def generate_checks(  # noqa: PLR0912
             # add any additional options
             options = check_data.check.get(OPTIONS_KEY)
             if options is not None:
-                for option in options:
+                for option, option_value in options.items():
                     # if option should be a flag (i.e., its value is the True boolean),
                     # then add only the option without a value
-                    option_value = options[option]
                     if isinstance(option_value, bool):
                         if option_value:
                             gg_args.append(f"--{option}")
@@ -128,10 +132,12 @@ def generate_checks(  # noqa: PLR0912
                         gg_args.extend([f"--{option}", str(option_value)])
             # add directory and file if file context in data
             if check_data.file_context is not None:
-                # get the file and directory using os
-                dirname, filename = os.path.split(check_data.file_context)
-                if dirname == EMPTY:
+                # get the file and directory using pathlib.Path for cross-platform support
+                context_path = Path(check_data.file_context)
+                dirname = context_path.parent.as_posix()
+                if dirname == ".":
                     dirname = DEFAULT_DIRECTORY
+                filename = context_path.name
                 gg_args.extend([ARG_DIRECTORY, dirname, ARG_FILE, filename])
             description = check_data.check.get(DESCRIPTION_KEY, UNNAMED_CHECK)
             # compute the check identifier using a SHA256 hash,
@@ -141,7 +147,7 @@ def generate_checks(  # noqa: PLR0912
             check_id = compute_check_id(
                 description=description,
                 check_data=check_data.check,
-                file_context=check_data.file_context,
+                file_context=file_context_posix,
                 weight=weight,
                 outputlimit=outputlimit,
                 hint=check_data.check.get(HINT_KEY),
