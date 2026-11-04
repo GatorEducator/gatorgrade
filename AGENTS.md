@@ -9,6 +9,10 @@ This document provides guidelines for AI agents contributing to this repository.
 - **Follow all guidelines:** This document contains the complete set of
   guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
 - **Commit messages:** Follow the [commit message standards](docs/COMMIT_MESSAGES.md).
+- **Local hooks:** After setup, run `uv run task hooks-install` in each
+  clone. Use `uv run task hooks-check` to check all files and
+  `uv run task test-hooks` for isolated commit rejection/recovery tests.
+  Hooks check commit messages, not PR titles. Linked checkouts share hooks.
 - **Verify your changes:** Before committing any changes, you must run all
   linters and tests to ensure your changes are correct and follow the project's
   style. Use `uv run task all`.

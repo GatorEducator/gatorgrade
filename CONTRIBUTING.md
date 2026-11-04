@@ -105,6 +105,7 @@ From the repository root, run:
 
 ```bash
 uv sync --dev
+uv run task hooks-install
 uv run gatorgrade --version
 uv run gatorgrade --help
 ```
@@ -114,6 +115,10 @@ dependencies, and installs this checkout in editable mode. Python source
 changes are available on the next run without reinstalling the package.
 Run sync again after dependency or package metadata changes. Keep dependency
 changes and their lockfile updates together.
+
+Install hooks in every new clone. They check staged changes and commit
+messages; PR titles need no prefix. See [local checks](docs/PRE_COMMIT.md)
+for setup, full checks, and the isolated hook smoke tests.
 
 ### Auto-hint and CI environment
 

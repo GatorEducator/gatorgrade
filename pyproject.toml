@@ -85,6 +85,7 @@ dev = [
     "hypothesis>=6.155.2",
     "tree-sitter-analyzer[popular]>=0.4.0",
     "pytest-xdist>=3.8.0",
+    "pre-commit==4.6.0",
 ]
 
 [build-system]
@@ -118,6 +119,9 @@ cosmic-ray-report-command = "cosmic-ray dump cosmic-ray.sqlite"
 cosmic-ray-baseline-command = "cosmic-ray baseline cosmic-ray.toml"
 
 [tool.taskipy.tasks]
+hooks-install = "uv run pre-commit install"
+hooks-check = "uv run pre-commit run --all-files"
+test-hooks = "bash scripts/test_hooks.sh"
 all = "task check && task test && task test-coverage-check"
 check = "task lint && task typecheck"
 lint = "task ruff-format && task ruff-check && task comments-check && task vsc && task rumdl-check"

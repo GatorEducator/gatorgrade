@@ -97,6 +97,8 @@ jobs:
         run: uv sync --dev --extra auto-hint
       - name: Execute tests
         run: uv run task test
+      - name: Check direct-test coverage
+        run: uv run task test-coverage-check
 
   coverage:
     name: Test Coverage (Python ${{ matrix.python-version }})
@@ -148,3 +150,23 @@ jobs:
         with:
           configFile: .github/commitlint.config.mjs
           helpURL: https://www.conventionalcommits.org/en/v1.0.0/
+
+  hooks:
+    name: Test Installed Hooks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v8.3.2
+      - name: Cache hook environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-hooks-${{ hashFiles('.pre-commit-config.yaml') }}
+      - run: uv sync --locked
+      - name: Test real Git commit rejection and recovery
+        run: uv run task test-hooks

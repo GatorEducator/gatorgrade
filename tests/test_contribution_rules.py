@@ -12,6 +12,8 @@ GUIDE_FILE = "CONTRIBUTING.md"
 ENCODING = "utf-8"
 TASK_PATTERN = re.compile(r"uv run (?:--extra [\w-]+ )?task ([\w-]+)")
 MINIMUM_COVERAGE = 95
+MINIMUM_DIRECT_COVERAGE = 75
+DIRECT_THRESHOLD = "directtestedfailunder"
 TOOL = "tool"
 TASKIPY = "taskipy"
 TASKS = "tasks"
@@ -35,4 +37,6 @@ def test_coverage_requirement_is_preserved() -> None:
     """Keep the documented coverage minimum and branch measurement enabled."""
     threshold = CONFIG[TOOL][TASKIPY][VARIABLES][THRESHOLD]
     assert int(threshold) >= MINIMUM_COVERAGE
+    direct = CONFIG[TOOL][TASKIPY][VARIABLES][DIRECT_THRESHOLD]
+    assert int(direct) >= MINIMUM_DIRECT_COVERAGE
     assert CONFIG[TOOL][COVERAGE][RUN][BRANCH] is True
