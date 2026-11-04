@@ -34,6 +34,8 @@ INVALID_BYTES_FAILING_CMD = (
 )
 CLI_TIMEOUT = 30
 CHECK_TIMEOUT = 900
+UNROUNDED_DURATION = 1.23456
+ROUNDED_DURATION = 1.235
 
 EXPECTED_AMOUNT = 2
 EXPECTED_PERCENTAGE = 100
@@ -2893,15 +2895,15 @@ def test_resolve_timeout_falls_back_to_default() -> None:
 def test_run_shell_check_timeout_expired_returns_failed_result() -> None:
     """Test the issue regression where a timeout crashed instead of failing."""
     process = MagicMock()
-    process.communicate.side_effect = [
-        subprocess.TimeoutExpired(cmd="sleep 301", timeout=300),
-        (None, None),
-    ]
+    process.wait.side_effect = subprocess.TimeoutExpired(
+        cmd="sleep 301", timeout=300
+    )
     check = ShellCheck(description="Slow check", command="sleep 301")
     with (
         patch(
             "gatorgrade.shell_runner.subprocess.Popen", return_value=process
         ),
+        patch("gatorgrade.shell_runner._create_job", return_value=None),
         patch("gatorgrade.shell_runner._kill_process_tree"),
     ):
         result = output._run_shell_check(check)
@@ -3028,6 +3030,90 @@ def test_create_report_json_includes_timeout_for_shell_checks() -> None:
     report = output.create_report_json(1, [shell_result, gg_result], 50)
     assert report["checks"][0]["timeout"] == DEFAULT_TIMEOUT_SECONDS
     assert "timeout" not in report["checks"][1]
+
+
+def test_create_report_json_includes_timed_out_and_duration_for_shell() -> (
+    None
+):
+    """Test that shell checks report their timed out status and rounded run time."""
+    shell_result = CheckResult(
+        passed=False,
+        description="Shell",
+        json_info={"description": "Shell", "command": "slow"},
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        timed_out=True,
+        duration_seconds=UNROUNDED_DURATION,
+    )
+    report = output.create_report_json(0, [shell_result], 0)
+    assert report["checks"][0]["timed_out"] is True
+    assert report["checks"][0]["duration_seconds"] == ROUNDED_DURATION
+
+
+def test_create_report_json_omits_timed_out_and_duration_for_gg_checks() -> (
+    None
+):
+    """Test that GatorGrader checks do not report a timed out status or run time."""
+    gg_result = CheckResult(
+        passed=True,
+        description="GatorGrader",
+        json_info={"description": "GatorGrader", "check": "MatchFileFragment"},
+    )
+    report = output.create_report_json(1, [gg_result], 100)
+    assert "timed_out" not in report["checks"][0]
+    assert "duration_seconds" not in report["checks"][0]
+
+
+def test_run_shell_check_records_duration_from_runner() -> None:
+    """Test that the run time measured by the runner reaches the CheckResult."""
+    check = ShellCheck(description="Check", command="cmd")
+    outcome = CommandOutcome(
+        command="cmd",
+        returncode=0,
+        stdout="",
+        stderr="",
+        timed_out=False,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        elapsed_seconds=UNROUNDED_DURATION,
+    )
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check)
+    assert result.duration_seconds == UNROUNDED_DURATION
+
+
+def test_run_shell_check_start_failure_becomes_diagnostic() -> None:
+    """Test that a command that cannot start is a failed check, not a crash."""
+    check = ShellCheck(description="Check", command="cmd")
+    with patch(
+        "gatorgrade.shell_runner.subprocess.Popen",
+        side_effect=OSError("command line is too long"),
+    ):
+        result = output._run_shell_check(check)
+    assert result.passed is False
+    assert result.timed_out is False
+    assert result.diagnostic == (
+        "Could not start command: command line is too long"
+    )
+
+
+def test_run_shell_check_shows_truncated_output_marker() -> None:
+    """Test that a failing check with very large output says it was truncated."""
+    check = ShellCheck(description="Check", command="cmd")
+    outcome = CommandOutcome(
+        command="cmd",
+        returncode=1,
+        stdout="start\n... (output truncated: kept 4 of 9 bytes) ...\nend",
+        stderr="",
+        timed_out=False,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        output_truncated=True,
+    )
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check)
+    assert "output truncated: kept 4 of 9 bytes" in result.diagnostic
 
 
 def test_create_markdown_report_shows_timeout_for_failing_check() -> None:

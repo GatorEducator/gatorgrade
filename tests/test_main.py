@@ -36,7 +36,7 @@ def patch_open(
         closefd: bool = True,
         opener: Any | None = None,
     ) -> Any:
-        if "w" in mode and not os.path.isfile(path):
+        if "w" in mode and not os.path.exists(path):
             files.append(path)
         return open_func(
             path,

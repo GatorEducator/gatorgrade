@@ -18,6 +18,13 @@ from gatorgrade import main, report_history
 gc.disable()
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the marker for tests that measure real process timing."""
+    config.addinivalue_line(
+        "markers", "timing: tests that measure real shell command timing"
+    )
+
+
 @pytest.fixture(autouse=True)
 def redirect_output_streams(
     monkeypatch: pytest.MonkeyPatch,

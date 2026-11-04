@@ -322,6 +322,7 @@ def test_check_result_timeout_defaults() -> None:
     )
     assert check_result.timeout is None
     assert check_result.timed_out is False
+    assert check_result.duration_seconds is None
 
 
 def test_check_result_with_explicit_timeout() -> None:
@@ -346,7 +347,9 @@ def test_check_result_repr_includes_timeout() -> None:
         json_info={"check": "test"},
         timeout=7,
         timed_out=True,
+        duration_seconds=7.5,
     )
     repr_str = repr(check_result)
     assert "timeout=7" in repr_str
     assert "timed_out=True" in repr_str
+    assert "duration_seconds=7.5" in repr_str

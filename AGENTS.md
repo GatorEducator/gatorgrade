@@ -196,8 +196,19 @@ The coding agent should write the notes as a Markdown list.
 - Shell checks run through `run_shell_command()` in
   `gatorgrade/shell_runner.py`, which returns a frozen `CommandOutcome`,
   decodes output as UTF-8 with `errors="replace"`, never raises on timeout,
-  and kills the whole process tree (`taskkill /F /T` on Windows, `os.killpg`
-  on POSIX). `DEFAULT_TIMEOUT_SECONDS = 300` lives there.
+  and kills the whole process tree (a Windows Job Object with a fallback to
+  `taskkill /F /T`, `os.killpg` on POSIX). `DEFAULT_TIMEOUT_SECONDS = 300`
+  and `MAX_TIMEOUT_SECONDS = 86400` live there.
+- The runner captures output in temporary files, not pipes, and waits on the
+  process. A background process that outlives a command therefore cannot
+  delay the result, and it is only killed if the command times out. Input is
+  closed, and each stream keeps at most `MAX_CAPTURE_BYTES` in memory.
+- Tests of real timing use `@pytest.mark.timing`. They check that a command
+  is neither stopped early nor late using tolerance bands, because comparing
+  real timing to the exact limit is racy; the exact deadline is proven with
+  fake processes instead. During a coverage run, `COV_CORE_SOURCE` makes each
+  new Python process start about ten times slower (measured on Windows), so
+  `tests/test_shell_runner.py` removes it for child processes.
 - Platform branches must use the literal `sys.platform == "win32"` with an
   explicit `else:` block (not an early `return`), or zuban reports the other
   platform's code as unreachable and type checkers cannot narrow names like

@@ -107,6 +107,9 @@ HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
 TIMEOUT_KEY = "timeout"
+TIMED_OUT_KEY = "timed_out"
+DURATION_SECONDS_KEY = "duration_seconds"
+DURATION_DECIMAL_PLACES = 3
 CHECK_ID_KEY = "check_id"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -322,6 +325,7 @@ def _run_shell_check(
         check_id=check.check_id,
         timeout=effective_timeout,
         timed_out=outcome.timed_out,
+        duration_seconds=outcome.elapsed_seconds,
     )
 
 
@@ -480,6 +484,12 @@ def create_report_json(  # noqa: PLR0913
             results_json[OUTPUTLIMIT_KEY] = checkResults[i].outputlimit
             if checkResults[i].timeout is not None:
                 results_json[TIMEOUT_KEY] = checkResults[i].timeout
+                results_json[TIMED_OUT_KEY] = checkResults[i].timed_out
+            duration_seconds = checkResults[i].duration_seconds
+            if duration_seconds is not None:
+                results_json[DURATION_SECONDS_KEY] = round(
+                    duration_seconds, DURATION_DECIMAL_PLACES
+                )
             if checkResults[i].path:
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:
