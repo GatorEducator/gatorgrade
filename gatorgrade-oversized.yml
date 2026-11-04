@@ -1,0 +1,3 @@
+- description: Emit an oversized diagnostic
+  command: >-
+    python -c "print('x' * (1024 * 1024 + 100)); raise SystemExit(1)"

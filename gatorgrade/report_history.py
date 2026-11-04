@@ -173,6 +173,19 @@ def _validate_positive_limit(value: int, label: str) -> None:
         raise ValueError(f"{label} must be a positive integer, got {value}")
 
 
+def get_report_history_size_bytes(
+    report: dict[str, Any],
+    scope: str,
+) -> int:
+    """Return the serialized size of a report-history file in bytes."""
+    timestamp = _normalise_timestamp(None)
+    payload = _make_history_payload(report, scope, timestamp)
+    serialized_payload = json.dumps(payload, indent=HISTORY_JSON_INDENT)
+    serialized_payload = serialized_payload.replace("\n", os.linesep)
+    serialized_payload += os.linesep
+    return len(serialized_payload.encode(HISTORY_FILE_ENCODING))
+
+
 def prune_report_history(
     history_directory: Path,
     max_report_count: int = DEFAULT_HISTORY_REPORT_COUNT,

@@ -410,7 +410,10 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
     report_history_max_mib: int = typer.Option(
         DEFAULT_HISTORY_SIZE_MIB,
         "--report-history-max-mb",
-        help="Maximum total size of automatic reports in MiB.",
+        help=(
+            "Maximum total size of automatic reports in MiB. The newest "
+            "report is retained as an exception when it exceeds this limit."
+        ),
         show_default=True,
         callback=validate_report_history_size,
     ),

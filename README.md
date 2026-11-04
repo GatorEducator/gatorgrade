@@ -358,9 +358,12 @@ projects isolated even though all reports share the same directory.
 
 History is limited to 100 reports and 100 MiB by default. The limits can be
 changed with `--report-history-max-count` and `--report-history-max-mb`. The
-oldest history files are removed when either limit is exceeded. These automatic
-history files are separate from reports written with `--report` or
-`--github-env`.
+oldest history files are removed when either limit is exceeded. If an individual
+report exceeds the configured size limit, GatorGrade asks whether to keep it;
+declining discards that automatic history report without changing existing
+history. In non-interactive runs, oversized automatic history reports are
+discarded with a warning. These automatic history files are separate from
+reports written with `--report` or `--github-env`.
 
 Use `--filter-failed-last` to run only checks that failed in at least one of the
 newest retained reports. Historical matching uses each check's exact `check_id`.
