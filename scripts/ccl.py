@@ -26,6 +26,7 @@ PROPER_NOUNS = frozenset(
         "GatorGrade",
         "GatorGrader",
         "GatorGraderCheck",
+        "GitHub",
         "GITHUB_ENV",
         "GITHUB_STEP_SUMMARY",
         "JSON",

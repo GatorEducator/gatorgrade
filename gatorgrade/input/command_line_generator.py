@@ -4,9 +4,12 @@ import os
 from typing import List, Union
 
 from gatorgrade.hash import compute_check_id
-
-from .checks import GatorGraderCheck, ShellCheck, validate_positive_nonzero_int
-from .in_file_path import CheckData
+from gatorgrade.input.checks import (
+    GatorGraderCheck,
+    ShellCheck,
+    validate_positive_nonzero_int,
+)
+from gatorgrade.input.in_file_path import CheckData
 
 EMPTY = ""
 NEWLINE = "\n"

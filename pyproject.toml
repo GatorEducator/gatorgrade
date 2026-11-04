@@ -184,6 +184,7 @@ exclude_lines = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "--strict-markers"
 markers = [
     "propertybased: property-based tests using hypothesis",
     "autohint: tests that exercise the optional auto-hint extra",
@@ -205,8 +206,13 @@ lint.select = [
     "Q",    # flake8-quotes
     "RUF",  # ruff-specific
     "W",    # pycodestyle warnings
-    "T201"  # flake8-print
+    "T201",  # flake8-print
+    "N802",  # snake_case function names
+    "TID252",  # absolute imports
 ]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.isort]
 include_trailing_comma = true

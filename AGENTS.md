@@ -139,7 +139,7 @@ All test cases should follow these standards:
 - Test cases should aim to achieve full function, statement, and branch
   coverage.
 - Property-based tests, such as those that use the `hypothesis` package, must be
-  marked with `@pytest.mark.property`.
+  marked with `@pytest.mark.propertybased`.
 - Test cases should not produce any console output.
 
 ## Making Changes
@@ -176,7 +176,7 @@ The coding agent should write the notes as a Markdown list.
 - `tree-sitter` and `tree-sitter-python` are now production dependencies
   because `ccl` is an installed entry point.
 - Proper nouns allowed in comments: `CountCommits`, `GatorGrade`,
-  `GatorGrader`, `GatorGraderCheck`, `GITHUB_ENV`,
+  `GatorGrader`, `GatorGraderCheck`, `GitHub`, `GITHUB_ENV`,
   `GITHUB_STEP_SUMMARY`, `JSON`, `MatchFileFragment`, `ShellCheck`,
   `STDOUT`, `STDERR`, `TODO`, `FIXME`, `NOTE`. "Typo" is NOT a proper
   noun and was removed from the exceptions list.

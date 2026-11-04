@@ -247,6 +247,9 @@ and branch coverage. CI also runs a separate Markdown spelling check using
 | Comment case check | `uv run task comments-check` |
 | Fix comment case | `uv run task comments-fix` |
 
+Ruff checks snake_case function names and absolute imports. Pytest rejects
+unregistered markers instead of treating them as warnings.
+
 Type checking includes mypy, ty, pyrefly, zuban, and symbex. Linting includes
 Ruff, comment case, version consistency, and Markdown checks. Fix commands
 modify files; inspect their diffs before including changes in your PR.
@@ -275,6 +278,7 @@ checks. Record failures and environment limitations accurately in your PR.
 - Keep tests independent so randomized execution works locally and in CI.
 - Add regression tests for bug fixes, including relevant failure paths.
 - Mark Hypothesis property-based tests with `@pytest.mark.propertybased`.
+  The contribution guard verifies this for collected Hypothesis tests.
 - Mark tests that exercise the optional extra with `@pytest.mark.autohint`.
 - Keep test cases from producing console output. Use pytest capture fixtures
   to assert output. The shared fixture in [tests/conftest.py] also redirects
