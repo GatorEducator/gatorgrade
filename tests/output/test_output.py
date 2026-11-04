@@ -153,6 +153,77 @@ def test_run_checks_discards_oversized_history_when_user_declines(
     save_history.assert_not_called()
 
 
+def test_run_checks_discards_oversized_history_without_interactive_terminal(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-interactive runs warn and discard without asking for confirmation."""
+    save_history = MagicMock()
+    confirm_ask = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+    monkeypatch.setattr(
+        output,
+        "get_report_history_size_bytes",
+        MagicMock(return_value=1024 * 1024 + 1),
+    )
+    monkeypatch.setattr(output.Confirm, "ask", confirm_ask)
+    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: False)
+    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: False)
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        report_history_max_mib=1,
+        history_scope="project-one",
+    )
+
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "automatic report is" in out
+    assert "Automatic report history was discarded" in out
+    confirm_ask.assert_not_called()
+    save_history.assert_not_called()
+
+
+def test_run_checks_saves_history_without_warning_when_under_limit(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reports within the configured limit are saved without prompting."""
+    save_history = MagicMock()
+    confirm_ask = MagicMock()
+    monkeypatch.setattr(output, "save_report_history", save_history)
+    monkeypatch.setattr(
+        output,
+        "get_report_history_size_bytes",
+        MagicMock(return_value=1024 * 1024),
+    )
+    monkeypatch.setattr(output.Confirm, "ask", confirm_ask)
+    monkeypatch.setattr(output.sys.stdin, "isatty", lambda: True)
+    monkeypatch.setattr(output.sys.stdout, "isatty", lambda: True)
+    check = ShellCheck(command="echo hello", check_id="check-one")
+    report: Tuple[str, str, str] = ("", "", "")
+
+    result = output.run_checks(
+        [check],
+        report,
+        no_progress_bar=True,
+        report_history=True,
+        report_history_max_mib=1,
+        history_scope="project-one",
+    )
+
+    out, _ = capsys.readouterr()
+    assert result is True
+    assert "automatic report is" not in out
+    confirm_ask.assert_not_called()
+    save_history.assert_called_once()
+
+
 def test_run_checks_invalid_gg_args_prints_exception(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
