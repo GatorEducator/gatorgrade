@@ -9,7 +9,11 @@ from typer import Exit
 
 from gatorgrade.input import set_up_shell
 from gatorgrade.input.set_up_shell import run_setup
-from gatorgrade.shell_runner import DEFAULT_TIMEOUT_SECONDS, CommandOutcome
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+    CommandOutcome,
+)
 
 PYTHON = f'"{sys.executable}"'
 SLEEP_CMD = f'{PYTHON} -c "import time; time.sleep(5)"'
@@ -202,7 +206,28 @@ def test_run_setup_skips_blank_lines(
     assert commands == ["first", "second"]
 
 
-@pytest.mark.parametrize("bad_timeout", [0, -5, True, "60", 1.5])
+@pytest.mark.parametrize(
+    "good_timeout",
+    [1, MAX_TIMEOUT_SECONDS],
+)
+def test_run_setup_accepts_valid_timeout_bounds(good_timeout: int) -> None:
+    """Setup timeouts are accepted on the supported range boundaries."""
+    monkeypatch = pytest.MonkeyPatch()
+    calls: list[int] = []
+
+    def fake_runner(command: str, **kwargs: object) -> CommandOutcome:
+        calls.append(kwargs["timeout"])
+        return _outcome(command, 0)
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    try:
+        run_setup({"setup": "echo hi", "setup_timeout": good_timeout})
+    finally:
+        monkeypatch.undo()
+    assert calls == [good_timeout]
+
+
+@pytest.mark.parametrize("bad_timeout", [0, -5, True, "60", 1.5, MAX_TIMEOUT_SECONDS + 1])
 def test_run_setup_invalid_setup_timeout_raises(bad_timeout: object) -> None:
     """An invalid setup_timeout is rejected before any command runs."""
     with pytest.raises(ValueError, match="setup_timeout"):

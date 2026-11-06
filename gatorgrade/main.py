@@ -625,7 +625,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             auto_hint_model,
             auto_hint_url,
             output_limit,
-            300 if timeout is None else timeout,
+            DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout,
             baseline_weight,
             show_diagnostics,
             progress_bar,
@@ -758,7 +758,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 REPORT_FLAG: list(report),
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
-                TIMEOUT_FLAG: 300 if timeout is None else timeout,
+                TIMEOUT_FLAG: (
+                    DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout
+                ),
                 BASELINE_WEIGHT_FLAG: baseline_weight,
                 VERBOSE_FLAG: verbose,
                 PROGRESS_BAR_FLAG: progress_bar,
