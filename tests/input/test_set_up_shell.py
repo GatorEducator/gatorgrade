@@ -1,11 +1,50 @@
 """Test suite for set_up_shell.py."""
 
+import sys
+from unittest.mock import MagicMock
+
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from typer import Exit
 
+from gatorgrade.input import set_up_shell
 from gatorgrade.input.set_up_shell import run_setup
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+    CommandOutcome,
+)
+from tests.helpers import flatten
+
+PYTHON = f'"{sys.executable}"'
+SLEEP_CMD = f'{PYTHON} -c "import time; time.sleep(5)"'
+INVALID_BYTES_CMD = (
+    f'{PYTHON} -c "import sys; '
+    "sys.stdout.buffer.write(b'out\\xffbytes'); sys.stdout.flush(); "
+    "sys.stderr.buffer.write(b'err\\xffbytes'); sys.exit(1)\""
+)
+SHORT_TIMEOUT = 1
+CUSTOM_TIMEOUT = 42
+
+
+def _outcome(  # noqa: PLR0913
+    command: str,
+    returncode: int | None,
+    stdout: str = "",
+    stderr: str = "",
+    timed_out: bool = False,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+) -> CommandOutcome:
+    """Create a CommandOutcome for a faked setup command."""
+    return CommandOutcome(
+        command=command,
+        returncode=returncode,
+        stdout=stdout,
+        stderr=stderr,
+        timed_out=timed_out,
+        timeout=timeout,
+    )
 
 
 def test_run_setup_with_no_setup_commands() -> None:
@@ -72,6 +111,181 @@ def test_run_setup_with_mixed_commands() -> None:
     assert exc_info.value.exit_code == 1
 
 
+def test_run_setup_timeout_exits_cleanly(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Setup timeouts stop setup without a traceback and report the command."""
+    outcome = _outcome("sleep 301", None, timed_out=True)
+    monkeypatch.setattr(
+        set_up_shell, "run_shell_command", lambda *_a, **_k: outcome
+    )
+    with pytest.raises(Exit) as exc_info:
+        run_setup({"setup": "sleep 301", "setup_timeout": 300})
+    assert exc_info.value.exit_code == 1
+    out = flatten(capsys.readouterr().out)
+    assert "sleep 301" in out
+    assert "timed out after 300 second(s)" in out
+
+
+def test_run_setup_timeout_shows_partial_output(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Output written before a setup timeout is shown above the message."""
+    outcome = _outcome(
+        "slow", None, stdout="installing\n", stderr="warn\n", timed_out=True
+    )
+    monkeypatch.setattr(
+        set_up_shell, "run_shell_command", lambda *_a, **_k: outcome
+    )
+    with pytest.raises(Exit):
+        run_setup({"setup": "slow"})
+    out = flatten(capsys.readouterr().out)
+    assert "installing" in out
+    assert "warn" in out
+    assert out.index("installing") < out.index("timed out after")
+
+
+def test_run_setup_real_timeout_exits_cleanly(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A real slow setup command is stopped after setup_timeout seconds."""
+    with pytest.raises(Exit) as exc_info:
+        run_setup({"setup": SLEEP_CMD, "setup_timeout": SHORT_TIMEOUT})
+    assert exc_info.value.exit_code == 1
+    out = flatten(capsys.readouterr().out)
+    assert f"timed out after {SHORT_TIMEOUT} second(s)" in out
+
+
+def test_run_setup_passes_timeout_to_runner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The setup_timeout value reaches the runner with STDERR kept separate."""
+    calls: list[dict] = []
+
+    def fake_runner(command: str, **kwargs: object) -> CommandOutcome:
+        calls.append({"command": command, **kwargs})
+        return _outcome(command, 0)
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    run_setup({"setup": "first\nsecond", "setup_timeout": CUSTOM_TIMEOUT})
+    assert calls == [
+        {"command": "first", "timeout": CUSTOM_TIMEOUT, "merge_stderr": False},
+        {
+            "command": "second",
+            "timeout": CUSTOM_TIMEOUT,
+            "merge_stderr": False,
+        },
+    ]
+
+
+def test_run_setup_uses_default_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Setup commands use the default timeout when none is configured."""
+    timeouts: list[object] = []
+
+    def fake_runner(command: str, **kwargs: object) -> CommandOutcome:
+        timeouts.append(kwargs["timeout"])
+        return _outcome(command, 0)
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    run_setup({"setup": "first"})
+    assert timeouts == [DEFAULT_TIMEOUT_SECONDS]
+
+
+def test_run_setup_skips_blank_lines(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Blank lines in the setup block are not run as commands."""
+    commands: list[str] = []
+
+    def fake_runner(command: str, **_kwargs: object) -> CommandOutcome:
+        commands.append(command)
+        return _outcome(command, 0)
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    run_setup({"setup": "first\n\n   \nsecond"})
+    assert commands == ["first", "second"]
+
+
+def test_run_setup_stops_at_first_timed_out_command(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A timed-out command stops setup, so later commands never run."""
+    commands: list[str] = []
+
+    def fake_runner(command: str, **_kwargs: object) -> CommandOutcome:
+        commands.append(command)
+        if command == "second":
+            return _outcome(command, None, stdout="partial\n", timed_out=True)
+        return _outcome(command, 0, stdout="first ran\n")
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    with pytest.raises(Exit) as exc_info:
+        run_setup({"setup": "first\nsecond\nthird", "setup_timeout": 7})
+    assert exc_info.value.exit_code == 1
+    assert commands == ["first", "second"]
+    out = flatten(capsys.readouterr().out)
+    assert "first ran" in out
+    assert "partial" in out
+    assert 'The set up command "second" timed out after 7 second(s).' in out
+
+
+def test_run_setup_start_failure_shows_the_reason(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A setup command that cannot start reports why and exits cleanly."""
+    monkeypatch.setattr(
+        "gatorgrade.shell_runner.subprocess.Popen",
+        MagicMock(side_effect=OSError("too long")),
+    )
+    with pytest.raises(Exit) as exc_info:
+        run_setup({"setup": "cmd"})
+    assert exc_info.value.exit_code == 1
+    assert "Could not start command: too long" in flatten(
+        capsys.readouterr().out
+    )
+
+
+@pytest.mark.parametrize(
+    "good_timeout",
+    [1, MAX_TIMEOUT_SECONDS],
+)
+def test_run_setup_accepts_valid_timeout_bounds(
+    good_timeout: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Setup timeouts are accepted on the supported range boundaries."""
+    calls: list[object] = []
+
+    def fake_runner(command: str, **kwargs: object) -> CommandOutcome:
+        calls.append(kwargs["timeout"])
+        return _outcome(command, 0)
+
+    monkeypatch.setattr(set_up_shell, "run_shell_command", fake_runner)
+    run_setup({"setup": "echo hi", "setup_timeout": good_timeout})
+    assert calls == [good_timeout]
+
+
+@pytest.mark.parametrize(
+    "bad_timeout", [0, -5, True, "60", 1.5, MAX_TIMEOUT_SECONDS + 1, 10**12]
+)
+def test_run_setup_invalid_setup_timeout_raises(bad_timeout: object) -> None:
+    """An invalid setup_timeout is rejected before any command runs."""
+    with pytest.raises(ValueError, match="setup_timeout"):
+        run_setup({"setup": "echo hi", "setup_timeout": bad_timeout})
+
+
+def test_run_setup_invalid_bytes_do_not_crash(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Invalid UTF-8 in STDOUT and STDERR is replaced instead of crashing."""
+    with pytest.raises(Exit):
+        run_setup({"setup": INVALID_BYTES_CMD})
+    out, _ = capsys.readouterr()
+    assert "out�bytes" in out
+    assert "err�bytes" in out
+
+
 @pytest.mark.propertybased
 @given(st.dictionaries(st.text(min_size=1, max_size=10), st.text(max_size=20)))
 def test_run_setup_no_setup_key_property(front_matter: dict) -> None:
@@ -91,6 +305,9 @@ def test_run_setup_no_setup_key_property(front_matter: dict) -> None:
         max_size=4,
     ).map("\n".join),
 )
+# each example starts up to four real processes, which can take longer than
+# the default per-example deadline on a slow or busy machine
+@settings(deadline=None)
 def test_run_setup_with_commands_property(commands: str) -> None:
     """Property: run_setup with setup commands never raises outside of typer.Exit."""
     front_matter = {"setup": commands}

@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any, List, Tuple, Union
 from unittest.mock import MagicMock, patch
@@ -13,8 +14,15 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output import output
 from gatorgrade.output.check_result import CheckResult
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+    CommandOutcome,
+)
+from tests.helpers import flatten
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
@@ -24,6 +32,16 @@ FAILING_CMD = 'python -c "exit(1)"'
 FAILING_CMD_WITH_LINES = (
     "python -c \"print('line1'); print('line2'); print('line3'); exit(1)\""
 )
+
+# cross-platform shell command that writes invalid UTF-8 and fails
+INVALID_BYTES_FAILING_CMD = (
+    'python -c "import sys; '
+    "sys.stdout.buffer.write(b'valid\\xffoutput'); sys.exit(1)\""
+)
+CLI_TIMEOUT = 30
+CHECK_TIMEOUT = 900
+UNROUNDED_DURATION = 1.23456
+ROUNDED_DURATION = 1.235
 
 EXPECTED_AMOUNT = 2
 EXPECTED_PERCENTAGE = 100
@@ -2849,3 +2867,390 @@ def test_run_checks_generates_low_quality_hint(
         [check], report, auto_hint_engine=mock_engine, no_progress_bar=True
     )
     mock_engine.generate_hint.assert_called_once()
+
+
+def _timed_out_outcome(
+    command: str, timeout: int, stdout: str = ""
+) -> CommandOutcome:
+    """Create a CommandOutcome for a command that ran past its timeout."""
+    return CommandOutcome(
+        command=command,
+        returncode=None,
+        stdout=stdout,
+        stderr="",
+        timed_out=True,
+        timeout=timeout,
+    )
+
+
+def test_resolve_timeout_prefers_check_timeout() -> None:
+    """Test that a per-check timeout wins over the command-line timeout."""
+    assert output._resolve_timeout(CHECK_TIMEOUT, CLI_TIMEOUT) == CHECK_TIMEOUT
+
+
+def test_resolve_timeout_uses_cli_timeout_when_check_has_none() -> None:
+    """Test that the command-line timeout is used when the check has none."""
+    assert output._resolve_timeout(None, CLI_TIMEOUT) == CLI_TIMEOUT
+
+
+def test_resolve_timeout_falls_back_to_default() -> None:
+    """Test that the default timeout is used when nothing is set."""
+    assert output._resolve_timeout(None, None) == DEFAULT_TIMEOUT_SECONDS
+
+
+def test_run_shell_check_timeout_expired_returns_failed_result() -> None:
+    """Test the issue regression where a timeout crashed instead of failing."""
+    process = MagicMock()
+    process.wait.side_effect = subprocess.TimeoutExpired(
+        cmd="sleep 301", timeout=300
+    )
+    check = ShellCheck(description="Slow check", command="sleep 301")
+    with (
+        patch(
+            "gatorgrade.shell_runner.subprocess.Popen", return_value=process
+        ),
+        patch("gatorgrade.shell_runner._create_job", return_value=None),
+        patch("gatorgrade.shell_runner._kill_process_tree"),
+    ):
+        result = output._run_shell_check(check)
+    assert result.passed is False
+    assert result.timed_out is True
+    assert result.timeout == DEFAULT_TIMEOUT_SECONDS
+    assert result.diagnostic == "Command timed out after 300 second(s)"
+
+
+def test_run_shell_check_timeout_includes_partial_output() -> None:
+    """Test that partial output follows the timeout line in the diagnostic."""
+    check = ShellCheck(description="Slow check", command="slow")
+    outcome = _timed_out_outcome("slow", CLI_TIMEOUT, "line1\nline2\n")
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check, timeout=CLI_TIMEOUT)
+    assert result.diagnostic == (
+        f"Command timed out after {CLI_TIMEOUT} second(s)"
+        f"{output.DIAGNOSTIC_INDENT}line1{output.DIAGNOSTIC_INDENT}line2"
+    )
+
+
+def test_run_shell_check_timeout_diagnostic_is_truncated() -> None:
+    """Test that a timeout diagnostic is truncated but keeps the timeout line."""
+    check = ShellCheck(description="Slow check", command="slow", outputlimit=1)
+    outcome = _timed_out_outcome("slow", CLI_TIMEOUT, "line1\nline2\n")
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check, timeout=CLI_TIMEOUT)
+    assert result.diagnostic.startswith(
+        f"Command timed out after {CLI_TIMEOUT} second(s)"
+    )
+    assert "output truncated from 3 to 1 line(s)" in result.diagnostic
+    assert "line2" in result.raw_diagnostic
+
+
+def test_run_shell_check_passes_cli_timeout_to_runner() -> None:
+    """Test that the command-line timeout reaches the shared runner."""
+    check = ShellCheck(description="Check", command="cmd")
+    outcome = CommandOutcome(
+        command="cmd",
+        returncode=0,
+        stdout="",
+        stderr="",
+        timed_out=False,
+        timeout=CLI_TIMEOUT,
+    )
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ) as mock_run:
+        result = output._run_shell_check(check, timeout=CLI_TIMEOUT)
+    mock_run.assert_called_once_with(
+        "cmd", timeout=CLI_TIMEOUT, merge_stderr=True
+    )
+    assert result.passed is True
+    assert result.timeout == CLI_TIMEOUT
+    assert result.timed_out is False
+
+
+def test_run_shell_check_per_check_timeout_overrides_cli() -> None:
+    """Test that a timeout set on the check wins over the command-line value."""
+    check = ShellCheck(
+        description="Check", command='echo "hi"', timeout=CHECK_TIMEOUT
+    )
+    result = output._run_shell_check(check, timeout=CLI_TIMEOUT)
+    assert result.passed is True
+    assert result.timeout == CHECK_TIMEOUT
+
+
+def test_run_shell_check_invalid_bytes_do_not_crash() -> None:
+    """Test that invalid UTF-8 output becomes a readable diagnostic."""
+    check = ShellCheck(description="Bytes", command=INVALID_BYTES_FAILING_CMD)
+    result = output._run_shell_check(check)
+    assert result.passed is False
+    assert result.diagnostic == "valid\ufffdoutput"
+
+
+def test_run_shell_check_default_timeout_recorded() -> None:
+    """Test that a normal shell check records the default timeout."""
+    check = ShellCheck(description="Check", command='echo "hi"')
+    result = output._run_shell_check(check)
+    assert result.passed is True
+    assert result.timeout == DEFAULT_TIMEOUT_SECONDS
+    assert result.timed_out is False
+
+
+@pytest.mark.parametrize("no_progress_bar", [True, False])
+def test_run_checks_with_timed_out_check_returns_false(
+    no_progress_bar: bool,
+) -> None:
+    """Test that a timed-out check fails the run in both progress modes."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="Slow check", command="slow"),
+    ]
+    outcome = _timed_out_outcome("slow", DEFAULT_TIMEOUT_SECONDS)
+    report = (None, None, None)
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output.run_checks(
+            checks,
+            report,  # type: ignore
+            no_progress_bar=no_progress_bar,
+        )
+    assert result is False
+
+
+def test_create_report_json_includes_timeout_for_shell_checks() -> None:
+    """Test that the JSON report has a timeout key only for shell checks."""
+    shell_result = CheckResult(
+        passed=False,
+        description="Shell",
+        json_info={"description": "Shell", "command": "slow"},
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        timed_out=True,
+    )
+    gg_result = CheckResult(
+        passed=True,
+        description="GatorGrader",
+        json_info={"description": "GatorGrader", "check": "MatchFileFragment"},
+    )
+    report = output.create_report_json(1, [shell_result, gg_result], 50)
+    assert report["checks"][0]["timeout"] == DEFAULT_TIMEOUT_SECONDS
+    assert "timeout" not in report["checks"][1]
+
+
+def test_create_report_json_includes_timed_out_and_duration_for_shell() -> (
+    None
+):
+    """Test that shell checks report their timed out status and rounded run time."""
+    shell_result = CheckResult(
+        passed=False,
+        description="Shell",
+        json_info={"description": "Shell", "command": "slow"},
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        timed_out=True,
+        duration_seconds=UNROUNDED_DURATION,
+    )
+    report = output.create_report_json(0, [shell_result], 0)
+    assert report["checks"][0]["timed_out"] is True
+    assert report["checks"][0]["duration_seconds"] == ROUNDED_DURATION
+
+
+def test_create_report_json_omits_timed_out_and_duration_for_gg_checks() -> (
+    None
+):
+    """Test that GatorGrader checks do not report a timed out status or run time."""
+    gg_result = CheckResult(
+        passed=True,
+        description="GatorGrader",
+        json_info={"description": "GatorGrader", "check": "MatchFileFragment"},
+    )
+    report = output.create_report_json(1, [gg_result], 100)
+    assert "timed_out" not in report["checks"][0]
+    assert "duration_seconds" not in report["checks"][0]
+
+
+def test_run_shell_check_records_duration_from_runner() -> None:
+    """Test that the run time measured by the runner reaches the CheckResult."""
+    check = ShellCheck(description="Check", command="cmd")
+    outcome = CommandOutcome(
+        command="cmd",
+        returncode=0,
+        stdout="",
+        stderr="",
+        timed_out=False,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        elapsed_seconds=UNROUNDED_DURATION,
+    )
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check)
+    assert result.duration_seconds == UNROUNDED_DURATION
+
+
+def test_run_shell_check_start_failure_becomes_diagnostic() -> None:
+    """Test that a command that cannot start is a failed check, not a crash."""
+    check = ShellCheck(description="Check", command="cmd")
+    with patch(
+        "gatorgrade.shell_runner.subprocess.Popen",
+        side_effect=OSError("command line is too long"),
+    ):
+        result = output._run_shell_check(check)
+    assert result.passed is False
+    assert result.timed_out is False
+    assert result.diagnostic == (
+        "Could not start command: command line is too long"
+    )
+
+
+def test_run_shell_check_shows_truncated_output_marker() -> None:
+    """Test that a failing check with very large output says it was truncated."""
+    check = ShellCheck(description="Check", command="cmd")
+    outcome = CommandOutcome(
+        command="cmd",
+        returncode=1,
+        stdout="start\n... (output truncated: kept 4 of 9 bytes) ...\nend",
+        stderr="",
+        timed_out=False,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        output_truncated=True,
+    )
+    with patch(
+        "gatorgrade.output.output.run_shell_command", return_value=outcome
+    ):
+        result = output._run_shell_check(check)
+    assert "output truncated: kept 4 of 9 bytes" in result.diagnostic
+
+
+def test_create_markdown_report_shows_timeout_for_failing_check() -> None:
+    """Test that the Markdown report renders the timeout of a failing check."""
+    shell_result = CheckResult(
+        passed=False,
+        description="Shell",
+        json_info={"description": "Shell", "command": "slow"},
+        diagnostic="Command timed out after 300 second(s)",
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        timed_out=True,
+    )
+    report = output.create_report_json(0, [shell_result], 0)
+    markdown = output.create_markdown_report_file(report)
+    assert f"- **timeout:** {DEFAULT_TIMEOUT_SECONDS}" in markdown
+    assert "Command timed out after 300 second(s)" in markdown
+
+
+@pytest.mark.parametrize(
+    ("check_timeout", "cli_timeout", "expected"),
+    [
+        (None, None, DEFAULT_TIMEOUT_SECONDS),
+        (None, CLI_TIMEOUT, CLI_TIMEOUT),
+        (CHECK_TIMEOUT, None, CHECK_TIMEOUT),
+        (CHECK_TIMEOUT, CLI_TIMEOUT, CHECK_TIMEOUT),
+        (1, CLI_TIMEOUT, 1),
+        (1, MAX_TIMEOUT_SECONDS, 1),
+        (MAX_TIMEOUT_SECONDS, 1, MAX_TIMEOUT_SECONDS),
+    ],
+)
+def test_resolve_timeout_precedence_table(
+    check_timeout: int | None, cli_timeout: int | None, expected: int
+) -> None:
+    """Test that a check, then the command line, then the default decides."""
+    assert output._resolve_timeout(check_timeout, cli_timeout) == expected
+
+
+def _record_timeouts(
+    recorded: dict[str, float],
+) -> Any:
+    """Return a stand-in runner that records the timeout of each command."""
+
+    def fake_runner(command: str, **kwargs: Any) -> CommandOutcome:
+        recorded[command] = kwargs["timeout"]
+        return CommandOutcome(
+            command=command,
+            returncode=0,
+            stdout="",
+            stderr="",
+            timed_out=False,
+            timeout=kwargs["timeout"],
+        )
+
+    return fake_runner
+
+
+@pytest.mark.parametrize(
+    ("cli_timeout", "expected_unset"),
+    [(None, DEFAULT_TIMEOUT_SECONDS), (CLI_TIMEOUT, CLI_TIMEOUT)],
+)
+def test_timeout_precedence_from_config_file_to_runner(
+    tmp_path: Path, cli_timeout: int | None, expected_unset: int
+) -> None:
+    """Test that the right timeout reaches the runner from a real config file."""
+    config = tmp_path / "gatorgrade.yml"
+    config.write_text(
+        "- description: Own longer timeout\n"
+        f"  timeout: {CHECK_TIMEOUT}\n"
+        "  command: own-longer\n"
+        "- description: Own shorter timeout\n"
+        "  timeout: 1\n"
+        "  command: own-shorter\n"
+        "- description: No timeout\n"
+        "  command: no-timeout\n",
+        encoding="utf-8",
+    )
+    checks, error = parse_config(config)
+    assert error is None
+    recorded: dict[str, float] = {}
+    report = (None, None, None)
+    with patch(
+        "gatorgrade.output.output.run_shell_command",
+        side_effect=_record_timeouts(recorded),
+    ):
+        output.run_checks(
+            checks,
+            report,  # type: ignore
+            no_progress_bar=True,
+            timeout=cli_timeout,
+        )
+    assert recorded == {
+        "own-longer": CHECK_TIMEOUT,
+        "own-shorter": 1,
+        "no-timeout": expected_unset,
+    }
+
+
+@pytest.mark.parametrize("no_progress_bar", [True, False])
+def test_run_checks_keeps_going_after_a_timed_out_check(
+    no_progress_bar: bool, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that the checks after a timed-out check still run and are counted."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="First", command="first"),
+        ShellCheck(description="Middle", command="middle"),
+        ShellCheck(description="Last", command="last"),
+    ]
+    commands: List[str] = []
+
+    def fake_runner(command: str, **kwargs: Any) -> CommandOutcome:
+        commands.append(command)
+        return CommandOutcome(
+            command=command,
+            returncode=None if command == "middle" else 0,
+            stdout="",
+            stderr="",
+            timed_out=command == "middle",
+            timeout=kwargs["timeout"],
+        )
+
+    report = (None, None, None)
+    with patch(
+        "gatorgrade.output.output.run_shell_command", side_effect=fake_runner
+    ):
+        result = output.run_checks(
+            checks,
+            report,  # type: ignore
+            no_progress_bar=no_progress_bar,
+        )
+    assert result is False
+    assert commands == ["first", "middle", "last"]
+    out = flatten(ANSI_ESCAPE_PATTERN.sub("", capsys.readouterr().out))
+    assert "- Checks: 2/3 (67%)" in out
+    assert "Command timed out after 300 second(s)" in out

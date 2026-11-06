@@ -7,6 +7,7 @@ from hypothesis import strategies as st
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
 from gatorgrade.input.command_line_generator import generate_checks
 from gatorgrade.input.in_file_path import CheckData
+from gatorgrade.shell_runner import MAX_TIMEOUT_SECONDS
 
 
 def test_generate_checks_with_shell_check() -> None:
@@ -589,3 +590,60 @@ def test_generate_checks_shell_check_id_differs_with_command() -> None:
     )
     checks = generate_checks([cd1, cd2])
     assert checks[0].check_id != checks[1].check_id
+
+
+@pytest.mark.parametrize("timeout", [1, 2, MAX_TIMEOUT_SECONDS])
+def test_generate_checks_passes_timeout_to_shell_check(timeout: int) -> None:
+    """Test that a valid timeout key reaches the ShellCheck."""
+    check_data = CheckData(
+        file_context=None,
+        check={"command": "echo hi", "timeout": timeout},
+    )
+    check = generate_checks([check_data])[0]
+    assert isinstance(check, ShellCheck)
+    assert check.timeout == timeout
+
+
+def test_generate_checks_without_timeout_leaves_it_unset() -> None:
+    """Test that a check with no timeout key can use the wider defaults."""
+    check_data = CheckData(file_context=None, check={"command": "echo hi"})
+    check = generate_checks([check_data])[0]
+    assert isinstance(check, ShellCheck)
+    assert check.timeout is None
+
+
+@pytest.mark.parametrize(
+    "timeout",
+    [0, -1, MAX_TIMEOUT_SECONDS + 1, 10**12, True, 1.5, "60"],
+)
+def test_generate_checks_rejects_invalid_timeout(timeout: object) -> None:
+    """Test that an invalid timeout names the check and the problem."""
+    check_data = CheckData(
+        file_context=None,
+        check={
+            "description": "Slow check",
+            "command": "echo hi",
+            "timeout": timeout,
+        },
+    )
+    with pytest.raises(ValueError, match="Slow check") as exc_info:
+        generate_checks([check_data])
+    assert "timeout" in str(exc_info.value)
+
+
+def test_generate_checks_reports_every_invalid_timeout() -> None:
+    """Test that all invalid timeouts are reported at once, not just the first."""
+    check_data_list = [
+        CheckData(
+            file_context=None,
+            check={
+                "description": description,
+                "command": "echo hi",
+                "timeout": 0,
+            },
+        )
+        for description in ("First check", "Second check")
+    ]
+    with pytest.raises(ValueError, match="First check") as exc_info:
+        generate_checks(check_data_list)
+    assert "Second check" in str(exc_info.value)

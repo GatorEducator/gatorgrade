@@ -1,6 +1,7 @@
 """Tests for the gatorgrade.validate module."""
 
 import math
+from typing import Any
 
 import pytest
 from click import BadParameter
@@ -8,6 +9,8 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from gatorgrade import validate
+from gatorgrade.input.checks import validate_timeout_value
+from gatorgrade.shell_runner import MAX_TIMEOUT_SECONDS
 
 
 @pytest.mark.propertybased
@@ -32,6 +35,65 @@ def test_validate_baseline_weight_valid_property(value: int) -> None:
     """Property: positive ints pass through validation unchanged."""
     result = validate.validate_baseline_weight(value)
     assert result == value
+
+
+@pytest.mark.propertybased
+@given(st.integers(min_value=1, max_value=MAX_TIMEOUT_SECONDS))
+def test_validate_timeout_valid_property(value: int) -> None:
+    """Property: valid timeouts pass validation unchanged."""
+    result = validate.validate_timeout(value)
+    assert result == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        1,
+        MAX_TIMEOUT_SECONDS,
+        None,
+    ],
+)
+def test_validate_timeout_value_accepts_boundary_values(
+    value: int | None,
+) -> None:
+    """Timeout values within the supported range are accepted."""
+    assert validate_timeout_value(value, "timeout") is None
+    if value is not None:
+        assert validate.validate_timeout(value) == value
+
+
+@pytest.mark.parametrize("value", [0, -1, MAX_TIMEOUT_SECONDS + 1, 10**12])
+def test_validate_timeout_value_rejects_out_of_range_values(
+    value: int,
+) -> None:
+    """Too-small and too-large timeouts are rejected."""
+    error = validate_timeout_value(value, "timeout")
+    assert error is not None
+    with pytest.raises(BadParameter, match="timeout"):
+        validate.validate_timeout(value)
+
+
+@pytest.mark.parametrize("value", [True, 1.5, "60"])
+def test_validate_timeout_value_rejects_non_integer_types(
+    value: Any,
+) -> None:
+    """Only integer timeout values are accepted."""
+    assert validate_timeout_value(value, "timeout") is not None
+    with pytest.raises(BadParameter):
+        validate.validate_timeout(value)
+
+
+@pytest.mark.propertybased
+@given(
+    st.one_of(
+        st.integers(max_value=0),
+        st.integers(min_value=MAX_TIMEOUT_SECONDS + 1),
+    )
+)
+def test_validate_timeout_invalid_property(value: int) -> None:
+    """Property: any timeout outside the supported range is rejected."""
+    with pytest.raises(BadParameter):
+        validate.validate_timeout(value)
 
 
 @pytest.mark.propertybased

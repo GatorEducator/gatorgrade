@@ -8,6 +8,7 @@ import sys
 from io import StringIO
 from pathlib import Path
 from typing import Any, Callable, Generator, List
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -15,6 +16,11 @@ from typer.testing import CliRunner
 from gatorgrade import detect, main, report_history
 from gatorgrade.input.filter import FilterBy, FilterMode, FilterType
 from gatorgrade.input.parse_config import parse_config
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+)
+from tests.helpers import flatten
 
 runner = CliRunner()
 
@@ -36,7 +42,7 @@ def patch_open(
         closefd: bool = True,
         opener: Any | None = None,
     ) -> Any:
-        if "w" in mode and not os.path.isfile(path):
+        if "w" in mode and not os.path.exists(path):
             files.append(path)
         return open_func(
             path,
@@ -1368,3 +1374,130 @@ def test_filter_failed_and_passed_combined_is_accepted(
     capsys.readouterr()
     print(result.stdout)  # noqa: T201
     assert result.exit_code == 0
+
+
+def _write_quick_config(tmp_path: Path) -> Path:
+    """Write a configuration file with one check and return its path."""
+    config = tmp_path / "gatorgrade.yml"
+    config.write_text(
+        "- description: Quick check\n  command: quick\n",
+        encoding="utf-8",
+    )
+    return config
+
+
+@pytest.mark.parametrize("timeout", [1, 2, MAX_TIMEOUT_SECONDS])
+def test_timeout_flag_reaches_run_checks(tmp_path: Path, timeout: int) -> None:
+    """Test that a valid timeout flag is passed along and recorded for reports."""
+    config = _write_quick_config(tmp_path)
+    with patch("gatorgrade.main.run_checks", return_value=True) as mock_run:
+        result = runner.invoke(
+            main.app,
+            ["--config", str(config), "--timeout", str(timeout)],
+        )
+    assert result.exit_code == 0
+    assert timeout in mock_run.call_args.args
+    cli_args = next(
+        arg for arg in mock_run.call_args.args if isinstance(arg, dict)
+    )
+    assert cli_args["--timeout"] == timeout
+
+
+def test_timeout_short_flag_reaches_run_checks(tmp_path: Path) -> None:
+    """Test that the short form of the timeout flag behaves the same way."""
+    config = _write_quick_config(tmp_path)
+    with patch("gatorgrade.main.run_checks", return_value=True) as mock_run:
+        result = runner.invoke(main.app, ["--config", str(config), "-t", "7"])
+    assert result.exit_code == 0
+    cli_args = next(
+        arg for arg in mock_run.call_args.args if isinstance(arg, dict)
+    )
+    assert cli_args["--timeout"] == 7  # noqa: PLR2004
+
+
+def test_unset_timeout_flag_reports_the_default(tmp_path: Path) -> None:
+    """Test that reports record the default when no timeout flag is given."""
+    config = _write_quick_config(tmp_path)
+    with patch("gatorgrade.main.run_checks", return_value=True) as mock_run:
+        result = runner.invoke(main.app, ["--config", str(config)])
+    assert result.exit_code == 0
+    cli_args = next(
+        arg for arg in mock_run.call_args.args if isinstance(arg, dict)
+    )
+    assert cli_args["--timeout"] == DEFAULT_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["0", "-1", str(MAX_TIMEOUT_SECONDS + 1), str(10**12), "abc", "1.5"],
+)
+def test_invalid_timeout_flag_is_a_clean_error(
+    tmp_path: Path, value: str
+) -> None:
+    """Test that a bad timeout flag is a usage error and nothing is run."""
+    config = _write_quick_config(tmp_path)
+    with patch("gatorgrade.main.run_checks") as mock_run:
+        result = runner.invoke(
+            main.app, ["--config", str(config), f"--timeout={value}"]
+        )
+    assert result.exit_code == 2  # noqa: PLR2004
+    assert isinstance(result.exception, SystemExit)
+    assert "--timeout" in ANSI_ESCAPE_PATTERN.sub("", result.output)
+    mock_run.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected"),
+    [
+        ([], f"Timeout: {DEFAULT_TIMEOUT_SECONDS}"),
+        (["--timeout", "7"], "Timeout: 7"),
+    ],
+)
+def test_verbose_output_shows_the_timeout(
+    tmp_path: Path, arguments: List[str], expected: str
+) -> None:
+    """Test that the verbose configuration panel shows the default timeout."""
+    config = _write_quick_config(tmp_path)
+    with patch("gatorgrade.main.run_checks", return_value=True):
+        result = runner.invoke(
+            main.app, ["--config", str(config), "--verbose", *arguments]
+        )
+    assert result.exit_code == 0
+    assert expected in result.output
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        (
+            "- description: Bad check\n  timeout: 0\n  command: quick\n",
+            "Check timeout must be a positive, non-zero integer, got 0",
+        ),
+        (
+            "- description: Bad check\n"
+            f"  timeout: {MAX_TIMEOUT_SECONDS + 1}\n"
+            "  command: quick\n",
+            f"no greater than {MAX_TIMEOUT_SECONDS}",
+        ),
+        (
+            "setup_timeout: 0\n"
+            "setup: |\n  quick\n---\n"
+            "- description: Quick check\n  command: quick\n",
+            "Check setup_timeout must be a positive, non-zero integer, got 0",
+        ),
+    ],
+)
+def test_invalid_timeout_in_config_shows_configuration_error(
+    tmp_path: Path, content: str, expected: str
+) -> None:
+    """Test that a bad timeout in a config file is a clean configuration error."""
+    config = tmp_path / "gatorgrade.yml"
+    config.write_text(content, encoding="utf-8")
+    with patch("gatorgrade.main.run_checks") as mock_run:
+        result = runner.invoke(main.app, ["--config", str(config)])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit) or result.exception is None
+    output = flatten(ANSI_ESCAPE_PATTERN.sub("", result.output))
+    assert expected in output
+    assert flatten(main.EXIT_MESSAGE) in output
+    mock_run.assert_not_called()

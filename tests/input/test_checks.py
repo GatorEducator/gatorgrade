@@ -1,5 +1,7 @@
 """Test suite for checks.py."""
 
+from typing import Any
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -9,6 +11,7 @@ from gatorgrade.input.checks import (
     ShellCheck,
     validate_positive_nonzero_int,
 )
+from gatorgrade.shell_runner import MAX_TIMEOUT_SECONDS
 
 
 def test_shell_check_with_description() -> None:
@@ -416,3 +419,33 @@ def test_gatorgrader_check_default_check_id_is_none() -> None:
         json_info={"check": "TestCheck"},
     )
     assert check.check_id is None
+
+
+def test_shell_check_timeout_defaults_to_none() -> None:
+    """Test that a shell check has no timeout of its own by default."""
+    assert ShellCheck(command="echo test").timeout is None
+
+
+@pytest.mark.parametrize("timeout", [1, 2, MAX_TIMEOUT_SECONDS])
+def test_shell_check_accepts_timeout_at_and_inside_limits(
+    timeout: int,
+) -> None:
+    """Test that a timeout from the smallest to the largest value is accepted."""
+    assert ShellCheck(command="echo test", timeout=timeout).timeout == timeout
+
+
+@pytest.mark.parametrize(
+    "timeout",
+    [0, -1, MAX_TIMEOUT_SECONDS + 1, 10**12, True, 1.5, "60"],
+)
+def test_shell_check_rejects_timeout_outside_limits(timeout: Any) -> None:
+    """Test that a timeout just past either limit or of a wrong type is rejected."""
+    with pytest.raises(ValueError, match="timeout"):
+        ShellCheck(command="echo test", timeout=timeout)
+
+
+def test_shell_check_reports_all_invalid_fields_together() -> None:
+    """Test that an invalid timeout is reported with other invalid fields."""
+    with pytest.raises(ValueError, match="weight") as exc_info:
+        ShellCheck(command="echo test", weight=0, timeout=0)
+    assert "timeout" in str(exc_info.value)
