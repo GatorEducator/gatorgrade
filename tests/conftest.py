@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from hypothesis import is_hypothesis_test
 
 from gatorgrade import main, report_history
 
@@ -16,6 +17,21 @@ from gatorgrade import main, report_history
 # segfaults on CPython 3.14 when numpy C extensions interact with
 # hypothesis strategy object cleanup during GC.
 gc.disable()
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Require the property marker before any collected tests execute."""
+    missing = [
+        item.nodeid
+        for item in items
+        if is_hypothesis_test(getattr(item, "obj", None))
+        and item.get_closest_marker("propertybased") is None
+    ]
+    if missing:
+        raise pytest.UsageError(
+            "Hypothesis tests require @pytest.mark.propertybased: "
+            + ", ".join(missing)
+        )
 
 
 @pytest.fixture(autouse=True)

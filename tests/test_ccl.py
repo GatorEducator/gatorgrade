@@ -17,6 +17,9 @@ from scripts.ccl import (
     app,
 )
 
+GITHUB_TEST_FILENAME = "github_comment.py"
+GITHUB_COMMENT = "# GitHub is a documented proper noun.\n"
+
 PY_LANGUAGE = Language(tspython.language())
 
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
@@ -78,6 +81,12 @@ def test_find_errors_reports_uppercase_comment(
 def test_find_errors_allows_proper_noun(tmp_path: Path) -> None:
     """Skip comments whose first word is a known proper noun."""
     py_file = _write_py(tmp_path, "ok.py", "# GatorGrader is cool\n")
+    assert _find_errors(py_file, _make_parser()) == []
+
+
+def test_find_errors_allows_github(tmp_path: Path) -> None:
+    """Accept the documented GitHub proper-noun exception."""
+    py_file = _write_py(tmp_path, GITHUB_TEST_FILENAME, GITHUB_COMMENT)
     assert _find_errors(py_file, _make_parser()) == []
 
 

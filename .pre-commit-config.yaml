@@ -1,0 +1,50 @@
+minimum_pre_commit_version: "4.6.0"
+default_language_version:
+  node: "24.22.2"
+default_install_hook_types: [pre-commit, commit-msg]
+fail_fast: true
+repos:
+  - repo: local
+    hooks:
+      - id: contribution-guards
+        name: Contributor commands and coverage settings
+        language: system
+        entry: uv run pytest --noconftest tests/test_contribution_rules.py -q
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: markdown
+        name: Existing Markdown rules
+        language: system
+        entry: uv run rumdl check
+        types: [markdown]
+        stages: [pre-commit]
+      - id: project-checks
+        name: Existing project lint and tests
+        language: system
+        entry: uv run task all
+        files: '\.(py|toml|yaml|yml|sh)$|^uv\.lock$'
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: project-coverage
+        name: Existing statement and branch coverage gate
+        language: system
+        entry: uv run task test-coverage
+        files: '\.(py|toml|yaml|yml|sh)$|^uv\.lock$'
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: spelling
+        name: Existing spelling dictionary
+        language: node
+        entry: cspell --config .github/cspell.json
+        additional_dependencies: [cspell@4.2.8]
+        types: [markdown]
+        stages: [pre-commit]
+      - id: commitlint
+        name: Conventional commit message
+        language: node
+        entry: commitlint --config .github/commitlint.config.mjs --edit
+        additional_dependencies:
+          - '@commitlint/cli@19.8.1'
+          - conventional-changelog-conventionalcommits@7.0.2
+        stages: [commit-msg]
