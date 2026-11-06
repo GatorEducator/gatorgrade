@@ -88,7 +88,7 @@ Run from the repository root; review diffs after fix commands.
   files with `uv run pre-commit run --files` followed by explicit paths;
   never implicitly stash. Hooks check commit messages, not PR titles.
   Smoke tests export the Git index, not the working tree; do not stage to
-  test them. See [local checks](docs/PRE_COMMIT.md) for details.
+  test them. See [local checks](CONTRIBUTING.md#local-checks-and-hooks).
 
 ## Code Requirements
 
