@@ -3,6 +3,7 @@
     "language": "en",
     "words": [
         "addopts",
+        "allowlist",
         "autouse",
         "coveragefailunder",
         "modifyitems",
