@@ -1,43 +1,55 @@
-<!-- TODO: Replace the title below -->
+# Pull request
 
-# Your Title
+## Problem
 
-## Description
+<!-- Explain the current behavior and the problem being addressed. -->
 
-<!-- Describe the problem, resulting behavior, compatibility, and tests. -->
-<!-- For documentation moves/removals, identify replacement locations. -->
+## Changes
 
-<!-- Remember to check the reminders! -->
+<!-- Describe the resulting behavior and scope of this change. -->
 
-## Linked Issues
+## Compatibility
 
-<!-- Link relevant issues. Minor changes may omit an issue case by case; -->
-<!-- explain the scope and reason here. Use Closes for resolved issues. -->
-<!-- Use Refs for related or partially addressed issues. -->
+<!-- Explain compatibility changes and migration, or say none. -->
 
-Closes #00
+## Verification
 
-## Type of Change
-
-<!-- Mark all types that apply to the proposed changes. -->
-
-- [ ] Feature
-- [ ] Bug fix
-- [ ] Documentation
+<!-- Record exact commands and results, including relevant CI results. -->
+<!-- For manual checks, include inputs, expected/actual output, exit code. -->
 
 ## Contributors
 
-<!-- List the GitHub usernames of everyone contributing to this PR. -->
+<!-- List the GitHub @usernames of all contributors. -->
 
-- `@`
+## Linked Issues
 
-## Reminder
+<!-- Link each relevant issue, e.g. Refs #123 or Closes #123. -->
+<!-- Use Closes only for fully resolved issues. For minor changes without -->
+<!-- an issue, write Minor-change exception: followed by the scope/reason. -->
+
+## AI Assistance
+
+AI assistance: <!-- choose none or used -->
+
+<!-- If used, complete these lines and disclose it in affected commits too: -->
+<!-- Tool: name and model/version when known -->
+<!-- Contribution: what the tool helped with -->
+<!-- Verification: how you checked that assistance -->
+
+## Documentation Changes
+
+<!-- Identify documentation updates, or explain why none are needed. -->
+<!-- For moved/removed sections, list old and replacement locations. -->
+
+## Limitations
+
+<!-- Record anything not verified, environment limitations, or say none. -->
+<!-- Include OS and Python version when reporting manual verification. -->
+
+## Checklist
 
 - [ ] Announced ownership and teammates in issue comments, if applicable.
 - [ ] Linked issues and added PR backlinks, or explained the minor exception.
-- [ ] Tracked new problems as required by the guide, including during a PR.
-- [ ] Ran the required checks and reported verification results.
-- [ ] Followed the [contribution guide][guide].
-- [ ] GitHub Actions pass and the guide's required reviews are complete.
-
-[guide]: https://github.com/GatorEducator/gatorgrade/blob/main/CONTRIBUTING.md
+- [ ] Tracked newly discovered problems and kept this PR focused.
+- [ ] Added or updated relevant tests and documentation.
+- [ ] Reported verification accurately and followed the contribution guide.

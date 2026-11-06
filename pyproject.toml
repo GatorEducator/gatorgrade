@@ -207,6 +207,7 @@ lint.select = [
     "RUF",  # ruff-specific
     "W",    # pycodestyle warnings
     "T201",  # flake8-print
+    "N801",
     "N802",  # snake_case function names
     "TID252",  # absolute imports
 ]

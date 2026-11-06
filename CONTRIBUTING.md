@@ -28,53 +28,45 @@ documentation, tests, bug reports, and pull request reviews. Start with the
 
 ## Use of AI
 
-You are responsible for reviewing and testing AI-assisted code,
-documentation, and communication for accuracy, safety, and respectful language.
-Review output before submitting it; only claim verification you performed.
+Review and test AI-assisted code, documentation, and communication for
+accuracy, safety, and respectful language. You remain responsible for the
+result; only claim verification you performed.
 
 Disclose substantial AI assistance in contributions and project communication.
-In affected commits, describe what the tool contributed and how you verified
-it in the body, and add an `AI-Assisted: <tool name>` trailer.
+In affected commit bodies, explain the tool's contribution and how you
+verified it, then add an `Assisted-by: <tool name>` trailer. Include the
+model and version when known.
 
 ## Finding ways to help
 
-Browse the [issue tracker][issues] and existing [pull requests][pulls] before
-starting work. Look for the [good-first-issue][first] and
-[help-wanted][help-issues] labels. If no beginner issues are available, report
-a reproducible bug, improve documentation, add a regression test, or review
-an existing pull request.
+Check [issues][issues], [pull requests][pulls], and related discussions before
+starting. Look for [good-first-issue][first] and [help-wanted][help-issues]
+labels. You can improve examples or documentation, report a reproducible
+bug, add a regression test, or review a pull request.
 
-Read related discussions to avoid duplicating another contributor's work.
-If work overlaps, coordinate in the issue comments. Make small, incremental
-changes that reviewers can understand and verify.
+Coordinate overlapping work in issue comments. Keep changes small and easy
+to review and verify.
 
 ## Raising and tracking issues
 
-Proposed changes normally need an issue. Decide case by case whether a minor
-change, such as a typo or small documentation fix, needs a separate issue.
-If you proceed without one, explain the scope and reason in the PR. Ask a
-maintainer when uncertain.
+Changes normally need an issue. Decide minor fixes, such as typos or small
+documentation changes, case by case. If you skip an issue, explain the scope
+and reason in the PR. Ask a maintainer when unsure.
 
-Search existing issues and pull requests first, then [open an issue][new-issue]
-when needed. When working on an issue, comment before starting to identify
-yourself and any teammates. Broader design discussion is encouraged but
-optional.
-
-Choose the bug report or feature request template in the issue chooser and
-complete its prompts. These templates request the environment, reproduction
-steps, and examples needed to understand the report. For other changes,
-open a blank issue describing the problem, proposed scope, and how the result
-can be verified. Remove credentials and private assignment or student data
-from examples and output.
-
-If you discover another problem while working, search for an existing report
-and create an issue if needed, even when your pull request is already open.
-Link related work and keep the current pull request focused.
-
-Every pull request must link any relevant issues. Comment the pull request URL
-on **each linked issue**. Repeat this for any issues linked after the pull
-request opens. Use a closing keyword only when the pull request resolves the
-issue; use a reference when it addresses only part of the work.
+- Search issues and pull requests for duplicates, then
+  [open an issue][new-issue] if needed.
+- Before starting, comment on the issue with your name and any teammates.
+  Broader design discussion is encouraged but optional.
+- Complete the bug report or feature request template. Keep reproduction
+  steps, expected behavior, and environment details in the issue; see the
+  [bug report template][bug-template]. For other changes, explain the
+  problem, scope, and verification. Remove credentials and private
+  assignment or student data from examples and output.
+- Check duplicates and open an issue for other problems you discover, even
+  if your PR is already open. Link related work and keep the PR focused.
+- Link relevant issues in the PR and comment its URL on **each linked
+  issue**, including links added later. Use closing keywords only for fully
+  resolved issues; use references for partial or related work.
 
 ## Development setup
 
@@ -110,17 +102,17 @@ uv run gatorgrade --version
 uv run gatorgrade --help
 ```
 
-The sync command creates the project environment, installs development
-dependencies, and installs this checkout in editable mode. Python source
-changes are available on the next run without reinstalling the package.
-Run sync again after dependency or package metadata changes. Keep dependency
-changes and their lockfile updates together.
+Sync creates the environment, installs development dependencies, and makes
+this checkout editable: Python edits take effect without reinstalling.
+Sync again after dependency or package metadata changes, and keep dependency
+changes with their lockfile updates.
 
-Install hooks in every new clone. They check staged changes and commit
-messages; PR titles need no prefix. See [local checks](docs/PRE_COMMIT.md)
-for setup, full checks, and the isolated hook smoke tests.
+Contributors install hooks in each new clone; agents need explicit developer
+authorization before installing them. They check staged changes and commit
+messages, not PR titles. See [local checks](docs/PRE_COMMIT.md) for setup,
+full checks, and isolated hook smoke tests.
 
-### Auto-hint and CI environment
+### CI environment and optional dependencies
 
 Documentation-only contributors do not need auto-hint dependencies. For code
 changes or to reproduce CI's dependency setup, run:
@@ -132,12 +124,10 @@ uv run --extra auto-hint task test-coverage
 ```
 
 The extra includes the remote client and local model dependencies, including
-PyTorch. Full type checking currently needs these libraries, so install the
-extra before running the complete verification suite. Package availability
-depends on Python, operating system, and architecture. Report unsupported
-combinations in an issue with the resolver output. A base installation is
-useful for other contributions, but does not verify that the extra installs
-or that a real model works on your machine.
+PyTorch, needed for full type checking. Availability depends on Python, OS,
+and architecture; report unsupported combinations with the resolver output.
+A base installation does not verify that the extra installs or that a real
+model works on your machine.
 
 ### Running the edited checkout against an assignment
 
@@ -183,8 +173,9 @@ These requirements also apply to test functions and Python tools in scripts/.
 
 - Keep source in gatorgrade/ and tests in tests/, mirroring source structure.
   Maintain behavior across the Python versions and operating systems in CI.
-- Keep text files, including Markdown, within 80 columns. Use the project's
-  Ruff formatter, configured for 79 columns, and its import ordering.
+- Use the project's Ruff formatter, configured for 79 columns, and its
+  import ordering.
+- Keep text files, including Markdown, within 80 columns.
 - Keep function bodies contiguous, without blank lines inside them.
 - Add parameter and return type hints to every function.
 - Use snake_case for functions and variables, PascalCase for classes, and
@@ -205,20 +196,23 @@ These requirements also apply to test functions and Python tools in scripts/.
   files. Use plain identifier names there.
 - Use pathlib.Path for filesystem operations, rather than string paths.
 - Catch specific exceptions and provide meaningful error messages.
-- Use Pydantic models for data validation and JSON serialization.
+- Reuse existing validation and serialization patterns. Pydantic is not a
+  declared dependency; do not assume it is available.
 - Suppress lint rules with inline noqa comments, such as
   `# noqa: PLR0913`, rather than pylint disable comments.
 
-Preserve existing CLI flags, configuration formats, and JSON/Markdown report
-behavior unless the issue calls for a compatibility change. Document intended
-breaking changes and their migration path in the pull request.
+Preserve existing CLI flags and report behavior unless the issue calls for
+a compatibility change. Document intended breaking changes and their
+migration path in the pull request.
+
+This includes configuration formats and JSON/Markdown reports.
 
 ## Testing and checks
 
-Run tasks from the repository root. For documentation-only changes, run
-Markdown checks locally and use CI for the full suite; report checks you did
-not run locally. For code changes, start with focused tests while developing,
-then run the required checks before submitting or updating a pull request:
+Run tasks from the repository root. Start with focused tests while developing,
+then run the required checks before submitting or updating a pull request.
+For documentation-only changes, run Markdown checks locally and use CI for
+the full suite; report checks you did not run locally.
 
 ```bash
 uv run task all
@@ -227,9 +221,7 @@ uv run task test-coverage
 
 The all task runs linting, type checks, randomized tests, and the direct-test
 analysis. The separate test-coverage task measures executed statements and
-branches, with a configured minimum of 95%. Aim for full function, statement,
-and branch coverage. CI also runs a separate Markdown spelling check using
-[the project spelling configuration](.github/cspell.json).
+branches.
 
 | Purpose | Command |
 | --- | --- |
@@ -247,12 +239,7 @@ and branch coverage. CI also runs a separate Markdown spelling check using
 | Comment case check | `uv run task comments-check` |
 | Fix comment case | `uv run task comments-fix` |
 
-Ruff checks snake_case function names and absolute imports. Pytest rejects
-unregistered markers instead of treating them as warnings.
-
-Type checking includes mypy, ty, pyrefly, zuban, and symbex. Linting includes
-Ruff, comment case, version consistency, and Markdown checks. Fix commands
-modify files; inspect their diffs before including changes in your PR.
+### Writing tests
 
 To run one existing test:
 
@@ -268,15 +255,15 @@ For example, the base development path can run:
 uv run task test-not-autohint
 ```
 
-A subset is useful during development; it does not replace the required
-checks. Record failures and environment limitations accurately in your PR.
-
-### Writing tests
+Focused tests do not replace the required checks. Report failures and
+environment limitations in your PR.
 
 - Name tests descriptively with a test_ prefix. Group them by the function
   they exercise and order them logically within each group.
-- Keep tests independent so randomized execution works locally and in CI.
-- Add regression tests for bug fixes, including relevant failure paths.
+- Keep tests independent and runnable locally and in CI.
+- Add or update tests for new behavior and regression cases, including
+  relevant failure paths. Do not remove failing tests to make the suite pass.
+- Verify tests also work with randomized execution.
 - Mark Hypothesis property-based tests with `@pytest.mark.propertybased`.
   The contribution guard verifies this for collected Hypothesis tests.
 - Mark tests that exercise the optional extra with `@pytest.mark.autohint`.
@@ -284,7 +271,60 @@ checks. Record failures and environment limitations accurately in your PR.
   to assert output. The shared fixture in [tests/conftest.py] also redirects
   application streams and subprocess output; account for it when debugging.
 
+### Test coverage
+
+Aim for full function, statement, and branch coverage. If complete coverage
+is not possible, explain the uncovered behavior in the PR. The configured
+minimum for executed statement and branch coverage is 95%. Do not lower the
+threshold or game coverage to pass.
+
+```bash
+uv run task test-coverage
+```
+
+The all task separately requires 75% direct-test coverage through static
+analysis. This does not replace executed statement and branch coverage; see
+[Contributor scripts](#contributor-scripts) for the distinction.
+
+### Code linting
+
+Ruff checks formatting, imports, docstrings, snake_case function names, and
+absolute imports. Pytest rejects unregistered markers instead of treating
+them as warnings.
+
+Type checking includes mypy, ty, pyrefly, zuban, and symbex. Linting includes
+Ruff, comment case, version consistency, and Markdown checks.
+
+Fix commands modify files; inspect their diffs before including changes in
+your PR.
+
+### Continuous integration
+
+[GitHub Actions][ci] runs the project's automated checks. The test matrix
+covers the Python versions and operating systems listed under
+[Prerequisites](#prerequisites). CI also checks commit headers and runs
+isolated installed-hook smoke tests.
+
+Linting, type checks, and coverage run in separate jobs. CI also runs a
+separate Markdown spelling check using
+[the project spelling configuration](.github/cspell.json).
+
+Run local checks and review CI results. Report failures and limitations;
+only claim checks passed if you ran them.
+
 ## Contributor scripts
+
+### Automated contribution policy
+
+The pull request template provides fields checked by the Contribution Policy
+workflow: problem, changes, compatibility, verification, contributors,
+linked issues or a minor-change exception, AI assistance, documentation
+changes, and limitations. Complete these fields and target main. For AI
+assistance, choose none or used; if used, identify the tool, its contribution,
+and your verification. These declarations cannot prove truth or test quality.
+
+Local hooks can be bypassed; maintainers must configure required CI checks
+and reviews in GitHub for merge-time enforcement.
 
 The Python tools in scripts/ support the standard tasks. Run them through uv
 from the repository root; prefer the configured tasks for routine checks.
@@ -315,23 +355,30 @@ Mutation testing is optional and is not part of the all task.
 
 ## Documentation and debugging
 
-Update the README when changing installation, configuration, CLI options, or
-reports. Update this guide when changing contributor workflows. Keep
-docstrings and examples consistent with behavior. Documentation-only changes
-must also pass Markdown linting and CI spelling checks. Keep specialized
-mutation instructions in their existing guide and link to them here.
+Update the README for installation, configuration, CLI, or report changes;
+update this guide for contributor workflow changes. Keep docstrings and
+examples accurate. Documentation-only changes still need Markdown linting
+and the applicable CI documentation checks.
+Keep specialized mutation instructions in their existing guide and link to
+them here.
 
-For debugging, start with the smallest failing test or assignment. Use
-GatorGrade with --version and --verbose to inspect the environment and
+For debugging, start with the smallest failing test or disposable assignment.
+Use GatorGrade with --version and --verbose to inspect the environment and
 configuration. Record the working directory: selecting a configuration by
 path does not automatically relocate the assignment's files.
 
-For manual verification, describe the configuration, input files, exact
-command, expected output, actual output, OS, and Python version. Exercise both
-passing and failing behavior where relevant. Run against a disposable copy
-when changing files to trigger a check, and remove credentials from output.
+Record manual checks with:
+
+- Working directory, configuration, input files, and exact command.
+- Expected and actual output, exit code, OS, and Python version.
+- Passing and failing cases where relevant, including JSON report output.
+
+Use disposable files to trigger checks. Remove credentials and private data
+from shared logs.
 
 ## Making a pull request
+
+Follow [GitHub Flow][flow] and the [pull request template][pr-template]:
 
 1. Create or find an issue when required; comment with your name and
    teammates. For a minor change without an issue, explain why in the PR.
@@ -339,41 +386,41 @@ when changing files to trigger a check, and remove credentials from output.
 1. Add tests and documentation, then run the required checks.
 1. Follow the [commit message standards](docs/COMMIT_MESSAGES.md), based on
    Conventional Commits 1.0.0, including body and breaking-change footers.
-1. Push your branch and open a pull request targeting
-   the main branch of GatorEducator/gatorgrade. Use a draft if work is incomplete.
-1. Complete the [pull request template](.github/pull_request_template.md).
-   Explain the problem, resulting behavior, compatibility changes, and tests.
-   List contributors and link every relevant issue. Use `Closes #123` only
-   for an issue the PR fully resolves.
+1. Push your branch and open a pull request targeting the main branch of
+   GatorEducator/gatorgrade. Use a draft if work is incomplete.
+1. Complete every applicable template field. Explain the problem, resulting
+   behavior, compatibility changes, verification commands and results, and
+   anything you could not test. List contributors and link every relevant
+   issue. Use `Closes #123` only for an issue the PR fully resolves.
 1. Comment the PR URL on every linked issue, including later additions.
 1. Respond to review feedback and rerun relevant checks after changes.
 
-When consolidating documentation, state in the PR description which sections
-were moved or removed and where their replacements live. Preserve useful
-links and entry points so readers can still find the information.
+When reorganizing documentation, list moved or removed sections and their
+new locations in the PR description. Preserve useful links and entry points;
+adding a guide does not require deleting other documentation.
 
 ## Reviewing a pull request
 
-Reviewing is a contribution even if you do not author the change. Read the
-linked issue, description, and diff, then check out the proposed branch. One
-option, if you use the [GitHub CLI][github-cli], is:
+Reviews are contributions too. Read the linked issue, description, and diff,
+then check out the branch. With the [GitHub CLI][github-cli]:
 
 ```bash
 gh pr checkout 123 --repo GatorEducator/gatorgrade
 ```
 
-Save existing work before switching branches. Run uv sync --dev, adding the
-auto-hint extra when appropriate, then focused tests and the required checks.
-Test user-visible changes against an assignment. Report the commands you ran,
-results, OS, and Python version, and identify anything you could not verify.
+Save existing work before switching branches. Follow
+[Base development environment](#base-development-environment) and
+[CI environment and optional dependencies][ci-environment]
+to set up the checkout, then run focused tests and required checks. Test
+user-visible changes against a disposable assignment. Report commands,
+results, OS, Python version, and anything you could not verify.
 
-Submit a GitHub review with Comment, Approve, or Request changes. A favorable
-conversation comment does not count as an approval. Approve only when you are
-willing to endorse the change based on your review and verification.
+Submit a GitHub review: Comment, Approve, or Request changes. A favorable
+conversation comment is not approval. Approve only changes you can endorse
+based on your review and verification.
 
-Authors should address human and automated review comments. Verify suggested
-changes; if a suggestion is incorrect, explain why with evidence. Summarize
-how requested changes were addressed and request another review when ready.
+Address human and automated feedback. Verify suggestions; explain incorrect
+ones with evidence. Summarize your updates and request another review.
 
 ## Merging and releasing
 
@@ -382,19 +429,17 @@ one team member and one member of the Integration team, such as a senior
 GatorGrader team member. Outside contributors can ask in the PR comments for
 help identifying the appropriate reviewers.
 
-Maintainers handle merging and publication. A merge does not guarantee an
-immediate package release. Keep using the editable checkout to test changes
-that have not reached a published version. Detailed release procedures are
-maintainer documentation and are outside this guide.
+Maintainers merge and publish releases. A merge does not mean a release is
+immediately available; use the editable checkout until then. Publishing
+workflows and detailed release procedures remain in maintainer documentation.
 
 ## Getting help and external resources
 
-Ask questions about a change in its issue or pull request so others can find
-the discussion. For general contribution questions, search existing issues
-and open an issue if needed. Report conduct concerns using the contact in the
-[Code of Conduct](CODE_OF_CONDUCT.md).
+Ask change-specific questions in the issue or PR. For general help, search
+existing issues before opening one. Report conduct concerns using the
+contact in the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-- [GatorGrade README](README.md)
+- [Project README](README.md)
 - [uv installation][uv-install]
 - [uv project documentation][uv-projects]
 - [Git documentation][git]
@@ -403,8 +448,12 @@ and open an issue if needed. Report conduct concerns using the contact in the
 - [GitHub pull request reviews][rv]
 - [Mutation testing](scripts/MUTATION.md)
 
+[bug-template]: .github/ISSUE_TEMPLATE/bug_report.md
+[ci]: .github/workflows/main.yml
+[ci-environment]: #ci-environment-and-optional-dependencies
 [first]: https://github.com/GatorEducator/gatorgrade/labels/good-first-issue
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/
+[flow]: https://docs.github.com/en/get-started/using-github/github-flow
 [gg]: https://github.com/GatorEducator/gatorgrader/blob/master/CONTRIBUTING.md
 [git]: https://git-scm.com/doc
 [github-cli]: https://cli.github.com/manual/gh_pr_checkout
@@ -413,6 +462,7 @@ and open an issue if needed. Report conduct concerns using the contact in the
 [issues]: https://github.com/GatorEducator/gatorgrade/issues
 [new-issue]: https://github.com/GatorEducator/gatorgrade/issues/new/choose
 [pulls]: https://github.com/GatorEducator/gatorgrade/pulls
+[pr-template]: .github/pull_request_template.md
 [pytest]: https://docs.pytest.org/en/stable/
 [repository]: https://github.com/GatorEducator/gatorgrade
 [scripts/ccl.py]: scripts/ccl.py

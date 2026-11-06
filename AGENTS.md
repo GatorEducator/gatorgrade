@@ -4,201 +4,185 @@ This document provides guidelines for AI agents contributing to this repository.
 
 ## Overview of Instructions
 
-- **Always use `uv`:** This project uses `uv` for all dependency management,
-  virtual environments, and task running. Do not use `pip` or `venv` directly.
-- **Follow all guidelines:** This document contains the complete set of
-  guidelines from `AGENTS.md` and `docs/plan.md`. You must follow them strictly.
-- **Commit messages:** Follow the [commit message standards](docs/COMMIT_MESSAGES.md).
-- **Local hooks:** After setup, run `uv run task hooks-install` in each
-  clone. Use `uv run task hooks-check` to check all files and
-  `uv run task test-hooks` for isolated commit rejection/recovery tests.
-  Hooks check commit messages, not PR titles. Linked checkouts share hooks.
-- **Verify your changes:** Before committing any changes, you must run all
-  linters and tests to ensure your changes are correct and follow the project's
-  style. Use `uv run task all`.
-- **Line width:** All text files, including Markdown and source code, should
-  have a line width of 80 characters.
-- **Permission to run commands:** You have permission to run all commands in
-  this file to verify their functionality.
-- **Incremental changes:** Make small, incremental changes. This makes it easier
-  to review your work and catch errors early.
-- **Communicate clearly:** When you propose changes, explain what you've done
-  and why.
-- **Create and Follow a TODO List**: Always create a TODO list and then
-  follow that list. Do not stop until the tools that you call make it clear
-  that you have completed all the tasks in the TODO list.
+- **Always use `uv`:** Use uv for all dependency management, virtual
+  environments, and task running. Do not use pip or venv directly.
+- **Follow all guidelines:** Follow this file and applicable nested AGENTS.md.
+  Routine agent work does not require reading CONTRIBUTING.md; consult it
+  when editing contributor guidance or preparing issues, PRs, and reviews.
+- **Verify your changes:** Before handoff or any authorized commit, run all
+  linters and tests with `uv run task all`; report failures and limitations.
+- **Line width:** All text files should have a line width of 80 characters.
+- **Permission to run commands:** You may run verification commands here;
+  this does not authorize publication, hook installation, or Git mutations.
+- **Incremental changes:** Make small, incremental changes; avoid unrelated
+  repairs. Inspect git status and diffs first and preserve existing work.
+- **Communicate clearly:** Explain what changed and why.
+- **Create and Follow a TODO List:** Always create and follow a TODO list.
+  Use tool results to verify completion; report blockers honestly.
 
 ## Notification Instructions
 
-- The user has given permission to use the `notify-send` command to signal task
-  completion. Here is an example of the command:
+Send a desktop notification for questions, feedback requests, and completion.
+Standing permission covers notification calls, not installation. Adapt the
+message; report unavailable tools or desktop access. See
+[AI Agent Permissions](README.md#ai-agent-permissions).
 
-  ```bash
-  notify-send "Question from Coding Agent" \
-    "Please clarify how to complete the testing task."
-  ```
+Linux:
 
-- The user wants a `notify-send` notification whenever I ask a question.
+```bash
+notify-send "Coding agent" "Task complete or feedback needed."
+```
 
-- Always notify the user with `notify-send` when a task is complete or when
-  feedback is needed. I have standing permission to use the notification tool.
+macOS:
 
-- You should also use the following command to notify the user when you are
-  finished with a task or need further help:
+```bash
+osascript -e 'display notification "Task complete." with title "Agent"'
+```
 
-  ```bash
-  timeout 2 zellij pipe -- \
-    "zjstatus::notify::󰵰 Agent finished. This is really fun. "
-  ```
+Windows, in PowerShell with BurntToast installed (process-only policy bypass):
 
-- Note that this command will only display in the current Zellij session.
-  Please also note that you need to add a space at the end of the notification.
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command {
+  Import-Module BurntToast
+  New-BurntToastNotification -Text "Agent", "Task complete."
+}
+```
 
-- You should use both notification methods as appropriate, making sure that the
-  Zellij command is always prefaced with a timeout of 2 seconds.
+One-time setup in a regular PowerShell terminal, only with authorization:
+
+```powershell
+Install-Module -Name BurntToast -Scope CurrentUser
+```
+
+Optionally, inside Zellij with the tools available, also send a session
+notification. It does not replace the desktop notification. Keep the
+two-second timeout and trailing message space; no special font is needed.
+
+```bash
+timeout 2 zellij pipe -- \
+  "zjstatus::notify::Agent finished. This is really fun. "
+```
 
 ## Build, Lint, and Test Commands
 
-- **Install dependencies:** `uv sync --dev`
-- **Run all tasks:** `uv run task all`
+Run from the repository root; review diffs after fix commands.
+
+- **Install dependencies:** `uv sync --dev`; for code/full type checks use
+  `uv sync --dev --extra auto-hint`. Keep dependency and lock updates together.
+- **Run all tasks:** `uv run task all`; after syncing the extra, use
+  `uv run --no-sync task all` to avoid re-syncing.
 - **Run all linters:** `uv run task lint`
 - **Format code:** `uv run task format` (check), `uv run task format-fix` (fix)
 - **Lint code:** `uv run task check`
-- **Type check:** `uv run task typecheck` (runs mypy, ty, pyrefly, and zuban),
-  or individual checkers: `uv run task mypy`, `uv run task ty`,
-  `uv run task pyrefly`, `uv run task symbex`
+- **Type check:** `uv run task typecheck` (mypy, ty, pyrefly, zuban, symbex)
 - **Test all:** `uv run task test`
-- **Test with coverage:** `uv run task test-coverage`
-- **Test variants:** `uv run task test-not-property`,
+- **Test with coverage:** Also run `uv run task test-coverage`; all includes
+  static direct-test coverage, not executed statement/branch coverage.
+- **Test variants:** `uv run task test-not-propertybased`,
   `uv run task test-not-random`, `uv run task test-silent`
-- **Run a single test:** `pytest tests/test_file.py::test_function` or
-  `uv run pytest tests/test_file.py::test_function`
-- **Markdown lint:** `uv run task markdownlint`
-- **Comment check:** `uv run task comments-check` (check) or
-  `uv run comment-fix` (auto-fix)
+- **Run a focused test:** `uv run pytest tests/input/test_checks.py`
+- **Markdown lint:** `uv run task rumdl-check`
+- **Comment check:** `uv run task comments-check` (check),
+  `uv run task comments-fix` (fix)
+- **Local hooks:** Install only with developer authorization. Check working
+  files with `uv run pre-commit run --files` followed by explicit paths;
+  never implicitly stash. Hooks check commit messages, not PR titles.
+  Smoke tests export the Git index, not the working tree; do not stage to
+  test them. See [local checks](docs/PRE_COMMIT.md) for details.
 
 ## Code Requirements
 
-All the Python code should follow these standards:
+All Python code, including tests, should follow these standards:
 
-- **Function bodies:** No blank lines within function bodies - keep code
-  contiguous.
-- **Docstrings:** Single-line docstrings starting with a capital letter, ending
-  with a period. Follow this for new files. In existing files, preserve the
-  established docstring style even if it is multi-line with `Args` sections.
-- **Comments:** Other comments start with a lowercase letter; preserve existing
-  comments during refactoring. The only exception is when the first word of the
-  comment is a proper noun (e.g., `GatorGrader`, `GatorGrade`, `GitHub`) or an
-  identifier that must start with a capital letter (e.g., `GITHUB_ENV`).
-- **Sentences**: When writing sentences in the comments, only use one space
-  between the period and the following sentence.
-- **No backticks in comments:** Do not use backticks in comments, docstrings,
-  or any other prose text within source code files. Backticks are reserved for
-  Markdown formatting in `.md` files only. If you need to refer to a code
-  identifier, write it plainly (e.g., "transformers" not "`transformers`").
-- **Imports:** Group imports in this order: standard library, third-party,
-  local imports. Use absolute imports (`from gatorgrade.module import <name>`).
-  Finally, make sure that all imports are placed at the top of the file. Do not
-  place imports into the middle of a file or even at the start of a function or
-  class.
-- **Formatting:** Use `ruff format` (line length 79 for lint, 88 for isort);
-  trailing commas enabled or the corresponding task called `uv run task ruff-format`.
-- **Types:** All functions must have type hints for parameters and return
-  values.
-- **Naming:** snake_case for functions/variables, PascalCase for classes,
-  UPPER_SNAKE_CASE for constants.
-- **Constants over literals:** All hard-coded strings, integers, and floats
-  must be extracted into named constants (UPPER_SNAKE_CASE) at the top of
-  the module. Use the constant everywhere the value is needed, not the raw
-  literal.
-- **File operations:** Use `pathlib.Path` for all filesystem operations, never
-  string paths.
-- **Error handling:** Use specific exceptions, not generic `Exception`; provide
-  meaningful error messages.
+- **Function bodies:** No blank lines within function bodies; keep contiguous.
+- **Docstrings:** Single-line, capitalized, ending with a period in new files.
+  In existing files, preserve established styles, including multi-line Args.
+- **Comments:** Start lowercase except proper nouns or identifiers such as
+  GatorGrade or GITHUB_ENV; preserve existing comments during refactoring.
+- **Sentences:** Use one space between sentences in comments.
+- **No backticks in comments:** No backticks in comments, docstrings, or other
+  source prose; write identifiers plainly. Markdown formatting belongs in .md.
+- **Imports:** Group standard library, third-party, then local imports.
+  Use absolute imports such as `from gatorgrade.module import name`;
+  put all imports at the top, not inside functions or classes.
+- **Formatting:** Use configured Ruff formatting (79 columns, trailing
+  commas), e.g. `uv run task ruff-format`; the separate isort setting is 88.
+- **Types:** All functions need parameter and return type hints.
+- **Naming:** snake_case functions/variables, PascalCase classes,
+  UPPER_SNAKE_CASE constants.
+- **Constants over literals:** Extract hard-coded strings, integers, and
+  floats into named module-top constants; reuse them instead of raw literals.
+- **File operations:** Use pathlib.Path for filesystem operations.
+- **Error handling:** Catch specific exceptions, not generic Exception;
+  provide meaningful messages. Never add secrets or debugging leftovers.
 
 ## Project Structure Requirements
 
-- Source code in `gatorgrade/` directory.
-- Tests in `tests/` directory with matching structure to source.
-- Use `uv` for dependency management, virtual environments, and task running.
-- Support Python 3.12, 3.12, 3.13, and 3.14 on MacOS, Linux, and Windows.
-- Use Pydantic models for data validation and JSON serialization.
+- Source code belongs in gatorgrade/; tests mirror source under tests/.
+- Use uv for dependency management, environments, and task running.
+- Preserve compatibility with Python 3.11–3.14 on macOS, Linux, and Windows
+  (CI); metadata also permits 3.10, which CI does not verify.
+- Reuse existing validation and JSON serialization; Pydantic is not a
+  declared dependency. Preserve CLI, configuration, and report compatibility
+  unless the request calls for a change; document intended migration steps.
 
 ## Testing Requirements
 
-All test cases should follow these standards:
-
-- Since a test case is a Python function, it should always follow the code
-  requirements above.
-- Test cases should have a descriptive name that starts with `test_`.
-- Test cases should be grouped by the function they are testing.
-- Test cases should be ordered in a way that makes sense to the reader.
-- Test cases should be independent of each other so that they can be run in a
-  random order without affecting the results or each other.
-- Test cases must work both on a local machine and in a CI environment.
-- Test cases should aim to achieve full function, statement, and branch
-  coverage.
-- Property-based tests, such as those that use the `hypothesis` package, must be
-  marked with `@pytest.mark.propertybased`.
-- Test cases should not produce any console output.
+- Tests follow the Python code requirements above.
+- Use descriptive test_ names; group by function and order logically.
+- Tests must be independent, support random ordering, and work locally and
+  in CI. Add behavior, regression, and relevant failure-path tests.
+- Aim for full function, statement, and branch coverage. Preserve the 95%
+  executed and 75% direct-test floors; never lower or game measurement.
+- Mark Hypothesis tests with `@pytest.mark.propertybased`; use the autohint
+  marker for auto-hint tests. Never remove failing tests merely to pass.
+- Tests should not produce console output.
 
 ## Making Changes
 
-1. **Understand:** Thoroughly understand the request and the relevant codebase.
-   Use the available tools to explore the code.
-1. **Plan:** Formulate a clear plan before making any changes.
-1. **Implement:** Make small, incremental changes.
-1. **Verify:** Run `uv run task all` to ensure your changes are correct and
-   follow the project's style.
-1. **Commit:** The software developer will always commit the changes.
-1. **Rules**: Always follow the rules in this file and in the `docs/plan.md`
-   file.
-1. **Completion**: When you are finished with tasks, please summarize what tasks
-   you completed, how you completed them, the challenges you faced, how you
-   overcame them, and the rules that you followed during completion of the tasks.
+1. **Understand:** Explore the request and relevant code. Follow the
+   [Code of Conduct](CODE_OF_CONDUCT.md); review generated work and verify
+   APIs/references against sources. Claim only verification actually done.
+1. **Plan:** Create a clear plan before changing files.
+1. **Implement:** Make small changes; update affected docstrings, examples,
+   README, and contributor documentation. Ask before adding runtime
+   dependencies, changing CI, renaming public APIs, or removing checks/tests
+   unless explicitly requested.
+1. **Verify:** Run `uv run task all` and separate executed coverage. Fix
+   introduced failures and report existing ones. For user-visible changes,
+   test a disposable assignment against the edited checkout and verify its
+   import origin; record directory, inputs/configuration, command, expected
+   and actual output, exit code, OS, and Python version, including relevant
+   passing/failing JSON cases. Redact credentials and private student data.
+1. **Commit:** The software developer commits. Do not stage, commit, create
+   branches, switch checkouts, push, or publish without explicit authorization.
+   Follow [commit standards](docs/COMMIT_MESSAGES.md); disclose substantial
+   AI assistance, known model/version, and actual verification so the
+   developer can include the required body and Assisted-by trailer.
+1. **Rules:** Changes normally need an issue: check duplicates, prepare an
+   issue/team comment before starting, or justify a minor-change exception
+   in the PR; ask a maintainer when unsure. Complete the PR template, target
+   main, link relevant issues, and prepare the PR URL comment for every
+   linked issue, including later links. Draft communication unless publishing
+   is authorized. Before merge, require passing CI and a team member plus
+   Integration team review; use formal reviews, not conversation approvals.
+1. **Completion:** Summarize completed tasks, methods, challenges, applicable
+   rules, verification commands/results, environment, and limitations.
 
 ## Additional Notes for the Coding Agent
 
-Note: This file is specifically for coding agents and this section can be used
-by the coding agent to add additional details about this project that would
-be helpful for the agent to know when it is run again. Every time a coding
-agent finishes a task, it should add notes here as it deems appropriate.
-The coding agent should write the notes as a Markdown list.
+Append durable project notes as a Markdown list when useful, not routine logs.
 
-- The `ccl` (Comment Case Linter) tool is installed as a project entry
-  point in `gatorgrade/comments_checker.py`. It uses Tree-sitter to parse
-  Python files into a CST and checks that comments start with lowercase
-  letters (with proper-noun exceptions). Run `uv run ccl check` to check
-  and `uv run ccl fix` to auto-fix. The task `uv run task comments` also
-  runs `ccl check`.
-- The `ccl` command replaced the earlier `scripts/check_comments_lowercase.py`
-  approach. The old script file has been removed.
-- `tree-sitter` and `tree-sitter-python` are now production dependencies
-  because `ccl` is an installed entry point.
-- Proper nouns allowed in comments: `CountCommits`, `GatorGrade`,
-  `GatorGrader`, `GatorGraderCheck`, `GitHub`, `GITHUB_ENV`,
-  `GITHUB_STEP_SUMMARY`, `JSON`, `MatchFileFragment`, `ShellCheck`,
-  `STDOUT`, `STDERR`, `TODO`, `FIXME`, `NOTE`. "Typo" is NOT a proper
-  noun and was removed from the exceptions list.
-- Suppress lint rules with inline `# noqa: PLR...` comments (e.g.,
-  `# noqa: PLR0913`), not `# pylint: disable`.
-- Weight is always `int` throughout the codebase (refactored from
-  `int | float`). Validate with `validate_positive_nonzero_int()` in
-  `gatorgrade/input/checks.py`.
-- `generate_checks()` in `command_line_generator.py` validates all
-  check data upfront and raises `ValueError` on any invalid weight or
-  outputlimit (fail-fast). It no longer creates error `ShellCheck`
-  objects for misconfigured checks.
-- `parse_config()` returns `(checks, error_message)`. Both YAML parse
-  errors and validation errors are returned as the error string, which
-  `main.py` displays with `Rule`-based formatting.
-- `EXIT_MESSAGE` is defined in `gatorgrade/main.py` and is the string
-  displayed below error details in configuration error boxes.
-- **Never run `git stash`:** This command is destructive and risks losing
-  uncommitted work. If you need to temporarily set aside changes, create a
-  commit or use `git worktree` instead. The developer will handle any
-  rebasing or history cleanup.
-- **Creativity is welcome:** Every once in a while, feel free to slip
-  in a bit of flair like a pun, a limerick, a dad joke, a haiku about
-  test cases, or anything else that might make the developer smile.
-  Don't force it; let it come naturally when the moment feels right.
+- **Comment tool:** [scripts/ccl.py](scripts/ccl.py) replaces the old script
+  and installed ccl entry point. Use comments-check/comments-fix above;
+  its proper-noun allowlist is authoritative. Tree-sitter packages are dev
+  dependencies. Use inline noqa, not pylint disable, for lint suppressions.
+- **Validation:** Weights are positive nonzero integers, not booleans; retain
+  validate_positive_nonzero_int in gatorgrade/input/checks.py and fail-fast
+  generate_checks validation of weights/outputlimit. parse_config returns
+  checks/error_message; main.py displays errors and EXIT_MESSAGE.
+- **Never run `git stash`:** Preserve existing tracked, untracked, and staged
+  work. Use a separate worktree or developer-authorized commit if necessary;
+  the developer handles rebasing and cleanup.
+- **Creativity is welcome:** Occasional natural flair is optional.
+- Keep documented task names and inline local file references valid.

@@ -33,12 +33,12 @@ EXPECTED_PERCENTAGE = 100
 def patch_datetime_now(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fixture to patch datetime.datetime.now() to return a fixed time."""
 
-    class mydatetime:
+    class FixedDatetime:
         @classmethod
         def now(cls) -> datetime.datetime:
             return FAKE_TIME
 
-    monkeypatch.setattr(datetime, "datetime", mydatetime)
+    monkeypatch.setattr(datetime, "datetime", FixedDatetime)
 
 
 def test_print_historical_filter_summary_displays_report_count(
