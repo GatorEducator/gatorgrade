@@ -7,7 +7,7 @@ import rich
 import typer
 from rich.rule import Rule
 
-from gatorgrade.input.checks import validate_positive_nonzero_int
+from gatorgrade.input.checks import validate_timeout_value
 from gatorgrade.shell_runner import DEFAULT_TIMEOUT_SECONDS, run_shell_command
 
 # define the exit codes for the individual
@@ -40,7 +40,7 @@ def run_setup(front_matter: Dict[str, Any]) -> None:
         # every setup command uses the front matter timeout, falling back
         # to the same default that shell checks use
         timeout = front_matter.get(SETUP_TIMEOUT_KEY, DEFAULT_TIMEOUT_SECONDS)
-        error = validate_positive_nonzero_int(timeout, SETUP_TIMEOUT_KEY)
+        error = validate_timeout_value(timeout, SETUP_TIMEOUT_KEY)
         if error:
             raise ValueError(error)
         # run commands first, capturing all output and tracking the first failure

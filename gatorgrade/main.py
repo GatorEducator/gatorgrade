@@ -45,6 +45,7 @@ from gatorgrade.input.parse_config import (
     resolve_config_path,
 )
 from gatorgrade.output.output import run_checks
+from gatorgrade.shell_runner import DEFAULT_TIMEOUT_SECONDS
 from gatorgrade.report_history import (
     DEFAULT_HISTORY_REPORT_COUNT,
     DEFAULT_HISTORY_SIZE_MIB,
@@ -256,7 +257,9 @@ def _print_verbose_info(  # noqa: PLR0913
     config.add(f"Config file: {config_path}")
     config.add(f"Config dir: {config_dir}")
     config.add(f"Output limit: {output_limit}")
-    config.add(f"Timeout: {300 if timeout is None else timeout}")
+    config.add(
+        f"Timeout: {DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout}"
+    )
     config.add(f"Baseline weight: {baseline_weight}")
     config.add(f"Diagnostics: {show_diagnostics}")
     config.add(f"Progress: {progress_bar}")

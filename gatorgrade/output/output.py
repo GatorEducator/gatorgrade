@@ -107,6 +107,8 @@ HINT_KEY = "hint"
 WEIGHT_KEY = "weight"
 OUTPUTLIMIT_KEY = "outputlimit"
 TIMEOUT_KEY = "timeout"
+TIMED_OUT_KEY = "timed_out"
+DURATION_KEY = "duration_seconds"
 CHECK_ID_KEY = "check_id"
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -286,11 +288,15 @@ def _run_shell_check(
     outcome = run_shell_command(
         check.command, timeout=effective_timeout, merge_stderr=True
     )
-    passed = not outcome.timed_out and outcome.returncode == 0
+    passed = (
+        not outcome.timed_out
+        and outcome.start_error is None
+        and outcome.returncode == 0
+    )
     output_text = outcome.stdout.strip()
-    # put the timeout message first so that it is visible even when the
-    # partial output of the command is truncated
-    if outcome.timed_out:
+    if outcome.start_error:
+        output_text = outcome.start_error
+    elif outcome.timed_out:
         timeout_line = TIMEOUT_DIAGNOSTIC_FMT.format(effective_timeout)
         output_text = (
             timeout_line + NEWLINE + output_text
@@ -322,6 +328,9 @@ def _run_shell_check(
         check_id=check.check_id,
         timeout=effective_timeout,
         timed_out=outcome.timed_out,
+        duration_seconds=outcome.elapsed_seconds,
+        output_truncated=outcome.output_truncated,
+        start_error=outcome.start_error,
     )
 
 
@@ -480,6 +489,10 @@ def create_report_json(  # noqa: PLR0913
             results_json[OUTPUTLIMIT_KEY] = checkResults[i].outputlimit
             if checkResults[i].timeout is not None:
                 results_json[TIMEOUT_KEY] = checkResults[i].timeout
+            if checkResults[i].timed_out is not None:
+                results_json[TIMED_OUT_KEY] = checkResults[i].timed_out
+            if checkResults[i].duration_seconds is not None:
+                results_json[DURATION_KEY] = checkResults[i].duration_seconds
             if checkResults[i].path:
                 results_json[PATH_KEY] = checkResults[i].path
             if not checkResults[i].passed:

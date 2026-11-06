@@ -34,6 +34,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         check_id: str | None = None,
         timeout: int | None = None,
         timed_out: bool = False,
+        duration_seconds: float | None = None,
+        output_truncated: bool = False,
+        start_error: str | None = None,
     ):
         """Construct a CheckResult.
 
@@ -63,6 +66,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
                 run, or None for checks that do not run a command.
             timed_out: Whether the shell check was stopped because it
                 ran longer than its timeout.
+            duration_seconds: The number of seconds the shell check took to run.
+            output_truncated: Whether the captured output was shortened.
+            start_error: The reason a shell command could not be started.
 
         """
         self.passed = passed
@@ -81,6 +87,9 @@ class CheckResult:  # pylint: disable=too-few-public-methods
         self.check_id = check_id
         self.timeout = timeout
         self.timed_out = timed_out
+        self.duration_seconds = duration_seconds
+        self.output_truncated = output_truncated
+        self.start_error = start_error
 
     def display_result(self, show_diagnostic: bool = False) -> str:
         """Return check's passed or failed status, description, and, optionally, diagnostic message.
@@ -134,7 +143,10 @@ class CheckResult:  # pylint: disable=too-few-public-methods
             f"outputlimit={self.outputlimit}, "
             f"hint={self.hint}, "
             f"timeout={self.timeout}, "
-            f"timed_out={self.timed_out})"
+            f"timed_out={self.timed_out}, "
+            f"duration_seconds={self.duration_seconds}, "
+            f"output_truncated={self.output_truncated}, "
+            f"start_error={self.start_error})"
         )
 
     def __str__(self) -> str:
