@@ -183,6 +183,7 @@ exclude_lines = [
 markers = [
     "propertybased: property-based tests using hypothesis",
     "autohint: tests that exercise the optional auto-hint extra",
+    "timing: tests that measure real elapsed time and timing behavior",
 ]
 
 [tool.ruff]

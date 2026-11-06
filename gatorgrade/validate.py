@@ -25,6 +25,7 @@ from typing import Optional, Tuple
 
 from click import BadParameter
 
+from gatorgrade.input.checks import validate_timeout_value
 from gatorgrade.input.filter import (
     DEFAULT_FILTER_BY,
     DEFAULT_FILTER_FUZZY_THRESHOLD,
@@ -90,9 +91,10 @@ def validate_output_limit(value: int | None) -> int | None:
 
 
 def validate_timeout(value: int | None) -> int | None:
-    """Validate shell timeouts are at least 1 second when provided."""
-    if value is not None and value < 1:
-        raise BadParameter("Timeout must be at least 1.")
+    """Validate shell timeouts are within the supported range."""
+    error = validate_timeout_value(value, "timeout")
+    if error is not None:
+        raise BadParameter(error)
     return value
 
 

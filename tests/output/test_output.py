@@ -14,9 +14,15 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from gatorgrade.input.checks import GatorGraderCheck, ShellCheck
+from gatorgrade.input.parse_config import parse_config
 from gatorgrade.output import output
 from gatorgrade.output.check_result import CheckResult
-from gatorgrade.shell_runner import DEFAULT_TIMEOUT_SECONDS, CommandOutcome
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+    CommandOutcome,
+)
+from tests.helpers import flatten
 
 ANSI_ESCAPE_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 FAKE_TIME = datetime.datetime(2022, 1, 1, 10, 30, 0)
@@ -3130,3 +3136,121 @@ def test_create_markdown_report_shows_timeout_for_failing_check() -> None:
     markdown = output.create_markdown_report_file(report)
     assert f"- **timeout:** {DEFAULT_TIMEOUT_SECONDS}" in markdown
     assert "Command timed out after 300 second(s)" in markdown
+
+
+@pytest.mark.parametrize(
+    ("check_timeout", "cli_timeout", "expected"),
+    [
+        (None, None, DEFAULT_TIMEOUT_SECONDS),
+        (None, CLI_TIMEOUT, CLI_TIMEOUT),
+        (CHECK_TIMEOUT, None, CHECK_TIMEOUT),
+        (CHECK_TIMEOUT, CLI_TIMEOUT, CHECK_TIMEOUT),
+        (1, CLI_TIMEOUT, 1),
+        (1, MAX_TIMEOUT_SECONDS, 1),
+        (MAX_TIMEOUT_SECONDS, 1, MAX_TIMEOUT_SECONDS),
+    ],
+)
+def test_resolve_timeout_precedence_table(
+    check_timeout: int | None, cli_timeout: int | None, expected: int
+) -> None:
+    """Test that a check, then the command line, then the default decides."""
+    assert output._resolve_timeout(check_timeout, cli_timeout) == expected
+
+
+def _record_timeouts(
+    recorded: dict[str, float],
+) -> Any:
+    """Return a stand-in runner that records the timeout of each command."""
+
+    def fake_runner(command: str, **kwargs: Any) -> CommandOutcome:
+        recorded[command] = kwargs["timeout"]
+        return CommandOutcome(
+            command=command,
+            returncode=0,
+            stdout="",
+            stderr="",
+            timed_out=False,
+            timeout=kwargs["timeout"],
+        )
+
+    return fake_runner
+
+
+@pytest.mark.parametrize(
+    ("cli_timeout", "expected_unset"),
+    [(None, DEFAULT_TIMEOUT_SECONDS), (CLI_TIMEOUT, CLI_TIMEOUT)],
+)
+def test_timeout_precedence_from_config_file_to_runner(
+    tmp_path: Path, cli_timeout: int | None, expected_unset: int
+) -> None:
+    """Test that the right timeout reaches the runner from a real config file."""
+    config = tmp_path / "gatorgrade.yml"
+    config.write_text(
+        "- description: Own longer timeout\n"
+        f"  timeout: {CHECK_TIMEOUT}\n"
+        "  command: own-longer\n"
+        "- description: Own shorter timeout\n"
+        "  timeout: 1\n"
+        "  command: own-shorter\n"
+        "- description: No timeout\n"
+        "  command: no-timeout\n",
+        encoding="utf-8",
+    )
+    checks, error = parse_config(config)
+    assert error is None
+    recorded: dict[str, float] = {}
+    report = (None, None, None)
+    with patch(
+        "gatorgrade.output.output.run_shell_command",
+        side_effect=_record_timeouts(recorded),
+    ):
+        output.run_checks(
+            checks,
+            report,  # type: ignore
+            no_progress_bar=True,
+            timeout=cli_timeout,
+        )
+    assert recorded == {
+        "own-longer": CHECK_TIMEOUT,
+        "own-shorter": 1,
+        "no-timeout": expected_unset,
+    }
+
+
+@pytest.mark.parametrize("no_progress_bar", [True, False])
+def test_run_checks_keeps_going_after_a_timed_out_check(
+    no_progress_bar: bool, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test that the checks after a timed-out check still run and are counted."""
+    checks: List[Union[ShellCheck, GatorGraderCheck]] = [
+        ShellCheck(description="First", command="first"),
+        ShellCheck(description="Middle", command="middle"),
+        ShellCheck(description="Last", command="last"),
+    ]
+    commands: List[str] = []
+
+    def fake_runner(command: str, **kwargs: Any) -> CommandOutcome:
+        commands.append(command)
+        return CommandOutcome(
+            command=command,
+            returncode=None if command == "middle" else 0,
+            stdout="",
+            stderr="",
+            timed_out=command == "middle",
+            timeout=kwargs["timeout"],
+        )
+
+    report = (None, None, None)
+    with patch(
+        "gatorgrade.output.output.run_shell_command", side_effect=fake_runner
+    ):
+        result = output.run_checks(
+            checks,
+            report,  # type: ignore
+            no_progress_bar=no_progress_bar,
+        )
+    assert result is False
+    assert commands == ["first", "middle", "last"]
+    out = flatten(ANSI_ESCAPE_PATTERN.sub("", capsys.readouterr().out))
+    assert "- Checks: 2/3 (67%)" in out
+    assert "Command timed out after 300 second(s)" in out

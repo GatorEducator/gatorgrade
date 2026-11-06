@@ -26,6 +26,7 @@ from gatorgrade.shell_runner import (
     decode_output,
     run_shell_command,
 )
+from tests.helpers import python_command
 
 PYTHON = f'"{sys.executable}"'
 MIXED_CMD = (
@@ -116,14 +117,9 @@ print("done", flush=True)
 """
 
 
-def _python_command(code: str) -> str:
-    """Return a shell command that runs Python code with this interpreter."""
-    return f'{PYTHON} -c "{code}"'
-
-
 def _sleep_command(seconds: float) -> str:
     """Return a shell command that sleeps and then prints a final message."""
-    return _python_command(
+    return python_command(
         f"import time; time.sleep({seconds}); print('finished')"
     )
 
@@ -767,14 +763,14 @@ def test_run_shell_command_success() -> None:
 
 def test_run_shell_command_nonzero_exit() -> None:
     """Test that a failing command reports its nonzero exit code."""
-    outcome = run_shell_command(_python_command(f"exit({NONZERO_EXIT})"))
+    outcome = run_shell_command(python_command(f"exit({NONZERO_EXIT})"))
     assert outcome.returncode == NONZERO_EXIT
     assert outcome.timed_out is False
 
 
 def test_run_shell_command_empty_output() -> None:
     """Test that a command without output produces empty strings."""
-    outcome = run_shell_command(_python_command("pass"))
+    outcome = run_shell_command(python_command("pass"))
     assert outcome.returncode == 0
     assert outcome.stdout == ""
     assert outcome.stderr == ""
@@ -809,7 +805,7 @@ def test_run_shell_command_large_output_is_capped() -> None:
     """Test that very large real output keeps its start and end within the cap."""
     size = MAX_CAPTURE_BYTES * 3
     outcome = run_shell_command(
-        _python_command(
+        python_command(
             "import sys; w = sys.stdout.buffer.write; "
             f"w(b'H'); w(b'x' * {size}); w(b'T')"
         )
@@ -825,7 +821,7 @@ def test_run_shell_command_large_output_is_capped() -> None:
 def test_run_shell_command_input_is_closed() -> None:
     """Test that a command that reads input fails at once instead of waiting."""
     outcome = run_shell_command(
-        _python_command("input()"), timeout=INPUT_TIMEOUT
+        python_command("input()"), timeout=INPUT_TIMEOUT
     )
     assert outcome.timed_out is False
     assert outcome.returncode != 0
@@ -886,7 +882,7 @@ def test_real_command_within_minimum_timeout_passes() -> None:
 def test_real_command_over_limit_keeps_partial_output() -> None:
     """Test that output written before a real timeout is kept."""
     outcome = run_shell_command(
-        _python_command(
+        python_command(
             "import time; print('started', flush=True); "
             f"time.sleep({LONG_SLEEP})"
         ),

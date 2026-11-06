@@ -2,6 +2,8 @@
 
 from typing import Any, List
 
+from gatorgrade.shell_runner import MAX_TIMEOUT_SECONDS
+
 NEWLINE = "\n"
 WEIGHT_FIELD = "weight"
 OUTPUTLIMIT_FIELD = "outputlimit"
@@ -25,6 +27,21 @@ def validate_positive_nonzero_int(value: int, name: str) -> str | None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         return (
             f"Check {name} must be a positive, non-zero integer, got {value}"
+        )
+    return None
+
+
+def validate_timeout_value(value: int | None, name: str) -> str | None:
+    """Validate a timeout value against the shared range limit."""
+    if value is None:
+        return None
+    error = validate_positive_nonzero_int(value, name)
+    if error is not None:
+        return error
+    if value > MAX_TIMEOUT_SECONDS:
+        return (
+            f"Check {name} must be a positive, non-zero integer no greater "
+            f"than {MAX_TIMEOUT_SECONDS}, got {value}"
         )
     return None
 
@@ -71,7 +88,7 @@ class ShellCheck:  # pylint: disable=too-few-public-methods
             if error:
                 errors.append(error)
         if timeout is not None:
-            error = validate_positive_nonzero_int(timeout, TIMEOUT_FIELD)
+            error = validate_timeout_value(timeout, TIMEOUT_FIELD)
             if error:
                 errors.append(error)
         if errors:

@@ -5,7 +5,12 @@ from typing import List, Union
 
 from gatorgrade.hash import compute_check_id
 
-from .checks import GatorGraderCheck, ShellCheck, validate_positive_nonzero_int
+from .checks import (
+    GatorGraderCheck,
+    ShellCheck,
+    validate_positive_nonzero_int,
+    validate_timeout_value,
+)
 from .in_file_path import CheckData
 
 EMPTY = ""
@@ -70,7 +75,7 @@ def generate_checks(  # noqa: PLR0912
                     CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, ol_error)
                 )
         if timeout is not None:
-            timeout_error = validate_positive_nonzero_int(timeout, TIMEOUT_KEY)
+            timeout_error = validate_timeout_value(timeout, TIMEOUT_KEY)
             if timeout_error:
                 errors.append(
                     CONFIG_ERROR_FMT.format(desc, NEWLINE, TAB, timeout_error)

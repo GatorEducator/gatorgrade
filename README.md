@@ -123,10 +123,10 @@ The following options control how GatorGrade runs:
   - `gatorgrade --github-env md MD_REPORT`
 - `--output-limit`, `-o`: Set the maximum number of diagnostic lines to display
   for a failing check. The default is 5. Must be at least 1.
-- `--timeout`, `-t`: Set the default timeout in seconds for shell checks. The
-  default is 300 seconds, and each shell check may override it with a per-check
-  `timeout` value. The per-check value takes precedence over the CLI value, and
-  the CLI value takes precedence over the built-in default.
+- `--timeout`, `-t`: Set the default timeout in seconds for shell checks, from
+  1 to 86400. The default is 300 seconds, and each shell check may override it
+  with a per-check `timeout` value. The per-check value takes precedence over
+  the CLI value, and the CLI value takes precedence over the built-in default.
 - `--baseline-weight`, `-b`: Set the default weight for checks that do not
   specify an explicit weight. The default is 1. Must be at least 1.
 - `--progress-bar`, `--no-progress-bar`: Show or hide the progress bar while
@@ -255,7 +255,8 @@ setup: |
 The `setup` section runs shell commands before the checks. If a setup command
 fails or times out, GatorGrade exits immediately. You can also set a
 `setup_timeout` value in front matter to override the default 300-second
-timeout for those setup commands.
+timeout. It applies to each setup command rather than to all of them in total,
+and it must be from 1 to 86400.
 
 ```yaml
 setup_timeout: 600
@@ -356,12 +357,16 @@ by `--output-limit`.
 ### Timeout
 
 Each shell check can also specify an optional `timeout` value in seconds. This
-value must be a positive integer. If a check does not specify a timeout,
+value must be an integer from 1 to 86400 (24 hours). A command must finish
+within this many seconds, and if it is still running after that it is stopped.
+If a check does not specify a timeout,
 GatorGrade uses the CLI value from `--timeout` when provided, otherwise it uses
 300 seconds. Because the per-check value wins, a smaller `--timeout` cannot cut
 short a check that the configuration gave more time. The timeout is reported in
 the verbose configuration section and in the JSON report metadata for shell
-checks.
+checks. A `timeout` value only applies to checks that run a `command`. Adding
+one changes that check's `check_id`, because the ID includes the check's
+configuration.
 
 ### Timeouts and Output Encoding
 
@@ -379,8 +384,18 @@ followed by any output that the command wrote before it was stopped:
      ==================== test session starts ====================
 ```
 
-The usual output limit still applies to this diagnostic. The JSON and Markdown
-reports also include a `timeout` value for each shell check.
+The usual output limit still applies to this diagnostic. The JSON report also
+includes `timeout`, `timed_out`, and `duration_seconds` for each shell check,
+and the Markdown report shows them for a failing check.
+
+Background processes are only stopped when a command times out. If a command
+finishes in time and leaves a process running, such as a server started during
+setup, that process keeps running and does not delay the result.
+
+Commands run with their input closed, so a command that waits for input fails
+instead of hanging. GatorGrade keeps at most 10 MiB of each output stream in
+memory: the start and the end, with a marker between them. A command that
+cannot be started at all is reported as a failing check with the reason.
 
 GatorGrade decodes all command output as UTF-8. Any bytes that are not valid
 UTF-8 are replaced with the `�` character, so a command that prints binary data

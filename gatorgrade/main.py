@@ -58,6 +58,10 @@ from gatorgrade.resolve import (
     resolve_system_prompt,
     resolve_validation_rules,
 )
+from gatorgrade.shell_runner import (
+    DEFAULT_TIMEOUT_SECONDS,
+    MAX_TIMEOUT_SECONDS,
+)
 from gatorgrade.validate import (
     validate_auto_hint_options,
     validate_baseline_weight,
@@ -256,7 +260,9 @@ def _print_verbose_info(  # noqa: PLR0913
     config.add(f"Config file: {config_path}")
     config.add(f"Config dir: {config_dir}")
     config.add(f"Output limit: {output_limit}")
-    config.add(f"Timeout: {300 if timeout is None else timeout}")
+    config.add(
+        f"Timeout: {DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout}"
+    )
     config.add(f"Baseline weight: {baseline_weight}")
     config.add(f"Diagnostics: {show_diagnostics}")
     config.add(f"Progress: {progress_bar}")
@@ -458,7 +464,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
         None,
         "--timeout",
         "-t",
-        help="Default timeout in seconds for shell checks (>= 1).",
+        help=f"Default timeout in seconds for shell checks (1 to {MAX_TIMEOUT_SECONDS}).",
         callback=validate_timeout,
     ),
     baseline_weight: int = typer.Option(
@@ -622,7 +628,7 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
             auto_hint_model,
             auto_hint_url,
             output_limit,
-            300 if timeout is None else timeout,
+            DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout,
             baseline_weight,
             show_diagnostics,
             progress_bar,
@@ -755,7 +761,9 @@ def gatorgrade(  # noqa: PLR0912, PLR0913, PLR0915
                 REPORT_FLAG: list(report),
                 GITHUB_ENV_FLAG: list(github_env),
                 OUTPUT_LIMIT_FLAG: output_limit,
-                TIMEOUT_FLAG: 300 if timeout is None else timeout,
+                TIMEOUT_FLAG: (
+                    DEFAULT_TIMEOUT_SECONDS if timeout is None else timeout
+                ),
                 BASELINE_WEIGHT_FLAG: baseline_weight,
                 VERBOSE_FLAG: verbose,
                 PROGRESS_BAR_FLAG: progress_bar,
