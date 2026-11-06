@@ -1442,7 +1442,7 @@ def test_invalid_timeout_flag_is_a_clean_error(
         )
     assert result.exit_code == 2  # noqa: PLR2004
     assert isinstance(result.exception, SystemExit)
-    assert "--timeout" in result.output
+    assert "--timeout" in ANSI_ESCAPE_PATTERN.sub("", result.output)
     mock_run.assert_not_called()
 
 
@@ -1497,6 +1497,7 @@ def test_invalid_timeout_in_config_shows_configuration_error(
         result = runner.invoke(main.app, ["--config", str(config)])
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit) or result.exception is None
-    assert expected in flatten(result.output)
-    assert flatten(main.EXIT_MESSAGE) in flatten(result.output)
+    output = flatten(ANSI_ESCAPE_PATTERN.sub("", result.output))
+    assert expected in output
+    assert flatten(main.EXIT_MESSAGE) in output
     mock_run.assert_not_called()

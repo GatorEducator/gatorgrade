@@ -217,23 +217,11 @@ The coding agent should write the notes as a Markdown list.
   per-check `check.timeout`, then the `--timeout` value passed through
   `run_checks()`, then the default. Setup commands use the front matter
   `setup_timeout` key and call `run_shell_command(..., merge_stderr=False)`.
-- Tests that assert on text printed by `rich` must collapse whitespace
-  first with `flatten()` from `tests/helpers.py`, because `rich` wraps long
-  lines at the console width and a long path (such as `sys.executable`) can
-  split a phrase across lines. Use `python_command()` from the same file
-  instead of a bare `python -c` in tests that depend on the interpreter.
 - `validate_timeout_value()` in `gatorgrade/input/checks.py` is the one rule
   for timeouts (1 to `MAX_TIMEOUT_SECONDS`). `ShellCheck`,
   `generate_checks()`, `run_setup()`, and the `--timeout` option all use it.
 - Example configs in `demo/` live only on the `issue218-demo` branch. Keep
   `demo/` out of branches that merge to `main`.
-- `.github/cspell.json` spell-checks every Markdown file, including this
-  one, in CI. Add new technical terms to its `words` list.
-- `uv run task ty` reports `unresolved-import` errors for `torch`,
-  `transformers`, and `openai` unless the optional `auto-hint` extra is
-  installed; these are not caused by code changes.
-- On Windows, piping `gatorgrade` output in Git Bash can crash with a cp1252
-  `UnicodeEncodeError` on the check mark; set `PYTHONIOENCODING=utf-8`.
 - **Creativity is welcome:** Every once in a while, feel free to slip
   in a bit of flair like a pun, a limerick, a dad joke, a haiku about
   test cases, or anything else that might make the developer smile.
