@@ -1,5 +1,5 @@
 # Issue 218 Demo
-hello
+
 These configs demonstrate shell timeouts and safe output decoding. They live
 only on the `issue218-demo` branch and should never be merged into `main`.
 
