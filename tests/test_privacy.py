@@ -481,3 +481,20 @@ def test_safe_mode_redacts_cli_paths() -> None:
     assert report["cli_args"]["--report"][2] == (
         "/Users/student/private/report.json"
     )
+
+
+def test_safe_mode_redacts_details() -> None:
+    """Safe mode hides check details."""
+    report = {
+        "checks": [
+            {
+                "details": "fragment: secret answer",
+                "status": False,
+            }
+        ]
+    }
+
+    result = sanitize_report(report, mode=MODE_SAFE)
+
+    assert result["checks"][0]["details"] == REDACTED_VALUE
+    assert result["checks"][0]["status"] is False

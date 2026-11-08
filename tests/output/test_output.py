@@ -2956,6 +2956,35 @@ def test_run_checks_redacts_secrets_in_hint_tracking(
     assert engine_arguments["command"] == SECRET_OUTPUT_CMD
 
 
+def test_safe_mode_saves_redacted_auto_hint_details(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Safe mode hides details in the actual tracking file."""
+    monkeypatch.chdir(tmp_path)
+    details = "fragment: secret answer"
+    result = CheckResult(False, "failed check", {}, details=details)
+    monkeypatch.setattr(
+        output, "_run_shell_check", MagicMock(return_value=result)
+    )
+    hint_engine = MagicMock(is_loaded=True)
+    hint_engine.generate_hint.return_value = ("Try again.", False)
+
+    output.run_checks(
+        [ShellCheck(command="echo test")],
+        ("", "", ""),
+        no_progress_bar=True,
+        auto_hint_engine=hint_engine,
+        auto_hint_track=True,
+        report_safe=True,
+    )
+
+    saved = json.loads(
+        (tmp_path / "autohints.json").read_text(encoding="utf-8")
+    )
+    assert saved[0]["hints"][0]["details"] == "[redacted]"
+    assert hint_engine.generate_hint.call_args.kwargs["details"] == details
+
+
 @pytest.mark.parametrize("report_type", ["json", "md"])
 def test_safe_mode_applies_to_all_report_destinations(
     report_type: str,
