@@ -80,18 +80,18 @@ PRIVATE_KEY_PATTERN = re.compile(
     re.DOTALL,
 )
 
-# a name followed by a separator, such as API_KEY= or "password": ; the
-# lookbehind makes a name start at a word boundary, which keeps the
-# search fast for long output that does not contain any spaces
+# a name followed by =, ==, or :, or a command flag followed by a space;
+# the lookbehind keeps the search fast for long output without spaces
 ASSIGNMENT_NAME_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_.-])"
-    r"([A-Za-z0-9_.-]+)"
-    r"""["']?[ \t]*[=:][ \t]*""",
+    r"(?:([A-Za-z0-9_.-]+)"
+    r"""["']?[ \t]*(?:==|[=:])[ \t]*"""
+    r"|(--[A-Za-z0-9][A-Za-z0-9-]*)[ \t]+)",
 )
 
 # the value of an assignment, which may be quoted or follow a scheme
 ASSIGNMENT_VALUE_PATTERN = re.compile(
-    r"(?:(?:Bearer|Basic)[ \t]+)?"
+    r"(?:(?:Bearer|Basic|token)[ \t]+)?"
     r"""(?:"[^"\n]*"?|'[^'\n]*'?|[^\s&"',;]+)""",
     re.IGNORECASE,
 )
@@ -176,7 +176,7 @@ def _redact_assignments(text: str) -> str:
     for name in ASSIGNMENT_NAME_PATTERN.finditer(text):
         if name.start() < position:
             continue
-        key = name.group(1)
+        key = name.group(1) or name.group(2)
         key_is_sensitive = _is_sensitive_key(key)
         if (
             not key_is_sensitive

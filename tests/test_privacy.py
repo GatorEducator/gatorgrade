@@ -30,6 +30,7 @@ PRIVATE_KEY = (
     "-----END RSA PRIVATE KEY-----"
 )
 PLAIN_SECRET = "hunter2-plain-value"
+REVIEW_SECRET = "hunter2secret"
 HIGH_ENTROPY_SECRET = "uQ7pL2vZ9mR4xT8kB6nW3sY5"
 WEIGHT = 3
 EXPECTED_AMOUNT_CORRECT = 2
@@ -185,6 +186,22 @@ def test_entropy_preserves_git_hash() -> None:
         (
             f"https://example.com/v1?api_key={PLAIN_SECRET}&page=2",
             f"https://example.com/v1?api_key={REDACTED_VALUE}&page=2",
+        ),
+        (
+            f'assert password == "{REVIEW_SECRET}"',
+            f"assert password == {REDACTED_VALUE}",
+        ),
+        (
+            f"Authorization: token {REVIEW_SECRET}",
+            f"Authorization: {REDACTED_VALUE}",
+        ),
+        (
+            f"mysql --password {REVIEW_SECRET}",
+            f"mysql --password {REDACTED_VALUE}",
+        ),
+        (
+            f"tool --api-key {REVIEW_SECRET}",
+            f"tool --api-key {REDACTED_VALUE}",
         ),
     ],
 )
