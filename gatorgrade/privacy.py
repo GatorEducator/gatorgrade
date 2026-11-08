@@ -28,6 +28,7 @@ SAFE_MODE_FIELDS = frozenset(
         "options",
         "diagnostic",
         "diagnostics",
+        "details",
         "hint",
         "hints",
         "stdout",
