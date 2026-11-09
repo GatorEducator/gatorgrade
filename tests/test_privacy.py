@@ -2,7 +2,7 @@
 
 import copy
 import time
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 from hypothesis import given
@@ -40,6 +40,11 @@ EXPECTED_PERCENTAGE_SCORE = 100
 OUTPUT_LIMIT = 5
 LONG_TEXT_REPEATS = 20000
 LONG_TEXT_SECONDS = 5
+SECRET_CHARACTER_CATEGORIES: tuple[Literal["Ll", "Lu", "Nd"], ...] = (
+    "Ll",
+    "Lu",
+    "Nd",
+)
 
 
 def _full_report() -> dict[str, Any]:
@@ -218,14 +223,12 @@ def test_sanitize_text_redacts_named_assignments(
 @given(
     secret=st.text(
         alphabet=st.characters(
-            whitelist_categories=("Ll", "Lu", "Nd")
+            whitelist_categories=SECRET_CHARACTER_CATEGORIES
         ),
         min_size=6,
         max_size=30,
     ),
-    name=st.sampled_from(
-        ["password", "api_key", "token", "client_secret"]
-    ),
+    name=st.sampled_from(["password", "api_key", "token", "client_secret"]),
     separator=st.sampled_from(["=", "==", ":"]),
 )
 def test_sensitive_assignments_never_leak(

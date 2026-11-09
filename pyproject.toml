@@ -35,7 +35,6 @@ dependencies = [
     "click>=8.3.0,<9",
     "platformdirs>=4.10.0",
     "gatorgrader>=1.1.3",
-    "hypothesis>=6.156.6",
 ]
 
 [project.optional-dependencies]
