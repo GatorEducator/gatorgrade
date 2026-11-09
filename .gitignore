@@ -150,3 +150,6 @@ tsc.json
 # Coverage files
 coverage.json
 .coverage.json
+
+# Auto-hints history
+autohints.json

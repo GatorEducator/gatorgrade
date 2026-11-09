@@ -41,7 +41,8 @@
         "gatorgradle",
         "worktree",
         "systemprompt",
-        "socio"
+        "socio",
+        "openai"
     ],
     "ignorePaths": [
         ".github/**",

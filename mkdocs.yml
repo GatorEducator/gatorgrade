@@ -34,4 +34,5 @@ plugins:
         - gatorgrade
 nav:
   - Home: ./index.md
+  - Report Privacy: report-privacy.md
   - Code Reference: reference/

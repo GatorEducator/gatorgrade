@@ -1,6 +1,5 @@
 """Persist bounded JSON report history for filtering and analysis."""
 
-import copy
 import datetime
 import hashlib
 import json
@@ -10,6 +9,8 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import platformdirs
+
+from gatorgrade.privacy import sanitize_report
 
 HISTORY_APPLICATION_NAME = "gatorgrade"
 HISTORY_DIRECTORY_NAME = "reports"
@@ -23,9 +24,6 @@ HISTORY_REPORT_KEY = "report"
 CHECKS_KEY = "checks"
 CHECK_ID_KEY = "check_id"
 STATUS_KEY = "status"
-CLI_ARGS_KEY = "cli_args"
-SENSITIVE_CLI_ARGUMENTS = frozenset({"--auto-hint-api-key"})
-REDACTED_VALUE = "[redacted]"
 DEFAULT_HISTORY_QUERY_COUNT = 5
 DEFAULT_HISTORY_REPORT_COUNT = 100
 DEFAULT_HISTORY_SIZE_MIB = 100
@@ -102,12 +100,7 @@ def _make_history_payload(
     current_time: datetime.datetime,
 ) -> dict[str, Any]:
     """Return a versioned and privacy-filtered history payload."""
-    history_report = copy.deepcopy(report)
-    cli_args = history_report.get(CLI_ARGS_KEY)
-    if isinstance(cli_args, dict):
-        for argument in SENSITIVE_CLI_ARGUMENTS:
-            if cli_args.get(argument) is not None:
-                cli_args[argument] = REDACTED_VALUE
+    history_report = sanitize_report(report)
     return {
         HISTORY_SCHEMA_KEY: HISTORY_SCHEMA_VERSION,
         HISTORY_SAVED_AT_KEY: current_time.isoformat(),
