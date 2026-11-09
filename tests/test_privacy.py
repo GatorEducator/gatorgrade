@@ -5,6 +5,8 @@ import time
 from typing import Any
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from gatorgrade.privacy import (
     MODE_DEFAULT,
@@ -210,6 +212,29 @@ def test_sanitize_text_redacts_named_assignments(
 ) -> None:
     """Values assigned to a secret name are removed and the name is kept."""
     assert sanitize_text(text) == expected
+
+
+@pytest.mark.propertybased
+@given(
+    secret=st.text(
+        alphabet=st.characters(
+            whitelist_categories=("Ll", "Lu", "Nd")
+        ),
+        min_size=6,
+        max_size=30,
+    ),
+    name=st.sampled_from(
+        ["password", "api_key", "token", "client_secret"]
+    ),
+    separator=st.sampled_from(["=", "==", ":"]),
+)
+def test_sensitive_assignments_never_leak(
+    secret: str, name: str, separator: str
+) -> None:
+    """Sensitive assignments replace the entire value."""
+    text = f'{name} {separator} "{secret}"'
+
+    assert sanitize_text(text) == f"{name} {separator} {REDACTED_VALUE}"
 
 
 def test_sanitize_text_redacts_standalone_bearer_token() -> None:
