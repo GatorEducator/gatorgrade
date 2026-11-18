@@ -7,10 +7,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from gatorgrade.hint.remote_engine import (
-    ENABLE_THINKING_DEFAULT,
-    REMOTE_HINT_MAX_TOKENS,
-    REMOTE_HINT_TEMPERATURE,
+    REMOTE_API_KEY_DEFAULT,
+    REMOTE_HINT_TIMEOUT_MS,
+    REMOTE_KEY_ENV_DEFAULT,
     REMOTE_MODEL_DEFAULT,
+    USER_AGENT_KEY,
+    USER_AGENT_VALUE,
     RemoteHintEngine,
 )
 from gatorgrade.hint.support import (
@@ -19,6 +21,22 @@ from gatorgrade.hint.support import (
 from gatorgrade.hint.support import (
     HINT_FILE_LINES as REMOTE_HINT_FILE_LINES,
 )
+
+TEST_API_KEY = "test-api-key"
+TEST_API_KEY_ENV = "TEST_AUTO_HINT_API_KEY"
+MISSING_API_KEY_ERROR = (
+    f"API key environment variable {TEST_API_KEY_ENV} is not set. Save it "
+    "in your shell startup file or Windows user environment for future "
+    "sessions, then restart your terminal or IDE; see README."
+)
+MILLISECONDS_PER_SECOND = 1000
+
+
+@pytest.fixture(autouse=True)
+def set_api_key_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set the API key environment variable for each test."""
+    monkeypatch.setenv(TEST_API_KEY_ENV, TEST_API_KEY)
+    monkeypatch.delenv(REMOTE_KEY_ENV_DEFAULT, raising=False)
 
 
 @contextmanager
@@ -65,10 +83,26 @@ class TestRemoteHintEngineConstruction:
         """Engine constructed with custom values."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="my-key",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="custom-model",
         )
         assert engine.model_id == "custom-model"
+
+    def test_api_key_loaded_from_environment(self) -> None:
+        """Engine loads the API key from the named environment variable."""
+        engine = RemoteHintEngine(
+            base_url="http://test.url:4160",
+            api_key_env=TEST_API_KEY_ENV,
+        )
+        assert engine._api_key == TEST_API_KEY
+
+    def test_default_api_key_loaded_from_environment(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Engine reads the default API key environment variable."""
+        monkeypatch.setenv(REMOTE_KEY_ENV_DEFAULT, TEST_API_KEY)
+        engine = RemoteHintEngine(base_url="http://test.url:4160")
+        assert engine._api_key == TEST_API_KEY
 
     def test_is_loaded_always_true(self) -> None:
         """Remote engine is always considered loaded."""
@@ -115,7 +149,7 @@ class TestRemoteHintEngineGenerateHint:
         self,
         engine: RemoteHintEngine,
         mock_choice: MagicMock,
-    ) -> tuple:
+    ) -> tuple[str | None, bool, MagicMock, MagicMock]:
         """Run generate_hint with a fake openai module inserted.
 
         Since openai is not a declared project dependency and may not
@@ -140,12 +174,13 @@ class TestRemoteHintEngineGenerateHint:
         fake_openai.types.chat = chat_mod
         fake_openai.types.chat.ChatCompletionMessageParam = dict
         fake_openai.types.chat.ChatCompletion = MagicMock
-        fake_openai.OpenAI = MagicMock()
+        openai_factory = MagicMock()
+        fake_openai.OpenAI = openai_factory
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.choices = [mock_choice]
         mock_client.chat.completions.create.return_value = mock_response
-        fake_openai.OpenAI.return_value = mock_client
+        openai_factory.return_value = mock_client
         # register submodules so python's import machinery finds them
         sys.modules["openai.types"] = types_mod
         sys.modules["openai.types.chat"] = chat_mod
@@ -166,19 +201,19 @@ class TestRemoteHintEngineGenerateHint:
             # clean up submodule entries we injected
             for sub in ("openai.types", "openai.types.chat"):
                 sys.modules.pop(sub, None)
-        return hint, is_low_quality, mock_client
+        return hint, is_low_quality, mock_client, openai_factory
 
     def test_generate_hint_returns_content(self) -> None:
         """Return the hint from the message content field."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         mock_choice = self._mock_choice(
             content="Check your file path and try again."
         )
-        hint, is_low_quality, _ = self._run_with_fake_openai(
+        hint, is_low_quality, _, _ = self._run_with_fake_openai(
             engine, mock_choice
         )
         assert hint == "Check your file path and try again."
@@ -190,14 +225,14 @@ class TestRemoteHintEngineGenerateHint:
         """Fall back to reasoning_content when content is empty."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         mock_choice = self._mock_choice(
             content="",
             reasoning_content="The hint derived from your reasoning.",
         )
-        hint, is_low_quality, _ = self._run_with_fake_openai(
+        hint, is_low_quality, _, _ = self._run_with_fake_openai(
             engine, mock_choice
         )
         assert hint == "The hint derived from your reasoning."
@@ -215,12 +250,45 @@ class TestRemoteHintEngineGenerateHint:
                 description="test", diagnostic="error"
             )
         assert hint is None
+        assert engine.last_error is not None
+
+    def test_missing_named_key_does_not_use_sdk_default(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A missing named key cannot fall back to OPENAI_API_KEY."""
+        monkeypatch.delenv(TEST_API_KEY_ENV)
+        monkeypatch.setenv("OPENAI_API_KEY", TEST_API_KEY)
+        engine = RemoteHintEngine(
+            base_url="http://test.url:4160",
+            api_key_env=TEST_API_KEY_ENV,
+        )
+        fake_openai = MagicMock()
+        with _mock_openai_module(fake_openai):
+            hint, _ = engine.generate_hint(description="test")
+        assert hint is None
+        assert engine.last_error is not None
+        assert TEST_API_KEY_ENV in engine.last_error
+        fake_openai.OpenAI.assert_not_called()
+
+    def test_missing_named_key_is_reported_before_import_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A missing named key is reported before importing the SDK."""
+        monkeypatch.delenv(TEST_API_KEY_ENV)
+        engine = RemoteHintEngine(
+            base_url="http://test.url:4160",
+            api_key_env=TEST_API_KEY_ENV,
+        )
+        with patch.dict("sys.modules", {"openai": None}, clear=False):
+            hint, _ = engine.generate_hint(description="test")
+        assert hint is None
+        assert engine.last_error == MISSING_API_KEY_ERROR
 
     def test_generate_hint_returns_none_on_exception(self) -> None:
         """Returns None when the API raises."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         fake_openai = MagicMock()
@@ -239,41 +307,61 @@ class TestRemoteHintEngineGenerateHint:
         """Returns None when both content and reasoning are empty."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         mock_choice = self._mock_choice(content="   ")
-        hint, _is_low, _ = self._run_with_fake_openai(engine, mock_choice)
+        hint, _is_low, _, _ = self._run_with_fake_openai(engine, mock_choice)
         assert hint is None
 
     def test_generate_hint_passes_correct_params(self) -> None:
         """OpenAI client is called with the correct parameters."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         mock_choice = self._mock_choice(content="A hint.")
-        _, _, mock_client = self._run_with_fake_openai(engine, mock_choice)
+        _, _, mock_client, openai_factory = self._run_with_fake_openai(
+            engine, mock_choice
+        )
+        openai_factory.assert_called_once_with(
+            base_url="http://test.url:4160",
+            api_key=TEST_API_KEY,
+            default_headers={USER_AGENT_KEY: USER_AGENT_VALUE},
+        )
         call_kwargs = mock_client.chat.completions.create.call_args[1]
         assert call_kwargs["model"] == "test-model"
-        assert call_kwargs["max_tokens"] == REMOTE_HINT_MAX_TOKENS
-        assert call_kwargs["temperature"] == REMOTE_HINT_TEMPERATURE
-        assert "top_p" not in call_kwargs
-        assert "extra_body" in call_kwargs
-        assert call_kwargs["extra_body"] == ENABLE_THINKING_DEFAULT
+        assert set(call_kwargs) == {"model", "messages", "timeout"}
+        assert (
+            call_kwargs["timeout"]
+            == REMOTE_HINT_TIMEOUT_MS / MILLISECONDS_PER_SECOND
+        )
+
+    def test_generate_hint_uses_placeholder_for_keyless_server(self) -> None:
+        """A keyless server receives the non-secret placeholder key."""
+        engine = RemoteHintEngine(base_url="http://test.url:4160")
+        mock_choice = self._mock_choice(content="A hint.")
+        _, _, _, openai_factory = self._run_with_fake_openai(
+            engine, mock_choice
+        )
+        openai_factory.assert_called_once_with(
+            base_url="http://test.url:4160",
+            api_key=REMOTE_API_KEY_DEFAULT,
+            default_headers={USER_AGENT_KEY: USER_AGENT_VALUE},
+        )
 
     def test_generate_hint_handles_suggesting_test_change(self) -> None:
         """Return hint flagged as low quality when it suggests modifying tests."""
         engine = RemoteHintEngine(
             base_url="http://test.url:4160",
-            api_key="not-needed",
+            api_key_env=TEST_API_KEY_ENV,
             model_id="test-model",
         )
         mock_choice = self._mock_choice(
             content="The test incorrectly asserts equality."
         )
-        hint, is_low_quality, _ = self._run_with_fake_openai(
+        hint, is_low_quality, _, _ = self._run_with_fake_openai(
             engine, mock_choice
         )
         assert hint == "The test incorrectly asserts equality."
@@ -376,26 +464,6 @@ class TestRemoteHintEngineDepCheck:
         fake_openai = MagicMock()
         with _mock_openai_module(fake_openai):
             RemoteHintEngine.check_deps()  # should not raise
-
-
-class TestRemoteHintEngineGracefulDegradation:
-    """Tests that generate_hint returns None gracefully."""
-
-    def test_generate_hint_never_crashes(self) -> None:
-        """generate_hint never crashes — returns (None, False) or (hint, bool).
-
-        When the openai library is not installed, generate_hint returns
-        (None, False). When it is installed with mocks, it returns
-        a hint string.
-
-        """
-        engine = RemoteHintEngine(base_url="http://test.url:4160")
-        hint, is_low_quality = engine.generate_hint(
-            description="test", diagnostic="error"
-        )
-        if hint is not None:
-            assert isinstance(hint, str) and len(hint) > 0
-            assert isinstance(is_low_quality, bool)
 
 
 class TestRemoteHintEngineHintValidation:

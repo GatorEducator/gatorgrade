@@ -157,7 +157,7 @@ def test_run_checks_some_failed_prints_correct_summary(
     # and percentage of passed checks
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "- Project: gatorgrade" in plain_stdout
+    assert f"- Project: {Path.cwd().name}" in plain_stdout
     assert "- Checks: 2/3 (67%)" in plain_stdout
     assert "- Points: 2/3 (67%)" in plain_stdout
     capsys.readouterr()
@@ -191,7 +191,7 @@ def test_run_checks_with_gg_check_no_command_status_bar_enabled(
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "- Project: gatorgrade" in plain_stdout
+    assert f"- Project: {Path.cwd().name}" in plain_stdout
     assert "- Checks: 1/1 (100%)" in plain_stdout
     assert "- Points: 1/1 (100%)" in plain_stdout
 
@@ -269,7 +269,7 @@ def test_md_report_file_created_correctly(
     file.close()
     Path("insights.md").unlink()
     assert "# Gatorgrade Report" in file_contents
-    assert "**Project Name:** gatorgrade" in file_contents
+    assert f"**Project Name:** {Path.cwd().name}" in file_contents
     assert "**Amount Correct:** 1/3 (33%)" in file_contents
     assert "**Points:** 1/3 (33%)" in file_contents
     assert "## Passing Checks" in file_contents
@@ -661,7 +661,7 @@ def test_run_checks_with_no_status_bar(
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "Project: gatorgrade" in plain_stdout
+    assert f"Project: {Path.cwd().name}" in plain_stdout
     assert "Checks: 1/1 (100%)" in plain_stdout
     assert "Points: 1/1 (100%)" in plain_stdout
 
@@ -678,7 +678,7 @@ def test_run_checks_with_running_mode(
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "Project: gatorgrade" in plain_stdout
+    assert f"Project: {Path.cwd().name}" in plain_stdout
     assert "Checks: 1/1 (100%)" in plain_stdout
     assert "Points: 1/1 (100%)" in plain_stdout
 
@@ -858,7 +858,7 @@ def test_run_checks_zero_checks_no_division_error(
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "Project: gatorgrade" in plain_stdout
+    assert f"Project: {Path.cwd().name}" in plain_stdout
     assert "Checks: 0/0 (0%)" in plain_stdout
     assert "Points: 0/0 (0%)" in plain_stdout
 
@@ -1849,7 +1849,7 @@ def test_run_checks_weighted_score_displayed(
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "Project: gatorgrade" in plain_stdout
+    assert f"Project: {Path.cwd().name}" in plain_stdout
     assert "Checks: 1/2 (50%)" in plain_stdout
     assert "Points: 10/15 (67%)" in plain_stdout
 
@@ -1867,7 +1867,7 @@ def test_run_checks_all_pass_weighted_score_100(
     assert result is True
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "- Project: gatorgrade" in plain_stdout
+    assert f"- Project: {Path.cwd().name}" in plain_stdout
     assert "- Checks: 2/2 (100%)" in plain_stdout
     assert "- Points: 15/15 (100%)" in plain_stdout
 
@@ -1881,7 +1881,7 @@ def test_run_checks_zero_checks_weighted_zero(
     output.run_checks(checks, report)  # type: ignore
     out, _ = capsys.readouterr()
     plain_stdout = ANSI_ESCAPE_PATTERN.sub("", out)
-    assert "- Project: gatorgrade" in plain_stdout
+    assert f"- Project: {Path.cwd().name}" in plain_stdout
     assert "- Checks: 0/0 (0%)" in plain_stdout
     assert "- Points: 0/0 (0%)" in plain_stdout
 
