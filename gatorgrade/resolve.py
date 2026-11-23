@@ -30,6 +30,8 @@ def resolve_system_prompt(
     3. The --config-dir directory (or the default platformdirs-
        based config directory)
 
+    Directories and unreadable files are skipped.
+
     Args:
         config_path: Path to the resolved gatorgrade configuration
             file.
@@ -50,11 +52,11 @@ def resolve_system_prompt(
         config_path.parent / prompt_filename,
         (config_dir or get_config_dir()) / prompt_filename,
     ]:
-        if candidate.exists():
-            try:
+        try:
+            if candidate.is_file():
                 return candidate.read_text(encoding="utf-8")
-            except OSError:
-                return None
+        except OSError:
+            continue
     return None
 
 
@@ -71,7 +73,8 @@ def resolve_validation_rules(
     - cannot_contain: list of phrases that must not appear
 
     The file is resolved in the same search order as the system
-    prompt: CWD, alongside config file, then config dir.
+    prompt: CWD, alongside config file, then config dir. Directories
+    and unreadable files are skipped.
 
     Args:
         config_path: Path to the resolved gatorgrade configuration
@@ -92,12 +95,14 @@ def resolve_validation_rules(
         config_path.parent / filename,
         (config_dir or get_config_dir()) / filename,
     ]:
-        if candidate.exists():
-            try:
+        try:
+            if candidate.is_file():
                 data = json.loads(candidate.read_text(encoding="utf-8"))
                 if not isinstance(data, dict):
                     return None
                 return data
-            except (json.JSONDecodeError, OSError):
-                return None
+        except json.JSONDecodeError:
+            return None
+        except OSError:
+            continue
     return None
